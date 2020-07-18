@@ -29,6 +29,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Main", "Main", "{BD55C0D4-0
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "App.Manual.Tests", "App.Manual.Tests\App.Manual.Tests.csproj", "{3337CC52-6EBD-44E2-BDFA-E3A272E6FF6C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoftUnlimit.Data.Tests", "SoftUnlimit.Data.Tests\SoftUnlimit.Data.Tests.csproj", "{E3026ED6-A483-466D-9F4D-FB6A1A1F7442}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -75,12 +77,17 @@ Global
 		{3337CC52-6EBD-44E2-BDFA-E3A272E6FF6C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{3337CC52-6EBD-44E2-BDFA-E3A272E6FF6C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{3337CC52-6EBD-44E2-BDFA-E3A272E6FF6C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3026ED6-A483-466D-9F4D-FB6A1A1F7442}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3026ED6-A483-466D-9F4D-FB6A1A1F7442}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3026ED6-A483-466D-9F4D-FB6A1A1F7442}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3026ED6-A483-466D-9F4D-FB6A1A1F7442}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{3337CC52-6EBD-44E2-BDFA-E3A272E6FF6C} = {BD55C0D4-0EA4-44C9-A2C2-A0F487792D46}
+		{E3026ED6-A483-466D-9F4D-FB6A1A1F7442} = {91A68341-353D-4C30-86F8-50B2D19BBA38}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9B9451D6-06A9-4FE7-BD5A-062F758B8538}
