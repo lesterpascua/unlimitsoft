@@ -32,7 +32,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
             this.IsPubliched = false;
             this.IsDomainEvent = @event.IsDomainEvent;
 
-            this.ActionType = @event.Command.GetType().GetType().AssemblyQualifiedName;
+            this.ActionType = @event.Command?.GetType().AssemblyQualifiedName;
             this.Body = JsonConvert.SerializeObject(@event.Body, VersionedEventSettings.JsonSerializerSettings);
             this.Action = JsonConvert.SerializeObject(@event.Command, VersionedEventSettings.JsonSerializerSettings);
             this.PrevSnapshot = JsonConvert.SerializeObject(@event.PrevState, VersionedEventSettings.JsonSerializerSettings);
