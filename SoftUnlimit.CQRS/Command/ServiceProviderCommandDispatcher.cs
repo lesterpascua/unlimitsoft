@@ -26,6 +26,11 @@ namespace SoftUnlimit.CQRS.Command
         private static readonly object _sync = new object();
         private static readonly Dictionary<Type, MethodInfo> _cache = new Dictionary<Type, MethodInfo>();
 
+        /// <summary>
+        /// Default function used to convert error transform to standard ASP.NET format
+        /// </summary>
+        public static readonly Func<IList<ValidationFailure>, IDictionary<string, IEnumerable<string>>> DefaultErrorTransforms = (failure) => failure.GroupBy(p => p.PropertyName).ToDictionary(k => k.Key, v => v.Select(s => s.ErrorMessage))
+
 
         /// <summary>
         /// 

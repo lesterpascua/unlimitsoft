@@ -19,8 +19,9 @@ namespace SoftUnlimit.Data.Seed
         /// <param name="assembly"></param>
         /// <param name="migrateCallback"></param>
         /// <param name="condition">Check if type can be initialized.</param>
+        /// <param name="args">Extra argument passed to seed</param>
         public static async Task Seed(IUnitOfWork unitOfWork, Assembly assembly,
-            Func<IUnitOfWork, Task> migrateCallback = null, Func<Type, bool> condition = null)
+            Func<IUnitOfWork, Task> migrateCallback = null, Func<Type, bool> condition = null, params object[] args)
         {
             if (migrateCallback != null)
                 await migrateCallback(unitOfWork);
@@ -40,7 +41,7 @@ namespace SoftUnlimit.Data.Seed
                 if (!entityCache.ContainsKey(seedType.BaseType.GenericTypeArguments.Single()))
                     continue;
 
-                allSeed.Add((ICustomEntitySeed)Activator.CreateInstance(seedType));
+                allSeed.Add((ICustomEntitySeed)Activator.CreateInstance(seedType, args));
             }
 
             foreach (var entry in allSeed.OrderBy(k => k.Priority))
