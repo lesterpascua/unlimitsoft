@@ -17,7 +17,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Gets the identifier of the source originating the event.
         /// </summary>
-        object SourceID { get; }
+        object SourceID { get; set; }
         /// <summary>
         /// Specify if an event belown to domain. This have optimization propouse.
         /// </summary>
@@ -61,7 +61,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Gets the identifier of the source originating the event.
         /// </summary>
-        public Key SourceID { get; protected set; }
+        public Key SourceID { get; set; }
         /// <summary>
         /// 
         /// </summary>
@@ -74,7 +74,7 @@ namespace SoftUnlimit.CQRS.Event
 
         #region Explicit Interface Implementation
 
-        object IEvent.SourceID => this.SourceID;
+        object IEvent.SourceID { get => this.SourceID; set => this.SourceID = (Key)value; }
 
         #endregion
     }

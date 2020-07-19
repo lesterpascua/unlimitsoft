@@ -41,11 +41,12 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// </summary>
         /// <param name="events"></param>
         /// <returns></returns>
-        public async Task DispatchEventsAsync(IEnumerable<IVersionedEvent> events)
+        public virtual async Task DispatchEventsAsync(IEnumerable<IVersionedEvent> events)
         {
             List<VersionedEventPayload> remoteEvents = new List<VersionedEventPayload>();
             foreach (var @event in events)
             {
+                @event.SourceID = ((IEntity)@event.CurrState).ID;
                 if (!@event.IsDomainEvent)
                 {
                     var payload = new VersionedEventPayload(@event);
