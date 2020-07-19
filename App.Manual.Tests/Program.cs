@@ -250,7 +250,7 @@ namespace SoftUnlimit.CQRS.Test
                 services.AddScoped(entry.ServiceQueryType, (provider) => Activator.CreateInstance(entry.ImplementationQueryType, provider.GetService<TestDbContext>()));
             }
 
-            services.AddScoped<IMediatorDispatchEventSourced, DefaultMediatorDispatchEventSourced>();
+            services.AddScoped<IMediatorDispatchEventSourced, MyDefaultMediatorDispatchEventSourced>();
 
             ServiceProviderCommandDispatcher.RegisterCommandCompliance(services, typeof(ICommandCompliance<>), new Assembly[] { typeof(IMyCommandHandler<>).Assembly });
             ServiceProviderCommandDispatcher.RegisterCommandHandler(services, typeof(IMyCommandHandler<>), new Assembly[] { typeof(IMyCommandHandler<>).Assembly }, new Assembly[] { typeof(Program).Assembly });

@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 
 namespace SoftUnlimit.CQRS.Test.EventSourced
 {
-    public class DefaultMediatorDispatchEventSourced : IMediatorDispatchEventSourced
+    public class MyDefaultMediatorDispatchEventSourced : DefaultMediatorDispatchEventSourced
     {
         private readonly IServiceProvider _provider;
         private readonly IEventDispatcherWithServiceProvider _serviceProviderEventDispatcher;
@@ -26,31 +26,15 @@ namespace SoftUnlimit.CQRS.Test.EventSourced
         /// 
         /// </summary>
         /// <param name="context"></param>
-        public DefaultMediatorDispatchEventSourced(IServiceProvider provider, IEventDispatcherWithServiceProvider serviceProviderEventDispatcher)
+        public MyDefaultMediatorDispatchEventSourced(IServiceProvider provider, IEventDispatcherWithServiceProvider serviceProviderEventDispatcher)
+            : base(provider)
         {
             this._provider = provider;
             this._serviceProviderEventDispatcher = serviceProviderEventDispatcher;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="events"></param>
-        /// <returns></returns>
-        public async Task DispatchEventsAsync(IEnumerable<IVersionedEvent> events)
-        {
-            foreach (var @event in events)
-            {
-                var responses = await this._serviceProviderEventDispatcher
-                    .DispatchEventAsync(this._provider, @event);
+        protected override IEventDispatcherWithServiceProvider EventDispatcher => throw new NotImplementedException();
 
-                if (!responses.Success)
-                {
-                    var exceps = responses.ErrorEvents
-                        .Select(s => (Exception)s.GetBody());
-                    throw new AggregateException("Error when executed events", exceps);
-                }
-            }
-        }
+        protected override IRepository<VersionedEventPayload> VersionedEventRepository => throw new NotImplementedException();
     }
 }
