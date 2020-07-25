@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -37,7 +38,8 @@ namespace SoftUnlimit.Web.AspNet.Health
         /// <returns></returns>
         public async Task Invoke(HttpContext httpContext)
         {
-            if (_context.Healthy == HealthStatus.Unhealthy)
+            string path = httpContext.Request.Path;
+            if (this._options.SkipUrls?.Contains(path) != true && this._context.Healthy == HealthStatus.Unhealthy)
             {
                 var response = httpContext.Response;
 

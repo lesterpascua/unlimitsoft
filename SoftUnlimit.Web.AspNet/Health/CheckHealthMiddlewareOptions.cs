@@ -15,5 +15,9 @@ namespace SoftUnlimit.Web.AspNet.Health
         /// 
         /// </summary>
         public string InfoText { get; set; } = "Service Unavailable";
+        /// <summary>
+        /// 
+        /// </summary>
+        public string[] SkipUrls { get; set; } = new string[] { "/hc" };
     }
 }
