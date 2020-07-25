@@ -12,10 +12,9 @@ namespace SoftUnlimit.Web.AspNet.Health
     /// </summary>
     public class CheckHealthMiddleware
     {
-        private readonly string _infoText;
-        private readonly string _retryAfter;
         private readonly RequestDelegate _next;
         private readonly CheckHealthContext _context;
+        private readonly CheckHealthMiddlewareOptions _options;
 
 
         /// <summary>
@@ -23,18 +22,12 @@ namespace SoftUnlimit.Web.AspNet.Health
         /// </summary>
         /// <param name="next"></param>
         /// <param name="context"></param>
-        /// <param name="retryAfter">Retry time in seconds</param>
-        /// <param name="infoText"></param>
-        public CheckHealthMiddleware(
-            RequestDelegate next, 
-            CheckHealthContext context, 
-            int retryAfter, 
-            string infoText = "Service Unavailable")
+        /// <param name="options"></param>
+        public CheckHealthMiddleware(RequestDelegate next, CheckHealthContext context, CheckHealthMiddlewareOptions options)
         {
             this._next = next;
             this._context = context;
-            this._infoText = infoText;
-            this._retryAfter = retryAfter.ToString();
+            this._options = options;
         }
 
         /// <summary>
@@ -48,9 +41,9 @@ namespace SoftUnlimit.Web.AspNet.Health
             {
                 var response = httpContext.Response;
 
-                response.Headers["Retry-After"] = this._retryAfter;
+                response.Headers["Retry-After"] = this._options.RetryAfter.ToString();
                 response.StatusCode = StatusCodes.Status503ServiceUnavailable;
-                await response.WriteAsync(this._infoText);
+                await response.WriteAsync(this._options.InfoText);
             } else
                 await _next(httpContext);
         }
