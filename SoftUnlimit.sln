@@ -29,7 +29,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Main", "Main", "{BD55C0D4-0
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "App.Manual.Tests", "App.Manual.Tests\App.Manual.Tests.csproj", "{3337CC52-6EBD-44E2-BDFA-E3A272E6FF6C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoftUnlimit.Data.Tests", "SoftUnlimit.Data.Tests\SoftUnlimit.Data.Tests.csproj", "{E3026ED6-A483-466D-9F4D-FB6A1A1F7442}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.Data.Tests", "SoftUnlimit.Data.Tests\SoftUnlimit.Data.Tests.csproj", "{E3026ED6-A483-466D-9F4D-FB6A1A1F7442}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoftUnlimit.Web.AspNet", "SoftUnlimit.Web.AspNet\SoftUnlimit.Web.AspNet.csproj", "{514C91E5-E803-40D2-8E55-E33DB146A09D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -81,6 +83,10 @@ Global
 		{E3026ED6-A483-466D-9F4D-FB6A1A1F7442}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E3026ED6-A483-466D-9F4D-FB6A1A1F7442}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E3026ED6-A483-466D-9F4D-FB6A1A1F7442}.Release|Any CPU.Build.0 = Release|Any CPU
+		{514C91E5-E803-40D2-8E55-E33DB146A09D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{514C91E5-E803-40D2-8E55-E33DB146A09D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{514C91E5-E803-40D2-8E55-E33DB146A09D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{514C91E5-E803-40D2-8E55-E33DB146A09D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

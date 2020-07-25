@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+    <Authors>Lester Pastrana</Authors>
+    <Company>Private</Company>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">0.0.0.1</Version>
+    <Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    <Description>ASP.NET helpers</Description>
+    <LangVersion>8.0</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.2.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.2.5" />
+    <PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks" Version="3.1.6" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SoftUnlimit.Web\SoftUnlimit.Web.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Filter\Authorization\" />
+  </ItemGroup>
+
+</Project>
