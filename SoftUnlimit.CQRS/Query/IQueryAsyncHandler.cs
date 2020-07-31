@@ -16,7 +16,7 @@ namespace SoftUnlimit.CQRS.Query
     /// </summary>
     /// <typeparam name="TResult"></typeparam>
     /// <typeparam name="TQuery"></typeparam>
-    public interface IQueryAsyncHandler<TResult, TQuery> : IQueryHandler
+    public interface IQueryAsyncHandler<TResult, TQuery> : IQueryAsyncHandler
         where TQuery : IQueryAsync<TResult>
     {
         /// <summary>
