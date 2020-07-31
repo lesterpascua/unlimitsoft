@@ -8,13 +8,13 @@ namespace SoftUnlimit.CQRS.Query
     /// <summary>
     /// Base class for all query.
     /// </summary>
-    public abstract class QueryAsync<TResult> : IQueryAsync<TResult>
-        where TResult : QueryProps
+    public abstract class QueryAsync<TResult, TProps> : IQueryAsync<TResult>
+        where TResult: class
     {
         /// <summary>
         /// Get or set metadata props associate with the query.
         /// </summary>
-        public TResult QueryProps { get; protected set; }
+        public TProps QueryProps { get; protected set; }
 
         /// <summary>
         /// Auto execute query.
@@ -26,8 +26,8 @@ namespace SoftUnlimit.CQRS.Query
         /// <summary>
         /// Return metadata props associate with the query.
         /// </summary>
-        /// <typeparam name="TProps"></typeparam>
+        /// <typeparam name="TInnerProps"></typeparam>
         /// <returns></returns>
-        TProps IQueryAsync.GetProps<TProps>() => this.QueryProps as TProps;
+        TInnerProps IQueryAsync.GetProps<TInnerProps>() => this.QueryProps as TInnerProps;
     }
 }
