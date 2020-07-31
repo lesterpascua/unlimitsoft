@@ -8,13 +8,14 @@ namespace SoftUnlimit.CQRS.Query
     /// <summary>
     /// 
     /// </summary>
-    public interface IQuery
+    public interface IQueryAsyncDispatcher
     {
         /// <summary>
-        /// Get query property like user, etc
+        /// 
         /// </summary>
-        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="TResult"></typeparam>
+        /// <param name="args"></param>
         /// <returns></returns>
-        T GetProps<T>() where T : QueryProps;
+        Task<TResult> DispatchAsync<TResult>(IQueryAsync args) where TResult : class;
     }
 }

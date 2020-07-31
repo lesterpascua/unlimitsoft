@@ -115,15 +115,5 @@ namespace SoftUnlimit.CQRS.Query
         }
 
         #endregion
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="services"></param>
-        /// <param name="queryHanlerInterface"></param>
-        public static void RegisterQueryHandler(IServiceCollection services, Type queryHanlerInterface)
-        {
-            RegisterHandler(services, queryHanlerInterface, typeof(IQueryHandler), typeof(IQueryHandler<,>));
-        }
     }
 }

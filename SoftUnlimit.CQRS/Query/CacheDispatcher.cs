@@ -61,17 +61,17 @@ namespace SoftUnlimit.CQRS.Query
         /// 
         /// </summary>
         /// <param name="services"></param>
-        /// <param name="queryOrReportHanlerInterface"></param>
-        /// <param name="queryOrReport"></param>
-        /// <param name="queryOrReportGeneric"></param>
-        public static void RegisterHandler(IServiceCollection services, Type queryOrReportHanlerInterface, Type queryOrReport, Type queryOrReportGeneric)
+        /// <param name="assemblies"></param>
+        /// <param name="queryAsync"></param>
+        /// <param name="queryAsyncGeneric"></param>
+        public static void RegisterHandler(IServiceCollection services, IEnumerable<Assembly> assemblies, Type queryAsync, Type queryAsyncGeneric)
         {
-            var existReportHandler = queryOrReportHanlerInterface.Assembly.GetTypes()
-                .Where(p => p.IsClass && !p.IsAbstract && p.GetInterfaces().Contains(queryOrReport));
+            var existReportHandler = assemblies.SelectMany(s => s.GetTypes())
+                .Where(p => p.IsClass && !p.IsAbstract && p.GetInterfaces().Contains(queryAsync));
             foreach (var reportHandlerImplementation in existReportHandler)
             {
                 var reportHandlerImplementedInterfaces = reportHandlerImplementation.GetInterfaces()
-                    .Where(p => p.GetGenericArguments().Length == 2 && p.GetGenericTypeDefinition() == queryOrReportGeneric);
+                    .Where(p => p.GetGenericArguments().Length == 2 && p.GetGenericTypeDefinition() == queryAsyncGeneric);
 
                 foreach (var reportHandlerInterface in reportHandlerImplementedInterfaces)
                     services.AddScoped(reportHandlerInterface, reportHandlerImplementation);

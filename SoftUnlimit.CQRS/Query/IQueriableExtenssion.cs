@@ -88,5 +88,26 @@ namespace SoftUnlimit.CQRS.Query
                 @this = orderedQuery;
             return @this;
         }
+        /// <summary>
+        /// Applied all query specification for search
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="this"></param>
+        /// <param name="pagging"></param>
+        /// <param name="ordered"></param>
+        /// <param name="includes"></param>
+        /// <returns></returns>
+        public static IQueryable<TEntity> ApplySearch<TEntity>(this IQueryable<TEntity> @this, PaggingSettings pagging, IEnumerable<ColumnName> ordered, IEnumerable<string> includes)
+            where TEntity : class
+        {
+            if (ordered?.Any() == true)
+                @this = @this.ApplyOrdered(ordered);
+            if (pagging != null)
+                @this = @this.ApplyPagging(pagging.Page, pagging.PageSize);
+            if (includes?.Any() == true)
+                @this = @this.ApplyInclude(includes);
+
+            return @this;
+        }
     }
 }
