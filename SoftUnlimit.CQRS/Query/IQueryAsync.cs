@@ -10,6 +10,12 @@ namespace SoftUnlimit.CQRS.Query
     /// </summary>
     public interface IQueryAsync
     {
+        /// <summary>
+        /// Get query property like user, etc
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        T GetProps<T>() where T : QueryProps;
     }
     /// <summary>
     /// 

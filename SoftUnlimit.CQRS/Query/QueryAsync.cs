@@ -7,7 +7,7 @@ namespace SoftUnlimit.CQRS.Query
     /// <summary>
     /// Base class for all query.
     /// </summary>
-    public abstract class Query<T> : IQuery
+    public abstract class QueryAsync<T> : IQueryAsync
         where T : QueryProps
     {
         /// <summary>
@@ -20,6 +20,6 @@ namespace SoftUnlimit.CQRS.Query
         /// </summary>
         /// <typeparam name="TProps"></typeparam>
         /// <returns></returns>
-        TProps IQuery.GetProps<TProps>() => this.QueryProps as TProps;
+        TProps IQueryAsync.GetProps<TProps>() => this.QueryProps as TProps;
     }
 }
