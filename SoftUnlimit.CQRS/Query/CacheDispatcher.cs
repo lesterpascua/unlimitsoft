@@ -42,9 +42,9 @@ namespace SoftUnlimit.CQRS.Query
         protected static MethodInfo GetFromCache(Type type, object handler, bool isAsync)
         {
             if (!_cache.TryGetValue(type, out MethodInfo method))
+            {
                 lock (_sync)
-                {
-                    if (!_cache.ContainsKey(type))
+                    if (!_cache.TryGetValue(type, out method))
                     {
                         method = handler
                             .GetType()
@@ -54,7 +54,7 @@ namespace SoftUnlimit.CQRS.Query
 
                         _cache.Add(type, method);
                     }
-                }
+            }
             return method;
         }
         /// <summary>
