@@ -35,7 +35,7 @@ namespace SoftUnlimit.Web.AspNet.Filter.Authorization
         protected override Task HandleRequirementAsync(AuthorizationHandlerContext context, CertificateAuthorizationRequirement requirement)
         {
             var cert = requirement.Certificate;
-            if (this._httpContext.HttpContext.Connection.ClientCertificate.Thumbprint != cert.Thumbprint)
+            if (this._httpContext.HttpContext.Connection.ClientCertificate?.Thumbprint != cert.Thumbprint)
                 context.Fail();
             context.Succeed(requirement);
 
