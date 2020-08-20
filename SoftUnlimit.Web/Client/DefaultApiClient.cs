@@ -14,9 +14,8 @@ namespace SoftUnlimit.Web.Client
     /// <summary>
     /// 
     /// </summary>
-    public abstract class DefaultApiClient : IApiClient
+    public class DefaultApiClient : IApiClient
     {
-        private readonly string _baseUrl;
         private readonly HttpClient _httpClient;
 
 
@@ -25,10 +24,11 @@ namespace SoftUnlimit.Web.Client
         /// </summary>
         /// <param name="httpClient"></param>
         /// <param name="baseUrl"></param>
-        public DefaultApiClient(HttpClient httpClient, string baseUrl)
+        public DefaultApiClient(HttpClient httpClient, string baseUrl = null)
         {
-            this._baseUrl = baseUrl;
             this._httpClient = httpClient;
+            if (!string.IsNullOrEmpty(baseUrl))
+                httpClient.BaseAddress = new Uri(baseUrl);
         }
 
         /// <summary>
@@ -41,8 +41,8 @@ namespace SoftUnlimit.Web.Client
         /// <returns></returns>
         public async Task<TModel> SendAsync<TModel>(HttpMethod method, string uri, object model = null)
         {
+            string completeUri = uri;
             string jsonContent = null;
-            string completeUri = string.Concat(this._baseUrl, uri);
 
             if (model != null)
             {
@@ -76,7 +76,7 @@ namespace SoftUnlimit.Web.Client
             if (method == HttpMethod.Get)
                 throw new NotSupportedException("Get method don't allow upload image.");
 
-            string completeUri = string.Concat(_baseUrl, uri);
+            string completeUri = uri;
             var content = new MultipartFormDataContent("Uploading... " + DateTime.Now.ToString(CultureInfo.InvariantCulture));
             foreach (var stream in streams)
                 content.Add(new StreamContent(stream), fileName, fileName);
@@ -94,7 +94,7 @@ namespace SoftUnlimit.Web.Client
         /// <param name="method"></param>
         /// <param name="uri"></param>
         /// <returns></returns>
-        protected abstract Task BeforeSendRequestAsync(HttpMethod method, string uri);
+        protected virtual Task BeforeSendRequestAsync(HttpMethod method, string uri) => Task.CompletedTask;
 
         #region Private Methods
 
