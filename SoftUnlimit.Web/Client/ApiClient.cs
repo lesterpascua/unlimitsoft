@@ -22,21 +22,19 @@ namespace SoftUnlimit.Web.Client
         /// <typeparam name="TModel"></typeparam>
         /// <param name="method"></param>
         /// <param name="uri"></param>
-        /// <param name="token"></param>
         /// <param name="model"></param>
         /// <returns></returns>
-        Task<TModel> SendAsync<TModel>(HttpMethod method, string uri, string token, object model = null);
+        Task<TModel> SendAsync<TModel>(HttpMethod method, string uri, object model = null);
         /// <summary>
         /// Upload file (multipart/form-data)
         /// </summary>
         /// <typeparam name="TModel"></typeparam>
         /// <param name="method"></param>
         /// <param name="uri"></param>
-        /// <param name="token"></param>
         /// <param name="fileName"></param>
         /// <param name="streams"></param>
         /// <param name="qs"></param>
         /// <returns></returns>
-        Task<TModel> UploadAsync<TModel>(HttpMethod method, string uri, string token, string fileName, IEnumerable<Stream> streams, object qs = null);
+        Task<TModel> UploadAsync<TModel>(HttpMethod method, string uri, string fileName, IEnumerable<Stream> streams, object qs = null);
     }
 }

@@ -14,21 +14,21 @@ namespace SoftUnlimit.Web.Client
     /// <summary>
     /// 
     /// </summary>
-    public class DefaultApiClient : IApiClient
+    public abstract class DefaultApiClient : IApiClient
     {
         private readonly string _baseUrl;
-        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly HttpClient _httpClient;
 
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="httpClientFactory"></param>
+        /// <param name="httpClient"></param>
         /// <param name="baseUrl"></param>
-        public DefaultApiClient(IHttpClientFactory httpClientFactory, string baseUrl)
+        public DefaultApiClient(HttpClient httpClient, string baseUrl)
         {
             this._baseUrl = baseUrl;
-            this._httpClientFactory = httpClientFactory;
+            this._httpClient = httpClient;
         }
 
         /// <summary>
@@ -37,10 +37,9 @@ namespace SoftUnlimit.Web.Client
         /// <typeparam name="TModel"></typeparam>
         /// <param name="method"></param>
         /// <param name="uri"></param>
-        /// <param name="token"></param>
         /// <param name="model"></param>
         /// <returns></returns>
-        public async Task<TModel> SendAsync<TModel>(HttpMethod method, string uri, string token, object model = null)
+        public async Task<TModel> SendAsync<TModel>(HttpMethod method, string uri, object model = null)
         {
             string jsonContent = null;
             string completeUri = string.Concat(this._baseUrl, uri);
@@ -58,8 +57,8 @@ namespace SoftUnlimit.Web.Client
             if (jsonContent != null)
                 httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            var httpClient = await this.BeforeSendRequestAsync(method, uri, token);
-            return await this.SendWithContentAsync<TModel>(httpClient, method, completeUri, httpContent);
+            await this.BeforeSendRequestAsync(method, uri);
+            return await this.SendWithContentAsync<TModel>(_httpClient, method, completeUri, httpContent);
         }
         /// <summary>
         /// 
@@ -72,12 +71,12 @@ namespace SoftUnlimit.Web.Client
         /// <param name="streams"></param>
         /// <param name="qs"></param>
         /// <returns></returns>
-        public async Task<TModel> UploadAsync<TModel>(HttpMethod method, string uri, string token, string fileName, IEnumerable<Stream> streams, object qs = null)
+        public async Task<TModel> UploadAsync<TModel>(HttpMethod method, string uri, string fileName, IEnumerable<Stream> streams, object qs = null)
         {
             if (method == HttpMethod.Get)
                 throw new NotSupportedException("Get method don't allow upload image.");
 
-            string completeUri = string.Concat(this._baseUrl, uri);
+            string completeUri = string.Concat(_baseUrl, uri);
             var content = new MultipartFormDataContent("Uploading... " + DateTime.Now.ToString(CultureInfo.InvariantCulture));
             foreach (var stream in streams)
                 content.Add(new StreamContent(stream), fileName, fileName);
@@ -85,35 +84,17 @@ namespace SoftUnlimit.Web.Client
             if (qs != null)
                 completeUri += string.Concat('?', await ObjectUtils.ToQueryString(qs));
 
-            var httpClient = await this.BeforeSendRequestAsync(method, uri, token);
-            return await this.SendWithContentAsync<TModel>(httpClient, method, completeUri, content);
+            await BeforeSendRequestAsync(method, uri);
+            return await this.SendWithContentAsync<TModel>(_httpClient, method, completeUri, content);
         }
 
-        /// <summary>
-        /// Set tocken in auth header.
-        /// </summary>
-        /// <param name="httpClient"></param>
-        /// <param name="token"></param>
-        protected void AddBearerToken(HttpClient httpClient, string token)
-        {
-            //JwtBearerDefaults.AuthenticationScheme
-            if (!string.IsNullOrWhiteSpace(token))
-                httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        }
         /// <summary>
         /// Performs operations before request.
         /// </summary>
         /// <param name="method"></param>
         /// <param name="uri"></param>
-        /// <param name="token"></param>
         /// <returns></returns>
-        protected virtual Task<HttpClient> BeforeSendRequestAsync(HttpMethod method, string uri, string token)
-        {
-            var httpClient = this._httpClientFactory.CreateClient(token);
-
-            this.AddBearerToken(httpClient, token);
-            return Task.FromResult(httpClient);
-        }
+        protected abstract Task BeforeSendRequestAsync(HttpMethod method, string uri);
 
         #region Private Methods
 
