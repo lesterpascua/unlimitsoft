@@ -5,8 +5,6 @@ VisualStudioVersion = 16.0.29418.71
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UnitTest", "UnitTest", "{91A68341-353D-4C30-86F8-50B2D19BBA38}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Next", "Next", "{E7E9346D-EC6E-436B-BB74-623181DC6A8A}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.WorkerAdapter", "SoftUnlimit.WorkerAdapter\SoftUnlimit.WorkerAdapter.csproj", "{60F1BD37-E58B-444D-8F42-C4AFB4061D09}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.AutoMapper", "SoftUnlimit.AutoMapper\SoftUnlimit.AutoMapper.csproj", "{F28C13CB-BD15-4EDC-AAF3-211D6838D2AE}"
@@ -31,7 +29,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "App.Manual.Tests", "App.Man
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.Data.Tests", "SoftUnlimit.Data.Tests\SoftUnlimit.Data.Tests.csproj", "{E3026ED6-A483-466D-9F4D-FB6A1A1F7442}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoftUnlimit.Web.AspNet", "SoftUnlimit.Web.AspNet\SoftUnlimit.Web.AspNet.csproj", "{514C91E5-E803-40D2-8E55-E33DB146A09D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.Web.AspNet", "SoftUnlimit.Web.AspNet\SoftUnlimit.Web.AspNet.csproj", "{514C91E5-E803-40D2-8E55-E33DB146A09D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

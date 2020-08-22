@@ -11,6 +11,11 @@ namespace SoftUnlimit.Security.Cryptography
     public interface IIdGenerator<T> : IEnumerable<T>
     {
         /// <summary>
+        /// Id of the generator.
+        /// </summary>
+        string Id { get; }
+
+        /// <summary>
         /// Generates new identifier every time the method is called
         /// </summary>
         /// <returns>new identifier</returns>

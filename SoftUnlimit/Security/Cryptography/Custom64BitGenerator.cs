@@ -61,8 +61,14 @@ namespace SoftUnlimit.Security.Cryptography
             this._identifierBits = settings.IdentifierBits;
 
             this._timestampLeftShift = this._identifierBits + this._sequenceBits;
+
+            this.Id = identifier.ToString();
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Id { get; }
         /// <summary>
         /// 
         /// </summary>

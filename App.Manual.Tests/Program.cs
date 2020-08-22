@@ -37,6 +37,10 @@ using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading.Tasks;
+using Apache.NMS.ActiveMQ;
+using Apache.NMS;
+using Apache.NMS.ActiveMQ.Commands;
+using System.Threading;
 
 namespace SoftUnlimit.CQRS.Test
 {
@@ -143,7 +147,7 @@ namespace SoftUnlimit.CQRS.Test
 
     }
 
-    static class Program
+    static class Program1
     {
         static async Task Main()
         {
@@ -265,6 +269,158 @@ namespace SoftUnlimit.CQRS.Test
         }
     }
 
+    static class Program
+    {
+        private delegate void MessageReceivedDelegate(string message);
+        private class SimpleTopicSubscriber : IDisposable
+        {
+            private readonly string _topicName;
+            private readonly ConnectionFactory _connectionFactory;
+            private readonly IConnection _connection;
+            private readonly ISession _session;
+            private readonly IMessageConsumer _consumer;
+            private bool _isDisposed = false;
+
+            public event MessageReceivedDelegate OnMessageReceived;
+
+            public SimpleTopicSubscriber(string topicName, string brokerUri, string clientId, string consumerId, bool useQueue)
+            {
+                string selector = "2 > 1";
+                _topicName = topicName;
+                _connectionFactory = new ConnectionFactory(brokerUri);
+                _connection = _connectionFactory.CreateConnection();
+                _connection.ClientId = clientId;
+                _connection.Start();
+                _session = _connection.CreateSession();
+                
+                IDestination destination = useQueue ? 
+                    new ActiveMQQueue(_topicName) as IDestination : new ActiveMQTopic(_topicName) as IDestination;
+
+                _consumer = useQueue ? 
+                    _session.CreateConsumer(destination, selector, false) : _session.CreateDurableConsumer((ITopic)destination, consumerId, selector, false);
+
+                _consumer.Listener += new MessageListener(OnMessage);
+            }
+
+            public void OnMessage(IMessage message)
+            {
+                ITextMessage textMessage = message as ITextMessage;
+                OnMessageReceived?.Invoke(textMessage.Text);
+            }
+
+            public void Dispose()
+            {
+                if (!_isDisposed)
+                {
+                    _consumer.Dispose();
+                    _session.Dispose();
+                    _connection.Dispose();
+                    _isDisposed = true;
+                }
+            }
+        }
+        private class SimpleTopicPublisher : IDisposable
+        {
+            private readonly string _topicName = null;
+            private readonly IConnectionFactory _connectionFactory;
+            private readonly IConnection _connection;
+            private readonly ISession _session;
+            private readonly IMessageProducer _producer;
+            private bool _isDisposed = false;
+
+            public SimpleTopicPublisher(string topicName, string brokerUri, bool useQueue)
+            {
+                _topicName = topicName;
+                _connectionFactory = new ConnectionFactory(brokerUri);
+                _connection = _connectionFactory.CreateConnection();
+                _connection.Start();
+                _session = _connection.CreateSession();
+
+                IDestination destination = useQueue ? 
+                    new ActiveMQQueue(_topicName) as IDestination : new ActiveMQTopic(_topicName) as IDestination;
+                _producer = _session.CreateProducer(destination);
+            }
+
+            public void SendMessage(string message)
+            {
+                if (_isDisposed)
+                    throw new ObjectDisposedException(this.GetType().FullName);
+
+                ITextMessage textMessage = _session.CreateTextMessage(message);
+                _producer.Send(textMessage);
+            }
+
+            #region IDisposable Members
+
+            public void Dispose()
+            {
+                if (!_isDisposed)
+                {
+                    _producer.Dispose();
+                    _session.Dispose();
+                    _connection.Dispose();
+                    _isDisposed = true;
+                }
+            }
+
+            #endregion
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public static void Main()
+        {
+            const bool useQueue = true;
+            const string BROKER = "tcp://localhost:61616";
+            const string TOPIC_NAME = "LesterTopic";
+
+            CancellationTokenSource cts = new CancellationTokenSource();
+
+            var subscriber1Task = Task.Run(() => {
+                const string CLIENT_ID = "ActiveMqFirstSubscriber1";
+                const string CONSUMER_ID = "ActiveMqFirstSubscriber";
+
+
+                Thread.Sleep(10000);
+
+                using SimpleTopicSubscriber subscriber = new SimpleTopicSubscriber(TOPIC_NAME, BROKER, CLIENT_ID, CONSUMER_ID, useQueue);
+                subscriber.OnMessageReceived += new MessageReceivedDelegate(Subscriber_OnMessageReceived);
+                Console.WriteLine("Press any key to exit...");
+                Console.ReadKey();
+            }, cts.Token);
+            var subscriber2Task = Task.Run(() => {
+                const string CLIENT_ID = "ActiveMqFirstSubscriber2";
+                const string CONSUMER_ID = "ActiveMqFirstSubscriber";
+
+                Thread.Sleep(10000);
+
+                using SimpleTopicSubscriber subscriber = new SimpleTopicSubscriber(TOPIC_NAME, BROKER, CLIENT_ID, CONSUMER_ID, useQueue);
+                subscriber.OnMessageReceived += new MessageReceivedDelegate(Subscriber_OnMessageReceived);
+                Console.WriteLine("Press any key to exit...");
+                Console.ReadKey();
+            }, cts.Token);
+
+            var publicherTask = Task.Run(() => {
+                using var publisher = new SimpleTopicPublisher(TOPIC_NAME, BROKER, useQueue);
+                publisher.SendMessage("Mensaje 1");
+                publisher.SendMessage("Mensaje 2");
+
+                Console.ReadKey();
+            }, cts.Token);
+
+            Console.ReadKey();
+            cts.Cancel();
+            subscriber1Task.Wait();
+            publicherTask.Wait();
+        }
+        static void Subscriber_OnMessageReceived(string message)
+        {
+            Console.WriteLine(message);
+        }
+
+    }
     public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<TestDbContext>
     {
         TestDbContext IDesignTimeDbContextFactory<TestDbContext>.CreateDbContext(string[] args)

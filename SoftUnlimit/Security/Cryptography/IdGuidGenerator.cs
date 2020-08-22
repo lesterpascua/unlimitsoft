@@ -55,12 +55,18 @@ namespace SoftUnlimit.Security.Cryptography
             if (identifier.Length != 6)
                 throw new ArgumentException("Parameter must be an array of length equal 6.", nameof(identifier));
 
-            this._startEpoch = epoch;
-            this._id0 = identifier[0]; this._id1 = identifier[1];
-            this._id2 = identifier[2]; this._id3 = identifier[3];
-            this._id4 = identifier[4]; this._id5 = identifier[5];
+            _startEpoch = epoch;
+            Id = Convert.ToBase64String(identifier);
+            _id0 = identifier[0]; _id1 = identifier[1];
+            _id2 = identifier[2]; _id3 = identifier[3];
+            _id4 = identifier[4]; _id5 = identifier[5];
         }
-        
+
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public string Id { get; }
 
         #region Public Methods
 
@@ -82,6 +88,11 @@ namespace SoftUnlimit.Security.Cryptography
             while (true)
                 yield return GenerateId();
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString() => this.Id;
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
         {
             return GetEnumerator();
