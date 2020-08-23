@@ -1,6 +1,7 @@
 ﻿using Newtonsoft.Json;
 using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Event;
+using SoftUnlimit.Data;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -35,6 +36,49 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// Currenct snapshot in json representation
         /// </summary>
         object CurrState { get; }
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="TEntity"></typeparam>
+    /// <typeparam name="TKey"></typeparam>
+    [Serializable]
+    public abstract class TraceVersionedEvent<TEntity, TKey> : Event<TKey>, IVersionedEvent
+        where TEntity: class
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sourceID"></param>
+        /// <param name="version"></param>
+        /// <param name="creator"></param>
+        /// <param name="prevState"></param>
+        /// <param name="currState"></param>
+        /// <param name="history">History of previous event at current.</param>
+        /// <param name="body"></param>
+        public TraceVersionedEvent(TKey sourceID, long version, ICommand creator, TEntity prevState, TEntity currState, IVersionedEvent[] history, object body)
+        { }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public long Version { get; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public DateTime Created { get; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand Command { get; }
+        /// <summary>
+        /// Previous snapshot of entity.
+        /// </summary>
+        public object PrevState { get; }
+        /// <summary>
+        /// Currenct snapshot of entity.
+        /// </summary>
+        public object CurrState { get; }
     }
     /// <summary>
     /// 

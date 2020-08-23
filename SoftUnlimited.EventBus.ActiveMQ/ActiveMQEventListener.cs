@@ -23,7 +23,7 @@ namespace SoftUnlimited.EventBus.ActiveMQ
 
         private readonly IDestination _destination;
         private readonly IMessageConsumer _consumer;
-        private readonly Func<IEvent, Task> _processor;
+        private readonly Func<VersionedEventPayload, Task> _processor;
 
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace SoftUnlimited.EventBus.ActiveMQ
         /// <param name="clientId"></param>
         /// <param name="queue"></param>
         /// <param name="brokerUri"></param>
-        public ActiveMQEventListener(string clientId, string queue, string brokerUri, Func<IEvent, Task> processor)
+        public ActiveMQEventListener(string clientId, string queue, string brokerUri, Func<VersionedEventPayload, Task> processor)
         {
             _processor = processor;
             _connectionFactory = new ConnectionFactory(brokerUri);
@@ -44,7 +44,6 @@ namespace SoftUnlimited.EventBus.ActiveMQ
 
             _destination = new ActiveMQQueue(queue);
             _consumer = _session.CreateConsumer(_destination);
-            
         }
 
         /// <summary>
@@ -79,8 +78,12 @@ namespace SoftUnlimited.EventBus.ActiveMQ
 
         private void OnMessageReceive(IMessage message)
         {
-            if (message is IObjectMessage objMessage && objMessage.Body is IEvent @event)
-                _processor(@event).Wait();
+            if (message is IObjectMessage objectMessage)
+            {
+                var body = objectMessage.Body;
+                if (body is VersionedEventPayload versionedEvent)
+                    _processor(versionedEvent).Wait();
+            }
         }
 
         #endregion

@@ -2,6 +2,7 @@
 using Apache.NMS.ActiveMQ;
 using Apache.NMS.ActiveMQ.Commands;
 using SoftUnlimit.CQRS.Event;
+using SoftUnlimit.CQRS.EventSourcing;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,14 +64,14 @@ namespace SoftUnlimited.EventBus.ActiveMQ
         /// <summary>
         /// Publish event in all queues.
         /// </summary>
-        /// <param name="event"></param>
+        /// <param name="msg"></param>
         /// <returns></returns>
-        public Task PublishAsync(IEvent @event)
+        public Task PublishAsync(VersionedEventPayload eventPayload)
         {
             if (_isDisposed)
                 throw new ObjectDisposedException(this.GetType().FullName);
 
-            var message = _session.CreateObjectMessage(@event);
+            var message = _session.CreateObjectMessage(eventPayload);
             foreach (var producer in _producers)
                 producer.Send(message);
 

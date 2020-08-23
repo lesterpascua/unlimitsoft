@@ -8,6 +8,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
     /// <summary>
     /// 
     /// </summary>
+    [Serializable]
     public class VersionedEventPayload
     {
         /// <summary>

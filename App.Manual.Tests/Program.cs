@@ -293,45 +293,46 @@ namespace SoftUnlimit.CQRS.Test
 
             CancellationTokenSource cts = new CancellationTokenSource();
 
-            var subscriber1Task = Task.Run(() => {
-                const string CLIENT_ID = "AppConfigMS_1";
+            //var subscriber1Task = Task.Run(() => {
+            //    const string CLIENT_ID = "AppConfigMS_1";
 
-                using var listener = new ActiveMQEventListener(CLIENT_ID, QUEUE_NAME, BROKER, async @event => {
-                    Console.WriteLine(@event.EntityID);
-                    await Task.CompletedTask;
-                });
-                listener.Listen();
+            //    using var listener = new ActiveMQEventListener(CLIENT_ID, QUEUE_NAME, BROKER, async payload => {
+            //        var @event = payload as IEvent;
+            //        Console.WriteLine(@event.EntityID);
+            //        await Task.CompletedTask;
+            //    });
+            //    listener.Listen();
 
-                Console.WriteLine("Press any key to exit to stop listener...");
-                Console.ReadKey();
-            }, cts.Token);
+            //    Console.WriteLine("Press any key to exit to stop listener...");
+            //    Console.ReadKey();
+            //}, cts.Token);
 
-            var publicherTask = Task.Run(async () => {
-                using var bus = new ActiveMQEventBus(new string[] { QUEUE_NAME }, BROKER);
+            //var publicherTask = Task.Run(async () => {
+            //    using var bus = new ActiveMQEventBus(new string[] { QUEUE_NAME }, BROKER);
 
-                Thread.Sleep(2000);
-                var e1 = new MyEvent(1, Guid.NewGuid(), 2, false, new CustomerCreateCommand { }, "prevState", "currState", 10);
-                await bus.PublishAsync(e1);
+            //    Thread.Sleep(2000);
+            //    var e1 = new MyEvent(1, Guid.NewGuid(), 2, false, new CustomerCreateCommand { }, "prevState", "currState", 10);
+            //    await bus.PublishAsync(e1);
 
-                Thread.Sleep(60000);
-                var e2 = new MyEvent(2, Guid.NewGuid(), 1, true, new CustomerCreateCommand {
-                    CID = "84041607065",
-                    LastName = "Pastrana",
-                    Name = "Lester",
-                    CommandProps = new CommandProps {
-                        Id = "6F718C48-9D5F-4A3B-A109-D8A52BE93139",
-                        Silent = false
-                    }
-                }, "prevState", "currState", 20);
-                await bus.PublishAsync(e2);
+            //    Thread.Sleep(60000);
+            //    var e2 = new MyEvent(2, Guid.NewGuid(), 1, true, new CustomerCreateCommand {
+            //        CID = "84041607065",
+            //        LastName = "Pastrana",
+            //        Name = "Lester",
+            //        CommandProps = new CommandProps {
+            //            Id = "6F718C48-9D5F-4A3B-A109-D8A52BE93139",
+            //            Silent = false
+            //        }
+            //    }, "prevState", "currState", 20);
+            //    await bus.PublishAsync(e2);
 
-                Console.ReadKey();
-            }, cts.Token);
+            //    Console.ReadKey();
+            //}, cts.Token);
 
             Console.ReadKey();
             cts.Cancel();
-            subscriber1Task.Wait();
-            publicherTask.Wait();
+            //subscriber1Task.Wait();
+            //publicherTask.Wait();
         }
 
     }

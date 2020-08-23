@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SoftUnlimit.CQRS.EventSourcing;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,8 +14,8 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Publis event in bus.
         /// </summary>
-        /// <param name="event"></param>
+        /// <param name="eventPayload"></param>
         /// <returns></returns>
-        Task PublishAsync(IEvent @event);
+        Task PublishAsync(VersionedEventPayload eventPayload);
     }
 }
