@@ -10,6 +10,7 @@ namespace SoftUnlimit.CQRS.Command
     /// <summary>
     /// Base class for all command.
     /// </summary>
+    [Serializable]
     public abstract class Command<T> : ICommand
         where T : CommandProps 
     {
@@ -28,6 +29,7 @@ namespace SoftUnlimit.CQRS.Command
     /// <summary>
     /// 
     /// </summary>
+    [Serializable]
     public sealed class SealedCommand : Command<CommandProps>
     {
         /// <summary>

@@ -31,6 +31,7 @@ namespace SoftUnlimit.CQRS.Event
     /// <summary>
     /// Represents an event message.
     /// </summary>
+    [Serializable]
     public abstract class Event<Key> : IEvent
     {
         /// <summary>

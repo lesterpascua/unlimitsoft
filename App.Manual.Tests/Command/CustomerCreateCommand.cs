@@ -16,7 +16,7 @@ namespace SoftUnlimit.CQRS.Test.Command
     public interface IMyCommandHandler<T> : ICommandHandler<T> where T : ICommand { }
 
 
-
+    [Serializable]
     [MasterEvent(typeof(CustomerCreateEvent))]
     public class CustomerCreateCommand : Command<CommandProps>
     {

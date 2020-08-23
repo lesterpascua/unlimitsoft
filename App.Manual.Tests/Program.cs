@@ -41,6 +41,7 @@ using Apache.NMS.ActiveMQ;
 using Apache.NMS;
 using Apache.NMS.ActiveMQ.Commands;
 using System.Threading;
+using SoftUnlimited.EventBus.ActiveMQ;
 
 namespace SoftUnlimit.CQRS.Test
 {
@@ -269,143 +270,60 @@ namespace SoftUnlimit.CQRS.Test
         }
     }
 
+
+    [Serializable]
+    public class MyEvent : VersionedEvent<Guid>
+    {
+        public MyEvent(long entityID, Guid sourceID, long version, bool isDomainEvent, ICommand command, object prevState, object currState, object body = null)
+            : base(entityID, sourceID, version, isDomainEvent, command, prevState, currState, body)
+        {
+        }
+    }
+
     static class Program
     {
-        private delegate void MessageReceivedDelegate(string message);
-        private class SimpleTopicSubscriber : IDisposable
-        {
-            private readonly string _topicName;
-            private readonly ConnectionFactory _connectionFactory;
-            private readonly IConnection _connection;
-            private readonly ISession _session;
-            private readonly IMessageConsumer _consumer;
-            private bool _isDisposed = false;
-
-            public event MessageReceivedDelegate OnMessageReceived;
-
-            public SimpleTopicSubscriber(string topicName, string brokerUri, string clientId, string consumerId, bool useQueue)
-            {
-                string selector = "2 > 1";
-                _topicName = topicName;
-                _connectionFactory = new ConnectionFactory(brokerUri);
-                _connection = _connectionFactory.CreateConnection();
-                _connection.ClientId = clientId;
-                _connection.Start();
-                _session = _connection.CreateSession();
-                
-                IDestination destination = useQueue ? 
-                    new ActiveMQQueue(_topicName) as IDestination : new ActiveMQTopic(_topicName) as IDestination;
-
-                _consumer = useQueue ? 
-                    _session.CreateConsumer(destination, selector, false) : _session.CreateDurableConsumer((ITopic)destination, consumerId, selector, false);
-
-                _consumer.Listener += new MessageListener(OnMessage);
-            }
-
-            public void OnMessage(IMessage message)
-            {
-                ITextMessage textMessage = message as ITextMessage;
-                OnMessageReceived?.Invoke(textMessage.Text);
-            }
-
-            public void Dispose()
-            {
-                if (!_isDisposed)
-                {
-                    _consumer.Dispose();
-                    _session.Dispose();
-                    _connection.Dispose();
-                    _isDisposed = true;
-                }
-            }
-        }
-        private class SimpleTopicPublisher : IDisposable
-        {
-            private readonly string _topicName = null;
-            private readonly IConnectionFactory _connectionFactory;
-            private readonly IConnection _connection;
-            private readonly ISession _session;
-            private readonly IMessageProducer _producer;
-            private bool _isDisposed = false;
-
-            public SimpleTopicPublisher(string topicName, string brokerUri, bool useQueue)
-            {
-                _topicName = topicName;
-                _connectionFactory = new ConnectionFactory(brokerUri);
-                _connection = _connectionFactory.CreateConnection();
-                _connection.Start();
-                _session = _connection.CreateSession();
-
-                IDestination destination = useQueue ? 
-                    new ActiveMQQueue(_topicName) as IDestination : new ActiveMQTopic(_topicName) as IDestination;
-                _producer = _session.CreateProducer(destination);
-            }
-
-            public void SendMessage(string message)
-            {
-                if (_isDisposed)
-                    throw new ObjectDisposedException(this.GetType().FullName);
-
-                ITextMessage textMessage = _session.CreateTextMessage(message);
-                _producer.Send(textMessage);
-            }
-
-            #region IDisposable Members
-
-            public void Dispose()
-            {
-                if (!_isDisposed)
-                {
-                    _producer.Dispose();
-                    _session.Dispose();
-                    _connection.Dispose();
-                    _isDisposed = true;
-                }
-            }
-
-            #endregion
-        }
-
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
         public static void Main()
         {
-            const bool useQueue = true;
             const string BROKER = "tcp://localhost:61616";
-            const string TOPIC_NAME = "LesterTopic";
+            const string QUEUE_NAME = "AppConfig";
 
             CancellationTokenSource cts = new CancellationTokenSource();
 
             var subscriber1Task = Task.Run(() => {
-                const string CLIENT_ID = "ActiveMqFirstSubscriber1";
-                const string CONSUMER_ID = "ActiveMqFirstSubscriber";
+                const string CLIENT_ID = "AppConfigMS_1";
 
+                using var listener = new ActiveMQEventListener(CLIENT_ID, QUEUE_NAME, BROKER, async @event => {
+                    Console.WriteLine(@event.EntityID);
+                    await Task.CompletedTask;
+                });
+                listener.Listen();
 
-                Thread.Sleep(10000);
-
-                using SimpleTopicSubscriber subscriber = new SimpleTopicSubscriber(TOPIC_NAME, BROKER, CLIENT_ID, CONSUMER_ID, useQueue);
-                subscriber.OnMessageReceived += new MessageReceivedDelegate(Subscriber_OnMessageReceived);
-                Console.WriteLine("Press any key to exit...");
-                Console.ReadKey();
-            }, cts.Token);
-            var subscriber2Task = Task.Run(() => {
-                const string CLIENT_ID = "ActiveMqFirstSubscriber2";
-                const string CONSUMER_ID = "ActiveMqFirstSubscriber";
-
-                Thread.Sleep(10000);
-
-                using SimpleTopicSubscriber subscriber = new SimpleTopicSubscriber(TOPIC_NAME, BROKER, CLIENT_ID, CONSUMER_ID, useQueue);
-                subscriber.OnMessageReceived += new MessageReceivedDelegate(Subscriber_OnMessageReceived);
-                Console.WriteLine("Press any key to exit...");
+                Console.WriteLine("Press any key to exit to stop listener...");
                 Console.ReadKey();
             }, cts.Token);
 
-            var publicherTask = Task.Run(() => {
-                using var publisher = new SimpleTopicPublisher(TOPIC_NAME, BROKER, useQueue);
-                publisher.SendMessage("Mensaje 1");
-                publisher.SendMessage("Mensaje 2");
+            var publicherTask = Task.Run(async () => {
+                using var bus = new ActiveMQEventBus(new string[] { QUEUE_NAME }, BROKER);
+
+                Thread.Sleep(2000);
+                var e1 = new MyEvent(1, Guid.NewGuid(), 2, false, new CustomerCreateCommand { }, "prevState", "currState", 10);
+                await bus.PublishAsync(e1);
+
+                Thread.Sleep(60000);
+                var e2 = new MyEvent(2, Guid.NewGuid(), 1, true, new CustomerCreateCommand {
+                    CID = "84041607065",
+                    LastName = "Pastrana",
+                    Name = "Lester",
+                    CommandProps = new CommandProps {
+                        Id = "6F718C48-9D5F-4A3B-A109-D8A52BE93139",
+                        Silent = false
+                    }
+                }, "prevState", "currState", 20);
+                await bus.PublishAsync(e2);
 
                 Console.ReadKey();
             }, cts.Token);
@@ -414,10 +332,6 @@ namespace SoftUnlimit.CQRS.Test
             cts.Cancel();
             subscriber1Task.Wait();
             publicherTask.Wait();
-        }
-        static void Subscriber_OnMessageReceived(string message)
-        {
-            Console.WriteLine(message);
         }
 
     }

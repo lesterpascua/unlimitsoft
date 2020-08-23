@@ -39,6 +39,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
     /// <summary>
     /// 
     /// </summary>
+    [Serializable]
     public abstract class VersionedEvent<Key> : Event<Key>, IVersionedEvent
     {
         /// <summary>

@@ -9,6 +9,7 @@ namespace SoftUnlimit.CQRS.Command
     /// <summary>
     /// Information about command.
     /// </summary>
+    [Serializable]
     public class CommandProps
     {
         /// <summary>
