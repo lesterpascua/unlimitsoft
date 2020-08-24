@@ -6,12 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.CQRS.EventSourcing
+namespace SoftUnlimit.CQRS.EventSourcing.Binary
 {
     /// <summary>
     /// 
     /// </summary>
-    public abstract class DefaultMediatorDispatchEventSourced : IMediatorDispatchEventSourced
+    public abstract class BinaryMediatorDispatchEventSourced : IMediatorDispatchEventSourced
     {
         private readonly bool _skipDomain;
         private readonly IServiceProvider _provider;
@@ -21,7 +21,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="skipDomain">If true not dispath domain event as optimized mechanims.</param>
-        public DefaultMediatorDispatchEventSourced(IServiceProvider provider, bool skipDomain = false)
+        public BinaryMediatorDispatchEventSourced(IServiceProvider provider, bool skipDomain = false)
         {
             this._provider = provider;
             this._skipDomain = skipDomain;
@@ -34,7 +34,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <summary>
         /// 
         /// </summary>
-        protected abstract IRepository<VersionedEventPayload> VersionedEventRepository { get; }
+        protected abstract IRepository<BinaryVersionedEventPayload> VersionedEventRepository { get; }
 
         /// <summary>
         /// 
@@ -43,13 +43,13 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <returns></returns>
         public virtual async Task DispatchEventsAsync(IEnumerable<IVersionedEvent> events)
         {
-            List<VersionedEventPayload> remoteEvents = new List<VersionedEventPayload>();
+            List<BinaryVersionedEventPayload> remoteEvents = new List<BinaryVersionedEventPayload>();
             foreach (var @event in events)
             {
                 @event.SourceID = ((IEntity)@event.CurrState).ID;
                 if (!@event.IsDomainEvent)
                 {
-                    var payload = new VersionedEventPayload(@event);
+                    var payload = new BinaryVersionedEventPayload(@event);
                     remoteEvents.Add(payload);
                     if (this._skipDomain)
                         continue;

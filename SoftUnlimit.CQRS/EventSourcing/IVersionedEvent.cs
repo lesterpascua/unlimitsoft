@@ -21,14 +21,6 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// </summary>
         long Version { get; }
         /// <summary>
-        /// 
-        /// </summary>
-        public string Name { get; }
-        /// <summary>
-        /// 
-        /// </summary>
-        DateTime Created { get; }
-        /// <summary>
         /// Command where event is originate.
         /// </summary>
         ICommand Creator { get; }
@@ -74,10 +66,6 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// 
         /// </summary>
         public long Version { get; protected set; }
-        /// <summary>
-        /// Get name of event
-        /// </summary>
-        public string Name => this.GetType().FullName;
         /// <summary>
         /// 
         /// </summary>

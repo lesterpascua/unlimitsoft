@@ -23,6 +23,14 @@ namespace SoftUnlimit.CQRS.Event
         /// </summary>
         ushort WorkerID { get; }
         /// <summary>
+        /// Event creation date
+        /// </summary>
+        DateTime Created { get; }
+        /// <summary>
+        /// Event name general is the type fullname
+        /// </summary>
+        public string Name { get; }
+        /// <summary>
         /// Specify if an event belown to domain. This have optimization propouse.
         /// </summary>
         bool IsDomainEvent { get; }
@@ -73,7 +81,14 @@ namespace SoftUnlimit.CQRS.Event
         /// 
         /// </summary>
         public ushort WorkerID { get; protected set; }
-
+        /// <summary>
+        /// Event creation date
+        /// </summary>
+        public DateTime Created { get; protected set; }
+        /// <summary>
+        /// Get name of event
+        /// </summary>
+        public string Name => this.GetType().FullName;
         /// <summary>
         /// 
         /// </summary>

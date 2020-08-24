@@ -3,6 +3,7 @@ using Apache.NMS.ActiveMQ;
 using Apache.NMS.ActiveMQ.Commands;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.EventSourcing;
+using SoftUnlimit.CQRS.EventSourcing.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -23,7 +24,7 @@ namespace SoftUnlimited.EventBus.ActiveMQ
 
         private readonly IDestination _destination;
         private readonly IMessageConsumer _consumer;
-        private readonly Func<VersionedEventPayload, Task> _processor;
+        private readonly Func<MessageEvelop, Task> _processor;
 
 
         /// <summary>
@@ -32,7 +33,7 @@ namespace SoftUnlimited.EventBus.ActiveMQ
         /// <param name="clientId"></param>
         /// <param name="queue"></param>
         /// <param name="brokerUri"></param>
-        public ActiveMQEventListener(string clientId, string queue, string brokerUri, Func<VersionedEventPayload, Task> processor)
+        public ActiveMQEventListener(string clientId, string queue, string brokerUri, Func<MessageEvelop, Task> processor)
         {
             _processor = processor;
             _connectionFactory = new ConnectionFactory(brokerUri);
@@ -81,8 +82,8 @@ namespace SoftUnlimited.EventBus.ActiveMQ
             if (message is IObjectMessage objectMessage)
             {
                 var body = objectMessage.Body;
-                if (body is VersionedEventPayload versionedEvent)
-                    _processor(versionedEvent).Wait();
+                if (body is MessageEvelop envelop)
+                    _processor(envelop).Wait();
             }
         }
 

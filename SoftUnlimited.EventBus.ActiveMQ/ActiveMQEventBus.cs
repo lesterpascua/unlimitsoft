@@ -3,6 +3,8 @@ using Apache.NMS.ActiveMQ;
 using Apache.NMS.ActiveMQ.Commands;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.EventSourcing;
+using SoftUnlimit.CQRS.EventSourcing.Binary;
+using SoftUnlimit.CQRS.EventSourcing.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -61,21 +63,44 @@ namespace SoftUnlimited.EventBus.ActiveMQ
                 _connection.Dispose();
             }
         }
+
         /// <summary>
         /// Publish event in all queues.
         /// </summary>
-        /// <param name="msg"></param>
+        /// <param name="event"></param>
         /// <returns></returns>
-        public Task PublishAsync(VersionedEventPayload eventPayload)
+        public Task PublishEventAsync(IEvent @event) => this.PublishAsync(@event, MessageType.Event);
+        /// <summary>
+        /// Publish event in all queues.
+        /// </summary>
+        /// <param name="event"></param>
+        /// <returns></returns>
+        public Task PublishJsonEventPayloadAsync(JsonEventPayload @event) => this.PublishAsync(@event, MessageType.Json);
+        /// <summary>
+        /// Publish event in all queues.
+        /// </summary>
+        /// <param name="event"></param>
+        /// <returns></returns>
+        public Task PublishBinaryEventPayloadAsync(BinaryEventPayload @event) => this.PublishAsync(@event, MessageType.Binary);
+
+        #region Private Methods 
+
+        private Task PublishAsync(object graph, MessageType type)
         {
             if (_isDisposed)
                 throw new ObjectDisposedException(this.GetType().FullName);
 
-            var message = _session.CreateObjectMessage(eventPayload);
+            var message = _session.CreateObjectMessage(
+                new MessageEvelop {
+                    Messaje = graph,
+                    Type = type
+                });
             foreach (var producer in _producers)
                 producer.Send(message);
 
             return Task.CompletedTask;
         }
+
+        #endregion
     }
 }

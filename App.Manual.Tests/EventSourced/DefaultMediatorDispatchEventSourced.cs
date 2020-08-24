@@ -4,6 +4,7 @@ using Newtonsoft.Json;
 using SoftUnlimit.CQRS.Data;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.EventSourcing;
+using SoftUnlimit.CQRS.EventSourcing.Json;
 using SoftUnlimit.CQRS.Test.Data;
 using SoftUnlimit.CQRS.Test.Model;
 using SoftUnlimit.Data;
@@ -17,7 +18,7 @@ using System.Threading.Tasks;
 
 namespace SoftUnlimit.CQRS.Test.EventSourced
 {
-    public class MyDefaultMediatorDispatchEventSourced : DefaultMediatorDispatchEventSourced
+    public class MyDefaultMediatorDispatchEventSourced : JsonMediatorDispatchEventSourced
     {
         private readonly IServiceProvider _provider;
         private readonly IEventDispatcherWithServiceProvider _serviceProviderEventDispatcher;
@@ -35,6 +36,6 @@ namespace SoftUnlimit.CQRS.Test.EventSourced
 
         protected override IEventDispatcherWithServiceProvider EventDispatcher => throw new NotImplementedException();
 
-        protected override IRepository<VersionedEventPayload> VersionedEventRepository => throw new NotImplementedException();
+        protected override IRepository<JsonVersionedEventPayload> VersionedEventRepository => throw new NotImplementedException();
     }
 }

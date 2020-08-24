@@ -42,6 +42,7 @@ using Apache.NMS;
 using Apache.NMS.ActiveMQ.Commands;
 using System.Threading;
 using SoftUnlimited.EventBus.ActiveMQ;
+using SoftUnlimit.CQRS.EventSourcing.Json;
 
 namespace SoftUnlimit.CQRS.Test
 {
@@ -228,14 +229,14 @@ namespace SoftUnlimit.CQRS.Test
 
             services.AddScoped<ICQRSUnitOfWork, TestDbContext>((provider) => provider.GetService<TestDbContext>());
 
-            services.AddScoped<IRepository<VersionedEventPayload>>((provider) => {
+            services.AddScoped<IRepository<JsonVersionedEventPayload>>((provider) => {
                 var dbContext = provider.GetService<TestDbContext>();
-                return new EFRepository<VersionedEventPayload>(dbContext);
+                return new EFRepository<JsonVersionedEventPayload>(dbContext);
             });
 
             services.AddScoped<IEventSourcedRepository<Customer>>((provider) => {
-                var repository = provider.GetService<IQueryRepository<VersionedEventPayload>>();
-                return new EventSourcedRepository<Customer>(repository);
+                var repository = provider.GetService<IQueryRepository<JsonVersionedEventPayload>>();
+                return new JsonEventSourcedRepository<Customer>(repository);
             });
 
             var query = Assembly
