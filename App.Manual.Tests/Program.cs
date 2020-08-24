@@ -274,8 +274,8 @@ namespace SoftUnlimit.CQRS.Test
     [Serializable]
     public class MyEvent : VersionedEvent<Guid>
     {
-        public MyEvent(long entityID, Guid sourceID, long version, bool isDomainEvent, ICommand command, object prevState, object currState, object body = null)
-            : base(entityID, sourceID, version, isDomainEvent, command, prevState, currState, body)
+        public MyEvent(Guid sourceID, long version, bool isDomainEvent, ICommand command, object prevState, object currState, object body = null)
+            : base(sourceID, 1, 1, version, isDomainEvent, command, prevState, currState, body)
         {
         }
     }

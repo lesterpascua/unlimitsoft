@@ -23,11 +23,15 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <summary>
         /// 
         /// </summary>
+        public string Name { get; }
+        /// <summary>
+        /// 
+        /// </summary>
         DateTime Created { get; }
         /// <summary>
         /// Command where event is originate.
         /// </summary>
-        ICommand Command { get; }
+        ICommand Creator { get; }
         /// <summary>
         /// Previous snapshot in json representation.
         /// </summary>
@@ -40,70 +44,28 @@ namespace SoftUnlimit.CQRS.EventSourcing
     /// <summary>
     /// 
     /// </summary>
-    /// <typeparam name="TEntity"></typeparam>
-    /// <typeparam name="TKey"></typeparam>
     [Serializable]
-    public abstract class TraceVersionedEvent<TEntity, TKey> : Event<TKey>, IVersionedEvent
-        where TEntity: class
+    public abstract class VersionedEvent<TKey> : Event<TKey>, IVersionedEvent
     {
         /// <summary>
         /// 
         /// </summary>
         /// <param name="sourceID"></param>
-        /// <param name="version"></param>
-        /// <param name="creator"></param>
-        /// <param name="prevState"></param>
-        /// <param name="currState"></param>
-        /// <param name="history">History of previous event at current.</param>
-        /// <param name="body"></param>
-        public TraceVersionedEvent(TKey sourceID, long version, ICommand creator, TEntity prevState, TEntity currState, IVersionedEvent[] history, object body)
-        { }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public long Version { get; }
-        /// <summary>
-        /// 
-        /// </summary>
-        public DateTime Created { get; }
-        /// <summary>
-        /// 
-        /// </summary>
-        public ICommand Command { get; }
-        /// <summary>
-        /// Previous snapshot of entity.
-        /// </summary>
-        public object PrevState { get; }
-        /// <summary>
-        /// Currenct snapshot of entity.
-        /// </summary>
-        public object CurrState { get; }
-    }
-    /// <summary>
-    /// 
-    /// </summary>
-    [Serializable]
-    public abstract class VersionedEvent<Key> : Event<Key>, IVersionedEvent
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="entityID"></param>
-        /// <param name="sourceID"></param>
+        /// <param name="serviceID"></param>
+        /// <param name="workerID"></param>
         /// <param name="version"></param>
         /// <param name="isDomainEvent"></param>
         /// <param name="command"></param>
         /// <param name="prevState"></param>
         /// <param name="currState"></param>
         /// <param name="body"></param>
-        protected VersionedEvent(long entityID, Key sourceID, long version, bool isDomainEvent, ICommand command, object prevState, object currState, object body = null)
-            : base(entityID, sourceID, isDomainEvent, body)
+        protected VersionedEvent(TKey sourceID, uint serviceID, ushort workerID, long version, bool isDomainEvent, ICommand command, object prevState, object currState, object body = null)
+            : base(sourceID, serviceID, workerID, isDomainEvent, body)
         {
             this.Version = version;
             this.Created = DateTime.UtcNow;
 
-            this.Command = command;
+            this.Creator = command;
             this.PrevState = prevState;
             this.CurrState = currState;
         }
@@ -111,23 +73,27 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <summary>
         /// 
         /// </summary>
-        public long Version { get; }
+        public long Version { get; protected set; }
+        /// <summary>
+        /// Get name of event
+        /// </summary>
+        public string Name => this.GetType().FullName;
         /// <summary>
         /// 
         /// </summary>
-        public DateTime Created { get; }
+        public DateTime Created { get; protected set; }
         /// <summary>
         /// 
         /// </summary>
-        public ICommand Command { get; }
+        public ICommand Creator { get; protected set; }
         /// <summary>
         /// Previous snapshot of entity.
         /// </summary>
-        public object PrevState { get; }
+        public object PrevState { get; protected set; }
         /// <summary>
         /// Currenct snapshot of entity.
         /// </summary>
-        public object CurrState { get; }
+        public object CurrState { get; protected set; }
     }
 
     /// <summary>

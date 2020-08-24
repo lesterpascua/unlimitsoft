@@ -8,8 +8,8 @@ namespace SoftUnlimit.CQRS.Test.Model.Events
 {
     public class CustomerCreateEvent : VersionedEvent<Guid>
     {
-        public CustomerCreateEvent(long entityID, Guid sourceID, long version, ICommand cmd, Customer prevCustomer, Customer currCustomer, object body)
-            : base(entityID, sourceID, version, false, cmd, prevCustomer, currCustomer, body)
+        public CustomerCreateEvent(Guid sourceID, long version, ICommand cmd, Customer prevCustomer, Customer currCustomer, object body)
+            : base(sourceID, 1, 1, version, false, cmd, prevCustomer, currCustomer, body)
         {
         }
     }

@@ -17,6 +17,10 @@ namespace SoftUnlimit.CQRS.Command
         /// </summary>
         public string Id { get; set; }
         /// <summary>
+        /// Command category name (normally Type FullName)
+        /// </summary>
+        public string Name { get; set; }
+        /// <summary>
         /// Indicate if the command has deliver some response
         /// </summary>
         public bool Silent { get; set; }

@@ -23,27 +23,25 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="event"></param>
         public VersionedEventPayload(IVersionedEvent @event)
         {
-            this.EntityID = @event.EntityID;
-            this.SourceID = @event.SourceID.ToString();
-            this.Version = @event.Version;
+            SourceID = @event.SourceID.ToString();
+            ServiceID = @event.ServiceID;
+            WorkerID = @event.WorkerID;
+            Version = @event.Version;
 
-            this.Created = @event.Created;
-            this.EventType = @event.GetType().AssemblyQualifiedName;
+            Created = @event.Created;
+            Name = @event.Name;
+            EventType = @event.GetType().AssemblyQualifiedName;
 
-            this.IsPubliched = false;
-            this.IsDomainEvent = @event.IsDomainEvent;
+            IsPubliched = false;
+            IsDomainEvent = @event.IsDomainEvent;
 
-            this.ActionType = @event.Command?.GetType().AssemblyQualifiedName;
-            this.Body = JsonConvert.SerializeObject(@event.Body, VersionedEventSettings.JsonSerializerSettings);
-            this.Action = JsonConvert.SerializeObject(@event.Command, VersionedEventSettings.JsonSerializerSettings);
-            this.PrevSnapshot = JsonConvert.SerializeObject(@event.PrevState, VersionedEventSettings.JsonSerializerSettings);
-            this.CurrSnapshot = JsonConvert.SerializeObject(@event.CurrState, VersionedEventSettings.JsonSerializerSettings);
+            ActionType = @event.Creator?.GetType().AssemblyQualifiedName;
+            Body = JsonConvert.SerializeObject(@event.Body, VersionedEventSettings.JsonSerializerSettings);
+            Action = JsonConvert.SerializeObject(@event.Creator, VersionedEventSettings.JsonSerializerSettings);
+            PrevSnapshot = JsonConvert.SerializeObject(@event.PrevState, VersionedEventSettings.JsonSerializerSettings);
+            CurrSnapshot = JsonConvert.SerializeObject(@event.CurrState, VersionedEventSettings.JsonSerializerSettings);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        public long EntityID { get; set; }
         /// <summary>
         /// 
         /// </summary>
@@ -51,11 +49,25 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <summary>
         /// 
         /// </summary>
+        public uint ServiceID { get; set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public ushort WorkerID { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public long Version { get; set; }
         /// <summary>
         /// 
         /// </summary>
+        public string Name { get; }
+        /// <summary>
+        /// 
+        /// </summary>
         public DateTime Created { get; set; }
+
         /// <summary>
         /// 
         /// </summary>

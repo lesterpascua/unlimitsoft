@@ -11,19 +11,23 @@ namespace SoftUnlimit.CQRS.Event
     public interface IEvent
     {
         /// <summary>
-        /// Identifier for entity owner of this event. Avoid diferent entitities with equal SourceID generate collitions.
-        /// </summary>
-        long EntityID { get; }
-        /// <summary>
         /// Gets the identifier of the source originating the event.
         /// </summary>
         object SourceID { get; set; }
+        /// <summary>
+        /// Identifier of service where event is created
+        /// </summary>
+        uint ServiceID { get; }
+        /// <summary>
+        /// Identifier of the worker were the event is create.
+        /// </summary>
+        ushort WorkerID { get; }
         /// <summary>
         /// Specify if an event belown to domain. This have optimization propouse.
         /// </summary>
         bool IsDomainEvent { get; }
         /// <summary>
-        /// Event information
+        /// Event extra information
         /// </summary>
         public object Body { get; }
     }
@@ -32,7 +36,7 @@ namespace SoftUnlimit.CQRS.Event
     /// Represents an event message.
     /// </summary>
     [Serializable]
-    public abstract class Event<Key> : IEvent
+    public abstract class Event<TKey> : IEvent
     {
         /// <summary>
         /// 
@@ -43,26 +47,33 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="entityID"></param>
         /// <param name="sourceID"></param>
+        /// <param name="serviceID"></param>
+        /// <param name="workerID"></param>
         /// <param name="isDomain"></param>
         /// <param name="body"></param>
-        protected Event(long entityID, Key sourceID, bool isDomain, object body)
+        protected Event(TKey sourceID, uint serviceID, ushort workerID, bool isDomain, object body)
         {
-            this.EntityID = entityID;
-            this.SourceID = sourceID;
-            this.IsDomainEvent = isDomain;
-            this.Body = body;
+            SourceID = sourceID;
+            ServiceID = serviceID;
+            WorkerID = workerID;
+            IsDomainEvent = isDomain;
+            Body = body;
         }
 
         /// <summary>
-        /// Identifier for entity owner of this event. Avoid diferent entitities with equal SourceID generate collitions.
-        /// </summary>
-        public long EntityID { get; protected set; }
-        /// <summary>
         /// Gets the identifier of the source originating the event.
         /// </summary>
-        public Key SourceID { get; set; }
+        public TKey SourceID { get; protected set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public uint ServiceID { get; protected set; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public ushort WorkerID { get; protected set; }
+
         /// <summary>
         /// 
         /// </summary>
@@ -75,7 +86,7 @@ namespace SoftUnlimit.CQRS.Event
 
         #region Explicit Interface Implementation
 
-        object IEvent.SourceID { get => this.SourceID; set => this.SourceID = (Key)value; }
+        object IEvent.SourceID { get => this.SourceID; set => this.SourceID = (TKey)value; }
 
         #endregion
     }
