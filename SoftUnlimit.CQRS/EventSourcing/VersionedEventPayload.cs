@@ -35,11 +35,13 @@ namespace SoftUnlimit.CQRS.EventSourcing
             IsPubliched = false;
             IsDomainEvent = @event.IsDomainEvent;
 
-            ActionType = @event.Creator?.GetType().AssemblyQualifiedName;
+            CreatorType = @event.Creator?.GetType().AssemblyQualifiedName;
+            Creator = JsonConvert.SerializeObject(@event.Creator, VersionedEventSettings.JsonSerializerSettings);
+
+            PrevState = JsonConvert.SerializeObject(@event.PrevState, VersionedEventSettings.JsonSerializerSettings);
+            CurrState = JsonConvert.SerializeObject(@event.CurrState, VersionedEventSettings.JsonSerializerSettings);
+
             Body = JsonConvert.SerializeObject(@event.Body, VersionedEventSettings.JsonSerializerSettings);
-            Action = JsonConvert.SerializeObject(@event.Creator, VersionedEventSettings.JsonSerializerSettings);
-            PrevSnapshot = JsonConvert.SerializeObject(@event.PrevState, VersionedEventSettings.JsonSerializerSettings);
-            CurrSnapshot = JsonConvert.SerializeObject(@event.CurrState, VersionedEventSettings.JsonSerializerSettings);
         }
 
         /// <summary>
@@ -62,14 +64,14 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <summary>
         /// 
         /// </summary>
-        public string Name { get; }
+        public string Name { get; set; }
         /// <summary>
         /// 
         /// </summary>
         public DateTime Created { get; set; }
 
         /// <summary>
-        /// 
+        /// Event Type.
         /// </summary>
         public string EventType { get; set; }
         /// <summary>
@@ -87,19 +89,19 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <summary>
         /// Command serialized as Json
         /// </summary>
-        public string Action { get; set; }
+        public string Creator { get; set; }
         /// <summary>
         /// Command type
         /// </summary>
-        public string ActionType { get; set; }
+        public string CreatorType { get; set; }
         /// <summary>
         /// 
         /// </summary>
-        public string PrevSnapshot { get; set; }
+        public string PrevState { get; set; }
         /// <summary>
         /// 
         /// </summary>
-        public string CurrSnapshot { get; set; }
+        public string CurrState { get; set; }
         /// <summary>
         /// Event extra information
         /// </summary>

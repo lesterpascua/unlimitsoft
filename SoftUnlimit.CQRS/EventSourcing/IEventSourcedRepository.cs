@@ -59,7 +59,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
                 this._queryRepository.Find(p => p.SourceID.Equals(sourceID)).OrderByDescending(k => k.Version);
 
             VersionedEventPayload payload = await query.FirstOrDefaultAsync();
-            return JsonConvert.DeserializeObject<TEntity>(payload.CurrSnapshot, VersionedEventSettings.JsonDeserializerSettings);
+            return JsonConvert.DeserializeObject<TEntity>(payload.CurrState, VersionedEventSettings.JsonDeserializerSettings);
         }
     }
 }
