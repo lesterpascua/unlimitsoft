@@ -36,12 +36,14 @@ namespace SoftUnlimit.CQRS.EventSourcing
             IsDomainEvent = @event.IsDomainEvent;
 
             CreatorType = @event.Creator?.GetType().AssemblyQualifiedName;
-            Creator = JsonConvert.SerializeObject(@event.Creator, VersionedEventSettings.JsonSerializerSettings);
-
-            PrevState = JsonConvert.SerializeObject(@event.PrevState, VersionedEventSettings.JsonSerializerSettings);
-            CurrState = JsonConvert.SerializeObject(@event.CurrState, VersionedEventSettings.JsonSerializerSettings);
-
-            Body = JsonConvert.SerializeObject(@event.Body, VersionedEventSettings.JsonSerializerSettings);
+            if (@event.Created != null)
+                Creator = JsonConvert.SerializeObject(@event.Creator, VersionedEventSettings.JsonSerializerSettings);
+            if (@event.PrevState != null)
+                PrevState = JsonConvert.SerializeObject(@event.PrevState, VersionedEventSettings.JsonSerializerSettings);
+            if (@event.CurrState != null)
+                CurrState = JsonConvert.SerializeObject(@event.CurrState, VersionedEventSettings.JsonSerializerSettings);
+            if (@event.Body != null)
+                Body = JsonConvert.SerializeObject(@event.Body, VersionedEventSettings.JsonSerializerSettings);
         }
 
         /// <summary>
@@ -51,16 +53,16 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <summary>
         /// 
         /// </summary>
+        public long Version { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
         public uint ServiceID { get; set; }
         /// <summary>
         /// 
         /// </summary>
         public ushort WorkerID { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public long Version { get; set; }
         /// <summary>
         /// 
         /// </summary>
@@ -69,7 +71,6 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// 
         /// </summary>
         public DateTime Created { get; set; }
-
         /// <summary>
         /// Event Type.
         /// </summary>
@@ -82,10 +83,6 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// Indicate this event will process as domain allow optimization
         /// </summary>
         public bool IsDomainEvent { get; set; }
-        /// <summary>
-        /// Indicate this event will dispatcher for remote processing for all microservice.
-        /// </summary>
-        public bool IsRemoteEvent { get; }
         /// <summary>
         /// Command serialized as Json
         /// </summary>
