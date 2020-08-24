@@ -14,8 +14,6 @@ namespace SoftUnlimit.CQRS.Test.Model
     [Serializable]
     public class Customer : EventSourced<Guid>
     {
-        public const long EntityID = (MicroserviceSettings.MicroserviceID << 16) | 0;
-
 
         public Customer()
         {
@@ -59,7 +57,7 @@ namespace SoftUnlimit.CQRS.Test.Model
                 this.Addresses = new Collection<Address>();
             this.Addresses.Add(address);
         }
-        public void AddMasterEvent(ICommand cmd, Customer prevState = null, object body = null) => this.AddMasterEvent(cmd, EntityID, prevState, body);
+        public void AddMasterEvent(ICommand cmd, Customer prevState = null, object body = null) => this.AddMasterEvent(cmd, prevState, body);
 
         #endregion
     }

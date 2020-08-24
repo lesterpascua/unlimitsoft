@@ -69,10 +69,6 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <summary>
         /// 
         /// </summary>
-        public DateTime Created { get; protected set; }
-        /// <summary>
-        /// 
-        /// </summary>
         public ICommand Creator { get; protected set; }
         /// <summary>
         /// Previous snapshot of entity.

@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+﻿using Force.DeepCloner;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -31,9 +31,6 @@ namespace SoftUnlimit.Data
     public class Entity<Key> : IEntity
     {
         private int? _requestedHashCode;
-
-        private static readonly JsonSerializerSettings _settings = new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore };
-
 
         /// <summary>
         /// Identificator of entity.
@@ -83,13 +80,13 @@ namespace SoftUnlimit.Data
             if (this.GetType() != obj.GetType())
                 return false;
             Entity<Key> item = (Entity<Key>)obj;
-            return (item.IsTransient() || this.IsTransient()) ? false : item.ID.Equals(this.ID);
+            return !item.IsTransient() && !IsTransient() && item.ID.Equals(this.ID);
         }
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public virtual object Clone() => JsonConvert.DeserializeObject(JsonConvert.SerializeObject(this, _settings), this.GetType());
+        public virtual object Clone() => this.DeepClone();
 
 
         #endregion
