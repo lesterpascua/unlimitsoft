@@ -14,6 +14,10 @@ namespace SoftUnlimit.CQRS.Event
     public interface IEventBus
     {
         /// <summary>
+        /// Start event bus 
+        /// </summary>
+        void Start();
+        /// <summary>
         /// Publis event in bus.
         /// </summary>
         /// <param name="event"></param>
