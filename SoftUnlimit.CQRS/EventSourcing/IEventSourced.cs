@@ -74,15 +74,17 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// Add event asociate with the command and adding to the event list. Every time added a new event the version of entity increment in one.
         /// </summary>
         /// <param name="creator"></param>
+        /// <param name="serviceID"></param>
+        /// <param name="workerID"></param>
         /// <param name="currState">Actual entity snapshot.</param>
         /// <param name="prevState">Previous entity snapshot.</param>
         /// <param name="body"></param>
-        protected void AddMasterEvent(ICommand creator, object prevState, object currState = null, object body = null)
+        protected void AddMasterEvent(uint serviceID, ushort workerID, ICommand creator, object prevState, object currState = null, object body = null)
         {
             Type eventType = creator.GetMasterEvent();
             if (eventType != null)
             {
-                IVersionedEvent @event = this.EventFactory(eventType, ID, ++Version, creator, prevState, currState, body);
+                IVersionedEvent @event = this.EventFactory(eventType, ID, ++Version, serviceID, workerID, creator, prevState, currState, body);
                 this.AddVersionedEvent(@event);
             }
         }
@@ -98,11 +100,13 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="key"></param>
         /// <param name="version"></param>
         /// <param name="creator"></param>
+        /// <param name="serviceID"></param>
+        /// <param name="workerID"></param>
         /// <param name="currState">Actual entity snapshot.</param>
         /// <param name="prevState">Previous entity snapshot.</param>
         /// <param name="body"></param>
         /// <returns></returns>
-        protected virtual IVersionedEvent EventFactory(Type eventType, TKey key, long version, ICommand creator, object prevState, object currState, object body) => (IVersionedEvent)Activator.CreateInstance(eventType, this.ID, version, creator, prevState, currState, body);
+        protected virtual IVersionedEvent EventFactory(Type eventType, TKey key, long version, uint serviceID, ushort workerID, ICommand creator, object prevState, object currState, object body) => (IVersionedEvent)Activator.CreateInstance(eventType, this.ID, version, serviceID, workerID, creator, prevState, currState, body);
 
         #endregion
     }
