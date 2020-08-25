@@ -20,6 +20,7 @@ namespace SoftUnlimit.CQRS.Event
         private readonly IServiceProvider _provider;
 
         private static readonly object _sync = new object();
+        private static readonly Dictionary<string, bool> _register = new Dictionary<string, bool>();
         private static readonly Dictionary<KeyPair, MethodInfo> _cache = new Dictionary<KeyPair, MethodInfo>();
 
 
@@ -137,6 +138,12 @@ namespace SoftUnlimit.CQRS.Event
         }
 
         /// <summary>
+        /// If exist handler asociate with this event return true, false in other case.
+        /// </summary>
+        /// <param name="eventName"></param>
+        /// <returns></returns>
+        public static bool HasHadler(string eventName) => _register.ContainsKey(eventName);
+        /// <summary>
         /// Register EventHandler in DPI.
         /// </summary>
         /// <param name="services"></param>
@@ -163,9 +170,11 @@ namespace SoftUnlimit.CQRS.Event
 
                 foreach (var handlerInterface in commandHandlerImplementedInterfaces)
                 {
-                    var commandType = handlerInterface.GetGenericArguments().Single();
-                    var wellKnowCommandHandlerInterface = typeof(IEventHandler<>).MakeGenericType(commandType);
+                    var eventType = handlerInterface.GetGenericArguments().Single();
+                    var wellKnowCommandHandlerInterface = typeof(IEventHandler<>).MakeGenericType(eventType);
 
+                    if (!_register.ContainsKey(eventType.FullName))
+                        _register.Add(eventType.FullName, true);
                     services.AddScoped(wellKnowCommandHandlerInterface, commandHandlerImplementation);
                 }
             }
