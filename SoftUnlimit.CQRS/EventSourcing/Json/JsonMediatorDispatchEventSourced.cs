@@ -46,7 +46,6 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
             List<JsonVersionedEventPayload> remoteEvents = new List<JsonVersionedEventPayload>();
             foreach (var @event in events)
             {
-                @event.SourceID = ((IEntity)@event.CurrState).ID;
                 if (!@event.IsDomainEvent)
                 {
                     var payload = new JsonVersionedEventPayload(@event);

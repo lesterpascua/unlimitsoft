@@ -46,7 +46,6 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
             List<BinaryVersionedEventPayload> remoteEvents = new List<BinaryVersionedEventPayload>();
             foreach (var @event in events)
             {
-                @event.SourceID = ((IEntity)@event.CurrState).ID;
                 if (!@event.IsDomainEvent)
                 {
                     var payload = new BinaryVersionedEventPayload(@event);
