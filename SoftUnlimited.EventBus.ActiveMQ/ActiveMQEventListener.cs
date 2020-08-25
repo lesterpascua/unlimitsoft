@@ -7,6 +7,7 @@ using SoftUnlimit.CQRS.EventSourcing.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SoftUnlimited.EventBus.ActiveMQ
@@ -16,15 +17,17 @@ namespace SoftUnlimited.EventBus.ActiveMQ
     /// </summary>
     public class ActiveMQEventListener : IEventListener, IDisposable
     {
+        private bool _isListen = false;
         private bool _isDisposed = false;
 
-        private readonly ISession _session;
         private readonly IConnection _connection;
         private readonly ConnectionFactory _connectionFactory;
-
-        private readonly IDestination _destination;
-        private readonly IMessageConsumer _consumer;
+        private readonly string _queue;
         private readonly Func<MessageEvelop, Task> _processor;
+
+        private ISession _session;
+        private IDestination _destination;
+        private IMessageConsumer _consumer;
 
 
         /// <summary>
@@ -35,16 +38,11 @@ namespace SoftUnlimited.EventBus.ActiveMQ
         /// <param name="brokerUri"></param>
         public ActiveMQEventListener(string clientId, string queue, string brokerUri, Func<MessageEvelop, Task> processor)
         {
+            _queue = queue;
             _processor = processor;
             _connectionFactory = new ConnectionFactory(brokerUri);
             _connection = _connectionFactory.CreateConnection();
             _connection.ClientId = clientId;
-            _connection.Start();
-
-            _session = _connection.CreateSession();
-
-            _destination = new ActiveMQQueue(queue);
-            _consumer = _session.CreateConsumer(_destination);
         }
 
         /// <summary>
@@ -72,7 +70,17 @@ namespace SoftUnlimited.EventBus.ActiveMQ
         {
             if (_isDisposed)
                 throw new ObjectDisposedException(this.GetType().FullName);
-            _consumer.Listener += new MessageListener(OnMessageReceive);
+            if (!_isListen)
+            {
+                _isListen = true;
+                _connection.Start();
+
+                _session = _connection.CreateSession();
+
+                _destination = new ActiveMQQueue(_queue);
+                _consumer = _session.CreateConsumer(_destination);
+                _consumer.Listener += new MessageListener(OnMessageReceive);
+            }
         }
 
         #region Private Methods

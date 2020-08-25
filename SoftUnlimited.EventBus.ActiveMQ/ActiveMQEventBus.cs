@@ -19,12 +19,13 @@ namespace SoftUnlimited.EventBus.ActiveMQ
     {
         private bool _isDisposed = false;
 
-        private readonly ISession _session;
+        private readonly IEnumerable<string> _queues;
         private readonly IConnection _connection;
         private readonly ConnectionFactory _connectionFactory;
 
-        private readonly IEnumerable<IDestination> _destinations;
-        private readonly IEnumerable<IMessageProducer> _producers;
+        private ISession _session;
+        private IEnumerable<IDestination> _destinations;
+        private IEnumerable<IMessageProducer> _producers;
 
 
         /// <summary>
@@ -34,16 +35,23 @@ namespace SoftUnlimited.EventBus.ActiveMQ
         /// <param name="brokerUri"></param>
         public ActiveMQEventBus(IEnumerable<string> queues, string brokerUri)
         {
+            _queues = queues;
             _connectionFactory = new ConnectionFactory(brokerUri);
             _connection = _connectionFactory.CreateConnection();
+        }
+
+        /// <summary>
+        /// Start process.
+        /// </summary>
+        public void Start()
+        {
             _connection.Start();
 
             _session = _connection.CreateSession();
 
-            _destinations = queues.Select(name => new ActiveMQQueue(name));
+            _destinations = _queues.Select(name => new ActiveMQQueue(name));
             _producers = _destinations.Select(destination => _session.CreateProducer(destination));
         }
-
         /// <summary>
         /// Release all resources.
         /// </summary>
