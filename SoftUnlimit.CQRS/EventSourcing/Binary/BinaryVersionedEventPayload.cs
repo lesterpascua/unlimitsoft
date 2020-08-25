@@ -27,6 +27,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
             SourceID = @event.SourceID.ToString();
             ServiceID = @event.ServiceID;
             WorkerID = @event.WorkerID;
+            Name = @event.Name;
 
             Created = @event.Created;
             IsPubliched = false;
@@ -50,6 +51,11 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
         /// 
         /// </summary>
         public ushort WorkerID { get; set; }
+        /// <summary>
+        /// Event unique name.
+        /// </summary>
+        public string Name { get; private set; }
+
         /// <summary>
         /// 
         /// </summary>
