@@ -79,14 +79,16 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="currState">Actual entity snapshot.</param>
         /// <param name="prevState">Previous entity snapshot.</param>
         /// <param name="body"></param>
-        protected void AddMasterEvent(uint serviceID, ushort workerID, ICommand creator, object prevState, object currState = null, object body = null)
+        protected IVersionedEvent AddMasterEvent(uint serviceID, ushort workerID, ICommand creator, object prevState, object currState = null, object body = null)
         {
+            IVersionedEvent @event = null;
             Type eventType = creator.GetMasterEvent();
             if (eventType != null)
             {
-                IVersionedEvent @event = this.EventFactory(eventType, ID, ++Version, serviceID, workerID, creator, prevState, currState, body);
+                @event = this.EventFactory(eventType, ID, ++Version, serviceID, workerID, creator, prevState, currState, body);
                 this.AddVersionedEvent(@event);
             }
+            return @event;
         }
         /// <summary>
         /// 
