@@ -20,7 +20,7 @@
     <ProjectReference Include="..\SoftUnlimit.AutoMapper\SoftUnlimit.AutoMapper.csproj" />
     <ProjectReference Include="..\SoftUnlimit.Data.EntityFramework\SoftUnlimit.Data.EntityFramework.csproj" />
     <ProjectReference Include="..\SoftUnlimit.Web\SoftUnlimit.Web.csproj" />
-    <ProjectReference Include="..\SoftUnlimited.EventBus.ActiveMQ\SoftUnlimited.EventBus.ActiveMQ.csproj" />
+    <ProjectReference Include="..\SoftUnlimit.EventBus.ActiveMQ\SoftUnlimit.EventBus.ActiveMQ.csproj" />
   </ItemGroup>
 
 </Project>

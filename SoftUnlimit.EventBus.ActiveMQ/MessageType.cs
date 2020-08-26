@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace SoftUnlimited.EventBus.ActiveMQ
+namespace SoftUnlimit.EventBus.ActiveMQ
 {
     public enum MessageType
     {

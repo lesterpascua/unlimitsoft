@@ -11,8 +11,9 @@ namespace SoftUnlimit.CQRS.Event
     public interface IEventListener
     {
         /// <summary>
-        /// Enter a background process for listener loop of event.
+        /// Enter a background process for listener loop of event. If connection fail should recover.
         /// </summary>
-        void Listen();
+        /// <param name="waitRetry">If fail indicate time to wait until retry again.</param>
+        void Listen(TimeSpan waitRetry);
     }
 }

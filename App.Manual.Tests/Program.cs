@@ -41,7 +41,7 @@ using Apache.NMS.ActiveMQ;
 using Apache.NMS;
 using Apache.NMS.ActiveMQ.Commands;
 using System.Threading;
-using SoftUnlimited.EventBus.ActiveMQ;
+using SoftUnlimit.EventBus.ActiveMQ;
 using SoftUnlimit.CQRS.EventSourcing.Json;
 
 namespace SoftUnlimit.CQRS.Test

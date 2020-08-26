@@ -14,9 +14,10 @@ namespace SoftUnlimit.CQRS.Event
     public interface IEventBus
     {
         /// <summary>
-        /// Start event bus 
+        /// When implement start event bus connection. If connection fail should recover.
         /// </summary>
-        void Start();
+        /// <param name="waitRetry">If fail indicate time to wait until retry again.</param>
+        void Start(TimeSpan waitRetry);
         /// <summary>
         /// Publis event in bus.
         /// </summary>

@@ -31,7 +31,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.Data.Tests", "S
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.Web.AspNet", "SoftUnlimit.Web.AspNet\SoftUnlimit.Web.AspNet.csproj", "{514C91E5-E803-40D2-8E55-E33DB146A09D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoftUnlimited.EventBus.ActiveMQ", "SoftUnlimited.EventBus.ActiveMQ\SoftUnlimited.EventBus.ActiveMQ.csproj", "{2F18154B-E5F6-4B91-866A-406D8082EFCB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.EventBus.ActiveMQ", "SoftUnlimit.EventBus.ActiveMQ\SoftUnlimit.EventBus.ActiveMQ.csproj", "{2F18154B-E5F6-4B91-866A-406D8082EFCB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

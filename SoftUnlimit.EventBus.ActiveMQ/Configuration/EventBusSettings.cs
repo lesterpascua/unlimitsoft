@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace SoftUnlimited.EventBus.ActiveMQ.Configuration
+namespace SoftUnlimit.EventBus.ActiveMQ.Configuration
 {
     /// <summary>
     /// 
