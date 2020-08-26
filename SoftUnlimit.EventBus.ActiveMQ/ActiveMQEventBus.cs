@@ -136,6 +136,8 @@ namespace SoftUnlimit.EventBus.ActiveMQ
         {
             if (_isDisposed)
                 throw new ObjectDisposedException(this.GetType().FullName);
+            if (_connection == null || _session == null)
+                throw new NMSException("ActiveMQ conection is not ready.");
 
             var message = _session.CreateObjectMessage(new MessageEvelop { Messaje = graph, Type = type });
             for (int i = 0; i < _producers.Length; i++)
