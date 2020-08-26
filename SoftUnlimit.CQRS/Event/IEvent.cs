@@ -99,6 +99,13 @@ namespace SoftUnlimit.CQRS.Event
         public object Body { get; protected set; }
 
 
+        /// <summary>
+        /// Convert objeto to string.
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString() => Name;
+
+
         #region Explicit Interface Implementation
 
         object IEvent.SourceID { get => this.SourceID; set => this.SourceID = (TKey)value; }

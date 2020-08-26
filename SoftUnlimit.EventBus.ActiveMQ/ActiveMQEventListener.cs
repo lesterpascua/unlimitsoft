@@ -62,6 +62,8 @@ namespace SoftUnlimit.EventBus.ActiveMQ
         {
             if (!_isDisposed)
             {
+                _logger.LogDebug("Disposing: {Class} with Id: {Id}", nameof(ActiveMQEventListener), _connection.ClientId);
+             
                 _isDisposed = true;
                 _connectionMonitorCts.Cancel();
                 _connectionMonitor?.Dispose();
@@ -121,7 +123,10 @@ namespace SoftUnlimit.EventBus.ActiveMQ
             {
                 var body = objectMessage.Body;
                 if (body is MessageEvelop envelop)
+                {
+                    _logger.LogDebug("Receive event: {Event} of type: {Type}.", envelop.Messaje.ToString(), envelop.Type);
                     _processor(envelop, _logger).Wait();
+                }
             }
         }
         private (IConnection, ISession, IDestination, IMessageConsumer) TryToReconect(ConnectionFactory factory, string clientId, string queue, ILogger logger, SemaphoreSlim semaphore)

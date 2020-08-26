@@ -77,6 +77,11 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         public string Body { get; set; }
 
         /// <summary>
+        /// Convert objeto to string.
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString() => Name;
+        /// <summary>
         /// 
         /// </summary>
         public void MarkEventAsPublished() => this.IsPubliched = true;

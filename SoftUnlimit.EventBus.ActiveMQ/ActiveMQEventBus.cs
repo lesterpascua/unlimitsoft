@@ -23,14 +23,14 @@ namespace SoftUnlimit.EventBus.ActiveMQ
         private bool _isStart = false;
         private bool _isDisposed = false;
 
-        private readonly IEnumerable<string> _queues;
+        private readonly string[] _queues;
         private readonly ILogger<ActiveMQEventBus> _logger;
         private readonly ConnectionFactory _connectionFactory;
 
         private ISession _session;
         private IConnection _connection;
-        private IEnumerable<IDestination> _destinations;
-        private IEnumerable<IMessageProducer> _producers;
+        private IDestination[] _destinations;
+        private IMessageProducer[] _producers;
 
         private Task _connectionMonitor;
         private readonly CancellationTokenSource _connectionMonitorCts;
@@ -44,8 +44,9 @@ namespace SoftUnlimit.EventBus.ActiveMQ
         /// <param name="logger"></param>
         public ActiveMQEventBus(IEnumerable<string> queues, string brokerUri, ILogger<ActiveMQEventBus> logger)
         {
-            _queues = queues;
             _logger = logger;
+
+            _queues = queues.ToArray();
             _connectionFactory = new ConnectionFactory(brokerUri);
             _connectionMonitorCts = new CancellationTokenSource();
         }
@@ -82,6 +83,8 @@ namespace SoftUnlimit.EventBus.ActiveMQ
         {
             if (!_isDisposed)
             {
+                _logger.LogDebug("Disposing: {Class} with Id: {Id}", nameof(ActiveMQEventBus), _connection.ClientId);
+
                 _isDisposed = true;
                 _connectionMonitorCts.Cancel();
                 _connectionMonitor?.Dispose();
@@ -134,17 +137,16 @@ namespace SoftUnlimit.EventBus.ActiveMQ
             if (_isDisposed)
                 throw new ObjectDisposedException(this.GetType().FullName);
 
-            var message = _session.CreateObjectMessage(
-                new MessageEvelop {
-                    Messaje = graph,
-                    Type = type
-                });
-            foreach (var producer in _producers)
-                producer.Send(message);
+            var message = _session.CreateObjectMessage(new MessageEvelop { Messaje = graph, Type = type });
+            for (int i = 0; i < _producers.Length; i++)
+            {
+                _producers[i].Send(message);
+                _logger.LogDebug("Published event: {Event} of type: {Type} to queue: {Queue}", graph.ToString(), type, _queues[i]);
+            }
 
             return Task.CompletedTask;
         }
-        private (IConnection, ISession, IEnumerable<IDestination>, IEnumerable<IMessageProducer>) TryToReconect(ConnectionFactory factory, IEnumerable<string> queues, ILogger logger, SemaphoreSlim semaphore)
+        private (IConnection, ISession, IDestination[], IMessageProducer[]) TryToReconect(ConnectionFactory factory, IEnumerable<string> queues, ILogger logger, SemaphoreSlim semaphore)
         {
             logger.LogInformation("Active MQ trying reconect to {Uri}, publicher: {Time}.", factory.BrokerUri, DateTime.UtcNow);
 
@@ -169,8 +171,8 @@ namespace SoftUnlimit.EventBus.ActiveMQ
 
             var session = connection.CreateSession();
 
-            var destinations = queues.Select(name => new ActiveMQQueue(name));
-            var producers = destinations.Select(destination => session.CreateProducer(destination));
+            var destinations = queues.Select(name => new ActiveMQQueue(name)).ToArray();
+            var producers = destinations.Select(destination => session.CreateProducer(destination)).ToArray();
 
             return (connection, session, destinations, producers);
         }
