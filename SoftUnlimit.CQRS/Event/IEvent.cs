@@ -1,4 +1,5 @@
-﻿using SoftUnlimit.CQRS.Message;
+﻿using SoftUnlimit.CQRS.Command;
+using SoftUnlimit.CQRS.Message;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -31,6 +32,18 @@ namespace SoftUnlimit.CQRS.Event
         /// </summary>
         public string Name { get; }
         /// <summary>
+        /// Command where event is originate.
+        /// </summary>
+        ICommand Creator { get; }
+        /// <summary>
+        /// Previous snapshot in json representation.
+        /// </summary>
+        object PrevState { get; }
+        /// <summary>
+        /// Currenct snapshot in json representation
+        /// </summary>
+        object CurrState { get; }
+        /// <summary>
         /// Specify if an event belown to domain. This have optimization propouse.
         /// </summary>
         bool IsDomainEvent { get; }
@@ -58,13 +71,21 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="sourceID"></param>
         /// <param name="serviceID"></param>
         /// <param name="workerID"></param>
+        /// <param name="command"></param>
+        /// <param name="prevState"></param>
+        /// <param name="currState"></param>
         /// <param name="isDomain"></param>
         /// <param name="body"></param>
-        protected Event(TKey sourceID, uint serviceID, ushort workerID, bool isDomain, object body)
+        protected Event(TKey sourceID, uint serviceID, ushort workerID, ICommand command, object prevState, object currState, bool isDomain, object body)
         {
             SourceID = sourceID;
             ServiceID = serviceID;
             WorkerID = workerID;
+
+            Creator = command;
+            PrevState = prevState;
+            CurrState = currState;
+
             IsDomainEvent = isDomain;
             Body = body;
         }
@@ -89,6 +110,20 @@ namespace SoftUnlimit.CQRS.Event
         /// Get name of event
         /// </summary>
         public string Name => this.GetType().FullName;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand Creator { get; protected set; }
+        /// <summary>
+        /// Previous snapshot of entity.
+        /// </summary>
+        public object PrevState { get; protected set; }
+        /// <summary>
+        /// Currenct snapshot of entity.
+        /// </summary>
+        public object CurrState { get; protected set; }
+
         /// <summary>
         /// 
         /// </summary>

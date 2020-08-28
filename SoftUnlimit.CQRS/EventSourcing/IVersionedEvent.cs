@@ -20,18 +20,6 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// es el que ella poseia en el instante en que fue generado el evento. 
         /// </summary>
         long Version { get; }
-        /// <summary>
-        /// Command where event is originate.
-        /// </summary>
-        ICommand Creator { get; }
-        /// <summary>
-        /// Previous snapshot in json representation.
-        /// </summary>
-        object PrevState { get; }
-        /// <summary>
-        /// Currenct snapshot in json representation
-        /// </summary>
-        object CurrState { get; }
     }
     /// <summary>
     /// 
@@ -52,32 +40,16 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="currState"></param>
         /// <param name="body"></param>
         protected VersionedEvent(TKey sourceID, uint serviceID, ushort workerID, long version, bool isDomainEvent, ICommand command, object prevState, object currState, object body = null)
-            : base(sourceID, serviceID, workerID, isDomainEvent, body)
+            : base(sourceID, serviceID, workerID, command, prevState, currState, isDomainEvent, body)
         {
             this.Version = version;
             this.Created = DateTime.UtcNow;
-
-            this.Creator = command;
-            this.PrevState = prevState;
-            this.CurrState = currState;
         }
 
         /// <summary>
         /// 
         /// </summary>
         public long Version { get; protected set; }
-        /// <summary>
-        /// 
-        /// </summary>
-        public ICommand Creator { get; protected set; }
-        /// <summary>
-        /// Previous snapshot of entity.
-        /// </summary>
-        public object PrevState { get; protected set; }
-        /// <summary>
-        /// Currenct snapshot of entity.
-        /// </summary>
-        public object CurrState { get; protected set; }
     }
 
     /// <summary>
