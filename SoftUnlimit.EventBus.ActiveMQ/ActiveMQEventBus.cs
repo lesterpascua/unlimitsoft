@@ -87,6 +87,9 @@ namespace SoftUnlimit.EventBus.ActiveMQ
 
                 _isDisposed = true;
                 _connectionMonitorCts.Cancel();
+                while (!_connectionMonitor.IsCanceled && !_connectionMonitor.IsCompleted)
+                    Task.Delay(10).Wait();
+
                 _connectionMonitor?.Dispose();
 
                 _connection?.Stop();

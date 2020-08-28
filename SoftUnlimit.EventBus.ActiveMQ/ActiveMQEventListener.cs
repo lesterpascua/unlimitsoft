@@ -43,9 +43,9 @@ namespace SoftUnlimit.EventBus.ActiveMQ
         /// <param name="clientId"></param>
         /// <param name="queue"></param>
         /// <param name="brokerUri"></param>
-        /// <param name="logger"></param>
         /// <param name="processor"></param>
-        public ActiveMQEventListener(string clientId, string queue, string brokerUri, ILogger<ActiveMQEventListener> logger, Func<MessageEvelop, ILogger, Task> processor)
+        /// <param name="logger"></param>
+        public ActiveMQEventListener(string clientId, string queue, string brokerUri, Func<MessageEvelop, ILogger, Task> processor, ILogger<ActiveMQEventListener> logger = null)
         {
             _queue = queue;
             _logger = logger;
@@ -62,10 +62,13 @@ namespace SoftUnlimit.EventBus.ActiveMQ
         {
             if (!_isDisposed)
             {
-                _logger.LogDebug("Disposing: {Class} with Id: {Id}", nameof(ActiveMQEventListener), _connection.ClientId);
-             
+                _logger?.LogDebug("Disposing: {Class} with Id: {Id}", nameof(ActiveMQEventListener), _connection.ClientId);
+
                 _isDisposed = true;
                 _connectionMonitorCts.Cancel();
+                while (!_connectionMonitor.IsCanceled && !_connectionMonitor.IsCompleted)
+                    Task.Delay(10).Wait();
+
                 _connectionMonitor?.Dispose();
 
                 _connection?.Stop();
@@ -124,21 +127,21 @@ namespace SoftUnlimit.EventBus.ActiveMQ
                 var body = objectMessage.Body;
                 if (body is MessageEvelop envelop)
                 {
-                    _logger.LogDebug("Receive event: {Event} of type: {Type}.", envelop.Messaje.ToString(), envelop.Type);
+                    _logger?.LogDebug("Receive event: {Event} of type: {Type}.", envelop.Messaje.ToString(), envelop.Type);
                     _processor(envelop, _logger).Wait();
                 }
             }
         }
         private (IConnection, ISession, IDestination, IMessageConsumer) TryToReconect(ConnectionFactory factory, string clientId, string queue, ILogger logger, SemaphoreSlim semaphore)
         {
-            logger.LogInformation("Active MQ trying reconect to {Uri}, listener: {Time}.", factory.BrokerUri, DateTime.UtcNow);
+            logger?.LogInformation("Active MQ trying reconect to {Uri}, listener: {Time}.", factory.BrokerUri, DateTime.UtcNow);
 
             var connection = factory.CreateConnection();
             connection.ClientId = clientId;
 
             connection.Start();
 
-            logger.LogInformation("Active MQ listener connect to {Uri} success: {Time}.", factory.BrokerUri, DateTime.UtcNow);
+            logger?.LogInformation("Active MQ listener connect to {Uri} success: {Time}.", factory.BrokerUri, DateTime.UtcNow);
             connection.ConnectionInterruptedListener += () => {
                 Release();
                 semaphore.Release();
@@ -151,7 +154,7 @@ namespace SoftUnlimit.EventBus.ActiveMQ
                         semaphore.Release();
                         break;
                 }
-                logger.LogWarning("Error on {Time} trying to reconect: {Url}", DateTime.UtcNow, factory.BrokerUri);
+                logger?.LogWarning("Error on {Time} trying to reconect: {Url}", DateTime.UtcNow, factory.BrokerUri);
             };
 
             var session = connection.CreateSession();

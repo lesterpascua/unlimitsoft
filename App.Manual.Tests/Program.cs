@@ -22,22 +22,22 @@ namespace SoftUnlimit.CQRS.Test
                 .Create()
                 .WithSagaId(id)
                 .WithOriginator("Test")
-                .WithMetadata("key", "lulz")
+                //.WithMetadata("key", "lulz")
                 .Build();
             var context2 = SagaContext.Create()
                 .WithSagaId(id)
                 .WithOriginator("Test")
-                .WithMetadata("key", "lulz")
+                //.WithMetadata("key", "lulz")
                 .Build();
 
 
-            coordinator.ProcessAsync(new Message1 { Text = "This message will be used one day..." }, context);
+            coordinator.ProcessAsync(new Message1 { Text = "This message will be used one day..." }, context).Wait();
             coordinator.ProcessAsync(new Message2 { Text = "But this one will be printed first! (We compensate from the end to beggining of the log)" },
                 onCompleted: (m, ctx) => {
                     Console.WriteLine("My work is done1");
                     return Task.CompletedTask;
                 },
-                context: context2);
+                context: context2).Wait();
             coordinator.ProcessAsync(new Message3 { Text = "But this one will be scan first! (We compensate from the end to beggining of the log)" },
                 onCompleted: (m, ctx) => {
                     Console.WriteLine("My work is done2");
