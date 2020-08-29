@@ -34,6 +34,9 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
             WorkerID = @event.WorkerID;
             EventName = @event.Name;
 
+            IsStartAction = @event is IStartActionEvent;
+            IsFinalAction = @event is IFinalActionEvent;
+
             Created = @event.Created;
             IsPubliched = false;
 
@@ -70,6 +73,15 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
         /// Event unique name.
         /// </summary>
         public string EventName { get; private set; }
+
+        /// <summary>
+        /// This event is the first event in action it's generate directly by a command.
+        /// </summary>
+        public bool IsStartAction { get; set; }
+        /// <summary>
+        /// This event is the final event in action can generate response.
+        /// </summary>
+        public bool IsFinalAction { get; set; }
 
         /// <summary>
         /// 

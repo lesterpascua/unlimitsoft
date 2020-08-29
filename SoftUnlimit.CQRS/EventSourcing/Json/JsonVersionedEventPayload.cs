@@ -10,6 +10,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
     /// 
     /// </summary>
     [Serializable]
+    [Obsolete("Use BinaryVersionedEventPayload")]
     public class JsonEventPayload
     {
         /// <summary>
