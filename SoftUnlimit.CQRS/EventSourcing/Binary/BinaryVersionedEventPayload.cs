@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Event;
 using System;
 using System.Collections.Generic;
@@ -24,10 +25,14 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
         /// <param name="event"></param>
         public BinaryEventPayload(IEvent @event)
         {
+            var props = @event.Creator.GetProps<CommandProps>();
+            CreatorID = props.Id;
+            CreatorName = props.Name;
+
             SourceID = @event.SourceID.ToString();
             ServiceID = @event.ServiceID;
             WorkerID = @event.WorkerID;
-            Name = @event.Name;
+            EventName = @event.Name;
 
             Created = @event.Created;
             IsPubliched = false;
@@ -40,9 +45,19 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
         }
 
         /// <summary>
+        /// Creator identifier (Command Id).
+        /// </summary>
+        public string CreatorID { get; set; }
+        /// <summary>
+        /// Creator name (Command FullName)
+        /// </summary>
+        public string CreatorName { get; set; }
+
+        /// <summary>
         /// 
         /// </summary>
         public string SourceID { get; set; }
+
         /// <summary>
         /// 
         /// </summary>
@@ -54,7 +69,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
         /// <summary>
         /// Event unique name.
         /// </summary>
-        public string Name { get; private set; }
+        public string EventName { get; private set; }
 
         /// <summary>
         /// 
@@ -74,7 +89,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
         /// Convert objeto to string.
         /// </summary>
         /// <returns></returns>
-        public override string ToString() => Name;
+        public override string ToString() => EventName;
         /// <summary>
         /// 
         /// </summary>

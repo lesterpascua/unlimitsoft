@@ -26,8 +26,6 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
             ServiceID = @event.ServiceID;
             WorkerID = @event.WorkerID;
             
-            IsDomainEvent = @event.IsDomainEvent;
-
             Created = @event.Created;
             Name = @event.Name;
             EventType = @event.GetType().AssemblyQualifiedName;
@@ -55,18 +53,16 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         /// 
         /// </summary>
         public string Name { get; set; }
+
         /// <summary>
         /// 
         /// </summary>
         public DateTime Created { get; set; }
         /// <summary>
-        /// Indicate this event will process as domain allow optimization
-        /// </summary>
-        public bool IsDomainEvent { get; set; }
-        /// <summary>
         /// 
         /// </summary>
         public bool IsPubliched { get; set; }
+
         /// <summary>
         /// Event Type.
         /// </summary>
