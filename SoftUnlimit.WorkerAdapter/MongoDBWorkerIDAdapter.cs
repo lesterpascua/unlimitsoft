@@ -49,20 +49,22 @@ namespace SoftUnlimit.WorkerAdapter
         /// <param name="service"></param>
         /// <param name="worker"></param>
         /// <returns></returns>
-        public async Task<string> ReleaseAsync(uint service, ushort worker)
+        public Task<string> ReleaseAsync(uint service, ushort worker)
         {
-            (var semaphore, var cache, var reverseCache) = this._assigns[service];
-            await semaphore.WaitAsync();
-            try
-            {
-                string identifier = reverseCache[worker];
-                if (cache.Remove(identifier) && reverseCache.Remove(worker))
-                    return identifier;
-                return null;
-            } finally
-            {
-                semaphore.Release();
-            }
+
+            throw new NotImplementedException();
+            //(var semaphore, var cache, var reverseCache) = this._assigns[service];
+            //await semaphore.WaitAsync();
+            //try
+            //{
+            //    string identifier = reverseCache[worker];
+            //    if (cache.Remove(identifier) && reverseCache.Remove(worker))
+            //        return identifier;
+            //    return null;
+            //} finally
+            //{
+            //    semaphore.Release();
+            //}
         }
         /// <summary>
         /// Update last check for service is alive.
@@ -70,19 +72,21 @@ namespace SoftUnlimit.WorkerAdapter
         /// <param name="service"></param>
         /// <param name="worker"></param>
         /// <returns></returns>
-        public async Task<DateTime> UpdateAsync(uint service, ushort worker)
+        public Task<DateTime> UpdateAsync(uint service, ushort worker)
         {
-            (var semaphore, var cache, var reverseCache) = _assigns[service];
-            await semaphore.WaitAsync();
-            try
-            {
-                string identifier = reverseCache[worker];
-                var aux = cache[identifier];
-                return aux.Updated = DateTime.UtcNow;
-            } finally
-            {
-                semaphore.Release();
-            }
+            //(var semaphore, var cache, var reverseCache) = _assigns[service];
+            //await semaphore.WaitAsync();
+            //try
+            //{
+            //    string identifier = reverseCache[worker];
+            //    var aux = cache[identifier];
+            //    return aux.Updated = DateTime.UtcNow;
+            //} finally
+            //{
+            //    semaphore.Release();
+            //}
+
+            throw new NotImplementedException();
         }
         /// <summary>
         /// 
@@ -91,21 +95,22 @@ namespace SoftUnlimit.WorkerAdapter
         /// <param name="identifier"></param>
         /// <param name="endpoint"></param>
         /// <returns></returns>
-        public async Task<RegisterResult> ReserveAsync(uint service, string identifier, string endpoint)
+        public Task<RegisterResult> ReserveAsync(uint service, string identifier, string endpoint)
         {
-            var bucket = _assigns.GetOrAdd(service, (service) => new ServiceBucket {
-                Semaphore = new SemaphoreSlim(1, 1),
-                HealthCheck = null
-            });
+            //var bucket = _assigns.GetOrAdd(service, (service) => new ServiceBucket {
+            //    Semaphore = new SemaphoreSlim(1, 1),
+            //    HealthCheck = null
+            //});
 
-            (var semaphore, var cache, var reverseCache) = bucket;
-            await semaphore.WaitAsync();
-            try
-            {
-                return this.Reserve(identifier, cache, reverseCache, endpoint);
-            } finally {
-                semaphore.Release();
-            }
+            //(var semaphore, var cache, var reverseCache) = bucket;
+            //await semaphore.WaitAsync();
+            //try
+            //{
+            //    return this.Reserve(identifier, cache, reverseCache, endpoint);
+            //} finally {
+            //    semaphore.Release();
+            //}
+            throw new NotImplementedException();
         }
 
         #region Private Method
@@ -123,35 +128,38 @@ namespace SoftUnlimit.WorkerAdapter
         /// <param name="reverseCache"></param>
         /// <param name="endpoint"></param>
         /// <returns></returns>
-        private RegisterResult Reserve(string identifier, Dictionary<string, WorkerBucket> cache, Dictionary<ushort, string> reverseCache, string endpoint)
+        private RegisterResult Reserve(string identifier, string endpoint)
         {
-            if (cache.ContainsKey(identifier))
-                return new RegisterResult(cache[identifier].WorkerID, true);
 
-            var array = cache.Values
-                .Select(s => s.WorkerID)
-                .OrderBy(k => k)
-                .ToArray();
-            ushort workerID = (ushort)array.Length;
-            for (ushort i = 0; i < array.Length; i++)
-            {
-                if (array[i] == i)
-                    continue;
-                workerID = i;
-                break;
-            }
+            throw new NotImplementedException();
 
-            var now = DateTime.UtcNow;
-            cache.Add(identifier, new WorkerBucket {
-                Checker = CheckerUtility.Create(endpoint),
-                Endpoint = endpoint,
-                WorkerID = workerID,
-                Created = now,
-                Updated = now,
-            });
-            reverseCache.Add(workerID, identifier);
+            //if (cache.ContainsKey(identifier))
+            //    return new RegisterResult(cache[identifier].WorkerID, true);
 
-            return new RegisterResult(workerID, false);
+            //var array = cache.Values
+            //    .Select(s => s.WorkerID)
+            //    .OrderBy(k => k)
+            //    .ToArray();
+            //ushort workerID = (ushort)array.Length;
+            //for (ushort i = 0; i < array.Length; i++)
+            //{
+            //    if (array[i] == i)
+            //        continue;
+            //    workerID = i;
+            //    break;
+            //}
+
+            //var now = DateTime.UtcNow;
+            //cache.Add(identifier, new WorkerBucket {
+            //    Checker = CheckerUtility.Create(endpoint),
+            //    Endpoint = endpoint,
+            //    WorkerID = workerID,
+            //    Created = now,
+            //    Updated = now,
+            //});
+            //reverseCache.Add(workerID, identifier);
+
+            //return new RegisterResult(workerID, false);
         }
 
 
