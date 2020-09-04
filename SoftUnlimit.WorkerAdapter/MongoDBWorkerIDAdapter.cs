@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.HealthChecks;
+using SoftUnlimit.Data;
 using System;
 using System.Collections;
 using System.Collections.Concurrent;
@@ -12,68 +13,36 @@ namespace SoftUnlimit.WorkerAdapter
     /// <summary>
     /// Transform a worker string identifier into number identifier.
     /// </summary>
-    public class MemoryWorkerIDAdapter : IWorkerIDAdapter
+    public class MongoDBWorkerIDAdapter : IWorkerIDAdapter
     {
-        private readonly ConcurrentDictionary<uint, ServiceBucket> _assigns;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IRepository<AdapterInfo> _repository;
+        private readonly ConcurrentDictionary<Key, ServiceBucket> _assigns;
 
 
         /// <summary>
         /// 
         /// </summary>
-        public MemoryWorkerIDAdapter()
+        /// <param name="unitOfWork"></param>
+        /// <param name="repository"></param>
+        public MongoDBWorkerIDAdapter(IUnitOfWork unitOfWork, IRepository<AdapterInfo> repository)
         {
-            this._assigns = new ConcurrentDictionary<uint, ServiceBucket>();
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        public MemoryWorkerIDAdapter(IEnumerable<AdapterInfo> initInfos)
-        {
-            this._assigns = new ConcurrentDictionary<uint, ServiceBucket>();
-            foreach (var info in initInfos)
-            {
-                (var semaphore, var cache, var reverseCache) = _assigns.GetOrAdd(info.ServiceID, (service) => new ServiceBucket {
-                    Cache = new Dictionary<string, WorkerBucket>(),
-                    ReverseCache = new Dictionary<ushort, string>(),
-                    Semaphore = new SemaphoreSlim(1, 1)
-                });
-
-                cache.Add(info.Identifier, new WorkerBucket {
-                    Checker = CheckerUtility.Create(info.Endpoint),
-                    Endpoint = info.Endpoint,
-                    WorkerID = info.WorkerID,
-                    Created = info.Created,
-                    Updated = info.Updated
-                });
-                reverseCache.Add(info.WorkerID, info.Identifier);
-            }
+            _unitOfWork = unitOfWork;
+            _repository = repository;
+            _assigns = new ConcurrentDictionary<Key, ServiceBucket>();
         }
 
         /// <summary>
         /// Convert adapter to Query.
         /// </summary>
         /// <returns></returns>
-        public IQueryable<AdapterInfo> ToQuery() => this.AsQueryable();
+        public IQueryable<AdapterInfo> ToQuery() => _repository.FindAll();
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public IEnumerator<AdapterInfo> GetEnumerator()
-        {
-            foreach (var service in this._assigns)
-                foreach (var worker in service.Value.Cache)
-                {
-                    yield return new AdapterInfo {
-                        Checker = worker.Value.Checker,
-                        Identifier = worker.Key,
-                        ServiceID = service.Key,
-                        WorkerID = worker.Value.WorkerID,
-                        Updated = worker.Value.Updated,
-                        Created = worker.Value.Created,
-                        Endpoint = worker.Value.Endpoint
-                    };
-                }
-        }
+        public IEnumerator<AdapterInfo> GetEnumerator() => _repository.FindAll().GetEnumerator();
+
         /// <summary>
         /// 
         /// </summary>
@@ -126,8 +95,7 @@ namespace SoftUnlimit.WorkerAdapter
         {
             var bucket = _assigns.GetOrAdd(service, (service) => new ServiceBucket {
                 Semaphore = new SemaphoreSlim(1, 1),
-                Cache = new Dictionary<string, WorkerBucket>(),
-                ReverseCache = new Dictionary<ushort, string>(),
+                HealthCheck = null
             });
 
             (var semaphore, var cache, var reverseCache) = bucket;
@@ -191,6 +159,22 @@ namespace SoftUnlimit.WorkerAdapter
 
         #region Nested Classes
 
+        private sealed class Key
+        {
+            public Key(uint serviceID, ushort workerID) => (ServiceID, WorkerID) = (serviceID, workerID);
+
+            public uint ServiceID { get; set; }
+            public ushort WorkerID { get; set; }
+
+            public void Deconstruct(out uint serviceID, out ushort workerID)
+            {
+                workerID = WorkerID;
+                serviceID = ServiceID;
+            }
+            public override bool Equals(object obj) => (obj is Key key) && Equals(key);
+            public override int GetHashCode() => HashCode.Combine(ServiceID, WorkerID);
+            public bool Equals(Key other) => ServiceID == other.ServiceID && WorkerID == other.WorkerID;
+        }
         private sealed class ServiceBucket
         {
             /// <summary>
@@ -200,47 +184,18 @@ namespace SoftUnlimit.WorkerAdapter
             /// <summary>
             /// 
             /// </summary>
-            public Dictionary<string, WorkerBucket> Cache { get; set; }
-            /// <summary>
-            /// Store Reverse cache for identifier.
-            /// </summary>
-            public Dictionary<ushort, string> ReverseCache { get; set; }
+            public IHealthCheckService HealthCheck { get; set; }
 
             /// <summary>
             /// 
             /// </summary>
             /// <param name="semaphore"></param>
-            /// <param name="cache"></param>
-            /// <param name="reverseCache"></param>
-            public void Deconstruct(out SemaphoreSlim semaphore, out Dictionary<string, WorkerBucket> cache, out Dictionary<ushort, string> reverseCache)
+            /// <param name="healthCheck"></param>
+            public void Deconstruct(out SemaphoreSlim semaphore, out IHealthCheckService healthCheck)
             {
-                semaphore = this.Semaphore;
-                cache = this.Cache;
-                reverseCache = this.ReverseCache;
+                semaphore = Semaphore;
+                healthCheck = HealthCheck;
             }
-        }
-        private sealed class WorkerBucket
-        {
-            /// <summary>
-            /// Health endpoint
-            /// </summary>
-            public string Endpoint { get; set; }
-            /// <summary>
-            /// 
-            /// </summary>
-            public ushort WorkerID { get; set; }
-            /// <summary>
-            /// 
-            /// </summary>
-            public IHealthCheckService Checker { get; set; }
-            /// <summary>
-            /// Creation date
-            /// </summary>
-            public DateTime Created { get; set; }
-            /// <summary>
-            /// Last healty check.
-            /// </summary>
-            public DateTime Updated { get; set; }
         }
 
         #endregion

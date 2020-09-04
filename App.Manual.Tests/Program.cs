@@ -7,8 +7,11 @@ using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.Data;
+using SoftUnlimit.Data.MongoDb;
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,7 +19,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace SoftUnlimit.CQRS.Test
 {
-    public class Job : EventSourced<Guid>
+    public class Job : SoftUnlimit.Data.Entity<Guid>
     {
         /// <summary>
         /// If Job is complete true, false in other case.
@@ -59,93 +62,65 @@ namespace SoftUnlimit.CQRS.Test
     }
 
 
-    public class MongoDbContext : IUnitOfWork, IAsyncDisposable
+    public abstract class MyContext : MongoDbContext
     {
-        private readonly IMongoClient _client;
-        private readonly IMongoDatabase _database;
-        private readonly IClientSessionHandle _session;
+        protected MyContext(IMongoClient client, IMongoDatabase database, IClientSessionHandle session = null)
+            : base(client, database, session)
+        { }
 
-        public MongoDbContext(IMongoClient client, IMongoDatabase database, IClientSessionHandle session)
+        public override IEnumerable<Type> GetModelEntityTypes() => new Type[] { typeof(Job) };
+
+        protected override void OnModelCreating()
         {
-            (_client, _database, _session) = (client, database, session);
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public void Dispose()
-        {
-            _session.AbortTransaction();
-            _session.Dispose();
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public async ValueTask DisposeAsync()
-        {
-            await _session.AbortTransactionAsync();
-            _session.Dispose();
-        }
-
-        public virtual IEnumerable<Type> GetModelEntityTypes() => Array.Empty<Type>();
-
-        public int SaveChanges()
-        {
-            _session.CommitTransaction();
-            _session.StartTransaction();
-            return 0;
-        }
-        public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
-        {
-            await _session.CommitTransactionAsync(cancellationToken);
-            _session.StartTransaction();
-            return 0;
-        }
-    }
-
-    public class Startup
-    {
-        private const string Database = "Glovo_Completion";
-
-        private readonly IMongoClient _client;
-        private readonly IMongoDatabase _database;
-        private readonly IClientSessionHandle _session;
-
-        public Startup(IMongoClient client, IClientSessionHandle session)
-        {
-            this._client = client;
-            this._session = session;
-            this._database = client.GetDatabase(Database, new MongoDatabaseSettings {
-                WriteConcern = WriteConcern.WMajority,
-                WriteEncoding = (UTF8Encoding)Encoding.Default
-            });
-            var _database1 = client.GetDatabase(Database, new MongoDatabaseSettings {
-                WriteConcern = WriteConcern.WMajority,
-                WriteEncoding = (UTF8Encoding)Encoding.Default
-            });
+            base.OnModelCreating();
 
             var indexDefinition = new IndexKeysDefinitionBuilder<Job>()
                 .Ascending(p => p.ID);
-            var key = new CreateIndexModel<Job>(indexDefinition);
+            var key = new CreateIndexModel<Job>(indexDefinition, new CreateIndexOptions { Unique = true });
+            Database.GetCollection<Job>(nameof(Job)).Indexes.CreateOne(key);
+        }
+    }
+    public class MongoDbReadContext : MyContext
+    {
+        public MongoDbReadContext(IMongoClient client, IMongoDatabase database)
+            : base(client, database)
+        {
+        }
+    }
+    public class MongoDbWriteContext : MyContext
+    {
+        public MongoDbWriteContext(IMongoClient client, IMongoDatabase database, IClientSessionHandle session)
+            : base(client, database, session)
+        {
+        }
+    }
 
-            _database.GetCollection<Job>(nameof(Job)).Indexes.CreateOne(key);
+    
+
+    public class Startup
+    {
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IRepository<Job> _repository;
+        private readonly IQueryRepository<Job> _queryRepository;
+
+        public Startup(IUnitOfWork unitOfWork, IRepository<Job> repository, IQueryRepository<Job> queryRepository)
+        {
+            _unitOfWork = unitOfWork;
+            _repository = repository;
+            this._queryRepository = queryRepository;
         }
 
         public async Task Start()
         {
-            var asyncEnum = await _database
-                .ListCollectionNamesAsync();
-            var collection = await asyncEnum.ToListAsync();
+            var all = _repository.FindAll().ToArray();
+            foreach (var entry in all)
+                _repository.Remove(entry);
 
-            if (!collection.Contains("Job"))
-                await _database.CreateCollectionAsync("Job");
+            var after = _queryRepository.FindAll().ToArray();
+            await _unitOfWork.SaveChangesAsync();
 
-            _session.StartTransaction();
-
-            var jobRepository = _database.GetCollection<Job>(nameof(Job));
             var dbJob = new Job {
-                ID = Guid.Parse("6e80ee22-9fef-d847-8eac-10fefc14e76f"),
+                ID = Guid.NewGuid(),
                 Completed = DateTime.UtcNow,
                 Created = DateTime.UtcNow,
                 Creator = "Some command",
@@ -154,17 +129,14 @@ namespace SoftUnlimit.CQRS.Test
                 Response = "Some Response",
                 UserID = Guid.NewGuid()
             };
-            await jobRepository.InsertOneAsync(_session, dbJob);
-
-            await _session.CommitTransactionAsync();
+            await _repository.AddAsync(dbJob);
+            await _unitOfWork.SaveChangesAsync();
 
             dbJob.Creator = "Lester";
-            await jobRepository.ReplaceOneAsync(_session, f => f.ID == dbJob.ID, dbJob);
-            await _session.CommitTransactionAsync();
 
-            //await _session.AbortTransactionAsync();
+            _repository.Update(dbJob);
+            await _unitOfWork.SaveChangesAsync();
 
-            Console.WriteLine(collection.Count);
             await Task.CompletedTask;
         }
     }
@@ -177,8 +149,40 @@ namespace SoftUnlimit.CQRS.Test
 
             var services = new ServiceCollection();
             services.AddSingleton<IMongoClient>(new MongoClient(connString));
-            services.AddScoped(provider => provider.GetService<IMongoClient>().StartSession());
-            services.AddScoped(provider => provider.GetService<IMongoClient>().GetDatabase("Glovo_Completion"));
+
+            services.AddScoped(provider => {
+                var client = provider.GetService<IMongoClient>();
+
+                var settings = new MongoDatabaseSettings {
+                    WriteConcern = WriteConcern.WMajority,
+                    WriteEncoding = (UTF8Encoding)Encoding.Default
+                };
+                var database = client.GetDatabase("Glovo_Completion", settings);
+
+                return new MongoDbReadContext(client, database);
+            });
+            services.AddScoped(provider => {
+                var client = provider.GetService<IMongoClient>();
+
+                var settings = new MongoDatabaseSettings {
+                    WriteConcern = WriteConcern.WMajority,
+                    WriteEncoding = (UTF8Encoding)Encoding.Default
+                };
+                var database = client.GetDatabase("Glovo_Completion", settings);
+                var session = client.StartSession();
+
+                return new MongoDbWriteContext(client, database, session);
+            });
+            services.AddScoped<IUnitOfWork>(provider => provider.GetService<MongoDbWriteContext>());
+
+            services.AddScoped<IRepository<Job>>(provider => {
+                var context = provider.GetService<MongoDbWriteContext>();
+                return new MongoRepository<Job>(context);
+            });
+            services.AddScoped<IQueryRepository<Job>>(provider => {
+                var context = provider.GetService<MongoDbReadContext>();
+                return new MongoRepository<Job>(context);
+            });
 
             services.AddScoped<Startup>();
 

@@ -35,7 +35,6 @@ namespace SoftUnlimit.CQRS.EventSourcing
     /// <see cref="IEventSourced"/> entities do not require the use of <see cref="EventSourced{TKey}"/>, but this class contains some common 
     /// useful functionality related to versions and rehydration from past events.
     /// </remarks>
-    [Serializable]
     public abstract class EventSourced<TKey> : AggregateRoot<TKey>, IEventSourced
     {
         private readonly List<IVersionedEvent> _versionedEvents;

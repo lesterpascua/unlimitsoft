@@ -27,6 +27,12 @@ namespace SoftUnlimit.Data
         /// <returns></returns>
         EntityState Update(TEntity entity);
         /// <summary>
+        /// Update entity in repository async.
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
+        Task<EntityState> UpdateAsync(TEntity entity);
+        /// <summary>
         /// 
         /// </summary>
         /// <param name="entities"></param>

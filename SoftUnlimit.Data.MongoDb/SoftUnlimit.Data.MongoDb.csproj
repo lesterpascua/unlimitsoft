@@ -11,30 +11,24 @@
     <Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">0.0.0.1</Version>
     <Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
     <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
-    <Description>Toolkit to convert string identifier into a unique long identifier.</Description>
+    <Description>Data library with Repository and UnitOfWork for mongo db driver</Description>
     <LangVersion>8.0</LangVersion>
     <PackageLicenseFile>License.txt</PackageLicenseFile>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\netcoreapp3.1\SoftUnlimit.WorkerAdapter.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DocumentationFile>bin\Release\netcoreapp3.1\SoftUnlimit.WorkerAdapter.xml</DocumentationFile>
-  </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="AspNetCore.HealthChecks.Uris" Version="3.1.2" />
-    <PackageReference Include="Microsoft.AspNetCore.HealthChecks" Version="1.0.0" />
-    <PackageReference Include="SoftUnlimit.Data" Version="2.0.0.53" />
-  </ItemGroup>
 
   <ItemGroup>
     <None Include="License.txt">
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MongoDB.Driver" Version="2.11.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="SoftUnlimit.Data" Version="2.0.0.53" />
   </ItemGroup>
 
 </Project>

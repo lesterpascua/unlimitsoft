@@ -125,6 +125,7 @@ namespace SoftUnlimit.Data.Reflection.Tests
             public ValueTask<TEntity> FindAsync(params object[] keyValues) => throw new NotImplementedException();
             public EntityState Remove(TEntity entity) => throw new NotImplementedException();
             public EntityState Update(TEntity entity) => throw new NotImplementedException();
+            public Task<EntityState> UpdateAsync(TEntity entity) => throw new NotImplementedException();
             public void UpdateRange(params TEntity[] entities) => throw new NotImplementedException();
         }
 

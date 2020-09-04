@@ -25,7 +25,6 @@ namespace SoftUnlimit.CQRS.Data
     /// <summary>
     /// Implement and aggregate Root
     /// </summary>
-    [Serializable]
     public abstract class AggregateRoot<TKey> : Entity<TKey>, IAggregateRoot
     {
         private readonly List<IEvent> _events;

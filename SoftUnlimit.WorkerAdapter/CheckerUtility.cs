@@ -33,17 +33,17 @@ namespace SoftUnlimit.WorkerAdapter
         {
             var now = DateTime.UtcNow;
             var infos = adapter.ToArray();
-            List<(int, ushort)> toDelete = new List<(int, ushort)>();
-            List<(int, ushort)> toUpdate = new List<(int, ushort)>();
+            List<(uint, ushort)> toDelete = new List<(uint, ushort)>();
+            List<(uint, ushort)> toUpdate = new List<(uint, ushort)>();
             foreach (var info in infos)
             {
                 var status = await info.Checker.CheckHealthAsync();
                 if (status.CheckStatus != CheckStatus.Healthy)
                 {
                     if (now - info.Updated > tolerance)
-                        toDelete.Add((info.Service, info.WorkerID));
+                        toDelete.Add((info.ServiceID, info.WorkerID));
                 } else
-                    toUpdate.Add((info.Service, info.WorkerID));
+                    toUpdate.Add((info.ServiceID, info.WorkerID));
             }
 
             foreach (var entry in toUpdate)

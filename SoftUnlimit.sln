@@ -33,7 +33,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.Web.AspNet", "S
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.EventBus.ActiveMQ", "SoftUnlimit.EventBus.ActiveMQ\SoftUnlimit.EventBus.ActiveMQ.csproj", "{2F18154B-E5F6-4B91-866A-406D8082EFCB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoftUnlimit.EventBus.ActiveMQ.Tests", "SoftUnlimit.EventBus.ActiveMQ.Tests\SoftUnlimit.EventBus.ActiveMQ.Tests.csproj", "{135B2885-127A-400A-9BC0-DF1838B56A0C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.EventBus.ActiveMQ.Tests", "SoftUnlimit.EventBus.ActiveMQ.Tests\SoftUnlimit.EventBus.ActiveMQ.Tests.csproj", "{135B2885-127A-400A-9BC0-DF1838B56A0C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SoftUnlimit.Data.MongoDb", "SoftUnlimit.Data.MongoDb\SoftUnlimit.Data.MongoDb.csproj", "{F4FF7358-8300-4DFA-85C3-9FB3127E282B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -97,6 +99,10 @@ Global
 		{135B2885-127A-400A-9BC0-DF1838B56A0C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{135B2885-127A-400A-9BC0-DF1838B56A0C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{135B2885-127A-400A-9BC0-DF1838B56A0C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F4FF7358-8300-4DFA-85C3-9FB3127E282B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F4FF7358-8300-4DFA-85C3-9FB3127E282B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F4FF7358-8300-4DFA-85C3-9FB3127E282B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F4FF7358-8300-4DFA-85C3-9FB3127E282B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

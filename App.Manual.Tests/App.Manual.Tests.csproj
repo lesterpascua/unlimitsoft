@@ -29,6 +29,7 @@
   <ItemGroup>
     <ProjectReference Include="..\SoftUnlimit.AutoMapper\SoftUnlimit.AutoMapper.csproj" />
     <ProjectReference Include="..\SoftUnlimit.Data.EntityFramework\SoftUnlimit.Data.EntityFramework.csproj" />
+    <ProjectReference Include="..\SoftUnlimit.Data.MongoDb\SoftUnlimit.Data.MongoDb.csproj" />
     <ProjectReference Include="..\SoftUnlimit.Web\SoftUnlimit.Web.csproj" />
     <ProjectReference Include="..\SoftUnlimit.EventBus.ActiveMQ\SoftUnlimit.EventBus.ActiveMQ.csproj" />
   </ItemGroup>

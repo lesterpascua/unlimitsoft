@@ -13,7 +13,7 @@ namespace SoftUnlimit.WorkerAdapter
         /// <summary>
         /// Service identifier
         /// </summary>
-        public int Service { get; set; }
+        public uint ServiceID { get; set; }
         /// <summary>
         /// Worker numeric identifier
         /// </summary>

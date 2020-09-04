@@ -10,22 +10,6 @@ namespace SoftUnlimit.Data
     /// <summary>
     /// 
     /// </summary>
-    public interface IEntity : ICloneable
-    {
-        /// <summary>
-        /// Entity identifier.
-        /// </summary>
-        object ID { get; }
-
-        /// <summary>
-        /// Indicate is not initialized yet.
-        /// </summary>
-        /// <returns></returns>
-        bool IsTransient();
-    }
-    /// <summary>
-    /// 
-    /// </summary>
     /// <typeparam name="Key"></typeparam>
     [Serializable]
     public class Entity<Key> : IEntity
