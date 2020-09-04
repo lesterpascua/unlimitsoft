@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="SoftUnlimit.Data" Version="2.0.0.53" />
+    <ProjectReference Include="..\SoftUnlimit.Data\SoftUnlimit.Data.csproj" />
   </ItemGroup>
 
 </Project>
