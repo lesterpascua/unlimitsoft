@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -50,11 +51,6 @@ namespace SoftUnlimit.WorkerAdapter
         }
 
         /// <summary>
-        /// Convert adapter to Query.
-        /// </summary>
-        /// <returns></returns>
-        public IQueryable<AdapterInfo> ToQuery() => this.AsQueryable();
-        /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
@@ -74,6 +70,12 @@ namespace SoftUnlimit.WorkerAdapter
                     };
                 }
         }
+        /// <summary>
+        /// Convert adapter to Query.
+        /// </summary>
+        /// <returns></returns>
+        public IQueryable<AdapterInfo> ToQuery(Expression<Func<AdapterInfo, bool>> predicate) => this.AsQueryable().Where(predicate);
+
         /// <summary>
         /// 
         /// </summary>
@@ -142,11 +144,8 @@ namespace SoftUnlimit.WorkerAdapter
 
         #region Private Method
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+        IQueryable<AdapterInfo> IWorkerIDAdapter.ToQuery(Expression predicate) => ToQuery((Expression<Func<AdapterInfo, bool>>)predicate);
         /// <summary>
         /// 
         /// </summary>
@@ -185,7 +184,6 @@ namespace SoftUnlimit.WorkerAdapter
 
             return new RegisterResult(workerID, false);
         }
-
 
         #endregion
 

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -16,7 +17,8 @@ namespace SoftUnlimit.WorkerAdapter
         /// Return queryable representation.
         /// </summary>
         /// <returns></returns>
-        IQueryable<AdapterInfo> ToQuery();
+        IQueryable<AdapterInfo> ToQuery(Expression predicate = null);
+
         /// <summary>
         /// Delete worker registration from the Adapter maitainer.
         /// </summary>

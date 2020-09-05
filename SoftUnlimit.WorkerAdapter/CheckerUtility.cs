@@ -24,20 +24,19 @@ namespace SoftUnlimit.WorkerAdapter
             return new HealthCheckService(builder, null, null);
         }
         /// <summary>
-        /// 
+        /// Check all register adapters and remove all not satisfy tolerance rule.
         /// </summary>
         /// <param name="adapter"></param>
-        /// <param name="tolerance"></param>
+        /// <param name="tolerance">Diferent betwen current time and last updated adapter time.</param>
         /// <returns></returns>
         public static async Task CheckAsync(IWorkerIDAdapter adapter, TimeSpan tolerance)
         {
             var now = DateTime.UtcNow;
-            var infos = adapter.ToArray();
             List<(uint, ushort)> toDelete = new List<(uint, ushort)>();
             List<(uint, ushort)> toUpdate = new List<(uint, ushort)>();
-            foreach (var info in infos)
+            foreach (var info in adapter)
             {
-                var status = await info.Checker.CheckHealthAsync();
+                var status =  await info.Checker.CheckHealthAsync();
                 if (status.CheckStatus != CheckStatus.Healthy)
                 {
                     if (now - info.Updated > tolerance)
