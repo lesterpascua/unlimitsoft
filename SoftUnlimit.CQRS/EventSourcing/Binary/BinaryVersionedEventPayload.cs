@@ -33,6 +33,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
             ServiceID = @event.ServiceID;
             WorkerID = @event.WorkerID;
             EventName = @event.Name;
+            IsDomain = @event.IsDomainEvent;
 
             IsStartAction = @event is IStartActionEvent;
             IsFinalAction = @event is IFinalActionEvent;
@@ -91,6 +92,10 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
         /// 
         /// </summary>
         public bool IsPubliched { get; set; }
+        /// <summary>
+        /// If mark as domain event only has sence inside this microservice. Never publich to other events.
+        /// </summary>
+        public bool IsDomain { get; set; }
 
         /// <summary>
         /// Event Type.

@@ -43,7 +43,11 @@ namespace SoftUnlimit.Data.EntityFramework
         /// <param name="entity"></param>
         /// <returns></returns>
         public EntityState Update(TEntity entity) => (EntityState)DbContext.Set<TEntity>().Update(entity).State;
-
+        /// <summary>
+        /// Update data asynchonous
+        /// </summary>
+        /// <param name="entity"></param>
+        /// <returns></returns>
         public Task<EntityState> UpdateAsync(TEntity entity) => Task.FromResult((EntityState)DbContext.Set<TEntity>().Update(entity).State);
 
         /// <summary>

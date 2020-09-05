@@ -66,7 +66,6 @@ namespace SoftUnlimit.Web.Client
         /// <typeparam name="TModel"></typeparam>
         /// <param name="method"></param>
         /// <param name="uri"></param>
-        /// <param name="token"></param>
         /// <param name="fileName"></param>
         /// <param name="streams"></param>
         /// <param name="qs"></param>

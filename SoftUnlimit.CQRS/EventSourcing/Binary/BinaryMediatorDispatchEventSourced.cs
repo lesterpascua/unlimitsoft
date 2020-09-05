@@ -20,7 +20,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
         /// 
         /// </summary>
         /// <param name="provider"></param>
-        /// <param name="skipDomain">If true not dispath domain event as optimized mechanims.</param>
+        /// <param name="skipDomain">If true not dispath domain event. To optimized the system leave this value in false.</param>
         public BinaryMediatorDispatchEventSourced(IServiceProvider provider, bool skipDomain = false)
         {
             this._provider = provider;
@@ -46,16 +46,13 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
             List<BinaryVersionedEventPayload> remoteEvents = new List<BinaryVersionedEventPayload>();
             foreach (var @event in events)
             {
-                if (!@event.IsDomainEvent)
-                {
-                    var payload = new BinaryVersionedEventPayload(@event);
-                    remoteEvents.Add(payload);
-                    if (this._skipDomain)
-                        continue;
-                }
+                var payload = new BinaryVersionedEventPayload(@event);
+                remoteEvents.Add(payload);
+                if (!@event.IsDomainEvent && this._skipDomain)
+                    continue;
 
-                var responses = await this.EventDispatcher.DispatchEventAsync(this._provider, @event);
-                if (!responses.Success)
+                var responses = await EventDispatcher?.DispatchEventAsync(this._provider, @event);
+                if (responses?.Success == false)
                 {
                     var exceps = responses.ErrorEvents
                         .Select(s => (Exception)s.GetBody());
