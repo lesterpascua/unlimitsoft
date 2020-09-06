@@ -74,7 +74,13 @@ namespace SoftUnlimit.WorkerAdapter
         /// Convert adapter to Query.
         /// </summary>
         /// <returns></returns>
-        public IQueryable<AdapterInfo> ToQuery(Expression<Func<AdapterInfo, bool>> predicate) => this.AsQueryable().Where(predicate);
+        public IQueryable<AdapterInfo> ToQuery(Expression<Func<AdapterInfo, bool>> predicate)
+        {
+            var query = this.AsQueryable();
+            if (predicate != null)
+                query = query.Where(predicate);
+            return query;
+        }
 
         /// <summary>
         /// 

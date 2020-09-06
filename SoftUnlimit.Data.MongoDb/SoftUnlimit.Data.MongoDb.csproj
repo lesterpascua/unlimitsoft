@@ -25,10 +25,7 @@
 
   <ItemGroup>
     <PackageReference Include="MongoDB.Driver" Version="2.11.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\SoftUnlimit.Data\SoftUnlimit.Data.csproj" />
+    <PackageReference Include="SoftUnlimit.Data" Version="2.0.0.62" />
   </ItemGroup>
 
 </Project>

@@ -19,7 +19,7 @@ using System.Threading.Tasks.Dataflow;
 
 namespace SoftUnlimit.CQRS.Test
 {
-    public class Job : SoftUnlimit.Data.Entity<Guid>
+    public class Job : MongoEntity<Guid>
     {
         /// <summary>
         /// If Job is complete true, false in other case.
@@ -74,10 +74,10 @@ namespace SoftUnlimit.CQRS.Test
         {
             base.OnModelCreating();
 
-            var indexDefinition = new IndexKeysDefinitionBuilder<Job>()
-                .Ascending(p => p.ID);
-            var key = new CreateIndexModel<Job>(indexDefinition, new CreateIndexOptions { Unique = true });
-            Database.GetCollection<Job>(nameof(Job)).Indexes.CreateOne(key);
+            //var indexDefinition = new IndexKeysDefinitionBuilder<Job>()
+            //    .Ascending(p => p.ID);
+            //var key = new CreateIndexModel<Job>(indexDefinition, new CreateIndexOptions { Unique = true });
+            //Database.GetCollection<Job>(nameof(Job)).Indexes.CreateOne(key);
         }
     }
     public class MongoDbReadContext : MyContext
