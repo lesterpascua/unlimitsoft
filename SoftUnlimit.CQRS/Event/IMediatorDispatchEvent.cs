@@ -16,5 +16,11 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="entities"></param>
         /// <returns></returns>
         Task DispatchEventsAsync(IEnumerable<IEvent> entities);
+        /// <summary>
+        /// When all event are saved invoqued this method. 
+        /// </summary>
+        /// <param name="entities"></param>
+        /// <returns></returns>
+        Task EventsDispatchedAsync(IEnumerable<IEvent> entities);
     }
 }

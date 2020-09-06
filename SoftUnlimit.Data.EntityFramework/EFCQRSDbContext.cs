@@ -26,11 +26,11 @@ namespace SoftUnlimit.Data.EntityFramework
         /// <param name="options"></param>
         /// <param name="eventMediator"></param>
         /// <param name="eventSourcedMediator"></param>
-        protected EFCQRSDbContext(DbContextOptions options, IMediatorDispatchEvent eventMediator, IMediatorDispatchEventSourced eventSourcedMediator)
+        protected EFCQRSDbContext(DbContextOptions options, IMediatorDispatchEvent eventMediator = null, IMediatorDispatchEventSourced eventSourcedMediator = null)
             : base(options)
         {
-            this.EventMediator = eventMediator;
-            this.EventSourcedMediator = eventSourcedMediator;
+            EventMediator = eventMediator;
+            EventSourcedMediator = eventSourcedMediator;
         }
 
         #endregion
@@ -48,23 +48,23 @@ namespace SoftUnlimit.Data.EntityFramework
         /// 
         /// </summary>
         /// <returns></returns>
-        public Task TransactionCommitAsync() => this.Database.CurrentTransaction.CommitAsync();
+        public Task TransactionCommitAsync() => Database.CurrentTransaction.CommitAsync();
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public Task TransactionRollbackAsync() => this.Database.CurrentTransaction.RollbackAsync();
+        public Task TransactionRollbackAsync() => Database.CurrentTransaction.RollbackAsync();
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public Task<IAsyncDisposable> TransactionCreateAsync() => this.Database.BeginTransactionAsync().ContinueWith(c => (IAsyncDisposable)c.Result);
+        public Task<IAsyncDisposable> TransactionCreateAsync() => Database.BeginTransactionAsync().ContinueWith(c => (IAsyncDisposable)c.Result);
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public override int SaveChanges() => this.SaveChangesAsync().Result;
+        public override int SaveChanges() => SaveChangesAsync().Result;
 
         /// <summary>
         /// 
@@ -73,10 +73,10 @@ namespace SoftUnlimit.Data.EntityFramework
         /// <returns></returns>
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            IDbContextTransaction transaction = this.Database.CurrentTransaction;
+            IDbContextTransaction transaction = Database.CurrentTransaction;
             if (transaction == null)
             {
-                return await this.Database
+                return await Database
                     .CreateExecutionStrategy()
                     .ExecuteAsync(() => InnerTransactionSaveChangesAsync(transaction));
             } else
@@ -89,20 +89,25 @@ namespace SoftUnlimit.Data.EntityFramework
             if (transaction == null)
             {
                 isTransactionOwner = true;
-                transaction = await this.Database.BeginTransactionAsync();
+                transaction = await Database.BeginTransactionAsync();
             }
 
             try
             {
-                var changedEntities = this.ChangeTracker.Entries()
+                var changedEntities = ChangeTracker.Entries()
                     .Where(p => p.State != Microsoft.EntityFrameworkCore.EntityState.Unchanged)
                     .Select(s => s.Entity)
                     .ToArray();
                 changes = await base.SaveChangesAsync();
-                await this.PublishEvents(changedEntities);
+                var (count, events, versionedEvents) = await PublishEvents(changedEntities);
 
                 if (isTransactionOwner)
                     transaction.Commit();
+
+                if (events?.Any() == true && EventMediator != null)
+                    await EventMediator.EventsDispatchedAsync(events);
+                if (versionedEvents?.Any() == true && EventSourcedMediator != null)
+                    await EventSourcedMediator.EventsDispatchedAsync(versionedEvents);
             } finally
             {
                 if (isTransactionOwner)
@@ -115,14 +120,15 @@ namespace SoftUnlimit.Data.EntityFramework
         /// 
         /// </summary>
         /// <returns></returns>
-        private async Task<int> PublishEvents(IEnumerable<object> changedEntities)
+        private async Task<(int, IEnumerable<IEvent>, IEnumerable<IVersionedEvent>)> PublishEvents(IEnumerable<object> changedEntities)
         {
+            List<IEvent> events = new List<IEvent>();
+            List<IVersionedEvent> versionedEvents = new List<IVersionedEvent>();
             Task[] tasks = new Task[2] { Task.CompletedTask, Task.CompletedTask };
 
-            var eventMediator = this.EventMediator;
+            var eventMediator = EventMediator;
             if (eventMediator != null)
             {
-                List<IEvent> events = new List<IEvent>();
                 foreach (var entity in changedEntities.OfType<IAggregateRoot>())
                 {
                     events.AddRange(entity.GetEvents());
@@ -132,21 +138,22 @@ namespace SoftUnlimit.Data.EntityFramework
                     tasks[0] = eventMediator.DispatchEventsAsync(events);
             }
 
-            var eventSourcedMediator = this.EventSourcedMediator;
+            var eventSourcedMediator = EventSourcedMediator;
             if (eventSourcedMediator != null)
             {
-                List<IVersionedEvent> events = new List<IVersionedEvent>();
                 foreach (var entity in changedEntities.OfType<IEventSourced>())
                 {
-                    events.AddRange(entity.GetVersionedEvents());
+                    versionedEvents.AddRange(entity.GetVersionedEvents());
                     entity.ClearVersionedEvents();
                 }
-                if (events.Any())
-                    tasks[1] = eventSourcedMediator.DispatchEventsAsync(events);
+                if (versionedEvents.Any())
+                    tasks[1] = eventSourcedMediator.DispatchEventsAsync(versionedEvents);
             }
 
             await Task.WhenAll(tasks);
-            return await base.SaveChangesAsync();
+            int saved = await base.SaveChangesAsync();
+
+            return (saved, events, versionedEvents);
         }
     }
 }

@@ -64,5 +64,11 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
             }
             await this.VersionedEventRepository.AddRangeAsync(remoteEvents);
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="events"></param>
+        /// <returns></returns>
+        public virtual Task EventsDispatchedAsync(IEnumerable<IVersionedEvent> events) => Task.CompletedTask;
     }
 }
