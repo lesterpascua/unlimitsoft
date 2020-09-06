@@ -36,7 +36,7 @@ namespace SoftUnlimit.WorkerAdapter
             List<(uint, ushort)> toUpdate = new List<(uint, ushort)>();
             foreach (var info in adapter)
             {
-                var status =  await info.Checker.CheckHealthAsync();
+                var status = await info.Checker.CheckHealthAsync();
                 if (status.CheckStatus != CheckStatus.Healthy)
                 {
                     if (now - info.Updated > tolerance)

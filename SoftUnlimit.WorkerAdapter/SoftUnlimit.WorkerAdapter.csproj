@@ -27,7 +27,6 @@
   <ItemGroup>
     <PackageReference Include="AspNetCore.HealthChecks.Uris" Version="3.1.2" />
     <PackageReference Include="Microsoft.AspNetCore.HealthChecks" Version="1.0.0" />
-    <PackageReference Include="SoftUnlimit.Data" Version="2.0.0.62" />
   </ItemGroup>
 
   <ItemGroup>
@@ -35,6 +34,10 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SoftUnlimit.Data\SoftUnlimit.Data.csproj" />
   </ItemGroup>
 
 </Project>
