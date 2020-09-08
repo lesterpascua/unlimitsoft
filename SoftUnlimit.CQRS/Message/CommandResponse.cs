@@ -47,6 +47,13 @@ namespace SoftUnlimit.CQRS.Message
         public bool IsSuccess => 200 <= this.Code && this.Code < 300;
 
         /// <summary>
+        /// Get body cast to specific type.
+        /// </summary>
+        /// <typeparam name="TBody"></typeparam>
+        /// <returns></returns>
+        public TBody GetBody<TBody>() => (TBody)GetBody();
+
+        /// <summary>
         /// Get body.
         /// </summary>
         /// <returns></returns>
