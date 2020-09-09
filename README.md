@@ -17,13 +17,14 @@ along with this program.  If not, see <https://www.gnu.org/licenses/>.
 This project pretends the creation of bases for any project. Define several design patterns and methodologies for start to build different projects. 
 I create well know patters like Unit Of Work, Repository, Command Pattern, Service, Adapter, Factory Creator, etc. The objective was not to recreate 
 new implementation of all patterns, the idea was to join multiples libraries that already implement these patters join all and create a framework. 
-For validation, we propose to use FluentValidator, for access database EntityFramework, for paralleling processing Akka.NET. 
+For validation, we propose to use [FluentValidator](https://fluentvalidation.net) , for access database [EntityFramework](https://docs.microsoft.com/en-us/ef/), 
+for paralleling processing [Akka.NET](http://akka.net). 
 
 # Example (How use UnitOfWork with MongoDB)
 ```
 public static class Program
 {
-	/// <summary>
+    /// <summary>
     /// Create dependency injection
     /// </summary>
     public static async Task Main()
