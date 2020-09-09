@@ -22,6 +22,17 @@ for paralleling processing [Akka.NET](http://akka.net).
 
 # Example (How to use AutoMapper Attributes)
 ```
+[AutoMapCustom(typeof(Person))]
+public class PersonDto
+{
+    public Guid ID { get; set; }
+    public string Name { get; set; }
+}
+public class Person
+{
+    public Guid ID { get; set; }
+    public string Name { get; set; }
+}
 public static class Program
 {
     public static void Main()
