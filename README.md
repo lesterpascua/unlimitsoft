@@ -14,7 +14,115 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 # Introduction 
-TODO: Give a short introduction of your project. Let this section explain the objectives or the motivation behind this project. 
+This project pretends the creation of bases for any project. Define several design patterns and methodologies for start to build different projects. 
+I create well know patters like Unit Of Work, Repository, Command Pattern, Service, Adapter, Factory Creator, etc. The objective was not to recreate 
+new implementation of all patterns, the idea was to join multiples libraries that already implement these patters join all and create a framework. 
+For validation, we propose to use FluentValidator, for access database EntityFramework, for paralleling processing Akka.NET. 
+
+# Example (How use UnitOfWork with MongoDB)
+```
+public static class Program
+{
+	/// <summary>
+    /// Create dependency injection
+    /// </summary>
+    public static async Task Main()
+    {
+        var connString = "mongodb://localhost:27017";
+    
+        var services = new ServiceCollection();
+        services.AddSingleton<IMongoClient>(new MongoClient(connString));
+    
+        services.AddScoped(provider => {
+            var client = provider.GetService<IMongoClient>();
+    
+            var settings = new MongoDatabaseSettings {
+                WriteConcern = WriteConcern.WMajority,
+                WriteEncoding = (UTF8Encoding)Encoding.Default
+            };
+            var database = client.GetDatabase("ExampleDatabase", settings);
+            var session = client.StartSession();
+    
+            return new ExampleContext(client, database, session);
+        });
+        services.AddScoped<IUnitOfWork>(provider => provider.GetService<ExampleContext>());
+    
+        services.AddScoped<IRepository<Person>>(provider => {
+            var context = provider.GetService<ExampleContext>();
+            return new MongoRepository<Person>(context);
+        });
+        services.AddScoped<IQueryRepository<Person>>(provider => {
+            var context = provider.GetService<ExampleContext>();
+            return new MongoRepository<Person>(context);
+        });
+    
+        services.AddScoped<Startup>();
+    
+        using var provider = services.BuildServiceProvider();
+        using var scope = provider.CreateScope();
+    
+        await scope.ServiceProvider.GetService<Startup>().Run();
+    }
+}
+/// <summary>
+/// Busines logic entry point
+/// </summary>
+public class Startup
+{
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IRepository<Person> _repository;
+    private readonly IQueryRepository<Person> _queryRepository;
+
+    public Startup(IUnitOfWork unitOfWork, IRepository<Person> repository, IQueryRepository<Person> queryRepository)
+    {
+        _unitOfWork = unitOfWork;
+        _repository = repository;
+        this._queryRepository = queryRepository;
+    }
+
+    public async Task Run()
+    {
+        // Find all element before remove.
+        var after = _queryRepository.FindAll().ToArray();
+
+        // Iterate collection and remove all value from repository.
+        var all = _repository.FindAll().ToArray();
+        foreach (var entry in all)
+            _repository.Remove(entry);
+
+        // Persist changes
+        await _unitOfWork.SaveChangesAsync();
+
+        var dbJob = new Person {
+            ID = Guid.NewGuid(),
+            Name = "Some Test Name"
+        };
+        await _repository.AddAsync(dbJob);
+        await _unitOfWork.SaveChangesAsync();
+
+        dbJob.Name = "New Name";
+
+        _repository.Update(dbJob);
+        await _unitOfWork.SaveChangesAsync();
+
+        await Task.CompletedTask;
+    }
+}
+public class ExampleContext : MongoDbContext
+{
+    public ExampleContext(IMongoClient client, IMongoDatabase database, IClientSessionHandle session = null)
+        : base(client, database, session)
+    {
+    }
+
+    public override IEnumerable<Type> GetModelEntityTypes() => new Type[] { typeof(Person) };
+}
+public class Person : MongoEntity<Guid>
+{
+    [BsonRequired]
+    public string Name { get; set; }
+}
+```
 
 # Getting Started
 TODO: Guide users through getting your code up and running on their own system. In this section you can talk about:
