@@ -20,7 +20,31 @@ new implementation of all patterns, the idea was to join multiples libraries tha
 For validation, we propose to use [FluentValidator](https://fluentvalidation.net) , for access database [EntityFramework](https://docs.microsoft.com/en-us/ef/), 
 for paralleling processing [Akka.NET](http://akka.net). 
 
-# Example (How use UnitOfWork with MongoDB)
+# Example (How to use AutoMapper Attributes)
+```
+public static class Program
+{
+    public static void Main()
+    {
+        IMapper mapper = new Mapper(new MapperConfiguration(config => {
+            config.AllowNullCollections = true;
+            config.AllowNullDestinationValues = true;
+
+            config.AddDeepMaps(typeof(Program).Assembly);
+            config.AddCustomMaps(typeof(Program).Assembly);
+        }));
+
+        var person = new Person {
+            ID = Guid.NewGuid(),
+            Name = "Jhon Smith"
+        };
+        var personDto = mapper.Map<PersonDto>(person);
+        Console.WriteLine(personDto.Name);
+    }
+}
+```
+
+# Example (How use UnitOfWork and Repository with MongoDB)
 ```
 public static class Program
 {
@@ -78,7 +102,7 @@ public class Startup
     {
         _unitOfWork = unitOfWork;
         _repository = repository;
-        this._queryRepository = queryRepository;
+        _queryRepository = queryRepository;
     }
 
     public async Task Run()
