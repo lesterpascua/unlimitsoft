@@ -63,6 +63,12 @@ namespace SoftUnlimit.CQRS.Message
         /// </summary>
         /// <returns></returns>
         public abstract Type GetBodyType();
+
+        /// <summary>
+        /// Conver command to string representation
+        /// </summary>
+        /// <returns></returns>
+        public override string ToString() => $"Command Response: \n\tCode: {Code} \n\tUIText: {UIText} \n\tCommand: {Command} \n\tIsSuccess: {IsSuccess} \n\tBody: {GetBody()}";
     }
     /// <summary>
     /// 

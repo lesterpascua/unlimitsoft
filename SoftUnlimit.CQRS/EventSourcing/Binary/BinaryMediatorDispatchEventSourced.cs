@@ -13,9 +13,6 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
     /// </summary>
     public abstract class BinaryMediatorDispatchEventSourced : IMediatorDispatchEventSourced
     {
-        private readonly bool _skipDomain;
-        private readonly IServiceProvider _provider;
-
         /// <summary>
         /// 
         /// </summary>
@@ -23,10 +20,18 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
         /// <param name="skipDomain">If true not dispath domain event. To optimized the system leave this value in false.</param>
         public BinaryMediatorDispatchEventSourced(IServiceProvider provider, bool skipDomain = false)
         {
-            this._provider = provider;
-            this._skipDomain = skipDomain;
+            Provider = provider;
+            SkipDomain = skipDomain;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        protected bool SkipDomain { get; }
+        /// <summary>
+        /// 
+        /// </summary>
+        protected IServiceProvider Provider { get; }
         /// <summary>
         /// 
         /// </summary>
@@ -48,10 +53,10 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
             {
                 var payload = new BinaryVersionedEventPayload(@event);
                 remoteEvents.Add(payload);
-                if (!@event.IsDomainEvent && this._skipDomain)
+                if (!@event.IsDomainEvent && SkipDomain)
                     continue;
 
-                var responses = await EventDispatcher?.DispatchEventAsync(this._provider, @event);
+                var responses = await EventDispatcher?.DispatchEventAsync(Provider, @event);
                 if (responses?.Success == false)
                 {
                     var exceps = responses.ErrorEvents
@@ -59,7 +64,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
                     throw new AggregateException("Error when executed events", exceps);
                 }
             }
-            await this.VersionedEventRepository.AddRangeAsync(remoteEvents);
+            await VersionedEventRepository.AddRangeAsync(remoteEvents);
         }
         /// <summary>
         /// 

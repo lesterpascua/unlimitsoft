@@ -61,8 +61,8 @@ namespace SoftUnlimit.CQRS.Command
         /// <returns></returns>
         public async Task<CommandResponse> DispatchAsync(ICommand command)
         {
-            using IServiceScope scope = this._provider.CreateScope();
-            return await this.DispatchAsync(scope.ServiceProvider, command);
+            using IServiceScope scope = _provider.CreateScope();
+            return await DispatchAsync(scope.ServiceProvider, command);
         }
         /// <summary>
         /// 
@@ -75,12 +75,12 @@ namespace SoftUnlimit.CQRS.Command
             //
             // before execute command search if has validator and executed.
             object sharedCache;
-            if (this._validate)
+            if (_validate)
             {
                 Type commandValidationScopeType = typeof(CommandSharedCache<>).MakeGenericType(command.GetType());
                 ICommandSharedCache commandValidationCache = Activator.CreateInstance(commandValidationScopeType, args: command) as ICommandSharedCache;
 
-                var response = await ValidateAsync(provider, commandValidationCache, this._errorTransforms, this._invalidArgumendText);
+                var response = await ValidateAsync(provider, commandValidationCache, _errorTransforms, _invalidArgumendText);
                 if (!response.IsSuccess)
                     return response;
 
@@ -98,7 +98,7 @@ namespace SoftUnlimit.CQRS.Command
             // get handler and execute command.
             Type commandType = command.GetType();
             ICommandHandler handler = GetHandler(provider, command.GetType());
-            if (this._useCache)
+            if (_useCache)
             {
                 var method = GetFromCache(commandType, handler, true);
                 return await (Task<CommandResponse>)method.Invoke(handler, new object[] { command, sharedCache });

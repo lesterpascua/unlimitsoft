@@ -12,13 +12,13 @@ namespace SoftUnlimit.CQRS.Command
     public interface ICommandDispatcher
     {
         /// <summary>
-        /// Send a command to his command handler
+        /// Send a command to his command handler. This operation must execute in new scope.
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
         Task<CommandResponse> DispatchAsync(ICommand command);
         /// <summary>
-        /// Send command to his handler using specific service provider.
+        /// Send command to his handler using specific service provider. This operation use same scope of provider.
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="command"></param>

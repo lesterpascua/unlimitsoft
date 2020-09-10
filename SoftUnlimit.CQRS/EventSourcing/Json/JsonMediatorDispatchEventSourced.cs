@@ -23,8 +23,8 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         /// <param name="skipDomain">If true not dispath domain event as optimized mechanims.</param>
         public JsonMediatorDispatchEventSourced(IServiceProvider provider, bool skipDomain = false)
         {
-            this._provider = provider;
-            this._skipDomain = skipDomain;
+            _provider = provider;
+            _skipDomain = skipDomain;
         }
 
         /// <summary>
@@ -50,11 +50,11 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
                 {
                     var payload = new JsonVersionedEventPayload(@event);
                     remoteEvents.Add(payload);
-                    if (this._skipDomain)
+                    if (_skipDomain)
                         continue;
                 }
 
-                var responses = await this.EventDispatcher.DispatchEventAsync(this._provider, @event);
+                var responses = await EventDispatcher.DispatchEventAsync(_provider, @event);
                 if (!responses.Success)
                 {
                     var exceps = responses.ErrorEvents
@@ -62,7 +62,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
                     throw new AggregateException("Error when executed events", exceps);
                 }
             }
-            await this.VersionedEventRepository.AddRangeAsync(remoteEvents);
+            await VersionedEventRepository.AddRangeAsync(remoteEvents);
         }
         /// <summary>
         /// 

@@ -31,15 +31,15 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// 
         /// </summary>
         /// <param name="sourceID"></param>
+        /// <param name="version"></param>
         /// <param name="serviceID"></param>
         /// <param name="workerID"></param>
-        /// <param name="version"></param>
         /// <param name="isDomainEvent"></param>
         /// <param name="command"></param>
         /// <param name="prevState"></param>
         /// <param name="currState"></param>
         /// <param name="body"></param>
-        protected VersionedEvent(TKey sourceID, uint serviceID, ushort workerID, long version, bool isDomainEvent, ICommand command, object prevState, object currState, object body = null)
+        protected VersionedEvent(TKey sourceID, long version, uint serviceID, ushort workerID, bool isDomainEvent, ICommand command, object prevState, object currState, object body = null)
             : base(sourceID, serviceID, workerID, command, prevState, currState, isDomainEvent, body)
         {
             this.Version = version;

@@ -84,8 +84,8 @@ namespace SoftUnlimit.CQRS.EventSourcing
             Type eventType = creator.GetMasterEvent();
             if (eventType != null)
             {
-                @event = this.EventFactory(eventType, ID, ++Version, serviceID, workerID, creator, prevState, currState, body);
-                this.AddVersionedEvent(@event);
+                @event = EventFactory(eventType, ID, ++Version, serviceID, workerID, creator, prevState, currState, body);
+                AddVersionedEvent(@event);
             }
             return @event;
         }
