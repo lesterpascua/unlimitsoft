@@ -11,13 +11,13 @@ namespace SoftUnlimit.WorkerAdapter
     /// <summary>
     /// Represent a contract to convert worker identifier to numeric id
     /// </summary>
-    public interface IWorkerIDAdapter : IEnumerable<AdapterInfo>
+    public interface IWorkerIDAdapter : IEnumerable<IAdapterInfoStorageObject>
     {
         /// <summary>
         /// Return queryable representation.
         /// </summary>
         /// <returns></returns>
-        IQueryable<AdapterInfo> ToQuery(Expression predicate = null);
+        IQueryable<IAdapterInfoStorageObject> ToQuery(Expression<Func<IAdapterInfoStorageObject, bool>> predicate = null);
 
         /// <summary>
         /// Delete worker registration from the Adapter maitainer.

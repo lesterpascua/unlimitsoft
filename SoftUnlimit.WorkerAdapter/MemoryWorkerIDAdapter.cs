@@ -28,7 +28,7 @@ namespace SoftUnlimit.WorkerAdapter
         /// <summary>
         /// 
         /// </summary>
-        public MemoryWorkerIDAdapter(IEnumerable<AdapterInfo> initInfos)
+        public MemoryWorkerIDAdapter(IEnumerable<IAdapterInfoStorageObject> initInfos)
         {
             this._assigns = new ConcurrentDictionary<uint, ServiceBucket>();
             foreach (var info in initInfos)
@@ -40,11 +40,12 @@ namespace SoftUnlimit.WorkerAdapter
                 });
 
                 cache.Add(info.Identifier, new WorkerBucket {
-                    Checker = CheckerUtility.Create(info.Endpoint),
                     Endpoint = info.Endpoint,
                     WorkerID = info.WorkerID,
                     Created = info.Created,
-                    Updated = info.Updated
+                    Updated = info.Updated,
+                    Identifier = info.Identifier,
+                    ServiceID = info.ServiceID
                 });
                 reverseCache.Add(info.WorkerID, info.Identifier);
             }
@@ -54,27 +55,17 @@ namespace SoftUnlimit.WorkerAdapter
         /// 
         /// </summary>
         /// <returns></returns>
-        public IEnumerator<AdapterInfo> GetEnumerator()
+        public IEnumerator<IAdapterInfoStorageObject> GetEnumerator()
         {
             foreach (var service in this._assigns)
                 foreach (var worker in service.Value.Cache)
-                {
-                    yield return new AdapterInfo {
-                        Checker = worker.Value.Checker,
-                        Identifier = worker.Key,
-                        ServiceID = service.Key,
-                        WorkerID = worker.Value.WorkerID,
-                        Updated = worker.Value.Updated,
-                        Created = worker.Value.Created,
-                        Endpoint = worker.Value.Endpoint
-                    };
-                }
+                    yield return worker.Value;
         }
         /// <summary>
         /// Convert adapter to Query.
         /// </summary>
         /// <returns></returns>
-        public IQueryable<AdapterInfo> ToQuery(Expression<Func<AdapterInfo, bool>> predicate)
+        public IQueryable<IAdapterInfoStorageObject> ToQuery(Expression<Func<IAdapterInfoStorageObject, bool>> predicate)
         {
             var query = this.AsQueryable();
             if (predicate != null)
@@ -143,7 +134,8 @@ namespace SoftUnlimit.WorkerAdapter
             try
             {
                 return this.Reserve(identifier, cache, reverseCache, endpoint);
-            } finally {
+            } finally
+            {
                 semaphore.Release();
             }
         }
@@ -151,15 +143,6 @@ namespace SoftUnlimit.WorkerAdapter
         #region Private Method
 
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-        IQueryable<AdapterInfo> IWorkerIDAdapter.ToQuery(Expression predicate) => ToQuery((Expression<Func<AdapterInfo, bool>>)predicate);
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="identifier"></param>
-        /// <param name="cache"></param>
-        /// <param name="reverseCache"></param>
-        /// <param name="endpoint"></param>
-        /// <returns></returns>
         private RegisterResult Reserve(string identifier, Dictionary<string, WorkerBucket> cache, Dictionary<ushort, string> reverseCache, string endpoint)
         {
             if (cache.ContainsKey(identifier))
@@ -180,7 +163,6 @@ namespace SoftUnlimit.WorkerAdapter
 
             var now = DateTime.UtcNow;
             cache.Add(identifier, new WorkerBucket {
-                Checker = CheckerUtility.Create(endpoint),
                 Endpoint = endpoint,
                 WorkerID = workerID,
                 Created = now,
@@ -190,6 +172,7 @@ namespace SoftUnlimit.WorkerAdapter
 
             return new RegisterResult(workerID, false);
         }
+
 
         #endregion
 
@@ -223,8 +206,17 @@ namespace SoftUnlimit.WorkerAdapter
                 reverseCache = this.ReverseCache;
             }
         }
-        private sealed class WorkerBucket
+        private sealed class WorkerBucket : IAdapterInfoStorageObject
         {
+            /// <summary>
+            /// 
+            /// </summary>
+            public uint ServiceID { get; set; }
+            /// <summary>
+            /// 
+            /// </summary>
+            public string Identifier { get; set; }
+
             /// <summary>
             /// Health endpoint
             /// </summary>
@@ -233,10 +225,6 @@ namespace SoftUnlimit.WorkerAdapter
             /// 
             /// </summary>
             public ushort WorkerID { get; set; }
-            /// <summary>
-            /// 
-            /// </summary>
-            public IHealthCheckService Checker { get; set; }
             /// <summary>
             /// Creation date
             /// </summary>

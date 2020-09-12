@@ -22,7 +22,8 @@ namespace SoftUnlimit.WorkerAdapter
         private readonly TUnitOfWork _unitOfWork;
         private readonly TRepository _repository;
 
-        private static ConcurrentDictionary<uint, ServiceBucket> _assigns;
+        private static ConcurrentDictionary<uint, SemaphoreSlim> _assigns;
+
 
         /// <summary>
         /// 
@@ -39,23 +40,19 @@ namespace SoftUnlimit.WorkerAdapter
         /// Convert adapter to Query.
         /// </summary>
         /// <returns></returns>
-        public IQueryable<AdapterInfo> ToQuery(Expression<Func<TStorageObject, bool>> predicate)
+        public IQueryable<TStorageObject> ToQuery(Expression<Func<TStorageObject, bool>> predicate)
         {
             var query = _repository.FindAll();
             if (predicate != null)
                 query = query.Where(predicate);
 
-            return query
-                .AsEnumerable()
-                .Select(s => AdapterInfo.FromAdapterInfoStorageObject(s, _assigns[s.ServiceID].HealthCheck[s.WorkerID]))
-                .AsQueryable();
+            return query;
         }
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public IEnumerator<AdapterInfo> GetEnumerator() 
-            => _repository.FindAll().AsEnumerable().Select(s => AdapterInfo.FromAdapterInfoStorageObject(s, _assigns[s.ServiceID].HealthCheck[s.WorkerID])).GetEnumerator();
+        public IEnumerator<IAdapterInfoStorageObject> GetEnumerator() => _repository.FindAll().GetEnumerator();
 
         /// <summary>
         /// 
@@ -65,7 +62,7 @@ namespace SoftUnlimit.WorkerAdapter
         /// <returns></returns>
         public async Task<string> ReleaseAsync(uint service, ushort worker)
         {
-            (var semaphore, var healthCache) = _assigns[service];
+            var semaphore = _assigns[service];
             await semaphore.WaitAsync();
             try
             {
@@ -76,7 +73,6 @@ namespace SoftUnlimit.WorkerAdapter
                     return null;
 
                 await _unitOfWork.SaveChangesAsync();
-                healthCache.Remove(worker);
 
                 return dbInfo.Identifier;
             } finally
@@ -92,7 +88,7 @@ namespace SoftUnlimit.WorkerAdapter
         /// <returns></returns>
         public async Task<DateTime> UpdateAsync(uint service, ushort worker)
         {
-            (var semaphore, var _) = _assigns[service];
+            var semaphore = _assigns[service];
             await semaphore.WaitAsync();
             try
             {
@@ -119,13 +115,11 @@ namespace SoftUnlimit.WorkerAdapter
         /// <returns></returns>
         public async Task<RegisterResult> ReserveAsync(uint serviceID, string identifier, string endpoint)
         {
-            var bucket = _assigns.GetOrAdd(serviceID, ServiceBucketFactory);
-
-            (var semaphore, var healthCache) = bucket;
+            var semaphore = _assigns.GetOrAdd(serviceID, ServiceBucketFactory);
             await semaphore.WaitAsync();
             try
             {
-                return await this.Reserve(serviceID, identifier, endpoint, healthCache);
+                return await Reserve(serviceID, identifier, endpoint);
             } finally
             {
                 semaphore.Release();
@@ -142,13 +136,10 @@ namespace SoftUnlimit.WorkerAdapter
         {
             if (_assigns == null || force)
             {
-                ConcurrentDictionary<uint, ServiceBucket> assings = new ConcurrentDictionary<uint, ServiceBucket>();
+                ConcurrentDictionary<uint, SemaphoreSlim> assings = new ConcurrentDictionary<uint, SemaphoreSlim>();
                 foreach (var adapterInfo in repository.FindAll())
-                {
-                    var bucket = assings.GetOrAdd(adapterInfo.ServiceID, ServiceBucketFactory);
-                    if (!bucket.HealthCheck.ContainsKey(adapterInfo.WorkerID))
-                        bucket.HealthCheck.Add(adapterInfo.WorkerID, CheckerUtility.Create(adapterInfo.Endpoint));
-                }
+                    assings.GetOrAdd(adapterInfo.ServiceID, ServiceBucketFactory);
+
                 Interlocked.CompareExchange(ref _assigns, assings, null);
             }
         }
@@ -160,22 +151,15 @@ namespace SoftUnlimit.WorkerAdapter
         /// </summary>
         /// <returns></returns>
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-        /// <summary>
-        /// Query by filter expression.
-        /// </summary>
-        /// <param name="predicate"></param>
-        /// <returns></returns>
-        IQueryable<AdapterInfo> IWorkerIDAdapter.ToQuery(Expression predicate) => ToQuery((Expression<Func<TStorageObject, bool>>)predicate);
-
+        IQueryable<IAdapterInfoStorageObject> IWorkerIDAdapter.ToQuery(Expression<Func<IAdapterInfoStorageObject, bool>> predicate) => ToQuery(predicate as Expression<Func<TStorageObject, bool>>);
         /// <summary>
         /// 
         /// </summary>
         /// <param name="serviceID"></param>
         /// <param name="identifier"></param>
         /// <param name="endpoint"></param>
-        /// <param name="healthCache"></param>
         /// <returns></returns>
-        private async Task<RegisterResult> Reserve(uint serviceID, string identifier, string endpoint, Dictionary<ushort, IHealthCheckService> healthCache)
+        private async Task<RegisterResult> Reserve(uint serviceID, string identifier, string endpoint)
         {
             var dbInfo = _repository
                 .Find(p => p.Identifier == identifier)
@@ -208,8 +192,7 @@ namespace SoftUnlimit.WorkerAdapter
             };
             await _repository.AddAsync(dbInfo);
             await _unitOfWork.SaveChangesAsync();
-            
-            healthCache.Add(workerID, CheckerUtility.Create(endpoint));
+
             return new RegisterResult(workerID, false);
         }
 
@@ -218,40 +201,7 @@ namespace SoftUnlimit.WorkerAdapter
         /// </summary>
         /// <param name="serviceID"></param>
         /// <returns></returns>
-        private static ServiceBucket ServiceBucketFactory(uint serviceID) => new ServiceBucket(new SemaphoreSlim(1, 1));
-
-        #endregion
-
-        #region Nested Classes
-
-        private sealed class ServiceBucket
-        {
-            public ServiceBucket(SemaphoreSlim semaphore)
-            {
-                Semaphore = semaphore;
-                HealthCheck = new Dictionary<ushort, IHealthCheckService>();
-            }
-
-            /// <summary>
-            /// 
-            /// </summary>
-            public SemaphoreSlim Semaphore { get; }
-            /// <summary>
-            /// 
-            /// </summary>
-            public Dictionary<ushort, IHealthCheckService> HealthCheck { get; }
-
-            /// <summary>
-            /// 
-            /// </summary>
-            /// <param name="semaphore"></param>
-            /// <param name="healthCheck"></param>
-            public void Deconstruct(out SemaphoreSlim semaphore, out Dictionary<ushort, IHealthCheckService> healthCheck)
-            {
-                semaphore = Semaphore;
-                healthCheck = HealthCheck;
-            }
-        }
+        private static SemaphoreSlim ServiceBucketFactory(uint serviceID) => new SemaphoreSlim(1, 1);
 
         #endregion
     }
