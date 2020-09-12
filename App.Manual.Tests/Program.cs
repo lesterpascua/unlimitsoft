@@ -1,17 +1,31 @@
 ﻿using App.Manual.Tests;
+using App.Manual.Tests.CQRS;
+using App.Manual.Tests.CQRS.Configuration;
+using App.Manual.Tests.CQRS.Events;
+using AutoMapper;
 using Chronicle;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
+using SoftUnlimit.AutoMapper;
+using SoftUnlimit.CQRS.Command;
+using SoftUnlimit.CQRS.Command.Compliance;
+using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.EventSourcing;
+using SoftUnlimit.CQRS.Query;
 using SoftUnlimit.Data;
+using SoftUnlimit.Data.EntityFramework;
 using SoftUnlimit.Data.MongoDb;
+using SoftUnlimit.Data.Reflection;
+using SoftUnlimit.Security.Cryptography;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,120 +33,61 @@ using System.Threading.Tasks.Dataflow;
 
 namespace SoftUnlimit.CQRS.Test
 {
-    public class Job : MongoEntity<Guid>
+    public class Person : MongoEntity<Guid>
     {
-        /// <summary>
-        /// If Job is complete true, false in other case.
-        /// </summary>
         [BsonRequired]
-        public bool Finish { get; set; }
-        /// <summary>
-        /// User how create this job
-        /// </summary>
-        [BsonRequired]
-        [BsonGuidRepresentation(GuidRepresentation.Standard)]
-        public Guid UserID { get; set; }
-        /// <summary>
-        /// Name of operation how create this job. Match with command fullname
-        /// </summary>
-        [BsonRequired]
-        public string Creator { get; set; }
-        /// <summary>
-        /// Command creator Json serialized.
-        /// </summary>
-        [BsonRequired]
-        public string CreatorPayload { get; set; }
-        /// <summary>
-        /// Date job creation
-        /// </summary>
-        [BsonRequired]
-        [BsonDateTimeOptions]
-        public DateTime Created { get; set; }
-        /// <summary>
-        /// Last modification date.
-        /// </summary>
-        [BsonRequired]
-        [BsonDateTimeOptions]
-        public DateTime Completed { get; set; }
-        /// <summary>
-        /// Job response json serialized payload.
-        /// </summary>
-        [BsonElement]
-        public string Response { get; set; }
+        public string Name { get; set; }
     }
 
 
-    public abstract class MyContext : MongoDbContext
+    public class ExampleContext : MongoDbContext
     {
-        protected MyContext(IMongoClient client, IMongoDatabase database, IClientSessionHandle session = null)
-            : base(client, database, session)
-        { }
-
-        public override IEnumerable<Type> GetModelEntityTypes() => new Type[] { typeof(Job) };
-
-        protected override void OnModelCreating()
-        {
-            base.OnModelCreating();
-
-            //var indexDefinition = new IndexKeysDefinitionBuilder<Job>()
-            //    .Ascending(p => p.ID);
-            //var key = new CreateIndexModel<Job>(indexDefinition, new CreateIndexOptions { Unique = true });
-            //Database.GetCollection<Job>(nameof(Job)).Indexes.CreateOne(key);
-        }
-    }
-    public class MongoDbReadContext : MyContext
-    {
-        public MongoDbReadContext(IMongoClient client, IMongoDatabase database)
-            : base(client, database)
-        {
-        }
-    }
-    public class MongoDbWriteContext : MyContext
-    {
-        public MongoDbWriteContext(IMongoClient client, IMongoDatabase database, IClientSessionHandle session)
+        public ExampleContext(IMongoClient client, IMongoDatabase database, IClientSessionHandle session = null)
             : base(client, database, session)
         {
         }
+
+        public override IEnumerable<Type> GetModelEntityTypes() => new Type[] { typeof(Person) };
     }
 
     
-
+    /// <summary>
+    /// Busines logic entry point
+    /// </summary>
     public class Startup
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly IRepository<Job> _repository;
-        private readonly IQueryRepository<Job> _queryRepository;
+        private readonly IRepository<Person> _repository;
+        private readonly IQueryRepository<Person> _queryRepository;
 
-        public Startup(IUnitOfWork unitOfWork, IRepository<Job> repository, IQueryRepository<Job> queryRepository)
+        public Startup(IUnitOfWork unitOfWork, IRepository<Person> repository, IQueryRepository<Person> queryRepository)
         {
             _unitOfWork = unitOfWork;
             _repository = repository;
             this._queryRepository = queryRepository;
         }
 
-        public async Task Start()
+        public async Task Run()
         {
+            // Find all element before remove.
+            var after = _queryRepository.FindAll().ToArray();
+
+            // Iterate collection and remove all value from repository.
             var all = _repository.FindAll().ToArray();
             foreach (var entry in all)
                 _repository.Remove(entry);
 
-            var after = _queryRepository.FindAll().ToArray();
+            // Persist changes
             await _unitOfWork.SaveChangesAsync();
 
-            var dbJob = new Job {
+            var dbJob = new Person {
                 ID = Guid.NewGuid(),
-                Completed = DateTime.UtcNow,
-                Created = DateTime.UtcNow,
-                Creator = "Some command",
-                CreatorPayload = "Command Payload",
-                Finish = false,
-                Response = "Some Response",
-                UserID = Guid.NewGuid()
+                Name = "Some Test Name"
             };
             await _repository.AddAsync(dbJob);
             await _unitOfWork.SaveChangesAsync();
 
-            dbJob.Creator = "Lester";
+            dbJob.Name = "New Name";
 
             _repository.Update(dbJob);
             await _unitOfWork.SaveChangesAsync();
@@ -141,11 +96,102 @@ namespace SoftUnlimit.CQRS.Test
         }
     }
 
+
+    [AutoMapCustom(typeof(Person))]
+    public class PersonDto
+    {
+        public Guid ID { get; set; }
+        public string Name { get; set; }
+    }
+
     public static class Program
     {
-        public static void Main()
+        public static async Task Main()
         {
-            var connString = "mongodb://localhost:27017/Glovo_Completion";
+            var services = new ServiceCollection();
+
+            services.AddSingleton<IIdGenerator<Guid>>(_ => new IdGuidGenerator(1, 0));
+            services.AddSingleton<IMapper>(new Mapper(new MapperConfiguration(config => {
+                config.AllowNullCollections = true;
+                config.AllowNullDestinationValues = true;
+
+                config.AddDeepMaps(typeof(Program).Assembly);
+                config.AddCustomMaps(typeof(Program).Assembly);
+            })));
+
+            services.AddDbContext<DbContextRead>(options => {
+                options.UseSqlServer(DesignTimeDbContextFactory.ConnStringRead);
+            });
+            services.AddDbContext<DbContextWrite>(options => {
+                options.UseSqlServer(DesignTimeDbContextFactory.ConnStringWrite);
+            });
+            services.AddScoped<IUnitOfWork>(provider => provider.GetService<DbContextWrite>());
+
+            var collection = typeof(_EntityTypeBuilder<>).Assembly.FindAllRepositories(
+                typeof(_EntityTypeBuilder<>),
+                typeof(IRepository<>),
+                typeof(IQueryRepository<>),
+                typeof(EFRepository<>),
+                typeof(EFQueryRepository<>),
+                checkContrains: _ => true);
+            foreach (var entry in collection)
+            {
+                if (entry.ServiceType != null && entry.ImplementationType != null)
+                    services.AddScoped(entry.ServiceType, provider => Activator.CreateInstance(entry.ImplementationType, provider.GetService<DbContextWrite>()));
+                services.AddScoped(entry.ServiceQueryType, provider => Activator.CreateInstance(entry.ImplementationQueryType, provider.GetService<DbContextRead>()));
+            }
+
+            services.AddScoped<IQueryAsyncDispatcher>(provider => new ServiceProviderQueryAsyncDispatcher(provider, true));
+            CacheDispatcher.RegisterHandler(services, new Assembly[] { Assembly.GetExecutingAssembly() }, typeof(IQueryAsyncHandler), typeof(IQueryAsyncHandler<,>));
+
+            services.AddScoped<IMediatorDispatchEventSourced, DefaultMediatorDispatchEventSourced>();
+
+            // Command support
+            ServiceProviderCommandDispatcher.RegisterCommandCompliance(services, typeof(ICommandCompliance<>), new Assembly[] { Assembly.GetExecutingAssembly() });
+            ServiceProviderCommandDispatcher.RegisterCommandHandler(services, typeof(ICommandHandler<>), new Assembly[] { Assembly.GetExecutingAssembly() }, new Assembly[] { Assembly.GetExecutingAssembly() });
+            services.AddSingleton<ICommandDispatcher>((provider) => {
+                return new ServiceProviderCommandDispatcher(
+                    provider,
+                    errorTransforms: ServiceProviderCommandDispatcher.DefaultErrorTransforms
+                );
+            });
+
+            // Events support
+            ServiceProviderEventDispatcher.RegisterEventHandler(services, typeof(IEventHandler), Assembly.GetExecutingAssembly());
+            services.AddSingleton<IEventDispatcher>((provider) => provider.GetService<IEventDispatcherWithServiceProvider>());
+            services.AddSingleton<IEventDispatcherWithServiceProvider, ServiceProviderEventDispatcher>();
+
+            services.AddSingleton<App.Manual.Tests.CQRS.Startup>();
+
+            using var provider = services.BuildServiceProvider();
+            await provider.GetService<App.Manual.Tests.CQRS.Startup>().Start();
+        }
+
+        public static void Main45()
+        {
+            IMapper mapper = new Mapper(new MapperConfiguration(config => {
+                config.AllowNullCollections = true;
+                config.AllowNullDestinationValues = true;
+
+                config.AddDeepMaps(typeof(Program).Assembly);
+                config.AddCustomMaps(typeof(Program).Assembly);
+            }));
+
+            var person = new Person {
+                ID = Guid.NewGuid(),
+                Name = "Jhon Smith"
+            };
+            var personDto = mapper.Map<PersonDto>(person);
+
+            Console.WriteLine(personDto.Name);
+        }
+        /// <summary>
+        /// Create dependency injection
+        /// </summary>
+        /// <returns></returns>
+        public static async Task Main11()
+        {
+            var connString = "mongodb://localhost:27017";
 
             var services = new ServiceCollection();
             services.AddSingleton<IMongoClient>(new MongoClient(connString));
@@ -157,31 +203,20 @@ namespace SoftUnlimit.CQRS.Test
                     WriteConcern = WriteConcern.WMajority,
                     WriteEncoding = (UTF8Encoding)Encoding.Default
                 };
-                var database = client.GetDatabase("Glovo_Completion", settings);
-
-                return new MongoDbReadContext(client, database);
-            });
-            services.AddScoped(provider => {
-                var client = provider.GetService<IMongoClient>();
-
-                var settings = new MongoDatabaseSettings {
-                    WriteConcern = WriteConcern.WMajority,
-                    WriteEncoding = (UTF8Encoding)Encoding.Default
-                };
-                var database = client.GetDatabase("Glovo_Completion", settings);
+                var database = client.GetDatabase("ExampleDatabase", settings);
                 var session = client.StartSession();
 
-                return new MongoDbWriteContext(client, database, session);
+                return new ExampleContext(client, database, session);
             });
-            services.AddScoped<IUnitOfWork>(provider => provider.GetService<MongoDbWriteContext>());
+            services.AddScoped<IUnitOfWork>(provider => provider.GetService<ExampleContext>());
 
-            services.AddScoped<IRepository<Job>>(provider => {
-                var context = provider.GetService<MongoDbWriteContext>();
-                return new MongoRepository<Job>(context);
+            services.AddScoped<IRepository<Person>>(provider => {
+                var context = provider.GetService<ExampleContext>();
+                return new MongoRepository<Person>(context);
             });
-            services.AddScoped<IQueryRepository<Job>>(provider => {
-                var context = provider.GetService<MongoDbReadContext>();
-                return new MongoRepository<Job>(context);
+            services.AddScoped<IQueryRepository<Person>>(provider => {
+                var context = provider.GetService<ExampleContext>();
+                return new MongoRepository<Person>(context);
             });
 
             services.AddScoped<Startup>();
@@ -189,10 +224,8 @@ namespace SoftUnlimit.CQRS.Test
             using var provider = services.BuildServiceProvider();
             using var scope = provider.CreateScope();
 
-            scope.ServiceProvider.GetService<Startup>().Start().Wait();
+            await scope.ServiceProvider.GetService<Startup>().Run();
         }
-
-
         public static void Main1(string[] _)
         {
             var services = new ServiceCollection();

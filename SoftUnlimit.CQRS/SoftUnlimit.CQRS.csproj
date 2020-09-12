@@ -34,6 +34,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SoftUnlimit.Data\SoftUnlimit.Data.csproj" />
+    <ProjectReference Include="..\SoftUnlimit.Web\SoftUnlimit.Web.csproj" />
   </ItemGroup>
 
   <ItemGroup>
