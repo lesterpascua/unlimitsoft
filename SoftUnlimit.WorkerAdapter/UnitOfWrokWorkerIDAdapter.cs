@@ -21,8 +21,7 @@ namespace SoftUnlimit.WorkerAdapter
     {
         private readonly TUnitOfWork _unitOfWork;
         private readonly TRepository _repository;
-
-        private static ConcurrentDictionary<uint, SemaphoreSlim> _assigns;
+        private readonly IThreadSafeCache _threadSafe;
 
 
         /// <summary>
@@ -30,8 +29,10 @@ namespace SoftUnlimit.WorkerAdapter
         /// </summary>
         /// <param name="unitOfWork"></param>
         /// <param name="repository"></param>
-        public UnitOfWrokWorkerIDAdapter(TUnitOfWork unitOfWork, TRepository repository)
+        /// <param name="threadSafe"></param>
+        public UnitOfWrokWorkerIDAdapter(TUnitOfWork unitOfWork, TRepository repository, IThreadSafeCache threadSafe)
         {
+            _threadSafe = threadSafe;
             _unitOfWork = unitOfWork;
             _repository = repository;
         }
@@ -62,7 +63,7 @@ namespace SoftUnlimit.WorkerAdapter
         /// <returns></returns>
         public async Task<string> ReleaseAsync(uint service, ushort worker)
         {
-            var semaphore = _assigns[service];
+            var semaphore = _threadSafe.GetOrAdd(service);
             await semaphore.WaitAsync();
             try
             {
@@ -88,7 +89,7 @@ namespace SoftUnlimit.WorkerAdapter
         /// <returns></returns>
         public async Task<DateTime> UpdateAsync(uint service, ushort worker)
         {
-            var semaphore = _assigns[service];
+            var semaphore = _threadSafe.GetOrAdd(service);
             await semaphore.WaitAsync();
             try
             {
@@ -115,7 +116,7 @@ namespace SoftUnlimit.WorkerAdapter
         /// <returns></returns>
         public async Task<RegisterResult> ReserveAsync(uint serviceID, string identifier, string endpoint)
         {
-            var semaphore = _assigns.GetOrAdd(serviceID, ServiceBucketFactory);
+            var semaphore = _threadSafe.GetOrAdd(serviceID);
             await semaphore.WaitAsync();
             try
             {
@@ -123,24 +124,6 @@ namespace SoftUnlimit.WorkerAdapter
             } finally
             {
                 semaphore.Release();
-            }
-        }
-
-        /// <summary>
-        /// Load initial data using repository.
-        /// </summary>
-        /// <param name="repository"></param>
-        /// <param name="force"></param>
-        /// <returns></returns>
-        public static void LoadFromRepository(IQueryRepository<TStorageObject> repository, bool force = false)
-        {
-            if (_assigns == null || force)
-            {
-                ConcurrentDictionary<uint, SemaphoreSlim> assings = new ConcurrentDictionary<uint, SemaphoreSlim>();
-                foreach (var adapterInfo in repository.FindAll())
-                    assings.GetOrAdd(adapterInfo.ServiceID, ServiceBucketFactory);
-
-                Interlocked.CompareExchange(ref _assigns, assings, null);
             }
         }
 
@@ -195,14 +178,6 @@ namespace SoftUnlimit.WorkerAdapter
 
             return new RegisterResult(workerID, false);
         }
-
-        /// <summary>
-        /// Create new service bucket
-        /// </summary>
-        /// <param name="serviceID"></param>
-        /// <returns></returns>
-        private static SemaphoreSlim ServiceBucketFactory(uint serviceID) => new SemaphoreSlim(1, 1);
-
         #endregion
     }
 }
