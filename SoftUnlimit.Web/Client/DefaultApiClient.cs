@@ -31,15 +31,8 @@ namespace SoftUnlimit.Web.Client
                 httpClient.BaseAddress = new Uri(baseUrl);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="TModel"></typeparam>
-        /// <param name="method"></param>
-        /// <param name="uri"></param>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        public async Task<TModel> SendAsync<TModel>(HttpMethod method, string uri, object model = null)
+        /// <inheritdoc/>
+        public async Task<TModel> SendAsync<TModel>(HttpMethod method, string uri, Action<HttpContent> setup = null, object model = null)
         {
             string completeUri = uri;
             string jsonContent = null;
@@ -53,24 +46,15 @@ namespace SoftUnlimit.Web.Client
                 } else
                     jsonContent = JsonConvert.SerializeObject(model);
             }
-            HttpContent httpContent = null;
+            HttpContent content = null;
             if (jsonContent != null)
-                httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+                content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            await this.BeforeSendRequestAsync(method, uri);
-            return await this.SendWithContentAsync<TModel>(_httpClient, method, completeUri, httpContent);
+            await this.BeforeSendRequestAsync(content, method, uri);
+            return await SendWithContentAsync<TModel>(_httpClient, method, completeUri, content, setup);
         }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="TModel"></typeparam>
-        /// <param name="method"></param>
-        /// <param name="uri"></param>
-        /// <param name="fileName"></param>
-        /// <param name="streams"></param>
-        /// <param name="qs"></param>
-        /// <returns></returns>
-        public async Task<TModel> UploadAsync<TModel>(HttpMethod method, string uri, string fileName, IEnumerable<Stream> streams, object qs = null)
+        /// <inheritdoc/>
+        public async Task<TModel> UploadAsync<TModel>(HttpMethod method, string uri, string fileName, IEnumerable<Stream> streams, Action<HttpContent> setup = null, object qs = null)
         {
             if (method == HttpMethod.Get)
                 throw new NotSupportedException("Get method don't allow upload image.");
@@ -83,22 +67,25 @@ namespace SoftUnlimit.Web.Client
             if (qs != null)
                 completeUri += string.Concat('?', await ObjectUtils.ToQueryString(qs));
 
-            await BeforeSendRequestAsync(method, uri);
-            return await this.SendWithContentAsync<TModel>(_httpClient, method, completeUri, content);
+            await BeforeSendRequestAsync(content, method, uri);
+            return await SendWithContentAsync<TModel>(_httpClient, method, completeUri, content, setup);
         }
 
         /// <summary>
         /// Performs operations before request.
         /// </summary>
+        /// <param name="content"></param>
         /// <param name="method"></param>
         /// <param name="uri"></param>
         /// <returns></returns>
-        protected virtual Task BeforeSendRequestAsync(HttpMethod method, string uri) => Task.CompletedTask;
+        protected virtual Task BeforeSendRequestAsync(HttpContent content, HttpMethod method, string uri) => Task.CompletedTask;
 
         #region Private Methods
 
-        private async Task<TModel> SendWithContentAsync<TModel>(HttpClient httpClient, HttpMethod method, string completeUri, HttpContent content)
+        private static async Task<TModel> SendWithContentAsync<TModel>(HttpClient httpClient, HttpMethod method, string completeUri, HttpContent content, Action<HttpContent> setup)
         {
+            setup?.Invoke(content);
+
             HttpRequestMessage message = new HttpRequestMessage(method, completeUri);
             if (content != null)
                 message.Content = content;
