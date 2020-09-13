@@ -25,7 +25,7 @@ namespace SoftUnlimit.Web.Client
         /// <param name="setup">Allow configuration of current execution context before perform the request.</param>
         /// <param name="model"></param>
         /// <returns></returns>
-        Task<TModel> SendAsync<TModel>(HttpMethod method, string uri, Action<HttpContent> setup = null, object model = null);
+        Task<TModel> SendAsync<TModel>(HttpMethod method, string uri, Action<HttpRequestMessage> setup = null, object model = null);
         /// <summary>
         /// Upload file (multipart/form-data)
         /// </summary>
@@ -37,6 +37,6 @@ namespace SoftUnlimit.Web.Client
         /// <param name="setup">Allow configuration of current execution context before perform the request.</param>
         /// <param name="qs"></param>
         /// <returns></returns>
-        Task<TModel> UploadAsync<TModel>(HttpMethod method, string uri, string fileName, IEnumerable<Stream> streams, Action<HttpContent> setup = null, object qs = null);
+        Task<TModel> UploadAsync<TModel>(HttpMethod method, string uri, string fileName, IEnumerable<Stream> streams, Action<HttpRequestMessage> setup = null, object qs = null);
     }
 }

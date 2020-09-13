@@ -32,7 +32,7 @@ namespace SoftUnlimit.Web.Client
         }
 
         /// <inheritdoc/>
-        public async Task<TModel> SendAsync<TModel>(HttpMethod method, string uri, Action<HttpContent> setup = null, object model = null)
+        public async Task<TModel> SendAsync<TModel>(HttpMethod method, string uri, Action<HttpRequestMessage> setup = null, object model = null)
         {
             string completeUri = uri;
             string jsonContent = null;
@@ -54,7 +54,7 @@ namespace SoftUnlimit.Web.Client
             return await SendWithContentAsync<TModel>(_httpClient, method, completeUri, content, setup);
         }
         /// <inheritdoc/>
-        public async Task<TModel> UploadAsync<TModel>(HttpMethod method, string uri, string fileName, IEnumerable<Stream> streams, Action<HttpContent> setup = null, object qs = null)
+        public async Task<TModel> UploadAsync<TModel>(HttpMethod method, string uri, string fileName, IEnumerable<Stream> streams, Action<HttpRequestMessage> setup = null, object qs = null)
         {
             if (method == HttpMethod.Get)
                 throw new NotSupportedException("Get method don't allow upload image.");
@@ -82,13 +82,13 @@ namespace SoftUnlimit.Web.Client
 
         #region Private Methods
 
-        private static async Task<TModel> SendWithContentAsync<TModel>(HttpClient httpClient, HttpMethod method, string completeUri, HttpContent content, Action<HttpContent> setup)
+        private static async Task<TModel> SendWithContentAsync<TModel>(HttpClient httpClient, HttpMethod method, string completeUri, HttpContent content, Action<HttpRequestMessage> setup)
         {
-            setup?.Invoke(content);
-
             HttpRequestMessage message = new HttpRequestMessage(method, completeUri);
             if (content != null)
                 message.Content = content;
+
+            setup?.Invoke(message);
             var response = await httpClient.SendAsync(message);
 
             if (!response.IsSuccessStatusCode)
