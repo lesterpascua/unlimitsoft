@@ -34,13 +34,13 @@ namespace SoftUnlimit.Web.AspNet.Filter.Authentication
         {
             if (string.IsNullOrWhiteSpace(rawCertificate))
                 return null;
-
-            string cleanHeaderValue = Uri.UnescapeDataString(rawCertificate);
-            byte[] bytes = Convert.FromBase64String(cleanHeaderValue);
             try
             {
+                string cleanHeaderValue = Uri.UnescapeDataString(rawCertificate);
+                byte[] bytes = Convert.FromBase64String(cleanHeaderValue);
                 return new X509Certificate2(bytes, password);
             } catch { }
+
             return null;
         }
     }
