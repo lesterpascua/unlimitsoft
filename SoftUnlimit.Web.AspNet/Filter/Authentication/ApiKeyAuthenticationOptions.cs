@@ -30,11 +30,11 @@ namespace SoftUnlimit.Web.AspNet.Filter.Authentication
         /// </summary>
         public string ApiKey { get; set; }
         /// <summary>
-        /// 
+        /// Retrive user associate with the request if null means no user asociate and the apiKey is invalid.
         /// </summary>
         public Func<HttpRequest, TUser> CreateUserInfo { get; set; }
         /// <summary>
-        /// 
+        /// Return claims associate to principal identity. The result could be null. 
         /// </summary>
         public Func<TUser, HttpRequest, IEnumerable<Claim>> CreateClaims { get; set; }
     }
