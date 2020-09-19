@@ -9,6 +9,7 @@ namespace SoftUnlimit.Web.AspNet.Filter.Authorization
     /// <summary>
     /// Requiere x-api-key secret
     /// </summary>
+    [Obsolete("Use ApiKeyAuthenticationOptions")]
     public class XApiKeyAuthorizationRequirement : IAuthorizationRequirement
     {
         /// <summary>

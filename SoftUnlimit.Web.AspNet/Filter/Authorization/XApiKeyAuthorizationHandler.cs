@@ -10,6 +10,7 @@ namespace SoftUnlimit.Web.AspNet.Filter.Authorization
     /// <summary>
     /// 
     /// </summary>
+    [Obsolete("Use ApiKeyAuthenticationOptions")]
     public class XApiKeyAuthorizationHandler : AuthorizationHandler<XApiKeyAuthorizationRequirement>
     {
         private readonly IHttpContextAccessor _httpContext;
