@@ -14,8 +14,8 @@ using System.Threading.Tasks;
 
 namespace SoftUnlimit.Web.AspNet.Filter.Authentication
 {
-    public class ApiKeyAuthenticationHandler<TOption, TUser> : AuthenticationHandler<ApiKeyAuthenticationOptions<TUser>>
-        where TOption : ApiKeyAuthenticationOptions<TUser>
+    public class ApiKeyAuthenticationHandler<TOption, TUser> : AuthenticationHandler<TOption>
+        where TOption : ApiKeyAuthenticationOptions<TUser>, new()
         where TUser : class
     {
         public const string HeaderName = "X-API-KEY";
@@ -30,7 +30,7 @@ namespace SoftUnlimit.Web.AspNet.Filter.Authentication
         /// <param name="encoder"></param>
         /// <param name="clock"></param>
         /// <param name="errStringFactory"></param>
-        public ApiKeyAuthenticationHandler(IOptionsMonitor<ApiKeyAuthenticationOptions<TUser>> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock, Func<ApiKeyError, string> errStringFactory = null)
+        public ApiKeyAuthenticationHandler(IOptionsMonitor<TOption> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock, Func<ApiKeyError, string> errStringFactory = null)
             : base(options, logger, encoder, clock)
         {
             ErrorBuilder = errStringFactory;
