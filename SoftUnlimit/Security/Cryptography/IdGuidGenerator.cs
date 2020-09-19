@@ -2,6 +2,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Net.NetworkInformation;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading;
 
@@ -16,7 +18,7 @@ namespace SoftUnlimit.Security.Cryptography
     ///     <item><description>16-bit secuence</description></item>
     /// </list>
     /// </summary>
-    public class IdGuidGenerator : IIdGenerator<Guid>
+    public class IdGuidGenerator : IIdGenerator<Guid>, IServiceMetadata
     {
         private readonly DateTime _startEpoch;
         private readonly object _sync = new object();               // Object used as a monitor for threads synchronization.
@@ -46,6 +48,22 @@ namespace SoftUnlimit.Security.Cryptography
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="nic">MAC addresss identifier.</param>
+        public IdGuidGenerator(PhysicalAddress nic)
+            : this(nic.GetAddressBytes(), CustomGeneratorSettings.Jan1st1970)
+        {
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="nic">MAC addresss identifier.</param>
+        public IdGuidGenerator(NetworkInterface nic)
+            : this(nic.GetPhysicalAddress())
+        {
+        }
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="identifier">Identifier can be a mac addresss.</param>
         /// <param name="epoch"></param>
         public IdGuidGenerator(byte[] identifier, DateTime epoch)
@@ -56,10 +74,13 @@ namespace SoftUnlimit.Security.Cryptography
                 throw new ArgumentException("Parameter must be an array of length equal 6.", nameof(identifier));
 
             _startEpoch = epoch;
-            Id = Convert.ToBase64String(identifier);
             _id0 = identifier[0]; _id1 = identifier[1];
             _id2 = identifier[2]; _id3 = identifier[3];
             _id4 = identifier[4]; _id5 = identifier[5];
+
+            Id = Convert.ToBase64String(identifier);
+            WorkerId = (ushort)(_id0 << (8 * 0) | _id1 << (8 * 1));
+            ServiceId = (uint)(_id2 << (8 * 0) | _id3 << (8 * 1) | _id4 << (8 * 2) | _id5 << (8 * 3));
         }
 
 
@@ -67,6 +88,14 @@ namespace SoftUnlimit.Security.Cryptography
         /// 
         /// </summary>
         public string Id { get; }
+        /// <summary>
+        /// Service identifier.
+        /// </summary>
+        public uint ServiceId { get; }
+        /// <summary>
+        /// Worker identifier.
+        /// </summary>
+        public ushort WorkerId { get; }
 
         #region Public Methods
 
@@ -93,48 +122,34 @@ namespace SoftUnlimit.Security.Cryptography
         /// </summary>
         /// <returns></returns>
         public override string ToString() => this.Id;
-        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
-        }
 
         #endregion Public Methods
 
         #region Private Methods
 
-        private ulong CurrentTime
-        {
-            get { return (ulong)(DateTime.UtcNow - this._startEpoch).Ticks; }
-        }
+        private ulong CurrentTime => (ulong)(DateTime.UtcNow - this._startEpoch).Ticks;
 
         private Guid NextId()
         {
-            var timestamp = this.CurrentTime;
-            if (timestamp < this._lastTimestamp)
-                throw new InvalidOperationException(string.Format(Resources.InvalidOperationException_ClockMovedBackwards, (this._lastTimestamp - timestamp)));
+            var timestamp = CurrentTime;
+            if (timestamp < _lastTimestamp)
+                throw new InvalidOperationException(string.Format(Resources.InvalidOperationException_ClockMovedBackwards, (_lastTimestamp - timestamp)));
 
-            if (this._lastTimestamp == timestamp)
+            if (_lastTimestamp == timestamp)
             {
-                if (++this._sequence > UInt16.MaxValue)
-                    timestamp = this.TillNextMillis(this._lastTimestamp);
-                Console.WriteLine(new Guid(
-                (int)(this._lastTimestamp >> 32 & 0xFFFFFFFF),
-                (short)(this._lastTimestamp >> 16 & 0xFFFF),
-                (short)(this._lastTimestamp & 0xFFFF),
-                this._id5, this._id4, this._id3, this._id2, this._id1, this._id0,
-                (byte)(this._sequence >> 8 & 0xFF),
-                (byte)(this._sequence >> 0 & 0xFF)));
+                if (++_sequence > ushort.MaxValue)
+                    timestamp = TillNextMillis(_lastTimestamp);
             } else
-                this._sequence = 0;
+                _sequence = 0;
 
-            this._lastTimestamp = timestamp;
+            _lastTimestamp = timestamp;
             return new Guid(
-                (int)(this._lastTimestamp >> 32 & 0xFFFFFFFF),
-                (short)(this._lastTimestamp >> 16 & 0xFFFF),
-                (short)(this._lastTimestamp & 0xFFFF),
-                this._id5, this._id4, this._id3, this._id2, this._id1, this._id0,
-                (byte)(this._sequence >> 8 & 0xFF),
-                (byte)(this._sequence >> 0 & 0xFF));
+                (int)(_lastTimestamp >> 32 & 0xFFFFFFFF),
+                (short)(_lastTimestamp >> 16 & 0xFFFF),
+                (short)(_lastTimestamp & 0xFFFF),
+                _id5, _id4, _id3, _id2, _id1, _id0,
+                (byte)(_sequence >> 8 & 0xFF),
+                (byte)(_sequence >> 0 & 0xFF));
         }
         private ulong TillNextMillis(ulong lastTimestamp)
         {
@@ -143,18 +158,18 @@ namespace SoftUnlimit.Security.Cryptography
 
             return timestamp;
         }
-        private static byte[] CreateIdentifier(uint service, ushort worker)
-        {
-            return new byte[6] {
-                (byte)(worker >> (8 * 0) & 0xff),
-                (byte)(worker >> (8 * 1) & 0xff),
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static byte[] CreateIdentifier(uint service, ushort worker) => new byte[6] {
+            (byte)(worker >> (8 * 0) & 0xff),
+            (byte)(worker >> (8 * 1) & 0xff),
 
-                (byte)(service >> (8 * 0) & 0xff),
-                (byte)(service >> (8 * 1) & 0xff),
-                (byte)(service >> (8 * 2) & 0xff),
-                (byte)(service >> (8 * 3) & 0xff),
-            };
-        }
+            (byte)(service >> (8 * 0) & 0xff),
+            (byte)(service >> (8 * 1) & 0xff),
+            (byte)(service >> (8 * 2) & 0xff),
+            (byte)(service >> (8 * 3) & 0xff),
+        };
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 
         #endregion Private Methods
     }

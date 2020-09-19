@@ -25,6 +25,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -108,6 +109,14 @@ namespace SoftUnlimit.CQRS.Test
     {
         public static async Task Main()
         {
+            var firstMacAddress = NetworkInterface
+                .GetAllNetworkInterfaces()
+                .Where(nic => nic.OperationalStatus == OperationalStatus.Up && nic.NetworkInterfaceType != NetworkInterfaceType.Loopback)
+                .FirstOrDefault();
+
+            var gen = new IdGuidGenerator(firstMacAddress);
+            Console.WriteLine("Service: {0}, Worker: {1}", gen.ServiceId, gen.WorkerId);
+
             var services = new ServiceCollection();
 
             services.AddSingleton<IIdGenerator<Guid>>(_ => new IdGuidGenerator(1, 0));

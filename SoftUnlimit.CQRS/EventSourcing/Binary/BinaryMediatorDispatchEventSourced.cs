@@ -40,7 +40,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
         /// 
         /// </summary>
         protected abstract IRepository<BinaryVersionedEventPayload> VersionedEventRepository { get; }
-
+        
         /// <summary>
         /// 
         /// </summary>
@@ -51,7 +51,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
             List<BinaryVersionedEventPayload> remoteEvents = new List<BinaryVersionedEventPayload>();
             foreach (var @event in events)
             {
-                var payload = new BinaryVersionedEventPayload(@event);
+                var payload = Create(@event);
                 remoteEvents.Add(payload);
                 if (!@event.IsDomainEvent && SkipDomain)
                     continue;
@@ -72,5 +72,12 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
         /// <param name="events"></param>
         /// <returns></returns>
         public virtual Task EventsDispatchedAsync(IEnumerable<IVersionedEvent> events) => Task.CompletedTask;
+
+        /// <summary>
+        /// Create new event using versioned event as template.
+        /// </summary>
+        /// <param name="event"></param>
+        /// <returns></returns>
+        protected virtual BinaryVersionedEventPayload Create(IVersionedEvent @event) => new BinaryVersionedEventPayload(@event);
     }
 }
