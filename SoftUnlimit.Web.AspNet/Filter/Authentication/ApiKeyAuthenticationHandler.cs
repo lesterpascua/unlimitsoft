@@ -14,7 +14,8 @@ using System.Threading.Tasks;
 
 namespace SoftUnlimit.Web.AspNet.Filter.Authentication
 {
-    public class ApiKeyAuthenticationHandler<TUser> : AuthenticationHandler<ApiKeyAuthenticationOptions<TUser>>
+    public class ApiKeyAuthenticationHandler<TOption, TUser> : AuthenticationHandler<ApiKeyAuthenticationOptions<TUser>>
+        where TOption : ApiKeyAuthenticationOptions<TUser>
         where TUser : class
     {
         public const string HeaderName = "X-API-KEY";
