@@ -26,12 +26,14 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
         public BinaryEventPayload(IEvent @event)
         {
             var props = @event.Creator.GetProps<CommandProps>();
-            CreatorID = props.Id;
+            CreatorId = props.Id;
             CreatorName = props.Name;
 
-            SourceID = @event.SourceID.ToString();
-            ServiceID = @event.ServiceID;
-            WorkerID = @event.WorkerID;
+            SourceId = @event.SourceId.ToString();
+            EntityName = (@event.CurrState ?? @event.PrevState)?.GetType().AssemblyQualifiedName;
+
+            ServiceId = @event.ServiceId;
+            WorkerId = @event.WorkerId;
             EventName = @event.Name;
             IsDomain = @event.IsDomainEvent;
 
@@ -51,7 +53,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
         /// <summary>
         /// Creator identifier (Command Id).
         /// </summary>
-        public string CreatorID { get; set; }
+        public string CreatorId { get; set; }
         /// <summary>
         /// Creator name (Command FullName)
         /// </summary>
@@ -60,16 +62,21 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
         /// <summary>
         /// 
         /// </summary>
-        public string SourceID { get; set; }
+        public string SourceId { get; set; }
+        /// <summary>
+        /// Entity type full name.
+        /// </summary>
+        public string EntityName { get; set; }
 
         /// <summary>
-        /// 
+        /// Service unique identifier.
         /// </summary>
-        public uint ServiceID { get; set; }
+        public uint ServiceId { get; set; }
         /// <summary>
-        /// 
+        /// Worker unique identifier per service.
         /// </summary>
-        public ushort WorkerID { get; set; }
+        public string WorkerId { get; set; }
+
         /// <summary>
         /// Event unique name.
         /// </summary>

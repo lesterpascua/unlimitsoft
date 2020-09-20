@@ -6,8 +6,8 @@ namespace SoftUnlimit.WorkerAdapter.Tests
 {
     public class WorkerStorage : IAdapterInfoStorageObject
     {
-        public uint ServiceID { get; set; }
-        public ushort WorkerID { get; set; }
+        public uint ServiceId { get; set; }
+        public ushort WorkerId { get; set; }
         public string Identifier { get; set; }
         public string Endpoint { get; set; }
         public DateTime Created { get; set; }

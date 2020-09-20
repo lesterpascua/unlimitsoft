@@ -68,7 +68,7 @@ namespace SoftUnlimit.WorkerAdapter
             try
             {
                 var dbInfo = _repository
-                    .Find(p => p.WorkerID == worker)
+                    .Find(p => p.WorkerId == worker)
                     .FirstOrDefault();
                 if (dbInfo == null || _repository.Remove(dbInfo) != EntityState.Deleted)
                     return null;
@@ -94,7 +94,7 @@ namespace SoftUnlimit.WorkerAdapter
             try
             {
                 var dbInfo = _repository
-                    .Find(p => p.WorkerID == worker)
+                    .Find(p => p.WorkerId == worker)
                     .FirstOrDefault();
 
                 dbInfo.Updated = DateTime.UtcNow;
@@ -149,18 +149,18 @@ namespace SoftUnlimit.WorkerAdapter
                 .FirstOrDefault();
 
             if (dbInfo != null)
-                return new RegisterResult(dbInfo.WorkerID, true);
+                return new RegisterResult(dbInfo.WorkerId, true);
 
             var array = _repository.FindAll()
-                .Select(s => s.WorkerID)
+                .Select(s => s.WorkerId)
                 .OrderBy(k => k)
                 .ToArray();
-            ushort workerID = (ushort)array.Length;
+            ushort workerId = (ushort)array.Length;
             for (ushort i = 0; i < array.Length; i++)
             {
                 if (array[i] == i)
                     continue;
-                workerID = i;
+                workerId = i;
                 break;
             }
 
@@ -169,14 +169,14 @@ namespace SoftUnlimit.WorkerAdapter
                 Created = now,
                 Endpoint = endpoint,
                 Identifier = identifier,
-                ServiceID = serviceID,
+                ServiceId = serviceID,
                 Updated = now,
-                WorkerID = workerID
+                WorkerId = workerId
             };
             await _repository.AddAsync(dbInfo);
             await _unitOfWork.SaveChangesAsync();
 
-            return new RegisterResult(workerID, false);
+            return new RegisterResult(workerId, false);
         }
         #endregion
     }

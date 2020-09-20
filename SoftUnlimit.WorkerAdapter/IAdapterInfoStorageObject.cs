@@ -12,11 +12,11 @@ namespace SoftUnlimit.WorkerAdapter
         /// <summary>
         /// Service identifier
         /// </summary>
-        public uint ServiceID { get; set; }
+        public uint ServiceId { get; set; }
         /// <summary>
         /// Worker numeric identifier
         /// </summary>
-        public ushort WorkerID { get; set; }
+        public ushort WorkerId { get; set; }
         /// <summary>
         /// Worker string identifier
         /// </summary>

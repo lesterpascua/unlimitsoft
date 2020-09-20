@@ -33,7 +33,7 @@ namespace SoftUnlimit.WorkerAdapter
             this._assigns = new ConcurrentDictionary<uint, ServiceBucket>();
             foreach (var info in initInfos)
             {
-                (var semaphore, var cache, var reverseCache) = _assigns.GetOrAdd(info.ServiceID, (service) => new ServiceBucket {
+                (var semaphore, var cache, var reverseCache) = _assigns.GetOrAdd(info.ServiceId, (service) => new ServiceBucket {
                     Cache = new Dictionary<string, WorkerBucket>(),
                     ReverseCache = new Dictionary<ushort, string>(),
                     Semaphore = new SemaphoreSlim(1, 1)
@@ -41,13 +41,13 @@ namespace SoftUnlimit.WorkerAdapter
 
                 cache.Add(info.Identifier, new WorkerBucket {
                     Endpoint = info.Endpoint,
-                    WorkerID = info.WorkerID,
+                    WorkerId = info.WorkerId,
                     Created = info.Created,
                     Updated = info.Updated,
                     Identifier = info.Identifier,
-                    ServiceID = info.ServiceID
+                    ServiceId = info.ServiceId
                 });
-                reverseCache.Add(info.WorkerID, info.Identifier);
+                reverseCache.Add(info.WorkerId, info.Identifier);
             }
         }
 
@@ -146,31 +146,31 @@ namespace SoftUnlimit.WorkerAdapter
         private RegisterResult Reserve(string identifier, Dictionary<string, WorkerBucket> cache, Dictionary<ushort, string> reverseCache, string endpoint)
         {
             if (cache.ContainsKey(identifier))
-                return new RegisterResult(cache[identifier].WorkerID, true);
+                return new RegisterResult(cache[identifier].WorkerId, true);
 
             var array = cache.Values
-                .Select(s => s.WorkerID)
+                .Select(s => s.WorkerId)
                 .OrderBy(k => k)
                 .ToArray();
-            ushort workerID = (ushort)array.Length;
+            ushort workerId = (ushort)array.Length;
             for (ushort i = 0; i < array.Length; i++)
             {
                 if (array[i] == i)
                     continue;
-                workerID = i;
+                workerId = i;
                 break;
             }
 
             var now = DateTime.UtcNow;
             cache.Add(identifier, new WorkerBucket {
                 Endpoint = endpoint,
-                WorkerID = workerID,
+                WorkerId = workerId,
                 Created = now,
                 Updated = now,
             });
-            reverseCache.Add(workerID, identifier);
+            reverseCache.Add(workerId, identifier);
 
-            return new RegisterResult(workerID, false);
+            return new RegisterResult(workerId, false);
         }
 
 
@@ -211,7 +211,7 @@ namespace SoftUnlimit.WorkerAdapter
             /// <summary>
             /// 
             /// </summary>
-            public uint ServiceID { get; set; }
+            public uint ServiceId { get; set; }
             /// <summary>
             /// 
             /// </summary>
@@ -224,7 +224,7 @@ namespace SoftUnlimit.WorkerAdapter
             /// <summary>
             /// 
             /// </summary>
-            public ushort WorkerID { get; set; }
+            public ushort WorkerId { get; set; }
             /// <summary>
             /// Creation date
             /// </summary>

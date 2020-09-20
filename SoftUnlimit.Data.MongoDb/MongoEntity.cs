@@ -14,7 +14,7 @@ namespace SoftUnlimit.Data.MongoDb
         /// 
         /// </summary>
         [BsonId]
-        public TKey ID { get; set; }
+        public TKey Id { get; set; }
 
         /// <summary>
         /// 
@@ -23,7 +23,7 @@ namespace SoftUnlimit.Data.MongoDb
         public bool IsTransient()
         {
             if (typeof(TKey) == typeof(long) || typeof(TKey) == typeof(int) || typeof(TKey) == typeof(Guid))
-                return this.ID.Equals(default(TKey));
+                return this.Id.Equals(default(TKey));
 
             return false;
         }
@@ -36,7 +36,7 @@ namespace SoftUnlimit.Data.MongoDb
             if (!this.IsTransient())
             {
                 if (!this._requestedHashCode.HasValue)
-                    _requestedHashCode = this.ID.GetHashCode() ^ 31;
+                    _requestedHashCode = this.Id.GetHashCode() ^ 31;
 
                 return _requestedHashCode.Value;    // XOR for random distribution. See: http://blogs.msdn.com/b/ericlippert/archive/2011/02/28/guidelines-and-rules-forgethashcode.aspx
             } else
@@ -56,7 +56,7 @@ namespace SoftUnlimit.Data.MongoDb
             if (this.GetType() != obj.GetType())
                 return false;
             MongoEntity<TKey> item = (MongoEntity<TKey>)obj;
-            return !item.IsTransient() && !IsTransient() && item.ID.Equals(this.ID);
+            return !item.IsTransient() && !IsTransient() && item.Id.Equals(this.Id);
         }
         /// <summary>
         /// 
@@ -67,7 +67,7 @@ namespace SoftUnlimit.Data.MongoDb
 
         #region Private Methods
 
-        object IEntity.ID => ID;
+        object IEntity.Id => Id;
 
         #endregion
     }

@@ -34,20 +34,20 @@ namespace SoftUnlimit.Data.MongoDb
 
         public EntityState Remove(TEntity entity)
         {
-            var filter = Builders<TEntity>.Filter.Eq(s => s.ID, entity.ID);
+            var filter = Builders<TEntity>.Filter.Eq(s => s.Id, entity.Id);
             _repository.DeleteOne(_session, filter);
             return EntityState.Deleted;
         }
 
         public EntityState Update(TEntity entity)
         {
-            var filter = Builders<TEntity>.Filter.Eq(s => s.ID, entity.ID);
+            var filter = Builders<TEntity>.Filter.Eq(s => s.Id, entity.Id);
             _repository.ReplaceOne(_session, filter, entity);
             return EntityState.Deleted;
         }
         public async Task<EntityState> UpdateAsync(TEntity entity)
         {
-            var filter = Builders<TEntity>.Filter.Eq(s => s.ID, entity.ID);
+            var filter = Builders<TEntity>.Filter.Eq(s => s.Id, entity.Id);
             await _repository.ReplaceOneAsync(_session, filter, entity);
             return EntityState.Deleted;
         }

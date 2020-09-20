@@ -82,7 +82,7 @@ namespace SoftUnlimit.CQRS.Test
             await _unitOfWork.SaveChangesAsync();
 
             var dbJob = new Person {
-                ID = Guid.NewGuid(),
+                Id = Guid.NewGuid(),
                 Name = "Some Test Name"
             };
             await _repository.AddAsync(dbJob);
@@ -187,7 +187,7 @@ namespace SoftUnlimit.CQRS.Test
             }));
 
             var person = new Person {
-                ID = Guid.NewGuid(),
+                Id = Guid.NewGuid(),
                 Name = "Jhon Smith"
             };
             var personDto = mapper.Map<PersonDto>(person);

@@ -62,8 +62,8 @@ namespace SoftUnlimit.Data.EntityFramework
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             var typesToRegister =
-                from type in this.EntityTypeBuilderBaseClass.Assembly.GetTypes()
-                where type.IsClass && !type.IsAbstract && EFDbContext.IsSubTypeOfType(type, this.EntityTypeBuilderBaseClass)
+                from type in EntityTypeBuilderBaseClass.Assembly.GetTypes()
+                where type.IsClass && !type.IsAbstract && EFDbContext.IsSubTypeOfType(type, EntityTypeBuilderBaseClass)
                 select type;
 
             foreach (var type in typesToRegister)
@@ -96,7 +96,7 @@ namespace SoftUnlimit.Data.EntityFramework
         /// Get all types inside of this unit of work.
         /// </summary>
         /// <returns></returns>
-        public IEnumerable<Type> GetModelEntityTypes() => this.Model.GetEntityTypes().Select(s => s.ClrType);
+        public IEnumerable<Type> GetModelEntityTypes() => Model.GetEntityTypes().Select(s => s.ClrType);
 
         #region Static Methods
 

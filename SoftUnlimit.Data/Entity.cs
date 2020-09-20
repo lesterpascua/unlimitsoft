@@ -19,7 +19,7 @@ namespace SoftUnlimit.Data
         /// <summary>
         /// Identificator of entity.
         /// </summary>
-        public Key ID { get; set; }
+        public Key Id { get; set; }
 
         #region Public Methods
 
@@ -31,7 +31,7 @@ namespace SoftUnlimit.Data
         public bool IsTransient()
         {
             if (typeof(Key) == typeof(long) || typeof(Key) == typeof(int) || typeof(Key) == typeof(Guid))
-                return this.ID.Equals(default(Key));
+                return this.Id.Equals(default(Key));
 
             return false;
         }
@@ -44,7 +44,7 @@ namespace SoftUnlimit.Data
             if (!this.IsTransient())
             {
                 if (!this._requestedHashCode.HasValue)
-                    _requestedHashCode = this.ID.GetHashCode() ^ 31;
+                    _requestedHashCode = this.Id.GetHashCode() ^ 31;
 
                 return _requestedHashCode.Value;    // XOR for random distribution. See: http://blogs.msdn.com/b/ericlippert/archive/2011/02/28/guidelines-and-rules-forgethashcode.aspx
             } else
@@ -64,7 +64,7 @@ namespace SoftUnlimit.Data
             if (this.GetType() != obj.GetType())
                 return false;
             Entity<Key> item = (Entity<Key>)obj;
-            return !item.IsTransient() && !IsTransient() && item.ID.Equals(this.ID);
+            return !item.IsTransient() && !IsTransient() && item.Id.Equals(this.Id);
         }
         /// <summary>
         /// 
@@ -77,7 +77,7 @@ namespace SoftUnlimit.Data
 
         #region Explicit Interface Implementation
 
-        object IEntity.ID => this.ID;
+        object IEntity.Id => this.Id;
 
         #endregion
     }

@@ -57,9 +57,9 @@ namespace SoftUnlimit.WorkerAdapter
                 if (!allowed.Contains(status.CheckStatus))
                 {
                     if (now - info.Updated > tolerance)
-                        toDelete.Add((info.ServiceID, info.WorkerID));
+                        toDelete.Add((info.ServiceId, info.WorkerId));
                 } else
-                    toUpdate.Add((info.ServiceID, info.WorkerID));
+                    toUpdate.Add((info.ServiceId, info.WorkerId));
             }
 
             foreach (var entry in toUpdate)

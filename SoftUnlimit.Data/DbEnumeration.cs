@@ -25,7 +25,7 @@ namespace SoftUnlimit.Data
         /// <param name="name"></param>
         protected DbEnumeration(TKey id, string name)
         {
-            this.ID = id;
+            this.Id = id;
             this.Name = name;
         }
 
@@ -40,13 +40,13 @@ namespace SoftUnlimit.Data
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
-        public int CompareTo(object other) => this.ID.CompareTo(((DbEnumeration<TKey>)other).ID);
+        public int CompareTo(object other) => this.Id.CompareTo(((DbEnumeration<TKey>)other).Id);
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public override int GetHashCode() => this.ID.GetHashCode();
+        public override int GetHashCode() => this.Id.GetHashCode();
         /// <summary>
         /// 
         /// </summary>
@@ -62,7 +62,7 @@ namespace SoftUnlimit.Data
             if (!(obj is DbEnumeration<TKey> otherValue))
                 return false;
 
-            bool valueMatches = this.ID.Equals(otherValue.ID);
+            bool valueMatches = this.Id.Equals(otherValue.Id);
             bool typeMatches = this.GetType().Equals(obj.GetType());
 
             return typeMatches && valueMatches;

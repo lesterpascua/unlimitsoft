@@ -35,7 +35,7 @@ namespace App.Manual.Tests.CQRS.Command
         public async Task<CommandResponse> HandleAsync(DummyCreateCommand command, object validationCache)
         {
             var dbObj = new Dummy {
-                ID = _gen.GenerateId(),
+                Id = _gen.GenerateId(),
                 Name = $"Time: {DateTime.Now}"
             };
 

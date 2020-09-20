@@ -30,14 +30,14 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="sourceID"></param>
+        /// <param name="sourceId"></param>
         /// <param name="version">if null get the last version.</param>
         /// <returns></returns>
-        public async Task<TEntity> FindByID(string sourceID, long? version = null)
+        public async Task<TEntity> FindByID(string sourceId, long? version = null)
         {
             IQueryable<JsonVersionedEventPayload> query = version.HasValue ?
-                this._queryRepository.Find(p => p.SourceID.Equals(sourceID) && p.Version == version) :
-                this._queryRepository.Find(p => p.SourceID.Equals(sourceID)).OrderByDescending(k => k.Version);
+                this._queryRepository.Find(p => p.SourceId.Equals(sourceId) && p.Version == version) :
+                this._queryRepository.Find(p => p.SourceId.Equals(sourceId)).OrderByDescending(k => k.Version);
 
             JsonVersionedEventPayload payload = await query.FirstOrDefaultAsync();
             return JsonConvert.DeserializeObject<TEntity>(payload.CurrState, VersionedEventSettings.JsonDeserializerSettings);

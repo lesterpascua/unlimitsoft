@@ -10,9 +10,9 @@ namespace App.Manual.Tests.CQRS.Configuration
     {
         public override void Configure(EntityTypeBuilder<Dummy> builder)
         {
-            builder.HasKey(k => k.ID);
+            builder.HasKey(k => k.Id);
 
-            builder.Property(p => p.ID).ValueGeneratedNever();
+            builder.Property(p => p.Id).ValueGeneratedNever();
             builder.Property(p => p.Name).IsRequired().HasMaxLength(60);
         }
     }

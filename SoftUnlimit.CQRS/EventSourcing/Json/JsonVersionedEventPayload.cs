@@ -23,9 +23,9 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         /// <param name="event"></param>
         public JsonEventPayload(IEvent @event)
         {
-            SourceID = @event.SourceID.ToString();
-            ServiceID = @event.ServiceID;
-            WorkerID = @event.WorkerID;
+            SourceId = @event.SourceId.ToString();
+            ServiceId = @event.ServiceId;
+            WorkerId = @event.WorkerId;
             
             Created = @event.Created;
             Name = @event.Name;
@@ -40,16 +40,16 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         /// <summary>
         /// 
         /// </summary>
-        public string SourceID { get; set; }
+        public string SourceId { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
-        public uint ServiceID { get; set; }
+        public uint ServiceId { get; set; }
         /// <summary>
         /// 
         /// </summary>
-        public ushort WorkerID { get; set; }
+        public string WorkerId { get; set; }
         /// <summary>
         /// 
         /// </summary>

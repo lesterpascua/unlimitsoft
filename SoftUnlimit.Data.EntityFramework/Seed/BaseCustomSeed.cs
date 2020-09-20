@@ -42,7 +42,7 @@ namespace SoftUnlimit.Data.EntityFramework.Seed
             {
                 foreach (var entry in EnumerationHelper.GetAll(typeof(TEntity)).Cast<IDbEnumeration>())
                 {
-                    TEntity dbEntity = await dbContext.FindAsync<TEntity>(entry.ID);
+                    TEntity dbEntity = await dbContext.FindAsync<TEntity>(entry.Id);
                     if (dbEntity != null)
                     {
                         //entity.Name = entry.Name;

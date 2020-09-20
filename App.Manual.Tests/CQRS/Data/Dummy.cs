@@ -20,6 +20,6 @@ namespace App.Manual.Tests.CQRS.Data
     {
         public string Name { get; set; }
 
-        public void AddMasterEvent(ICommand creator, DummyDTO prevState, DummyDTO currState) => base.AddMasterEvent(1, 0, creator, prevState, currState);
+        public void AddMasterEvent(ICommand creator, DummyDTO prevState, DummyDTO currState) => base.AddMasterEvent(1, "0", creator, prevState, currState);
     }
 }

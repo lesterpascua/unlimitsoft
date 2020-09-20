@@ -14,15 +14,15 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Gets the identifier of the source originating the event.
         /// </summary>
-        object SourceID { get; set; }
+        object SourceId { get; set; }
         /// <summary>
         /// Identifier of service where event is created
         /// </summary>
-        uint ServiceID { get; }
+        uint ServiceId { get; }
         /// <summary>
         /// Identifier of the worker were the event is create.
         /// </summary>
-        ushort WorkerID { get; }
+        string WorkerId { get; }
         /// <summary>
         /// Event creation date
         /// </summary>
@@ -68,19 +68,19 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="sourceID"></param>
-        /// <param name="serviceID"></param>
-        /// <param name="workerID"></param>
+        /// <param name="sourceId"></param>
+        /// <param name="serviceId"></param>
+        /// <param name="workerId"></param>
         /// <param name="command"></param>
         /// <param name="prevState"></param>
         /// <param name="currState"></param>
         /// <param name="isDomain"></param>
         /// <param name="body"></param>
-        protected Event(TKey sourceID, uint serviceID, ushort workerID, ICommand command, object prevState, object currState, bool isDomain, object body)
+        protected Event(TKey sourceId, uint serviceId, string workerId, ICommand command, object prevState, object currState, bool isDomain, object body)
         {
-            SourceID = sourceID;
-            ServiceID = serviceID;
-            WorkerID = workerID;
+            SourceId = sourceId;
+            ServiceId = serviceId;
+            WorkerId = workerId;
 
             Creator = command;
             PrevState = prevState;
@@ -93,15 +93,15 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Gets the identifier of the source originating the event.
         /// </summary>
-        public TKey SourceID { get; protected set; }
+        public TKey SourceId { get; protected set; }
         /// <summary>
         /// 
         /// </summary>
-        public uint ServiceID { get; protected set; }
+        public uint ServiceId { get; protected set; }
         /// <summary>
         /// 
         /// </summary>
-        public ushort WorkerID { get; protected set; }
+        public string WorkerId { get; protected set; }
         /// <summary>
         /// Event creation date
         /// </summary>
@@ -143,7 +143,7 @@ namespace SoftUnlimit.CQRS.Event
 
         #region Explicit Interface Implementation
 
-        object IEvent.SourceID { get => this.SourceID; set => this.SourceID = (TKey)value; }
+        object IEvent.SourceId { get => this.SourceId; set => this.SourceId = (TKey)value; }
 
         #endregion
     }

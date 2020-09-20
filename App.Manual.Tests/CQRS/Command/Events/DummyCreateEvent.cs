@@ -9,8 +9,8 @@ namespace App.Manual.Tests.CQRS.Command.Events
     [Serializable]
     public class DummyCreateEvent : VersionedEvent<Guid>
     {
-        public DummyCreateEvent(Guid sourceID, long version, uint serviceID, ushort workerID, ICommand command, object prevState, object currState, object body = null)
-            : base(sourceID, version, serviceID, workerID, false, command, prevState, currState, body)
+        public DummyCreateEvent(Guid sourceId, long version, uint serviceId, string workerId, ICommand command, object prevState, object currState, object body = null)
+            : base(sourceId, version, serviceId, workerId, false, command, prevState, currState, body)
         {
         }
     }

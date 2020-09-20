@@ -39,7 +39,7 @@ namespace SoftUnlimit.Data.MongoDb
         /// <returns></returns>
         public async ValueTask<TEntity> FindAsync(params object[] keyValues)
         {
-            var filter = Builders<TEntity>.Filter.Eq(s => s.ID, keyValues[0]);
+            var filter = Builders<TEntity>.Filter.Eq(s => s.Id, keyValues[0]);
             var cursor = await _repository.FindAsync(_session, filter);
             return await cursor.FirstOrDefaultAsync();
         }

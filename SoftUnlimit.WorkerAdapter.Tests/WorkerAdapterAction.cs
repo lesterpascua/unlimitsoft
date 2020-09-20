@@ -35,17 +35,17 @@ namespace SoftUnlimit.WorkerAdapter.Tests
                 new DefaultThreadSafeCache()
             );
 
-            const uint serviceID = 10;
+            const uint serviceId = 10;
             const string identifier = "123456";
             const string healthEndpoint = "http://localhost/hc";
 
             DateTime now = DateTime.UtcNow;
 
-            adapter.ReserveAsync(serviceID, identifier, healthEndpoint);
+            adapter.ReserveAsync(serviceId, identifier, healthEndpoint);
 
             Assert.True(save);
             Assert.Single(workers);
-            Assert.Equal(serviceID, workers[0].ServiceID);
+            Assert.Equal(serviceId, workers[0].ServiceId);
             Assert.Equal(identifier, workers[0].Identifier);
             Assert.Equal(healthEndpoint, workers[0].Endpoint);
             Assert.True(now <= workers[0].Created && workers[0].Created <= DateTime.UtcNow);

@@ -12,7 +12,7 @@ namespace SoftUnlimit.Data
         /// <summary>
         /// Entity identifier.
         /// </summary>
-        object ID { get; }
+        object Id { get; }
 
         /// <summary>
         /// Indicate is not initialized yet.
