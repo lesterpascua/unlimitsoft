@@ -25,8 +25,7 @@ namespace SoftUnlimit.Data.EntityFramework.DependencyInjection
         /// <typeparam name="DbContextWrite"></typeparam>
         /// <param name="services"></param>
         /// <param name="settings"></param>
-        /// <param name="isDevelop"></param>
-        public static IServiceCollection AddSoftUnlimitDefaultFrameworkUnitOfWork<DbContextRead, DbContextWrite>(this IServiceCollection services, UnitOfWorkSettings settings, bool isDevelop)
+        public static IServiceCollection AddSoftUnlimitDefaultFrameworkUnitOfWork<DbContextRead, DbContextWrite>(this IServiceCollection services, UnitOfWorkSettings settings)
             where DbContextRead : DbContext
             where DbContextWrite : DbContext
         {
@@ -35,15 +34,15 @@ namespace SoftUnlimit.Data.EntityFramework.DependencyInjection
             {
                 int currConn = Math.Abs(Interlocked.Increment(ref connIndex) % settings.ReadConnString.Length);
 
-                settings.ReadBuilder(settings, options, settings.ReadConnString[currConn]);
                 if (settings.DatabaseSettings.EnableSensitiveDataLogging)
                     options.EnableSensitiveDataLogging();
+                settings.ReadBuilder(settings, options, settings.ReadConnString[currConn]);
             }
             static void WriteOptionAction(UnitOfWorkSettings settings, DbContextOptionsBuilder options)
             {
-                settings.WriteBuilder(settings, options, settings.WriteConnString);
                 if (settings.DatabaseSettings.EnableSensitiveDataLogging)
                     options.EnableSensitiveDataLogging();
+                settings.WriteBuilder(settings, options, settings.WriteConnString);
             }
 
             static bool IsEventSourceContrain(Type entityType) => entityType.GetInterfaces().Any(p => p == typeof(IEventSourced));
