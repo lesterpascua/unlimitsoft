@@ -9,6 +9,7 @@ namespace SoftUnlimit.CQRS.Query
     /// <summary>
     /// Base interface for all QueryHandler
     /// </summary>
+    [Obsolete("Use IQueryAsyncDispatcher")]
     public interface IQueryHandler
     {
         /// <summary>
@@ -21,6 +22,7 @@ namespace SoftUnlimit.CQRS.Query
     /// </summary>
     /// <typeparam name="TEntity"></typeparam>
     /// <typeparam name="TQuery"></typeparam>
+    [Obsolete("Use IQueryAsyncDispatcher")]
     public interface IQueryHandler<TEntity, TQuery> : IQueryHandler
     {
         /// <summary>

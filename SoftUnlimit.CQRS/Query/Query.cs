@@ -7,6 +7,7 @@ namespace SoftUnlimit.CQRS.Query
     /// <summary>
     /// Base class for all query.
     /// </summary>
+    [Obsolete("Use QueryAsync")]
     public abstract class Query<T> : IQuery
         where T : QueryProps
     {

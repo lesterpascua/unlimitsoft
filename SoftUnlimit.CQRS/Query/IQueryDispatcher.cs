@@ -11,6 +11,7 @@ namespace SoftUnlimit.CQRS.Query
     /// <summary>
     /// 
     /// </summary>
+    [Obsolete("Use IQueryAsyncDispatcher")]
     public interface IQueryDispatcher
     {
         /// <summary>
@@ -25,6 +26,7 @@ namespace SoftUnlimit.CQRS.Query
     /// <summary>
     /// Extenssion method for query dispatcher.
     /// </summary>
+    [Obsolete("Use IQueryAsyncDispatcher")]
     public static class IQueryDispatcherExtenssion
     {
         /// <summary>

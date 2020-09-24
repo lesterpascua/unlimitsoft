@@ -14,6 +14,7 @@ namespace SoftUnlimit.CQRS.Query
     /// <summary>
     /// Query provider dispatcher using and standard IServiceProvider to locate the QueryHandler associate with a query.
     /// </summary>
+    [Obsolete("Use ServiceProviderQueryAsyncDispatcher")]
     public class ServiceProviderQueryDispatcher : CacheDispatcher, IQueryDispatcher
     {
         private readonly IServiceProvider _provider;

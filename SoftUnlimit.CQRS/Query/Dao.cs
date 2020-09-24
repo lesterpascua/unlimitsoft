@@ -12,6 +12,7 @@ namespace SoftUnlimit.CQRS.Query
     /// <summary>
     /// Generic method over all Dao.
     /// </summary>
+    [Obsolete("Use ServiceProviderQueryAsyncDispatcher")]
     public static class Dao
     {
         /// <summary>
