@@ -17,16 +17,19 @@ namespace SoftUnlimit.Web.AspNet.Filter
     /// </summary>
     public class ValidationActionModelAttribute : ActionFilterAttribute
     {
+        private readonly bool _transforResponse;
         private readonly ILogger<ValidationActionModelAttribute> _logger;
 
        
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="transforResponse"></param>
         /// <param name="logger"></param>
-        public ValidationActionModelAttribute(ILogger<ValidationActionModelAttribute> logger)
+        public ValidationActionModelAttribute(bool transforResponse = false, ILogger<ValidationActionModelAttribute> logger = null)
         {
-            this._logger = logger;
+            _transforResponse = transforResponse;
+            _logger = logger;
         }
 
         /// <summary>
@@ -62,16 +65,15 @@ namespace SoftUnlimit.Web.AspNet.Filter
         /// <param name="context"></param>
         public override void OnActionExecuted(ActionExecutedContext context)
         {
-            if (context.Exception != null && context.Controller is ControllerBase controller)
+            if (_transforResponse && context.Exception != null && context.Controller is ControllerBase controller)
             {
-                if (this._logger != null)
-                    this._logger.LogError(context.Exception, $"User: {context.HttpContext.User.Identity.Name}, logged in from: {context.HttpContext.Connection.RemoteIpAddress}:{context.HttpContext.Connection.RemotePort}");
+                this._logger?.LogError(context.Exception, $"User: {context.HttpContext.User.Identity.Name}, logged in from: {context.HttpContext.GetIpAddress()}");
 
                 var response = new Response<IDictionary<string, string[]>> {
                     IsSuccess = false,
                     Code = StatusCodes.Status500InternalServerError,
                     Body = new Dictionary<string, string[]> {
-                        { "Fatal error", new string[] { context.Exception.Message } }
+                        { string.Empty, new string[] { context.Exception.Message } }
                     },
                     UIText = "Server Error"
                 };

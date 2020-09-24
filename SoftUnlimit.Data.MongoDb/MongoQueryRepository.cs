@@ -31,7 +31,12 @@ namespace SoftUnlimit.Data.MongoDb
         /// Convert elements in queryable object.
         /// </summary>
         /// <returns></returns>
-        public IQueryable<TEntity> FindAll() => _session != null ? _repository.AsQueryable(_session) : _repository.AsQueryable();
+        public IQueryable<TEntity> FindAll()
+        {
+            if (_session != null)
+                return _repository.AsQueryable(_session);
+            return _repository.AsQueryable();
+        }
         /// <summary>
         /// Find element by primary key.
         /// </summary>
