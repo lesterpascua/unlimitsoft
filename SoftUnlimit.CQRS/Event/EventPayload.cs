@@ -27,7 +27,7 @@ namespace SoftUnlimit.CQRS.Event
             CreatorName = props.Name;
 
             SourceId = @event.SourceId.ToString();
-            EntityName = (@event.CurrState ?? @event.PrevState)?.GetType().AssemblyQualifiedName;
+            EntityName = (@event.CurrState ?? @event.PrevState)?.GetType().FullName;
 
             ServiceId = @event.ServiceId;
             WorkerId = @event.WorkerId;
