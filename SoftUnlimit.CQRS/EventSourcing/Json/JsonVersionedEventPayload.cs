@@ -24,10 +24,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         public JsonEventPayload(IEvent @event)
             : base(@event)
         {
-            var commandType = @event.Creator.GetType();
-            var option = CommandConverter.CreateOptions(commandType);
-
-            Payload = JsonSerializer.Serialize(@event, option);
+            Payload = JsonEventUtility.Serializer(@event);
         }
     }
     /// <summary>
@@ -49,10 +46,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         public JsonVersionedEventPayload(IVersionedEvent @event)
             : base(@event)
         {
-            var commandType = @event.Creator.GetType();
-            var option = CommandConverter.CreateOptions(commandType);
-
-            Payload = JsonSerializer.Serialize(@event, option);
+            Payload = JsonEventUtility.Serializer(@event);
         }
     }
 }
