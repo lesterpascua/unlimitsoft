@@ -25,6 +25,6 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="sourceID"></param>
         /// <param name="version"></param>
         /// <returns></returns>
-        Task<TEntity> FindByID(string sourceID, long? version = null);
+        Task<TEntity> FindById(string sourceID, long? version = null);
     }
 }

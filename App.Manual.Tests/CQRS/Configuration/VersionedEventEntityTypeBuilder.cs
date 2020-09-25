@@ -18,7 +18,7 @@ namespace App.Manual.Tests.CQRS.Configuration
             builder.Property(p => p.WorkerId).IsRequired().HasMaxLength(64);
             builder.Property(p => p.EventName).HasMaxLength(255).IsRequired();
             builder.Property(p => p.CreatorName).HasMaxLength(255).IsRequired();
-            builder.Property(p => p.RawData).IsRequired();
+            builder.Property(p => p.Payload).IsRequired();
 
             builder.HasIndex(i => i.SourceId).IsUnique(false);
             builder.HasIndex(i => i.EventName).IsUnique(false);

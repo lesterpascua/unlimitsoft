@@ -30,6 +30,12 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <summary>
         /// 
         /// </summary>
+        protected VersionedEvent()
+        { 
+        }
+        /// <summary>
+        /// 
+        /// </summary>
         /// <param name="sourceId"></param>
         /// <param name="version"></param>
         /// <param name="serviceId"></param>

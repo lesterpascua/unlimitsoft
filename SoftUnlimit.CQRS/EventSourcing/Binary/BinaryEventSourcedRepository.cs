@@ -35,15 +35,15 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
         /// <param name="sourceId"></param>
         /// <param name="version">if null get the last version.</param>
         /// <returns></returns>
-        public async Task<TEntity> FindByID(string sourceId, long? version = null)
+        public async Task<TEntity> FindById(string sourceId, long? version = null)
         {
             IQueryable<BinaryVersionedEventPayload> query = version.HasValue ?
-                this._queryRepository.Find(p => p.SourceId.Equals(sourceId) && p.Version == version) :
-                this._queryRepository.Find(p => p.SourceId.Equals(sourceId)).OrderByDescending(k => k.Version);
+                this._queryRepository.Find(p => p.SourceId == sourceId && p.Version == version) :
+                this._queryRepository.Find(p => p.SourceId == sourceId).OrderByDescending(k => k.Version);
 
-            BinaryVersionedEventPayload payload = await query.FirstOrDefaultAsync();
+            BinaryVersionedEventPayload entity = await query.FirstOrDefaultAsync();
             var formatter = new BinaryFormatter();
-            using var stream = new MemoryStream(payload.RawData);
+            using var stream = new MemoryStream(entity.Payload);
 
             return (TEntity)formatter.Deserialize(stream);
         }

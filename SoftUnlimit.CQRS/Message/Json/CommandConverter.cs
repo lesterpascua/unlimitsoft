@@ -13,6 +13,8 @@ namespace SoftUnlimit.CQRS.Message.Json
     public class CommandConverter : JsonConverter<ICommand>
     {
         private readonly Type _commandType;
+        private static readonly object _sync = new object();
+        private static readonly Dictionary<Type, JsonSerializerOptions> _cache = new Dictionary<Type, JsonSerializerOptions>();
 
         /// <summary>
         /// 
@@ -37,14 +39,14 @@ namespace SoftUnlimit.CQRS.Message.Json
         /// <param name="typeToConvert"></param>
         /// <param name="options"></param>
         /// <returns></returns>
-        public override ICommand Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => JsonSerializer.Deserialize(ref reader, this._commandType, options) as ICommand;
+        public override ICommand Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options) => JsonSerializer.Deserialize(ref reader, _commandType, options) as ICommand;
         /// <summary>
         /// 
         /// </summary>
         /// <param name="writer"></param>
         /// <param name="value"></param>
         /// <param name="options"></param>
-        public override void Write(Utf8JsonWriter writer, ICommand value, JsonSerializerOptions options) => throw new NotImplementedException();
+        public override void Write(Utf8JsonWriter writer, ICommand value, JsonSerializerOptions options) => JsonSerializer.Serialize(writer, value, _commandType, options);
 
 
         /// <summary>
@@ -54,10 +56,16 @@ namespace SoftUnlimit.CQRS.Message.Json
         /// <returns></returns>
         public static JsonSerializerOptions CreateOptions(Type type)
         {
-            var options = new JsonSerializerOptions();
-            options.Converters.Add(new CommandConverter(type));
+            if (!_cache.TryGetValue(type, out JsonSerializerOptions value))
+                lock (_sync)
+                    if (!_cache.TryGetValue(type, out value))
+                    {
+                        value = new JsonSerializerOptions();
+                        value.Converters.Add(new CommandConverter(type));
 
-            return options;
+                        _cache.Add(type, value);
+                    }
+            return value;
         }
     }
 }

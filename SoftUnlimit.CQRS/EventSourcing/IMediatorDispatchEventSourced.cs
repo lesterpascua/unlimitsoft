@@ -1,5 +1,8 @@
-﻿using System;
+﻿using SoftUnlimit.CQRS.Event;
+using SoftUnlimit.Data;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -22,5 +25,78 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="events"></param>
         /// <returns></returns>
         Task EventsDispatchedAsync(IEnumerable<IVersionedEvent> events);
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    public abstract class MediatorDispatchEventSourced<TPayload> : IMediatorDispatchEventSourced
+        where TPayload : class
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="directlyDispatchNotDomainEvents">If true try to dispatch not domain event directly to find if exist any procesor for it.</param>
+        public MediatorDispatchEventSourced(IServiceProvider provider, bool directlyDispatchNotDomainEvents = false)
+        {
+            Provider = provider;
+            DirectlyDispatchNotDomainEvents = directlyDispatchNotDomainEvents;
+        }
+
+        /// <summary>
+        /// If true try to dispatch not domain event directly to find if exist any procesor for it.
+        /// </summary>
+        protected bool DirectlyDispatchNotDomainEvents { get; }
+        /// <summary>
+        /// 
+        /// </summary>
+        protected IServiceProvider Provider { get; }
+        /// <summary>
+        /// 
+        /// </summary>
+        protected abstract IEventDispatcherWithServiceProvider EventDispatcher { get; }
+        /// <summary>
+        /// 
+        /// </summary>
+        protected abstract IRepository<TPayload> VersionedEventRepository { get; }
+
+        /// <summary>
+        /// Create new event using versioned event as template.
+        /// </summary>
+        /// <param name="event"></param>
+        /// <returns></returns>
+        protected abstract TPayload Create(IVersionedEvent @event);
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="events"></param>
+        /// <returns></returns>
+        public virtual async Task DispatchEventsAsync(IEnumerable<IVersionedEvent> events)
+        {
+            List<TPayload> remoteEvents = new List<TPayload>();
+            foreach (var @event in events)
+            {
+                var payload = Create(@event);
+                remoteEvents.Add(payload);
+                if (@event.IsDomainEvent || DirectlyDispatchNotDomainEvents)
+                {
+                    var responses = await EventDispatcher?.DispatchEventAsync(Provider, @event);
+                    if (responses?.Success == false)
+                    {
+                        var exceptions = responses.ErrorEvents
+                            .Select(s => (Exception)s.GetBody());
+                        throw new AggregateException("Error when executed events", exceptions);
+                    }
+                }
+            }
+            await VersionedEventRepository.AddRangeAsync(remoteEvents);
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="events"></param>
+        /// <returns></returns>
+        public virtual Task EventsDispatchedAsync(IEnumerable<IVersionedEvent> events) => Task.CompletedTask;
     }
 }

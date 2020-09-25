@@ -29,12 +29,6 @@ namespace SoftUnlimit.CQRS.Event
         /// </summary>
         /// <param name="event"></param>
         /// <returns></returns>
-        Task PublishJsonEventPayloadAsync(JsonEventPayload @event);
-        /// <summary>
-        /// Publis event in bus.
-        /// </summary>
-        /// <param name="event"></param>
-        /// <returns></returns>
-        Task PublishBinaryEventPayloadAsync(BinaryEventPayload @event);
+        Task PublishEventPayloadAsync<T>(EventPayload<T> @event);
     }
 }

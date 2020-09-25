@@ -1,8 +1,9 @@
-﻿using Newtonsoft.Json;
-using SoftUnlimit.CQRS.Event;
+﻿using SoftUnlimit.CQRS.Event;
+using SoftUnlimit.CQRS.Message.Json;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Text.Json;
 
 namespace SoftUnlimit.CQRS.EventSourcing.Json
 {
@@ -10,8 +11,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
     /// 
     /// </summary>
     [Serializable]
-    [Obsolete("Use BinaryVersionedEventPayload")]
-    public class JsonEventPayload
+    public class JsonEventPayload : EventPayload<string>
     {
         /// <summary>
         /// 
@@ -22,72 +22,19 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         /// </summary>
         /// <param name="event"></param>
         public JsonEventPayload(IEvent @event)
+            : base(@event)
         {
-            SourceId = @event.SourceId.ToString();
-            ServiceId = @event.ServiceId;
-            WorkerId = @event.WorkerId;
-            
-            Created = @event.Created;
-            Name = @event.Name;
-            EventType = @event.GetType().AssemblyQualifiedName;
+            var commandType = @event.Creator.GetType();
+            var option = CommandConverter.CreateOptions(commandType);
 
-            IsPubliched = false;
-
-            if (@event.Body != null)
-                Body = JsonConvert.SerializeObject(@event.Body, VersionedEventSettings.JsonSerializerSettings);
+            Payload = JsonSerializer.Serialize(@event, option);
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public string SourceId { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public uint ServiceId { get; set; }
-        /// <summary>
-        /// 
-        /// </summary>
-        public string WorkerId { get; set; }
-        /// <summary>
-        /// 
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public DateTime Created { get; set; }
-        /// <summary>
-        /// 
-        /// </summary>
-        public bool IsPubliched { get; set; }
-
-        /// <summary>
-        /// Event Type.
-        /// </summary>
-        public string EventType { get; set; }
-        /// <summary>
-        /// Event extra information
-        /// </summary>
-        public string Body { get; set; }
-
-        /// <summary>
-        /// Convert objeto to string.
-        /// </summary>
-        /// <returns></returns>
-        public override string ToString() => Name;
-        /// <summary>
-        /// 
-        /// </summary>
-        public void MarkEventAsPublished() => this.IsPubliched = true;
     }
     /// <summary>
     /// 
     /// </summary>
     [Serializable]
-    public class JsonVersionedEventPayload : JsonEventPayload
+    public class JsonVersionedEventPayload : VersionedEventPayload<string>
     {
         /// <summary>
         /// 
@@ -102,37 +49,10 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         public JsonVersionedEventPayload(IVersionedEvent @event)
             : base(@event)
         {
-            Version = @event.Version;
+            var commandType = @event.Creator.GetType();
+            var option = CommandConverter.CreateOptions(commandType);
 
-            CreatorType = @event.Creator?.GetType().AssemblyQualifiedName;
-            if (@event.Created != null)
-                Creator = JsonConvert.SerializeObject(@event.Creator, VersionedEventSettings.JsonSerializerSettings);
-            if (@event.PrevState != null)
-                PrevState = JsonConvert.SerializeObject(@event.PrevState, VersionedEventSettings.JsonSerializerSettings);
-            if (@event.CurrState != null)
-                CurrState = JsonConvert.SerializeObject(@event.CurrState, VersionedEventSettings.JsonSerializerSettings);
+            Payload = JsonSerializer.Serialize(@event, option);
         }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public long Version { get; set; }
-        
-        /// <summary>
-        /// Command serialized as Json
-        /// </summary>
-        public string Creator { get; set; }
-        /// <summary>
-        /// Command type
-        /// </summary>
-        public string CreatorType { get; set; }
-        /// <summary>
-        /// 
-        /// </summary>
-        public string PrevState { get; set; }
-        /// <summary>
-        /// 
-        /// </summary>
-        public string CurrState { get; set; }
     }
 }

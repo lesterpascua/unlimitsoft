@@ -108,13 +108,7 @@ namespace SoftUnlimit.EventBus.ActiveMQ
         /// </summary>
         /// <param name="event"></param>
         /// <returns></returns>
-        public Task PublishJsonEventPayloadAsync(JsonEventPayload @event) => this.PublishAsync(@event, MessageType.Json);
-        /// <summary>
-        /// Publish event in all queues.
-        /// </summary>
-        /// <param name="event"></param>
-        /// <returns></returns>
-        public Task PublishBinaryEventPayloadAsync(BinaryEventPayload @event) => this.PublishAsync(@event, MessageType.Binary);
+        public Task PublishEventPayloadAsync<T>(EventPayload<T> @event) => this.PublishAsync(@event, MessageType.Binary);
 
 
         #region Private Methods
