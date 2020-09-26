@@ -23,10 +23,12 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
         /// <param name="builder"></param>
         /// <param name="indexAll">Indicate if create index for SourceId, EventName, CreatorName, EntityName</param>
         /// <param name="payloadBuilder">Extra properties applied over payload.</param>
-        public static void ConfigureVersionedEvent<T>(
-            EntityTypeBuilder<VersionedEventPayload<T>> builder, 
+        public static void ConfigureVersionedEvent<TVersionedEvent, TPayload>(
+            EntityTypeBuilder<TVersionedEvent> builder, 
             bool indexAll = false,
-            Action<PropertyBuilder<T>> payloadBuilder = null)
+            Action<PropertyBuilder<TPayload>> payloadBuilder = null
+        )
+            where TVersionedEvent : VersionedEventPayload<TPayload>
         {
             builder.ToTable("VersionedEventPayload");
             builder.HasKey(k => k.Id);
