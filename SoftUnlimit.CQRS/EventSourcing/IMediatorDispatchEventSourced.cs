@@ -1,4 +1,5 @@
-﻿using SoftUnlimit.CQRS.Event;
+﻿using Microsoft.Extensions.DependencyInjection;
+using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.Data;
 using System;
 using System.Collections.Generic;
@@ -58,6 +59,10 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <summary>
         /// 
         /// </summary>
+        protected abstract IEventPublishWorker EventPublishWorker { get; }
+        /// <summary>
+        /// 
+        /// </summary>
         protected abstract IRepository<TPayload> VersionedEventRepository { get; }
 
         /// <summary>
@@ -97,6 +102,10 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// </summary>
         /// <param name="events"></param>
         /// <returns></returns>
-        public virtual Task EventsDispatchedAsync(IEnumerable<IVersionedEvent> events) => Task.CompletedTask;
+        public virtual Task EventsDispatchedAsync(IEnumerable<IVersionedEvent> events)
+        {
+            EventPublishWorker?.Publish(events);
+            return Task.CompletedTask;
+        }
     }
 }
