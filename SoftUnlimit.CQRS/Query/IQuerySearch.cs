@@ -8,7 +8,7 @@ namespace SoftUnlimit.CQRS.Query
     /// <summary>
     /// Interface for al search query to stablish uniform patter
     /// </summary>
-    public interface IQueryAsyncSearch
+    public interface IQuerySearch
     {
         /// <summary>
         /// 

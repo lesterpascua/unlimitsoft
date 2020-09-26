@@ -1,41 +1,29 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
 namespace SoftUnlimit.CQRS.Query
 {
     /// <summary>
-    /// Base interface for all QueryHandler
+    /// 
     /// </summary>
-    [Obsolete("Use IQueryAsyncDispatcher")]
     public interface IQueryHandler
     {
-        /// <summary>
-        /// Specified if query is async or not.
-        /// </summary>
-        bool IsAsync { get; }
     }
     /// <summary>
     /// Base generic interface for all QueryHandler
     /// </summary>
-    /// <typeparam name="TEntity"></typeparam>
+    /// <typeparam name="TResult"></typeparam>
     /// <typeparam name="TQuery"></typeparam>
-    [Obsolete("Use IQueryAsyncDispatcher")]
-    public interface IQueryHandler<TEntity, TQuery> : IQueryHandler
+    public interface IQueryHandler<TResult, TQuery> : IQueryHandler
+        where TQuery : IQuery<TResult>
     {
         /// <summary>
         /// Handle query for specific type.
         /// </summary>
-        /// <param name="query"></param>
+        /// <param name="args"></param>
         /// <returns></returns>
-        IQueryable<TEntity> Handler(TQuery query);
-        /// <summary>
-        /// Handle query for specific type.
-        /// </summary>
-        /// <param name="query"></param>
-        /// <returns></returns>
-        Task<IEnumerable<TEntity>> HandlerAsync(TQuery query);
+        Task<TResult> HandlerAsync(TQuery args);
     }
 }

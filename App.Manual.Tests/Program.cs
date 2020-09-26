@@ -2,6 +2,7 @@
 using App.Manual.Tests.CQRS;
 using App.Manual.Tests.CQRS.Configuration;
 using App.Manual.Tests.CQRS.Events;
+using App.Manual.Tests.CQRS.Query;
 using App.Manual.Tests.MongoDb;
 using AutoMapper;
 using Chronicle;
@@ -17,6 +18,7 @@ using SoftUnlimit.CQRS.Command.Compliance;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.CQRS.Query;
+using SoftUnlimit.CQRS.Query.Compliance;
 using SoftUnlimit.Data;
 using SoftUnlimit.Data.EntityFramework;
 using SoftUnlimit.Data.MongoDb;
@@ -39,7 +41,7 @@ namespace SoftUnlimit.CQRS.Test
     {
         public static void Main()
         {
-            MainMongoDb().Wait();
+            MainCQRS().Wait();
         }
 
         public static void MainAutoMapper()
@@ -103,8 +105,9 @@ namespace SoftUnlimit.CQRS.Test
                 services.AddScoped(entry.ServiceQueryType, provider => Activator.CreateInstance(entry.ImplementationQueryType, provider.GetService<DbContextRead>()));
             }
 
-            services.AddScoped<IQueryAsyncDispatcher>(provider => new ServiceProviderQueryAsyncDispatcher(provider, true));
-            CacheDispatcher.RegisterHandler(services, new Assembly[] { Assembly.GetExecutingAssembly() }, typeof(IQueryAsyncHandler), typeof(IQueryAsyncHandler<,>));
+            services.AddScoped<IQueryDispatcher>(provider => new ServiceProviderQueryDispatcher(provider));
+            ServiceProviderQueryDispatcher.RegisterQueryCompliance(services, typeof(IQueryCompliance<>), new Assembly[] { Assembly.GetExecutingAssembly() });
+            CacheDispatcher.RegisterHandler(services, typeof(IMyQueryHandler), typeof(IMyQueryHandler<,>), new Assembly[] { Assembly.GetExecutingAssembly() }, new Assembly[] { Assembly.GetExecutingAssembly() });
 
             services.AddScoped<IMediatorDispatchEventSourced, DefaultMediatorDispatchEventSourced>();
 

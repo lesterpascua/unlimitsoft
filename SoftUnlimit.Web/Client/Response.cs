@@ -20,6 +20,10 @@ namespace SoftUnlimit.Web.Client
         /// </summary>
         public string UIText { get; set; }
         /// <summary>
+        /// Query where source of response.
+        /// </summary>
+        public JObject Query { get; set; }
+        /// <summary>
         /// Command where source of response.
         /// </summary>
         public JObject Command { get; set; }

@@ -1,6 +1,4 @@
-﻿using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
-using SoftUnlimit.CQRS.Command;
+﻿using SoftUnlimit.CQRS.Query;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,23 +8,23 @@ namespace SoftUnlimit.CQRS.Message
     /// <summary>
     /// 
     /// </summary>
-    public abstract class CommandResponse
+    public abstract class QueryResponse
     {
         /// <summary>
         /// 
         /// </summary>
-        protected CommandResponse() { }
+        protected QueryResponse() { }
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="command"></param>
+        /// <param name="query"></param>
         /// <param name="code"></param>
         /// <param name="uiText"></param>
-        protected CommandResponse(ICommand command, int code, string uiText)
+        protected QueryResponse(IQuery query, int code, string uiText)
         {
             this.Code = code;
             this.UIText = uiText;
-            this.Command = command;
+            this.Query = query;
         }
 
         /// <summary>
@@ -40,7 +38,7 @@ namespace SoftUnlimit.CQRS.Message
         /// <summary>
         /// Command where source of response.
         /// </summary>
-        public ICommand Command { get; set; }
+        public IQuery Query { get; set; }
         /// <summary>
         /// Indicate if command is success. This is only when code beteen 200 and 299.
         /// </summary>
@@ -68,26 +66,26 @@ namespace SoftUnlimit.CQRS.Message
         /// Conver command to string representation
         /// </summary>
         /// <returns></returns>
-        public override string ToString() => $"Command Response: \n\tCode: {Code} \n\tUIText: {UIText} \n\tCommand: {Command} \n\tIsSuccess: {IsSuccess} \n\tBody: {GetBody()}";
+        public override string ToString() => $"Query Response: \n\tCode: {Code} \n\tUIText: {UIText} \n\tQuery: {Query} \n\tIsSuccess: {IsSuccess} \n\tBody: {GetBody()}";
     }
     /// <summary>
     /// 
     /// </summary>
-    public class CommandResponse<T> : CommandResponse
+    public class QueryResponse<T> : QueryResponse
     {
         /// <summary>
         /// 
         /// </summary>
-        public CommandResponse() { }
+        public QueryResponse() { }
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="command"></param>
+        /// <param name="query"></param>
         /// <param name="code"></param>
         /// <param name="body"></param>
         /// <param name="uiText"></param>
-        public CommandResponse(ICommand command, int code, T body, string uiText)
-            : base(command, code, uiText)
+        public QueryResponse(IQuery query, int code, T body, string uiText)
+            : base(query, code, uiText)
         {
             this.Body = body;
         }

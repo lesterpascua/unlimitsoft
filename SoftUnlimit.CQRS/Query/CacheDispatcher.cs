@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.DependencyInjection;
+﻿using FluentValidation;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -61,20 +62,46 @@ namespace SoftUnlimit.CQRS.Query
         /// 
         /// </summary>
         /// <param name="services"></param>
-        /// <param name="assemblies"></param>
-        /// <param name="queryAsync"></param>
-        /// <param name="queryAsyncGeneric"></param>
-        public static void RegisterHandler(IServiceCollection services, IEnumerable<Assembly> assemblies, Type queryAsync, Type queryAsyncGeneric)
+        /// <param name="query"></param>
+        /// <param name="queryGeneric"></param>
+        /// <param name="queryAssemblies"></param>
+        /// <param name="validatorAssembly"></param>
+        public static void RegisterHandler(IServiceCollection services, Type query, Type queryGeneric, IEnumerable<Assembly> queryAssemblies, IEnumerable<Assembly> validatorAssembly = null)
         {
-            var existReportHandler = assemblies.SelectMany(s => s.GetTypes())
-                .Where(p => p.IsClass && !p.IsAbstract && p.GetInterfaces().Contains(queryAsync));
-            foreach (var reportHandlerImplementation in existReportHandler)
+            Dictionary<Type, Type> cache = new Dictionary<Type, Type>();
+            if (validatorAssembly != null)
             {
-                var reportHandlerImplementedInterfaces = reportHandlerImplementation.GetInterfaces()
-                    .Where(p => p.GetGenericArguments().Length == 2 && p.GetGenericTypeDefinition() == queryAsyncGeneric);
+                List<AssemblyScanner> aux = new List<AssemblyScanner>();
+                foreach (var assembly in validatorAssembly)
+                {
+                    foreach (var entry in AssemblyScanner.FindValidatorsInAssembly(assembly))
+                        cache.Add(entry.InterfaceType, entry.ValidatorType);
+                }
+            }
 
-                foreach (var reportHandlerInterface in reportHandlerImplementedInterfaces)
-                    services.AddScoped(reportHandlerInterface, reportHandlerImplementation);
+            var existQueryHandler = queryAssemblies.SelectMany(s => s.GetTypes())
+                .Where(p => p.IsClass && !p.IsAbstract && p.GetInterfaces().Contains(query));
+            foreach (var queryHandlerImplementation in existQueryHandler)
+            {
+                var queryHandlerImplementedInterfaces = queryHandlerImplementation.GetInterfaces()
+                    .Where(p => p.GetGenericArguments().Length == 2 && p.GetGenericTypeDefinition() == queryGeneric);
+
+                foreach (var queryHandlerInterface in queryHandlerImplementedInterfaces)
+                {
+                    var baseQueryHandlerInterface = typeof(IQueryHandler<,>)
+                        .MakeGenericType(queryHandlerInterface.GenericTypeArguments);
+
+                    services.AddScoped(baseQueryHandlerInterface, queryHandlerImplementation);
+                    if (validatorAssembly != null)
+                    {
+                        Type queryType = queryHandlerInterface.GenericTypeArguments[1];
+                        //
+                        // add command associate validation 
+                        Type validationInterfaceType = typeof(IValidator<>).MakeGenericType(queryType);
+                        if (cache.TryGetValue(validationInterfaceType, out Type validatorType))
+                            services.AddScoped(validationInterfaceType, validatorType);
+                    }
+                }
             }
         }
     }

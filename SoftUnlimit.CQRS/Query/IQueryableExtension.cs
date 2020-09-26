@@ -11,7 +11,7 @@ namespace SoftUnlimit.CQRS.Query
     /// <summary>
     /// 
     /// </summary>
-    public static class IQueriableExtenssion
+    public static class IQueryableExtension
     {
         /// <summary>
         /// 
