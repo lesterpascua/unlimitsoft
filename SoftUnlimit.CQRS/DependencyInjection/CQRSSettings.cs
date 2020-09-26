@@ -46,6 +46,6 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         /// <summary>
         /// Event dispatcher used to handler events.
         /// </summary>
-        public Func<IServiceProvider, IEventDispatcherWithServiceProvider> EventDispatcher { get; set; }
+        public Func<IServiceProvider, IEventDispatcher> EventDispatcher { get; set; }
     }
 }

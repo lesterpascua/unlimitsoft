@@ -27,7 +27,7 @@ namespace SoftUnlimit.CQRS.Query
         public ServiceProviderQueryAsyncDispatcher(IServiceProvider provider, bool useCache = true)
             : base(useCache)
         {
-            this._provider = provider;
+            _provider = provider;
         }
         
         /// <summary>
@@ -42,8 +42,8 @@ namespace SoftUnlimit.CQRS.Query
             Type queryType = args.GetType();
             Type entityType = typeof(TResult);
 
-            var handler = GetQueryHandler(this._provider, entityType, queryType);
-            TResult result = await ExecuteHandlerForQueryAsync<TResult>(handler, args, queryType, this.UseCache);
+            var handler = GetQueryHandler(_provider, entityType, queryType);
+            TResult result = await ExecuteHandlerForQueryAsync<TResult>(handler, args, queryType, UseCache);
 
             return result;
         }

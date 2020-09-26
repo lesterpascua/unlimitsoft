@@ -14,7 +14,7 @@ namespace SoftUnlimit.CQRS.Event
     /// <summary>
     /// 
     /// </summary>
-    public class ServiceProviderEventDispatcher : IEventDispatcherWithServiceProvider
+    public class ServiceProviderEventDispatcher : IEventDispatcher
     {
         private readonly bool _useCache, _useScope;
         private readonly IServiceProvider _provider;

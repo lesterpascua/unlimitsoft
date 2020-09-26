@@ -76,10 +76,7 @@ namespace SoftUnlimit.CQRS.DependencyInjection
             {
                 ServiceProviderEventDispatcher.RegisterEventHandler(services, settings.IEventHandler, settings.Assemblies.ToArray());
                 if (settings.EventDispatcher != null)
-                {
-                    services.AddSingleton<IEventDispatcher>((provider) => provider.GetService<IEventDispatcherWithServiceProvider>());
                     services.AddSingleton(settings.EventDispatcher);
-                }
             }
             return services;
         }

@@ -17,7 +17,7 @@ namespace App.Manual.Tests.CQRS.Events
         {
         }
 
-        protected override IEventDispatcherWithServiceProvider EventDispatcher => Provider.GetService(typeof(IEventDispatcherWithServiceProvider)) as IEventDispatcherWithServiceProvider;
+        protected override IEventDispatcher EventDispatcher => Provider.GetService(typeof(IEventDispatcher)) as IEventDispatcher;
         protected override IRepository<BinaryVersionedEventPayload> VersionedEventRepository => Provider.GetService(typeof(IRepository<BinaryVersionedEventPayload>)) as IRepository<BinaryVersionedEventPayload>;
     }
 }

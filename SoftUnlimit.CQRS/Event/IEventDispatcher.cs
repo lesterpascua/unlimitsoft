@@ -17,5 +17,12 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="event"></param>
         /// <returns></returns>
         Task<CombinedEventResponse> DispatchEventAsync(IEvent @event);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="event"></param>
+        /// <returns></returns>
+        Task<CombinedEventResponse> DispatchEventAsync(IServiceProvider provider, IEvent @event);
     }
 }

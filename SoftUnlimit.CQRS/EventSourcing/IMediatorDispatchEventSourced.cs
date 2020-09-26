@@ -54,7 +54,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <summary>
         /// 
         /// </summary>
-        protected abstract IEventDispatcherWithServiceProvider EventDispatcher { get; }
+        protected abstract IEventDispatcher EventDispatcher { get; }
         /// <summary>
         /// 
         /// </summary>

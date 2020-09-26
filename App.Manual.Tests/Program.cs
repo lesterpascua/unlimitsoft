@@ -120,8 +120,7 @@ namespace SoftUnlimit.CQRS.Test
 
             // Events support
             ServiceProviderEventDispatcher.RegisterEventHandler(services, typeof(IEventHandler), Assembly.GetExecutingAssembly());
-            services.AddSingleton<IEventDispatcher>((provider) => provider.GetService<IEventDispatcherWithServiceProvider>());
-            services.AddSingleton<IEventDispatcherWithServiceProvider, ServiceProviderEventDispatcher>();
+            services.AddSingleton<IEventDispatcher, ServiceProviderEventDispatcher>();
 
             services.AddSingleton<App.Manual.Tests.CQRS.Startup>();
 
