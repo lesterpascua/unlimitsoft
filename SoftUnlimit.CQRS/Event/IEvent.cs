@@ -32,7 +32,7 @@ namespace SoftUnlimit.CQRS.Event
         /// </summary>
         public string Name { get; }
         /// <summary>
-        /// Command where event is originate.
+        /// Command where event is originate (fullname).
         /// </summary>
         ICommand Creator { get; }
         /// <summary>
@@ -52,7 +52,6 @@ namespace SoftUnlimit.CQRS.Event
         /// </summary>
         public object Body { get; }
     }
-
     /// <summary>
     /// Represents an event message.
     /// </summary>
@@ -94,43 +93,25 @@ namespace SoftUnlimit.CQRS.Event
         /// Gets the identifier of the source originating the event.
         /// </summary>
         public TKey SourceId { get; protected set; }
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <inheritdoc />
         public uint ServiceId { get; protected set; }
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <inheritdoc />
         public string WorkerId { get; protected set; }
-        /// <summary>
-        /// Event creation date
-        /// </summary>
+        /// <inheritdoc />
         public DateTime Created { get; protected set; }
-        /// <summary>
-        /// Get name of event
-        /// </summary>
+        /// <inheritdoc />
         public string Name => this.GetType().FullName;
 
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <inheritdoc />
         public ICommand Creator { get; protected set; }
-        /// <summary>
-        /// Previous snapshot of entity.
-        /// </summary>
+        /// <inheritdoc />
         public object PrevState { get; protected set; }
-        /// <summary>
-        /// Currenct snapshot of entity.
-        /// </summary>
+        /// <inheritdoc />
         public object CurrState { get; protected set; }
 
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <inheritdoc />
         public bool IsDomainEvent { get; protected set; }
-        /// <summary>
-        /// 
-        /// </summary>
+        /// <inheritdoc />
         public object Body { get; protected set; }
 
 
@@ -146,30 +127,5 @@ namespace SoftUnlimit.CQRS.Event
         object IEvent.SourceId { get => this.SourceId; set => this.SourceId = (TKey)value; }
 
         #endregion
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public static class IEventExtenssion
-    {
-        /// <summary>
-        /// Generate a success response using event data.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="event"></param>
-        /// <param name="body"></param>
-        /// <param name="skipEventInfo"></param>
-        /// <returns></returns>
-        public static EventResponse OkResponse<T>(this IEvent @event, T body, bool skipEventInfo = true) => new EventResponse<T>(skipEventInfo ? null : @event, 200, body);
-        /// <summary>
-        /// Generate a error response using event data.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="event"></param>
-        /// <param name="body"></param>
-        /// <param name="skipCommandInfo"></param>
-        /// <returns></returns>
-        public static EventResponse ErrorResponse<T>(this IEvent @event, T body, bool skipCommandInfo = true) => new EventResponse<T>(skipCommandInfo ? null : @event, 500, body);
     }
 }
