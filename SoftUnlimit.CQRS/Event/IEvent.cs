@@ -12,6 +12,10 @@ namespace SoftUnlimit.CQRS.Event
     public interface IEvent
     {
         /// <summary>
+        /// Command creator identifier.
+        /// </summary>
+        Guid Id { get; }
+        /// <summary>
         /// Gets the identifier of the source originating the event.
         /// </summary>
         object SourceId { get; set; }
@@ -89,6 +93,8 @@ namespace SoftUnlimit.CQRS.Event
             Body = body;
         }
 
+        /// <inheritdoc />
+        public Guid Id => Creator.GetProps<CommandProps>().Id;
         /// <summary>
         /// Gets the identifier of the source originating the event.
         /// </summary>

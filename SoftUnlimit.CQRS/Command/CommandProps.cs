@@ -15,7 +15,7 @@ namespace SoftUnlimit.CQRS.Command
         /// <summary>
         /// Unique identifier for command
         /// </summary>
-        public string Id { get; set; }
+        public Guid Id { get; set; }
         /// <summary>
         /// Command category name (normally Type FullName)
         /// </summary>

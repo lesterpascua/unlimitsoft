@@ -14,7 +14,7 @@ namespace App.Manual.Tests.CQRS.Command
         public DummyCreateCommand()
         {
             CommandProps = new CommandProps {
-                Id = Guid.NewGuid().ToString("N"),
+                Id = Guid.NewGuid(),
                 Name = GetType().FullName,
                 Silent = false
             };

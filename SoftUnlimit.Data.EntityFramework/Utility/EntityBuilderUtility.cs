@@ -18,7 +18,7 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
     public static class EntityBuilderUtility
     {
         /// <summary>
-        /// Helper method to configure versioned event.
+        /// Helper method to configure versioned event. Command CreatorId is the primary key
         /// </summary>
         /// <param name="builder"></param>
         /// <param name="indexAll">Indicate if create index for SourceId, EventName, CreatorName, EntityName</param>
@@ -31,10 +31,10 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
             where TVersionedEvent : VersionedEventPayload<TPayload>
         {
             builder.ToTable("VersionedEventPayload");
-            builder.HasKey(k => k.Id);
+            builder.HasKey(k => k.CreatorId);
 
-            builder.Property(p => p.CreatorId).IsRequired().HasMaxLength(36);     // Guid
-            builder.Property(p => p.SourceId).IsRequired().HasMaxLength(36);      // Guid
+            builder.Property(p => p.CreatorId).ValueGeneratedNever();               // Guid
+            builder.Property(p => p.SourceId).IsRequired().HasMaxLength(36);        // Guid
             builder.Property(p => p.ServiceId);
             builder.Property(p => p.WorkerId).IsRequired();
             builder.Property(p => p.EventName).IsRequired().HasMaxLength(255);
@@ -46,6 +46,7 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
 
             if (indexAll)
             {
+                builder.HasIndex(k => k.CreatorId).IsUnique(true);
                 builder.HasIndex(i => i.SourceId).IsUnique(false);
                 builder.HasIndex(i => i.EventName).IsUnique(false);
                 builder.HasIndex(i => i.CreatorName).IsUnique(false);

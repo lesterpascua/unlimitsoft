@@ -42,13 +42,9 @@ namespace SoftUnlimit.CQRS.Event
         }
 
         /// <summary>
-        /// Unique identifier.
-        /// </summary>
-        public Guid Id { get; set; }
-        /// <summary>
         /// Creator identifier (Command Id).
         /// </summary>
-        public string CreatorId { get; set; }
+        public Guid CreatorId { get; set; }
         /// <summary>
         /// Creator name (Command FullName)
         /// </summary>
