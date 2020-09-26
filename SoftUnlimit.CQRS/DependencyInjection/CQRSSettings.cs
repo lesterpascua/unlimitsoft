@@ -20,11 +20,15 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         /// <summary>
         /// typeof(IQueryAsyncHandler)
         /// </summary>
-        public Type IQueryAsyncHandler { get; set; }
+        public Type IQueryHandler { get; set; }
         /// <summary>
         /// typeof(IQueryAsyncHandler&lt;,&gt;)
         /// </summary>
-        public Type IQueryAsyncHandlerGeneric { get; set; }
+        public Type IQueryHandlerGeneric { get; set; }
+        /// <summary>
+        /// typeof(IQueryCompliance&lt;&gt;)
+        /// </summary>
+        public Type IQueryCompliance { get; set; }
 
         /// <summary>
         /// typeof(ICommandCompliance&lt;&gt;)
@@ -34,6 +38,7 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         /// typeof(ICommandHandler&lt;&gt;)
         /// </summary>
         public Type ICommandHandler { get; set; }
+
         /// <summary>
         /// typeof(IEventHandler&lt;&gt;)
         /// </summary>

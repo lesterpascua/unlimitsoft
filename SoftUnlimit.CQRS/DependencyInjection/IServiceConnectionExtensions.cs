@@ -35,10 +35,12 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         /// <param name="settings"></param>
         private static void RegisterQueryHandler(this IServiceCollection services, CQRSSettings settings)
         {
-            if (settings.IQueryAsyncHandler != null && settings.IQueryAsyncHandlerGeneric != null)
+            if (settings.IQueryHandler != null && settings.IQueryHandlerGeneric != null)
             {
                 services.AddScoped<IQueryDispatcher>(provider => new ServiceProviderQueryDispatcher(provider, true));
-                CacheDispatcher.RegisterHandler(services, settings.IQueryAsyncHandler, settings.IQueryAsyncHandlerGeneric, settings.Assemblies, settings.Assemblies);
+                if (settings.IQueryCompliance != null)
+                    ServiceProviderQueryDispatcher.RegisterQueryCompliance(services, settings.IQueryCompliance, settings.Assemblies);
+                CacheDispatcher.RegisterHandler(services, settings.IQueryHandler, settings.IQueryHandlerGeneric, settings.Assemblies, settings.Assemblies);
             }
         }
         /// <summary>
