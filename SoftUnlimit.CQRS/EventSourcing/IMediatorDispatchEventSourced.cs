@@ -38,7 +38,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="directlyDispatchNotDomainEvents">If true try to dispatch not domain event directly to find if exist any procesor for it.</param>
-        public MediatorDispatchEventSourced(IServiceProvider provider, bool directlyDispatchNotDomainEvents = false)
+        public MediatorDispatchEventSourced(IServiceProvider provider, bool directlyDispatchNotDomainEvents = true)
         {
             Provider = provider;
             DirectlyDispatchNotDomainEvents = directlyDispatchNotDomainEvents;
