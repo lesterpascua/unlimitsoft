@@ -25,5 +25,19 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
             formatter.Serialize(ms, @event);
             return ms.GetBuffer();
         }
+        /// <summary>
+        /// Deserialized from byte array
+        /// </summary>
+        /// <param name="rawData"></param>
+        /// <returns></returns>
+        public static IEvent Deserializer(byte[] rawData)
+        {
+            BinaryFormatter formatter = new BinaryFormatter();
+            using var ms = new MemoryStream();
+            ms.Write(rawData);
+
+            ms.Seek(0, SeekOrigin.Begin);
+            return (IEvent)formatter.Deserialize(ms);
+        }
     }
 }
