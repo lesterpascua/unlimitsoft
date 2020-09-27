@@ -4,9 +4,6 @@ using Apache.NMS.ActiveMQ.Commands;
 using Microsoft.Extensions.Logging;
 using Polly;
 using SoftUnlimit.CQRS.Event;
-using SoftUnlimit.CQRS.EventSourcing;
-using SoftUnlimit.CQRS.EventSourcing.Binary;
-using SoftUnlimit.CQRS.EventSourcing.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -99,18 +96,10 @@ namespace SoftUnlimit.EventBus.ActiveMQ
             }
         }
 
-        /// <summary>
-        /// Publish event in all queues.
-        /// </summary>
-        /// <param name="event"></param>
-        /// <returns></returns>
-        public Task PublishEventAsync(IEvent @event) => this.PublishAsync(@event, MessageType.Event);
-        /// <summary>
-        /// Publish event in all queues.
-        /// </summary>
-        /// <param name="event"></param>
-        /// <returns></returns>
-        public Task PublishEventPayloadAsync<T>(EventPayload<T> @event) => this.PublishAsync(@event, MessageType.Binary);
+        /// <inheritdoc />
+        public Task PublishEventAsync(IEvent @event) => PublishAsync(@event, MessageType.Event);
+        /// <inheritdoc />
+        public Task PublishEventPayloadAsync<T>(EventPayload<T> @event, MessageType type) => PublishAsync(@event, type);
 
 
         #region Private Methods

@@ -2,13 +2,11 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SoftUnlimit.CQRS.EventSourcing;
-using SoftUnlimit.CQRS.EventSourcing.Json;
 using SoftUnlimit.Data;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -29,23 +27,27 @@ namespace SoftUnlimit.CQRS.Event
         private readonly int _bachSize;
         private readonly IServiceProvider _provider;
         private readonly IEventBus _eventBus;
+        private readonly MessageType _type;
         private readonly ILogger<IEventPublishWorker> _logger;
         private readonly Task _backgoundWorker;
         private readonly CancellationTokenSource _cts;
         private readonly ConcurrentQueue<Guid> _queue;
 
-        
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="eventBus"></param>
+        /// <param name="type"></param>
         /// <param name="logger"></param>
         /// <param name="bachSize"></param>
-        public QueueEventPublishWorker(IServiceProvider provider, IEventBus eventBus, ILogger<IEventPublishWorker> logger = null, int bachSize = 10)
+        public QueueEventPublishWorker(IServiceProvider provider, IEventBus eventBus, MessageType type, ILogger<IEventPublishWorker> logger = null, int bachSize = 10)
         {
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
             _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
+
+            _type = type;
             _logger = logger;
             _bachSize = bachSize;
             _queue = new ConcurrentQueue<Guid>();
@@ -113,7 +115,7 @@ namespace SoftUnlimit.CQRS.Event
                         .ToArrayAsync();
                     foreach (var entity in eventsPayload)
                     {
-                        await _eventBus.PublishEventPayloadAsync(entity);
+                        await _eventBus.PublishEventPayloadAsync(entity, _type);
                         entity.MarkEventAsPublished();
                     }
                     await unitOfWork.SaveChangesAsync();

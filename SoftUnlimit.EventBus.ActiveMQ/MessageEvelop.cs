@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SoftUnlimit.CQRS.Event;
+using System;
 using System.Collections.Generic;
 using System.Text;
 

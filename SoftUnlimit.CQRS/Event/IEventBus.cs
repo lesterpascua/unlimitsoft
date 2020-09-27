@@ -28,7 +28,8 @@ namespace SoftUnlimit.CQRS.Event
         /// Publis event in bus.
         /// </summary>
         /// <param name="event"></param>
+        /// <param name="type">Messaje format type.</param>
         /// <returns></returns>
-        Task PublishEventPayloadAsync<T>(EventPayload<T> @event);
+        Task PublishEventPayloadAsync<T>(EventPayload<T> @event, MessageType type);
     }
 }
