@@ -8,9 +8,8 @@ namespace SoftUnlimit.CQRS.Event
     /// <summary>
     /// 
     /// </summary>
-    /// <typeparam name="TBody"></typeparam>
     [Serializable]
-    public abstract class EventPayload<TBody>
+    public abstract class EventPayload
     {
         /// <summary>
         /// 
@@ -94,6 +93,26 @@ namespace SoftUnlimit.CQRS.Event
         /// If mark as domain event only has sence inside this microservice. Never publich to other events.
         /// </summary>
         public bool IsDomain { get; set; }
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="TBody"></typeparam>
+    [Serializable]
+    public abstract class EventPayload<TBody> : EventPayload
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        protected EventPayload() { }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="event"></param>
+        protected EventPayload(IEvent @event)
+            : base(@event)
+        {
+        }
 
         /// <summary>
         /// Event Type.
@@ -101,7 +120,7 @@ namespace SoftUnlimit.CQRS.Event
         public TBody Payload { get; set; }
 
         /// <summary>
-        /// Convert objeto to string.
+        /// Get event name inside the payload.
         /// </summary>
         /// <returns></returns>
         public override string ToString() => EventName;
