@@ -26,7 +26,7 @@ namespace SoftUnlimit.EventBus.ActiveMQ
         private readonly string _clientId;
         private readonly string _queue;
         private readonly ILogger<ActiveMQEventListener> _logger;
-        private readonly Func<MessageEvelop, ILogger, Task> _processor;
+        private readonly Func<MessageEnvelop, ILogger, Task> _processor;
 
         private ISession _session;
         private IConnection _connection;
@@ -43,9 +43,9 @@ namespace SoftUnlimit.EventBus.ActiveMQ
         /// <param name="clientId"></param>
         /// <param name="queue"></param>
         /// <param name="brokerUri"></param>
-        /// <param name="processor"></param>
+        /// <param name="processor">Processor is the function to call when some message is arrive.</param>
         /// <param name="logger"></param>
-        public ActiveMQEventListener(string clientId, string queue, string brokerUri, Func<MessageEvelop, ILogger, Task> processor, ILogger<ActiveMQEventListener> logger = null)
+        public ActiveMQEventListener(string clientId, string queue, string brokerUri, Func<MessageEnvelop, ILogger, Task> processor, ILogger<ActiveMQEventListener> logger = null)
         {
             _queue = queue;
             _logger = logger;
@@ -125,7 +125,7 @@ namespace SoftUnlimit.EventBus.ActiveMQ
             if (message is IObjectMessage objectMessage)
             {
                 var body = objectMessage.Body;
-                if (body is MessageEvelop envelop)
+                if (body is MessageEnvelop envelop)
                 {
                     _logger?.LogDebug("Receive event: {Event} of type: {Type}.", envelop.Messaje.ToString(), envelop.Type);
                     _processor(envelop, _logger).Wait();

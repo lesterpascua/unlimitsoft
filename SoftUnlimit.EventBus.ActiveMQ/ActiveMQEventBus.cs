@@ -4,6 +4,7 @@ using Apache.NMS.ActiveMQ.Commands;
 using Microsoft.Extensions.Logging;
 using Polly;
 using SoftUnlimit.CQRS.Event;
+using SoftUnlimit.Security;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -127,7 +128,14 @@ namespace SoftUnlimit.EventBus.ActiveMQ
             if (_connection == null || _session == null)
                 throw new NMSException("ActiveMQ conection is not ready.");
 
-            var message = _session.CreateObjectMessage(new MessageEvelop { Messaje = graph, Type = type });
+            var message = _session.CreateObjectMessage(new MessageEnvelop {
+                Type = type,
+                Created = DateTime.UtcNow,
+                ServiceId = MicroService.Default?.ServiceId,
+                WorkerId = MicroService.Default?.WorkerId,
+
+                Messaje = graph
+            });
             for (int i = 0; i < _producers.Length; i++)
             {
                 _producers[i].Send(message);
