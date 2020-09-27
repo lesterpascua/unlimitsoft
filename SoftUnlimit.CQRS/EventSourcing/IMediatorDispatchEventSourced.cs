@@ -84,9 +84,11 @@ namespace SoftUnlimit.CQRS.EventSourcing
             {
                 var payload = Create(@event);
                 remoteEvents.Add(payload);
-                if (@event.IsDomainEvent || DirectlyDispatchNotDomainEvents)
+
+                var dispatcher = EventDispatcher;
+                if (dispatcher != null && (@event.IsDomainEvent || DirectlyDispatchNotDomainEvents))
                 {
-                    var responses = await EventDispatcher?.DispatchEventAsync(Provider, @event);
+                    var responses = await dispatcher.DispatchEventAsync(Provider, @event);
                     if (responses?.Success == false)
                     {
                         var exceptions = responses.ErrorEvents
@@ -95,10 +97,12 @@ namespace SoftUnlimit.CQRS.EventSourcing
                     }
                 }
             }
-            await VersionedEventRepository.AddRangeAsync(remoteEvents);
+            var versionedEventRepository = VersionedEventRepository;
+            if (versionedEventRepository != null)
+                await versionedEventRepository.AddRangeAsync(remoteEvents);
         }
         /// <summary>
-        /// 
+        /// Indicated all event already dispatchers.
         /// </summary>
         /// <param name="events"></param>
         /// <returns></returns>
