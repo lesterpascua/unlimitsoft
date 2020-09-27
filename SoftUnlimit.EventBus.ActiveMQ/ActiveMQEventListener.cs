@@ -126,10 +126,7 @@ namespace SoftUnlimit.EventBus.ActiveMQ
             {
                 var body = objectMessage.Body;
                 if (body is MessageEnvelop envelop)
-                {
-                    _logger?.LogDebug("Receive event: {Event} of type: {Type}.", envelop.Messaje.ToString(), envelop.Type);
                     _processor(envelop, _logger).Wait();
-                }
             }
         }
         private (IConnection, ISession, IDestination, IMessageConsumer) TryToReconect(ConnectionFactory factory, string clientId, string queue, ILogger logger, SemaphoreSlim semaphore)

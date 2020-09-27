@@ -77,7 +77,7 @@ namespace SoftUnlimit.CQRS.Event
                         throw new NotSupportedException($"Envelop type: {envelop.Type} not suported");
                 }
 
-                _logger?.LogDebug("Event {Event} arrive at {Time}", @event.Name, DateTime.UtcNow);
+                _logger?.LogDebug("Receive event: {Event} of type: {Type} as {Time} and body: {Body}.", envelop.Messaje, envelop.Type, DateTime.UtcNow, @event.Body);
                 response = await _eventDispatcher.DispatchEventAsync(@event);
                 if (response?.ErrorEvents?.Any() != true)
                     return true;
