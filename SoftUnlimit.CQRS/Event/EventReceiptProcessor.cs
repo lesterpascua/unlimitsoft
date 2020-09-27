@@ -17,7 +17,7 @@ namespace SoftUnlimit.CQRS.Event
     public class EventReceiptProcessor : IEventReceiptProcessor
     {
         private readonly IEventDispatcher _eventDispatcher;
-        private readonly Dictionary<string, (Type, Type)> _resolver;
+        private readonly IReadOnlyDictionary<string, (Type, Type)> _resolver;
         private readonly ILogger<EventReceiptProcessor> _logger;
 
         private const string ErrMessage = "Error executing event {Event} generate on {Time} from {Service}, {Worker}";
@@ -28,7 +28,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="eventDispatcher"></param>
         /// <param name="resolver"></param>
         /// <param name="logger"></param>
-        public EventReceiptProcessor(IEventDispatcher eventDispatcher, Dictionary<string, (Type, Type)> resolver, ILogger<EventReceiptProcessor> logger = null)
+        public EventReceiptProcessor(IEventDispatcher eventDispatcher, IReadOnlyDictionary<string, (Type, Type)> resolver, ILogger<EventReceiptProcessor> logger = null)
         {
             _eventDispatcher = eventDispatcher;
             _resolver = resolver;
