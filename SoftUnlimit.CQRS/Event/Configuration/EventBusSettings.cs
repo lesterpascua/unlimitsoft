@@ -23,6 +23,11 @@ namespace SoftUnlimit.CQRS.Event.Configuration
         /// optimize the system handling local event directly and not throws queue.
         /// </summary>
         public bool AlsoPublishInOwnQueue { get; set; }
+
+        /// <summary>
+        /// Fail settings.
+        /// </summary>
+        public FailSettings Fail { get; set; }
         /// <summary>
         /// Credential to autenticate in queue
         /// </summary>

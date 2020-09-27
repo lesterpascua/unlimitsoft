@@ -62,6 +62,8 @@ namespace SoftUnlimit.EventBus.ActiveMQ
             {
                 _isStart = true;
                 var token = _connectionMonitorCts.Token;
+                _logger.LogDebug("ActiveMQ start connection: {Time}", DateTime.UtcNow);
+
                 _connectionMonitor = Task.Run(async () => {
                     var semaphore = new SemaphoreSlim(0, 1);
                     while (!token.IsCancellationRequested)
