@@ -109,7 +109,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="prevState">Previous entity snapshot.</param>
         /// <param name="body"></param>
         /// <returns></returns>
-        protected virtual IVersionedEvent EventFactory(Type eventType, Guid eventId, TKey sourceId, long version, uint serviceId, string workerId, ICommand creator, object prevState, object currState, object body) => (IVersionedEvent)Activator.CreateInstance(eventType, sourceId, version, serviceId, workerId, creator, prevState, currState, body);
+        protected virtual IVersionedEvent EventFactory(Type eventType, Guid eventId, TKey sourceId, long version, uint serviceId, string workerId, ICommand creator, object prevState, object currState, object body) => (IVersionedEvent)Activator.CreateInstance(eventType, eventId, sourceId, version, serviceId, workerId, creator, prevState, currState, body);
 
         #endregion
     }
