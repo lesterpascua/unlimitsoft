@@ -21,6 +21,8 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="event"></param>
         protected EventPayload(IEvent @event)
         {
+            Id = @event.Id;
+
             var props = @event.Creator.GetProps<CommandProps>();
             CreatorId = props.Id;
             CreatorName = props.Name;
@@ -40,6 +42,10 @@ namespace SoftUnlimit.CQRS.Event
             IsPubliched = false;
         }
 
+        /// <summary>
+        /// Event unique identifier.
+        /// </summary>
+        public Guid Id { get; set; }
         /// <summary>
         /// Creator identifier (Command Id).
         /// </summary>

@@ -14,7 +14,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Command creator identifier.
         /// </summary>
-        Guid Id { get; }
+        Guid Id { get; set; }
         /// <summary>
         /// Gets the identifier of the source originating the event.
         /// </summary>
@@ -71,6 +71,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="id"></param>
         /// <param name="sourceId"></param>
         /// <param name="serviceId"></param>
         /// <param name="workerId"></param>
@@ -79,8 +80,9 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="currState"></param>
         /// <param name="isDomain"></param>
         /// <param name="body"></param>
-        protected Event(TKey sourceId, uint serviceId, string workerId, ICommand command, object prevState, object currState, bool isDomain, object body)
+        protected Event(Guid id, TKey sourceId, uint serviceId, string workerId, ICommand command, object prevState, object currState, bool isDomain, object body)
         {
+            Id = id;
             SourceId = sourceId;
             ServiceId = serviceId;
             WorkerId = workerId;
@@ -94,7 +96,7 @@ namespace SoftUnlimit.CQRS.Event
         }
 
         /// <inheritdoc />
-        public Guid Id => Creator.GetProps<CommandProps>().Id;
+        public Guid Id { get; set; }
         /// <summary>
         /// Gets the identifier of the source originating the event.
         /// </summary>

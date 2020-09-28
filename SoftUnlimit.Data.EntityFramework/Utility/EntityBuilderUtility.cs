@@ -31,9 +31,9 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
             where TVersionedEvent : VersionedEventPayload<TPayload>
         {
             builder.ToTable("VersionedEventPayload");
-            builder.HasKey(k => k.CreatorId);
+            builder.HasKey(k => k.Id);
 
-            builder.Property(p => p.CreatorId).ValueGeneratedNever();               // Guid
+            builder.Property(p => p.Id).ValueGeneratedNever();                      // Guid
             builder.Property(p => p.SourceId).IsRequired().HasMaxLength(36);        // Guid
             builder.Property(p => p.ServiceId);
             builder.Property(p => p.WorkerId).IsRequired();
@@ -46,7 +46,7 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
 
             if (indexAll)
             {
-                builder.HasIndex(k => k.CreatorId).IsUnique(true);
+                builder.HasIndex(k => k.CreatorId).IsUnique(false);
                 builder.HasIndex(i => i.SourceId).IsUnique(false);
                 builder.HasIndex(i => i.EventName).IsUnique(false);
                 builder.HasIndex(i => i.CreatorName).IsUnique(false);

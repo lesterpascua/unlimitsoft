@@ -36,6 +36,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="id"></param>
         /// <param name="sourceId"></param>
         /// <param name="version"></param>
         /// <param name="serviceId"></param>
@@ -45,8 +46,8 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="prevState"></param>
         /// <param name="currState"></param>
         /// <param name="body"></param>
-        protected VersionedEvent(TKey sourceId, long version, uint serviceId, string workerId, bool isDomainEvent, ICommand command, object prevState, object currState, object body = null)
-            : base(sourceId, serviceId, workerId, command, prevState, currState, isDomainEvent, body)
+        protected VersionedEvent(Guid id, TKey sourceId, long version, uint serviceId, string workerId, bool isDomainEvent, ICommand command, object prevState, object currState, object body = null)
+            : base(id, sourceId, serviceId, workerId, command, prevState, currState, isDomainEvent, body)
         {
             this.Version = version;
             this.Created = DateTime.UtcNow;
@@ -56,24 +57,5 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// 
         /// </summary>
         public long Version { get; protected set; }
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    public static class VersionedEventSettings
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        public static JsonSerializerSettings JsonSerializerSettings { get; set; } = new JsonSerializerSettings { 
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-        };
-        /// <summary>
-        /// 
-        /// </summary>
-        public static JsonSerializerSettings JsonDeserializerSettings { get; set; } = new JsonSerializerSettings { 
-            ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor 
-        };
     }
 }

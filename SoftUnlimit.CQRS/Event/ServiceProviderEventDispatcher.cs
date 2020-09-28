@@ -20,7 +20,7 @@ namespace SoftUnlimit.CQRS.Event
         private readonly IServiceProvider _provider;
 
         private static readonly object _sync = new object();
-        private static readonly Dictionary<string, bool> _register = new Dictionary<string, bool>();
+        private static readonly Dictionary<string, Type> _register = new Dictionary<string, Type>();
         private static readonly Dictionary<KeyPair, MethodInfo> _cache = new Dictionary<KeyPair, MethodInfo>();
 
 
@@ -144,6 +144,36 @@ namespace SoftUnlimit.CQRS.Event
         /// <returns></returns>
         public static bool HasHadler(string eventName) => _register.ContainsKey(eventName);
         /// <summary>
+        /// Get collection of register events.
+        /// </summary>
+        /// <returns></returns>
+        public static IEnumerable<KeyValuePair<string, Type>> GetRegisterEvents()
+        {
+            return _register.Select(s => new KeyValuePair<string, Type>(s.Key, _register[s.Key]));
+        }
+        /// <summary>
+        /// Get a dictionaty with a mapping of event name and (eventType, commandType). 
+        /// </summary>
+        /// <remarks>This method only work if the event receive 9 parameters and the 5th is command type.</remarks>
+        /// <returns></returns>
+        public static IReadOnlyDictionary<string, (Type, Type)> GetTypeResolver()
+        {
+            Dictionary<string, (Type, Type)> cache = new Dictionary<string, (Type, Type)>();
+            foreach (var regEvent in GetRegisterEvents())
+            {
+                var contructors = regEvent.Value.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
+                var ctor = contructors.FirstOrDefault(p => p.GetParameters().Length == 9);
+                if (ctor != null)
+                {
+                    var commandParam = ctor.GetParameters()[5];
+                    var commandType = commandParam.ParameterType;
+
+                    cache.Add(regEvent.Key, (regEvent.Value, commandType));
+                }
+            }
+            return cache;
+        }
+        /// <summary>
         /// Register EventHandler in DPI.
         /// </summary>
         /// <param name="services"></param>
@@ -160,22 +190,22 @@ namespace SoftUnlimit.CQRS.Event
                 existEventHandler.AddRange(query);
             }
 
-            foreach (var commandHandlerImplementation in existEventHandler)
+            foreach (var eventHandlerImplementation in existEventHandler)
             {
-                var commandHandlerImplementedInterfaces = commandHandlerImplementation.GetInterfaces()
+                var eventHandlerImplementedInterfaces = eventHandlerImplementation.GetInterfaces()
                     .Where(p =>
                         p.IsGenericType &&
                         p.GetGenericArguments().Length == 1 &&
                         p.GetGenericTypeDefinition() == eventHandlerInterface);
 
-                foreach (var handlerInterface in commandHandlerImplementedInterfaces)
+                foreach (var handlerInterface in eventHandlerImplementedInterfaces)
                 {
                     var eventType = handlerInterface.GetGenericArguments().Single();
                     var wellKnowCommandHandlerInterface = typeof(IEventHandler<>).MakeGenericType(eventType);
 
                     if (!_register.ContainsKey(eventType.FullName))
-                        _register.Add(eventType.FullName, true);
-                    services.AddScoped(wellKnowCommandHandlerInterface, commandHandlerImplementation);
+                        _register.Add(eventType.FullName, eventType);
+                    services.AddScoped(wellKnowCommandHandlerInterface, eventHandlerImplementation);
                 }
             }
         }

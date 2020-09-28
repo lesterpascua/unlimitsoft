@@ -40,7 +40,7 @@ namespace App.Manual.Tests.CQRS.Command
             };
 
             var currState = _mapper.Map<DummyDTO>(dbObj);
-            dbObj.AddMasterEvent(command, null, currState);
+            dbObj.AddMasterEvent(_gen.GenerateId(), command, null, currState);
 
             await _dummyRepository.AddAsync(dbObj);
             await _unitOfWork.SaveChangesAsync();
