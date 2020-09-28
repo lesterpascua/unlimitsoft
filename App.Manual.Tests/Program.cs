@@ -125,19 +125,7 @@ namespace SoftUnlimit.CQRS.Test
             ServiceProviderEventDispatcher.RegisterEventHandler(services, typeof(IEventHandler<>), Assembly.GetExecutingAssembly());
             services.AddSingleton<IEventDispatcher, ServiceProviderEventDispatcher>();
 
-            Dictionary<string, (Type, Type)> cache = new Dictionary<string, (Type, Type)>();
-            foreach (var regEvent in ServiceProviderEventDispatcher.GetRegisterEvents())
-            {
-                var contructors = regEvent.Value.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
-                var ctor = contructors.FirstOrDefault(p => p.GetParameters().Length == 9);
-                if (ctor != null)
-                {
-                    var commandParam = ctor.GetParameters()[5];
-                    var commandType = commandParam.ParameterType;
-
-                    cache.Add(regEvent.Key, (regEvent.Value, commandType));
-                }
-            }
+            var cache = ServiceProviderEventDispatcher.GetTypeResolver();
 
             services.AddSingleton<App.Manual.Tests.CQRS.Startup>();
 

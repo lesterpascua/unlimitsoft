@@ -15,7 +15,7 @@ namespace SoftUnlimit.CQRS.Event
     /// <summary>
     /// 
     /// </summary>
-    /// <typeparam name="TUnitOfWork"></typeparam>
+    /// <typeparam name="TUnitOfWork">Register Unit of Work interface. Late used by <see cref="IServiceProvider"/> to update event state in database.</typeparam>
     /// <typeparam name="TVersionedEventRepository"></typeparam>
     /// <typeparam name="TVersionedEventPayload"></typeparam>
     /// <typeparam name="TPayload"></typeparam>
