@@ -187,7 +187,7 @@ namespace SoftUnlimit.AutoMapper
             bool preserveReferences,
             Dictionary<TypePair, bool> cache)
         {
-            if (source == typeof(string))
+            if (source == typeof(string) || source == typeof(object))
                 return false;
             if (MapDictionary(profile, source, destination, reverseMap, preserveReferences, cache))
                 return true;
