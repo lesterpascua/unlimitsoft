@@ -8,6 +8,7 @@ using SoftUnlimit.Data.Seed;
 using System;
 using System.Collections.Generic;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -64,17 +65,18 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
         /// <param name="scope"></param>
         /// <param name="logger"></param>
         /// <param name="unitOfWorkType">Unit Of work type.</param>
+        /// <param name="assembly">Assembly where looking for the seed. If null get same assembly of unit of work.</param>
         /// <param name="retryCount"></param>
         /// <param name="args"></param>
         /// <returns></returns>
         public static async Task<IServiceScope> ExecuteSeedAndMigrationAsync(
-            IServiceScope scope, ILogger logger, Type unitOfWorkType, int retryCount = 3, params object[] args)
+            IServiceScope scope, ILogger logger, Type unitOfWorkType, Assembly assembly = null, int retryCount = 3, params object[] args)
         {
             var provider = scope.ServiceProvider;
             var unitOfWork = (IUnitOfWork)provider.GetService(unitOfWorkType);
             await SeedHelper.Seed(
                 unitOfWork,
-                unitOfWorkType.Assembly,
+                assembly ?? unitOfWorkType.Assembly,
                 (unitOfWork) => {
                     if (unitOfWork is DbContext dbContext)
                         return ExecuteMigrationAsync(dbContext, logger, retryCount);
