@@ -7,6 +7,7 @@ using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.Data.Seed;
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -21,12 +22,14 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
         /// Helper method to configure versioned event. Command CreatorId is the primary key
         /// </summary>
         /// <param name="builder"></param>
-        /// <param name="indexAll">Indicate if create index for SourceId, EventName, CreatorName, EntityName</param>
         /// <param name="payloadBuilder">Extra properties applied over payload.</param>
+        /// <param name="indexAll">Indicate if create index for SourceId, EventName, CreatorName, EntityName</param>
+        /// <param name="defaultKeyIndex">Set diferent unique index for event sourced entries. default k => new { k.SourceId, k.Version })</param>
         public static void ConfigureVersionedEvent<TVersionedEvent, TPayload>(
             EntityTypeBuilder<TVersionedEvent> builder, 
+            Action<PropertyBuilder<TPayload>> payloadBuilder = null,
             bool indexAll = false,
-            Action<PropertyBuilder<TPayload>> payloadBuilder = null
+            Expression<Func<TVersionedEvent, object>> defaultKeyIndex = null
         )
             where TVersionedEvent : VersionedEventPayload<TPayload>
         {
@@ -52,7 +55,7 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
                 builder.HasIndex(i => i.CreatorName).IsUnique(false);
                 builder.HasIndex(i => i.EntityName).IsUnique(false);
             }
-            builder.HasIndex(k => new { k.SourceId, k.Version }).IsUnique(true);
+            builder.HasIndex(defaultKeyIndex ?? (k => new { k.SourceId, k.Version })).IsUnique(true);
         }
 
         /// <summary>
