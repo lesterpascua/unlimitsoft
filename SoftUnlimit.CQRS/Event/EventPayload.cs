@@ -23,9 +23,9 @@ namespace SoftUnlimit.CQRS.Event
         {
             Id = @event.Id;
 
-            var props = @event.Creator.GetProps<CommandProps>();
-            CreatorId = props.Id;
-            CreatorName = props.Name;
+            var props = @event.Creator?.GetProps<CommandProps>();
+            CreatorId = props?.Id ?? Guid.Empty;
+            CreatorName = props?.Name;
 
             SourceId = @event.SourceId.ToString();
             EntityName = (@event.CurrState ?? @event.PrevState)?.GetType().FullName;

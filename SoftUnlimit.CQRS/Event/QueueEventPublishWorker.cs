@@ -32,6 +32,7 @@ namespace SoftUnlimit.CQRS.Event
         private readonly Task _backgoundWorker;
         private readonly CancellationTokenSource _cts;
         private readonly ConcurrentQueue<Guid> _queue;
+        private bool _disposed;
 
 
         /// <summary>
@@ -44,6 +45,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="bachSize"></param>
         public QueueEventPublishWorker(IServiceProvider provider, IEventBus eventBus, MessageType type, ILogger<IEventPublishWorker> logger = null, int bachSize = 10)
         {
+            _disposed = false;
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
             _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
 
@@ -78,10 +80,14 @@ namespace SoftUnlimit.CQRS.Event
         {
             _cts.Cancel();
             await _backgoundWorker;
+            _disposed = true;
         }
         /// <inheritdoc />
         public void Publish(IEnumerable<IEvent> events)
         {
+            if (_disposed)
+                throw new ObjectDisposedException(this.GetType().FullName);
+
             foreach (var @event in events)
                 _queue.Enqueue(@event.Id);
         }
@@ -110,7 +116,7 @@ namespace SoftUnlimit.CQRS.Event
 
                     var eventsPayload = await eventPayloadRepository
                         .FindAll()
-                        .Where(p => buffer.Contains(p.CreatorId))
+                        .Where(p => buffer.Contains(p.Id))
                         .OrderBy(k => k.Created)
                         .ToArrayAsync();
                     foreach (var entity in eventsPayload)

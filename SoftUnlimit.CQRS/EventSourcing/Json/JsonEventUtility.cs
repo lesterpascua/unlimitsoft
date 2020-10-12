@@ -27,15 +27,23 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         /// <returns></returns>
         public static string Serializer(IEvent @event)
         {
-            var commandType = @event.Creator.GetType();
+            var commandType = @event.Creator?.GetType();
             if (UseNewtonsoftSerializer)
             {
-                var option = NewtonsoftCommandConverter.CreateOptions(commandType);
-                return JsonConvert.SerializeObject(@event, option);
+                if (commandType != null)
+                {
+                    var option = NewtonsoftCommandConverter.CreateOptions(commandType);
+                    return JsonConvert.SerializeObject(@event, option);
+                }
+                return JsonConvert.SerializeObject(@event);
             } else
-            {   
-                var option = CommandConverter.CreateOptions(commandType);
-                return System.Text.Json.JsonSerializer.Serialize(@event, option);
+            {
+                if (commandType != null)
+                {
+                    var option = CommandConverter.CreateOptions(commandType);
+                    return System.Text.Json.JsonSerializer.Serialize(@event, option);
+                }
+                return System.Text.Json.JsonSerializer.Serialize(@event);
             }
         }
         /// <summary>
