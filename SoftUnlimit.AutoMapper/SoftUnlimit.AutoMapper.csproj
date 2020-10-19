@@ -35,4 +35,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\SoftUnlimit\SoftUnlimit.csproj" />
+  </ItemGroup>
+
 </Project>

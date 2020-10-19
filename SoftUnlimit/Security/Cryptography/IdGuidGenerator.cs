@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net.NetworkInformation;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -172,5 +173,24 @@ namespace SoftUnlimit.Security.Cryptography
         System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
 
         #endregion Private Methods
+
+        /// <summary>
+        /// Get first valid network interface to get the mack address as identifier.
+        /// </summary>
+        /// <param name="id">Prefered network identifier.</param>
+        /// <returns></returns>
+        public static NetworkInterface GetNetworkInterface(string id = null)
+        {
+            var query = NetworkInterface
+                .GetAllNetworkInterfaces()
+                .Where(
+                    nic => nic.OperationalStatus == OperationalStatus.Up && 
+                    nic.NetworkInterfaceType != NetworkInterfaceType.Loopback && 
+                    nic.GetPhysicalAddress().GetAddressBytes()?.Length == 6);
+            if (!string.IsNullOrEmpty(id))
+                return query.First(p => p.Id == id);
+
+            return query.First();
+        }
     }
 }

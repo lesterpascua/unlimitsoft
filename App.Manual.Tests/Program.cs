@@ -16,7 +16,9 @@ using SoftUnlimit.AutoMapper;
 using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Command.Compliance;
 using SoftUnlimit.CQRS.Event;
+using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.CQRS.EventSourcing;
+using SoftUnlimit.CQRS.EventSourcing.Json;
 using SoftUnlimit.CQRS.Query;
 using SoftUnlimit.CQRS.Query.Compliance;
 using SoftUnlimit.Data;
@@ -39,9 +41,9 @@ namespace SoftUnlimit.CQRS.Test
 {
     public static class Program
     {
-        public static void Main()
+        public static async Task Main()
         {
-            MainCQRS().Wait();
+            await MainCQRS();
         }
 
         public static void MainAutoMapper()
@@ -64,10 +66,7 @@ namespace SoftUnlimit.CQRS.Test
         }
         public static async Task MainCQRS()
         {
-            var firstMacAddress = NetworkInterface
-                .GetAllNetworkInterfaces()
-                .Where(nic => nic.OperationalStatus == OperationalStatus.Up && nic.NetworkInterfaceType != NetworkInterfaceType.Loopback)
-                .FirstOrDefault();
+            var firstMacAddress = IdGuidGenerator.GetNetworkInterface();
 
             var gen = new IdGuidGenerator(firstMacAddress);
             Console.WriteLine("Service: {0}, Worker: {1}", gen.ServiceId, gen.WorkerId);
@@ -82,6 +81,7 @@ namespace SoftUnlimit.CQRS.Test
                 config.AddDeepMaps(typeof(Program).Assembly);
                 config.AddCustomMaps(typeof(Program).Assembly);
             })));
+            services.AddSingleton<Map.IMapper, AutoMapperObjectMapper>();
 
             services.AddDbContext<DbContextRead>(options => {
                 options.UseSqlServer(DesignTimeDbContextFactory.ConnStringRead);
@@ -125,7 +125,7 @@ namespace SoftUnlimit.CQRS.Test
             ServiceProviderEventDispatcher.RegisterEventHandler(services, typeof(IEventHandler<>), Assembly.GetExecutingAssembly());
             services.AddSingleton<IEventDispatcher, ServiceProviderEventDispatcher>();
 
-            var cache = ServiceProviderEventDispatcher.GetTypeResolver();
+            services.AddSingleton<IEventNameResolver>(new DefaultEventCommandResolver(ServiceProviderEventDispatcher.GetTypeResolver()));
 
             services.AddSingleton<App.Manual.Tests.CQRS.Startup>();
 

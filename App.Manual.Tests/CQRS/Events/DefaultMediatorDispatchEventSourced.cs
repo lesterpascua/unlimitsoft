@@ -1,6 +1,7 @@
 ﻿using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.CQRS.EventSourcing.Binary;
+using SoftUnlimit.CQRS.EventSourcing.Json;
 using SoftUnlimit.Data;
 using SoftUnlimit.Data.EntityFramework;
 using System;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace App.Manual.Tests.CQRS.Events
 {
-    public class DefaultMediatorDispatchEventSourced : BinaryMediatorDispatchEventSourced
+    public class DefaultMediatorDispatchEventSourced : JsonMediatorDispatchEventSourced
     {
         public DefaultMediatorDispatchEventSourced(IServiceProvider provider)
             : base(provider)
@@ -18,7 +19,7 @@ namespace App.Manual.Tests.CQRS.Events
         }
 
         protected override IEventDispatcher EventDispatcher => Provider.GetService(typeof(IEventDispatcher)) as IEventDispatcher;
-        protected override IRepository<BinaryVersionedEventPayload> VersionedEventRepository => Provider.GetService(typeof(IRepository<BinaryVersionedEventPayload>)) as IRepository<BinaryVersionedEventPayload>;
+        protected override IRepository<JsonVersionedEventPayload> VersionedEventRepository => Provider.GetService(typeof(IRepository<JsonVersionedEventPayload>)) as IRepository<JsonVersionedEventPayload>;
 
         protected override IEventPublishWorker EventPublishWorker => null;
     }

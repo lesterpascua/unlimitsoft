@@ -4,6 +4,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polly;
 using SoftUnlimit.CQRS.EventSourcing;
+using SoftUnlimit.CQRS.EventSourcing.Binary;
+using SoftUnlimit.CQRS.EventSourcing.Json;
 using SoftUnlimit.Data.Seed;
 using System;
 using System.Collections.Generic;
@@ -22,6 +24,8 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
         /// <summary>
         /// Helper method to configure versioned event. Command CreatorId is the primary key
         /// </summary>
+        /// <typeparam name="TPayload">Type of the payload used as body of the event. The body is where save the data.</typeparam>
+        /// <typeparam name="TVersionedEvent"> Versioned event type. Example: <see cref="JsonVersionedEventPayload"/> <see cref="BinaryVersionedEventPayload"/> or you can create your personalize. /// </typeparam>
         /// <param name="builder"></param>
         /// <param name="payloadBuilder">Extra properties applied over payload.</param>
         /// <param name="indexAll">Indicate if create index for SourceId, EventName, CreatorName, EntityName</param>
@@ -42,19 +46,19 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
             builder.Property(p => p.ServiceId);
             builder.Property(p => p.WorkerId).IsRequired();
             builder.Property(p => p.EventName).IsRequired().HasMaxLength(255);
-            builder.Property(p => p.CreatorName).IsRequired().HasMaxLength(255);
-            builder.Property(p => p.EntityName).IsRequired().HasMaxLength(255);
+            builder.Property(p => p.CommandType).IsRequired().HasMaxLength(255);
+            builder.Property(p => p.EntityType).IsRequired().HasMaxLength(255);
 
             var payloadPropertyBuilder = builder.Property(p => p.Payload).IsRequired();
             payloadBuilder?.Invoke(payloadPropertyBuilder);
 
             if (indexAll)
             {
-                builder.HasIndex(k => k.CreatorId).IsUnique(false);
+                builder.HasIndex(k => k.CommandId).IsUnique(false);
                 builder.HasIndex(i => i.SourceId).IsUnique(false);
                 builder.HasIndex(i => i.EventName).IsUnique(false);
-                builder.HasIndex(i => i.CreatorName).IsUnique(false);
-                builder.HasIndex(i => i.EntityName).IsUnique(false);
+                builder.HasIndex(i => i.CommandType).IsUnique(false);
+                builder.HasIndex(i => i.EntityType).IsUnique(false);
             }
             builder.HasIndex(defaultKeyIndex ?? (k => new { k.SourceId, k.Version })).IsUnique(true);
         }

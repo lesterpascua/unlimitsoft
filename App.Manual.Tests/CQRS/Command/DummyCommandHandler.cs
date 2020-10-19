@@ -1,8 +1,8 @@
 ﻿using App.Manual.Tests.CQRS.Data;
-using AutoMapper;
 using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.Data;
+using SoftUnlimit.Map;
 using SoftUnlimit.Security.Cryptography;
 using System;
 using System.Collections.Generic;
@@ -14,19 +14,16 @@ namespace App.Manual.Tests.CQRS.Command
     public class DummyCommandHandler :
         ICommandHandler<DummyCreateCommand>
     {
-        private readonly IMapper _mapper;
         private readonly IIdGenerator<Guid> _gen;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IRepository<Dummy> _dummyRepository;
 
         public DummyCommandHandler(
-            IMapper mapper,
             IIdGenerator<Guid> gen,
             IUnitOfWork unitOfWork,
             IRepository<Dummy> dummyRepository
         )
         {
-            _mapper = mapper;
             _gen = gen;
             _unitOfWork = unitOfWork;
             _dummyRepository = dummyRepository;
@@ -39,8 +36,7 @@ namespace App.Manual.Tests.CQRS.Command
                 Name = $"Time: {DateTime.Now}"
             };
 
-            var currState = _mapper.Map<DummyDTO>(dbObj);
-            dbObj.AddMasterEvent(_gen.GenerateId(), command, null, currState);
+            dbObj.AddMasterEvent(_gen.GenerateId(), command, null, dbObj);
 
             await _dummyRepository.AddAsync(dbObj);
             await _unitOfWork.SaveChangesAsync();

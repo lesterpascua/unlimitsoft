@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using SoftUnlimit.CQRS.Event;
+using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.CQRS.EventSourcing.Binary;
 using SoftUnlimit.CQRS.EventSourcing.Json;
 using SoftUnlimit.CQRS.Message;
@@ -17,7 +18,7 @@ namespace SoftUnlimit.CQRS.Event
     public class EventReceiptProcessor : IEventReceiptProcessor
     {
         private readonly IEventDispatcher _eventDispatcher;
-        private readonly IReadOnlyDictionary<string, (Type, Type)> _resolver;
+        private readonly IEventNameResolver _resolver;
         private readonly ILogger<EventReceiptProcessor> _logger;
 
         private const string ErrMessage = "Error executing event {Event} generate on {Time} from {Service}, {Worker}";
@@ -28,7 +29,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="eventDispatcher"></param>
         /// <param name="resolver"></param>
         /// <param name="logger"></param>
-        public EventReceiptProcessor(IEventDispatcher eventDispatcher, IReadOnlyDictionary<string, (Type, Type)> resolver, ILogger<EventReceiptProcessor> logger = null)
+        public EventReceiptProcessor(IEventDispatcher eventDispatcher, IEventNameResolver resolver, ILogger<EventReceiptProcessor> logger = null)
         {
             _eventDispatcher = eventDispatcher;
             _resolver = resolver;
@@ -46,7 +47,7 @@ namespace SoftUnlimit.CQRS.Event
         /// </summary>
         /// <param name="envelop"></param>
         /// <returns></returns>
-        protected virtual bool Accept(MessageEnvelop envelop) => _resolver.ContainsKey(envelop.Messaje.ToString());
+        protected virtual bool Accept(MessageEnvelop envelop) => _resolver.Resolver(envelop.Messaje.ToString()) != null;
 
         /// <inheritdoc />
         public async Task<bool> Process(MessageEnvelop envelop)
@@ -70,8 +71,10 @@ namespace SoftUnlimit.CQRS.Event
                         break;
                     case MessageType.Json:
                         var jsonMessage = (EventPayload<string>)envelop.Messaje;
-                        var (eventType, commandType) = _resolver[jsonMessage.EventName];
-                        @event = JsonEventUtility.Deserializer(jsonMessage.Payload, eventType, commandType);
+                        var eventType = _resolver.Resolver(jsonMessage.EventName);
+                        var (commandType, entityType, bodyType) = EventPayload.ResolveType(jsonMessage.CommandType, jsonMessage.EntityType, jsonMessage.BodyType);
+
+                        @event = JsonEventUtility.Deserializer(jsonMessage.Payload, eventType, commandType, entityType, bodyType);
                         break;
                     default:
                         throw new NotSupportedException($"Envelop type: {envelop.Type} not suported");

@@ -1,4 +1,6 @@
 ﻿using SoftUnlimit.CQRS.Command;
+using SoftUnlimit.CQRS.EventSourcing.Json;
+using SoftUnlimit.Map;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -21,14 +23,19 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="event"></param>
         protected EventPayload(IEvent @event)
         {
+            var currStateType = @event.CurrState?.GetType();
+            var prevStateType = @event.PrevState?.GetType();
+            if (currStateType != null && prevStateType != null && currStateType != prevStateType)
+                throw new ArgumentException("Type of CurrState and PrevState not match", nameof(currStateType));
+
             Id = @event.Id;
 
-            var props = @event.Creator?.GetProps<CommandProps>();
-            CreatorId = props?.Id ?? Guid.Empty;
-            CreatorName = props?.Name;
+            var props = @event.Command?.GetProps<CommandProps>();
+            CommandId = props?.Id ?? Guid.Empty;
+            CommandType = @event.Command?.GetType().AssemblyQualifiedName;
 
             SourceId = @event.SourceId.ToString();
-            EntityName = (@event.CurrState ?? @event.PrevState)?.GetType().FullName;
+            EntityType = (currStateType ?? prevStateType)?.AssemblyQualifiedName;
 
             ServiceId = @event.ServiceId;
             WorkerId = @event.WorkerId;
@@ -40,6 +47,8 @@ namespace SoftUnlimit.CQRS.Event
 
             Created = @event.Created;
             IsPubliched = false;
+
+            BodyType = @event.Body?.GetType().AssemblyQualifiedName;
         }
 
         /// <summary>
@@ -49,20 +58,20 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Creator identifier (Command Id).
         /// </summary>
-        public Guid CreatorId { get; set; }
+        public Guid CommandId { get; set; }
         /// <summary>
-        /// Creator name (Command FullName)
+        /// Command string name responsible for the creation of this event (Command AssemblyQualifiedName)
         /// </summary>
-        public string CreatorName { get; set; }
+        public string CommandType { get; set; }
 
         /// <summary>
         /// 
         /// </summary>
         public string SourceId { get; set; }
         /// <summary>
-        /// Entity type full name.
+        /// Entity string name inside currState and prevState (Entity AssemblyQualifiedName).
         /// </summary>
-        public string EntityName { get; set; }
+        public string EntityType { get; set; }
 
         /// <summary>
         /// Service unique identifier.
@@ -76,7 +85,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Event unique name.
         /// </summary>
-        public string EventName { get; private set; }
+        public string EventName { get; set; }
 
         /// <summary>
         /// This event is the first event in action it's generate directly by a command.
@@ -99,6 +108,32 @@ namespace SoftUnlimit.CQRS.Event
         /// If mark as domain event only has sence inside this microservice. Never publich to other events.
         /// </summary>
         public bool IsDomain { get; set; }
+
+        /// <summary>
+        /// Type of the body.
+        /// </summary>
+        public string BodyType { get; set; }
+
+        /// <summary>
+        /// Resolve types for command, entity and body
+        /// </summary>
+        /// <param name="commandTypeName"></param>
+        /// <param name="entityTypeName"></param>
+        /// <param name="bodyTypeName"></param>
+        /// <returns></returns>
+        public static (Type, Type, Type) ResolveType(string commandTypeName, string entityTypeName, string bodyTypeName)
+        {
+            Type commandType = null, entityType = null, bodyType = null;
+
+            if (!string.IsNullOrEmpty(commandTypeName))
+                commandType = Type.GetType(commandTypeName);
+            if (!string.IsNullOrEmpty(entityTypeName))
+                entityType = Type.GetType(entityTypeName);
+            if (!string.IsNullOrEmpty(bodyTypeName))
+                bodyType = Type.GetType(bodyTypeName);
+
+            return (commandType, entityType, bodyType);
+        }
     }
     /// <summary>
     /// 

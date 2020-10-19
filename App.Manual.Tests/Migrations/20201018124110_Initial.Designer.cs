@@ -10,20 +10,20 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace App.Manual.Tests.Migrations
 {
     [DbContext(typeof(DbContextWrite))]
-    [Migration("20200910130547_Initial")]
+    [Migration("20201018124110_Initial")]
     partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "3.1.7")
+                .HasAnnotation("ProductVersion", "3.1.8")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("App.Manual.Tests.CQRS.Data.Dummy", b =>
                 {
-                    b.Property<Guid>("ID")
+                    b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
@@ -34,29 +34,31 @@ namespace App.Manual.Tests.Migrations
                     b.Property<long>("Version")
                         .HasColumnType("bigint");
 
-                    b.HasKey("ID");
+                    b.HasKey("Id");
 
                     b.ToTable("Dummy");
                 });
 
-            modelBuilder.Entity("SoftUnlimit.CQRS.EventSourcing.Binary.BinaryVersionedEventPayload", b =>
+            modelBuilder.Entity("SoftUnlimit.CQRS.EventSourcing.Json.JsonVersionedEventPayload", b =>
                 {
-                    b.Property<string>("SourceID")
-                        .HasColumnType("nvarchar(36)")
-                        .HasMaxLength(36);
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uniqueidentifier");
 
-                    b.Property<long>("Version")
-                        .HasColumnType("bigint");
+                    b.Property<string>("BodyType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("CommandId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CommandType")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(255)")
+                        .HasMaxLength(255);
 
                     b.Property<DateTime>("Created")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("CreatorID")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(36)")
-                        .HasMaxLength(36);
-
-                    b.Property<string>("CreatorName")
+                    b.Property<string>("EntityType")
                         .IsRequired()
                         .HasColumnType("nvarchar(255)")
                         .HasMaxLength(255);
@@ -78,25 +80,31 @@ namespace App.Manual.Tests.Migrations
                     b.Property<bool>("IsStartAction")
                         .HasColumnType("bit");
 
-                    b.Property<byte[]>("RawData")
+                    b.Property<string>("Payload")
                         .IsRequired()
-                        .HasColumnType("varbinary(max)");
+                        .HasColumnType("nvarchar(max)");
 
-                    b.Property<long>("ServiceID")
+                    b.Property<long>("ServiceId")
                         .HasColumnType("bigint");
 
-                    b.Property<int>("WorkerID")
-                        .HasColumnType("int");
+                    b.Property<string>("SourceId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(36)")
+                        .HasMaxLength(36);
 
-                    b.HasKey("SourceID", "Version");
+                    b.Property<long>("Version")
+                        .HasColumnType("bigint");
 
-                    b.HasIndex("CreatorName");
+                    b.Property<string>("WorkerId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
-                    b.HasIndex("EventName");
+                    b.HasKey("Id");
 
-                    b.HasIndex("SourceID");
+                    b.HasIndex("SourceId", "Version")
+                        .IsUnique();
 
-                    b.ToTable("BinaryVersionedEventPayload");
+                    b.ToTable("VersionedEventPayload");
                 });
 #pragma warning restore 612, 618
         }

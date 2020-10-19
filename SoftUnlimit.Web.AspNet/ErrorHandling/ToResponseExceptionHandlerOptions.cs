@@ -21,7 +21,7 @@ namespace SoftUnlimit.Web.AspNet.ErrorHandling
     /// </summary>
     public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
     {
-        private readonly IWebHostEnvironment _environment;
+        private readonly bool _showExceptionInfo;
         private readonly IEnumerable<IExceptionHandler> _handlers;
         private readonly ILogger<ToResponseExceptionHandlerOptions> _logger;
 
@@ -29,29 +29,29 @@ namespace SoftUnlimit.Web.AspNet.ErrorHandling
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="environment"></param>
+        /// <param name="showExceptionInfo"></param>
         /// <param name="handlers"></param>
         /// <param name="logger"></param>
         public ToResponseExceptionHandlerOptions(
-            IWebHostEnvironment environment,
+            bool showExceptionInfo = true,
             IEnumerable<IExceptionHandler> handlers = null, 
             ILogger<ToResponseExceptionHandlerOptions> logger = null)
         {
+            _showExceptionInfo = showExceptionInfo;
             _logger = logger;
-            _environment = environment;
             _handlers = handlers;
-            ExceptionHandler = (context) => ExceptionHandlerInternal(context, _environment, _handlers, _logger);
+            ExceptionHandler = (context) => ExceptionHandlerInternal(context, _showExceptionInfo, _handlers, _logger);
         }
 
         /// <summary>
         /// Write exception
         /// </summary>
         /// <param name="context"></param>
-        /// <param name="environment"></param>
+        /// <param name="showExceptionInfo"></param>
         /// <param name="handlers"></param>
         /// <param name="logger"></param>
         /// <returns></returns>
-        public static async Task ExceptionHandlerInternal(HttpContext context, IWebHostEnvironment environment, IEnumerable<IExceptionHandler> handlers = null, ILogger<ToResponseExceptionHandlerOptions> logger = null)
+        public static async Task ExceptionHandlerInternal(HttpContext context, bool showExceptionInfo, IEnumerable<IExceptionHandler> handlers = null, ILogger<ToResponseExceptionHandlerOptions> logger = null)
         {
             var feature = context.Features.Get<IExceptionHandlerFeature>();
             var jsonHelper = context.RequestServices.GetService<IJsonHelper>();
@@ -61,12 +61,12 @@ namespace SoftUnlimit.Web.AspNet.ErrorHandling
                 foreach (var handler in handlers.Where(x => x.ShouldHandle(context)))
                     await handler.HandleAsync(context);
 
-            var reason = environment.IsDevelopment() ? feature.Error : new Exception("Consult admin for more information.");
+            var reason = showExceptionInfo ? feature.Error : new Exception("Consult admin for more information.");
             var response = new Response<IDictionary<string, Exception>> {
                 IsSuccess = false,
                 Code = StatusCodes.Status500InternalServerError,
                 Body = new Dictionary<string, Exception> {
-                    { string.Empty, feature.Error }
+                    { string.Empty, reason }
                 },
                 UIText = "Server Error"
             };

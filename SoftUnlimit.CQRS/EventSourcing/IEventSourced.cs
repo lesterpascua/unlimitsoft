@@ -1,6 +1,8 @@
 ﻿using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Data;
+using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.Data;
+using SoftUnlimit.Web.Model;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
@@ -56,7 +58,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// </summary>
         public long Version
         {
-            get; protected set;
+            get; set;
         }
 
         /// <summary>
@@ -77,15 +79,16 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="workerId"></param>
         /// <param name="creator"></param>
         /// <param name="currState">Actual entity snapshot.</param>
+        /// <param name="isDomain"></param>
         /// <param name="prevState">Previous entity snapshot.</param>
         /// <param name="body"></param>
-        protected IVersionedEvent AddMasterEvent(Guid eventId, uint serviceId, string workerId, ICommand creator, object prevState, object currState = null, object body = null)
+        protected IVersionedEvent AddMasterEvent(Guid eventId, uint serviceId, string workerId, ICommand creator, IEntityInfo prevState, IEntityInfo currState = null, bool isDomain = false, IEventBodyInfo body = null)
         {
             IVersionedEvent @event = null;
             Type eventType = creator.GetMasterEvent();
             if (eventType != null)
             {
-                @event = EventFactory(eventType, eventId, Id, ++Version, serviceId, workerId, creator, prevState, currState, body);
+                @event = EventFactory(eventType, eventId, Id, ++Version, serviceId, workerId, creator, prevState, currState, isDomain, body);
                 AddVersionedEvent(@event);
             }
             return @event;
@@ -106,10 +109,11 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="serviceId"></param>
         /// <param name="workerId"></param>
         /// <param name="currState">Actual entity snapshot.</param>
+        /// <param name="isDomain"></param>
         /// <param name="prevState">Previous entity snapshot.</param>
         /// <param name="body"></param>
         /// <returns></returns>
-        protected virtual IVersionedEvent EventFactory(Type eventType, Guid eventId, TKey sourceId, long version, uint serviceId, string workerId, ICommand creator, object prevState, object currState, object body) => (IVersionedEvent)Activator.CreateInstance(eventType, eventId, sourceId, version, serviceId, workerId, creator, prevState, currState, body);
+        protected virtual IVersionedEvent EventFactory(Type eventType, Guid eventId, TKey sourceId, long version, uint serviceId, string workerId, ICommand creator, IEntityInfo prevState, IEntityInfo currState, bool isDomain, IEventBodyInfo body) => (IVersionedEvent)Activator.CreateInstance(eventType, eventId, sourceId, version, serviceId, workerId, creator, prevState, currState, isDomain, body);
 
         #endregion
     }

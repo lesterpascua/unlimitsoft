@@ -1,8 +1,7 @@
 ﻿using SoftUnlimit.CQRS.Command;
-using SoftUnlimit.CQRS.Message;
+using SoftUnlimit.Map;
+using SoftUnlimit.Web.Model;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace SoftUnlimit.CQRS.Event
 {
@@ -38,15 +37,15 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Command where event is originate (fullname).
         /// </summary>
-        ICommand Creator { get; }
+        ICommand Command { get; }
         /// <summary>
         /// Previous snapshot in json representation.
         /// </summary>
-        object PrevState { get; }
+        IEntityInfo PrevState { get; }
         /// <summary>
         /// Currenct snapshot in json representation
         /// </summary>
-        object CurrState { get; }
+        IEntityInfo CurrState { get; }
         /// <summary>
         /// Specify if an event belown to domain. This have optimization propouse.
         /// </summary>
@@ -54,7 +53,22 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Event extra information
         /// </summary>
-        public object Body { get; }
+        public IEventBodyInfo Body { get; }
+
+        /// <summary>
+        /// Transform event into other event with diferent entity type. Usefull to publish event without sensitive data or a public representation of the event.
+        /// </summary>
+        /// <param name="mapper"></param>
+        /// <param name="destination"></param>
+        /// <returns></returns>
+        IEvent Transform(IMapper mapper, Type destination);
+        /// <summary>
+        /// Transform event into other event with diferent entity type. Usefull to publish event without sensitive data or a public representation of the event.
+        /// </summary>
+        /// <typeparam name="TDestination"></typeparam>
+        /// <param name="mapper"></param>
+        /// <returns></returns>
+        IEvent Transform<TDestination>(IMapper mapper) where TDestination : class, IEntityInfo;
     }
     /// <summary>
     /// Represents an event message.
@@ -80,14 +94,16 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="currState"></param>
         /// <param name="isDomain"></param>
         /// <param name="body"></param>
-        protected Event(Guid id, TKey sourceId, uint serviceId, string workerId, ICommand command, object prevState, object currState, bool isDomain, object body)
+        protected Event(Guid id, TKey sourceId, uint serviceId, string workerId, ICommand command, IEntityInfo prevState, IEntityInfo currState, bool isDomain, IEventBodyInfo body)
         {
             Id = id;
             SourceId = sourceId;
             ServiceId = serviceId;
             WorkerId = workerId;
 
-            Creator = command;
+            Name = GetType().FullName;
+
+            Command = command;
             PrevState = prevState;
             CurrState = currState;
 
@@ -100,39 +116,50 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Gets the identifier of the source originating the event.
         /// </summary>
-        public TKey SourceId { get; protected set; }
+        public TKey SourceId { get; set; }
         /// <inheritdoc />
-        public uint ServiceId { get; protected set; }
+        public uint ServiceId { get; set; }
         /// <inheritdoc />
-        public string WorkerId { get; protected set; }
+        public string WorkerId { get; set; }
         /// <inheritdoc />
-        public DateTime Created { get; protected set; }
+        public DateTime Created { get; set; }
         /// <inheritdoc />
-        public string Name => this.GetType().FullName;
+        public string Name { get; set; }
 
         /// <inheritdoc />
-        public ICommand Creator { get; protected set; }
+        public ICommand Command { get; set; }
         /// <inheritdoc />
-        public object PrevState { get; protected set; }
+        public IEntityInfo PrevState { get; set; }
         /// <inheritdoc />
-        public object CurrState { get; protected set; }
+        public IEntityInfo CurrState { get; set; }
 
         /// <inheritdoc />
-        public bool IsDomainEvent { get; protected set; }
+        public bool IsDomainEvent { get; set; }
         /// <inheritdoc />
-        public object Body { get; protected set; }
+        public IEventBodyInfo Body { get; set; }
 
-
-        /// <summary>
-        /// Convert objeto to string.
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc />
         public override string ToString() => Name;
+
+
+        /// <inheritdoc />
+        public virtual IEvent Transform(IMapper mapper, Type destination)
+        {
+            var currState = (IEntityInfo)mapper.Map(CurrState, CurrState.GetType(), destination);
+            var prevState = (IEntityInfo)mapper.Map(PrevState, PrevState.GetType(), destination);
+
+            var type = GetType();
+            var @event = (IEvent)Activator.CreateInstance(type, Id, SourceId, ServiceId, WorkerId, Command, prevState, currState, IsDomainEvent, Body);
+
+            return @event;
+        }
+        /// <inheritdoc />
+        public virtual IEvent Transform<TDestination>(IMapper mapper) where TDestination : class, IEntityInfo => Transform(mapper, typeof(TDestination));
 
 
         #region Explicit Interface Implementation
 
-        object IEvent.SourceId { get => this.SourceId; set => this.SourceId = (TKey)value; }
+        object IEvent.SourceId { get => SourceId; set => SourceId = (TKey)value; }
 
         #endregion
     }

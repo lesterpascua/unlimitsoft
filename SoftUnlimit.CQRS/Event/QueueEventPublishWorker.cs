@@ -1,8 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.Data;
+using SoftUnlimit.Map;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -13,7 +15,7 @@ using System.Threading.Tasks;
 namespace SoftUnlimit.CQRS.Event
 {
     /// <summary>
-    /// 
+    /// Create a backgound process to publish all dispatcher events
     /// </summary>
     /// <typeparam name="TUnitOfWork">Register Unit of Work interface. Late used by <see cref="IServiceProvider"/> to update event state in database.</typeparam>
     /// <typeparam name="TVersionedEventRepository"></typeparam>
@@ -26,6 +28,8 @@ namespace SoftUnlimit.CQRS.Event
     {
         private readonly int _bachSize;
         private readonly IServiceProvider _provider;
+        private readonly IMapper _mapper;
+        private readonly IEventNameResolver _eventNameResolver;
         private readonly IEventBus _eventBus;
         private readonly MessageType _type;
         private readonly ILogger<IEventPublishWorker> _logger;
@@ -39,16 +43,26 @@ namespace SoftUnlimit.CQRS.Event
         /// 
         /// </summary>
         /// <param name="provider"></param>
+        /// <param name="mapper"></param>
+        /// <param name="eventNameResolver"></param>
         /// <param name="eventBus"></param>
         /// <param name="type"></param>
         /// <param name="logger"></param>
         /// <param name="bachSize"></param>
-        public QueueEventPublishWorker(IServiceProvider provider, IEventBus eventBus, MessageType type, ILogger<IEventPublishWorker> logger = null, int bachSize = 10)
+        public QueueEventPublishWorker(
+            IServiceProvider provider, 
+            IMapper mapper,
+            IEventNameResolver eventNameResolver,
+            IEventBus eventBus, 
+            MessageType type, 
+            ILogger<IEventPublishWorker> logger = null, int bachSize = 10)
         {
             _disposed = false;
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
             _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
 
+            _mapper = mapper;
+            _eventNameResolver = eventNameResolver;
             _type = type;
             _logger = logger;
             _bachSize = bachSize;
@@ -67,7 +81,7 @@ namespace SoftUnlimit.CQRS.Event
                 .FindAll()
                 .Where(p => !p.IsPubliched)
                 .OrderBy(k => k.Created)
-                .Select(s => s.CreatorId)
+                .Select(s => s.CommandId)
                 .ToArray();
             foreach (var eventId in notPublishEvents)
                 _queue.Enqueue(eventId);
@@ -98,12 +112,12 @@ namespace SoftUnlimit.CQRS.Event
         /// <returns></returns>
         private async Task PublishBackground()
         {
+            await Task.Delay(TimeSpan.FromSeconds(5));
             while (!_cts.Token.IsCancellationRequested)
             {
                 SpinWait.SpinUntil(() => !_queue.IsEmpty || _cts.Token.IsCancellationRequested);
                 if (_cts.Token.IsCancellationRequested)
                     break;
-                await Task.Delay(TimeSpan.FromSeconds(1));
                 _logger?.LogDebug("Start to publish events {Time}", DateTime.UtcNow);
 
                 int count = Math.Min(_queue.Count, _bachSize);
@@ -119,10 +133,12 @@ namespace SoftUnlimit.CQRS.Event
                         .Where(p => buffer.Contains(p.Id))
                         .OrderBy(k => k.Created)
                         .ToArrayAsync();
-                    foreach (var entity in eventsPayload)
+                    foreach (var eventPayload in eventsPayload)
                     {
-                        await _eventBus.PublishEventPayloadAsync(entity, _type);
-                        entity.MarkEventAsPublished();
+                        var transformEventPayload = eventPayload.Transform(_mapper, _eventNameResolver);
+
+                        await _eventBus.PublishEventPayloadAsync(transformEventPayload, _type);
+                        eventPayload.MarkEventAsPublished();
                     }
                     await unitOfWork.SaveChangesAsync();
                     //

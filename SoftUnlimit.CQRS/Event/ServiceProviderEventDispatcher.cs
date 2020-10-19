@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.DependencyInjection;
+using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Message;
 using System;
 using System.Collections;
@@ -154,22 +155,23 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Get a dictionaty with a mapping of event name and (eventType, commandType). 
         /// </summary>
-        /// <remarks>This method only work if the event receive 9 parameters and the 5th is command type.</remarks>
         /// <returns></returns>
-        public static IReadOnlyDictionary<string, (Type, Type)> GetTypeResolver()
+        public static IReadOnlyDictionary<string, Type> GetTypeResolver()
         {
-            Dictionary<string, (Type, Type)> cache = new Dictionary<string, (Type, Type)>();
+            Dictionary<string, Type> cache = new Dictionary<string, Type>();
             foreach (var regEvent in GetRegisterEvents())
             {
-                var contructors = regEvent.Value.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
-                var ctor = contructors.FirstOrDefault(p => p.GetParameters().Length == 9);
-                if (ctor != null)
-                {
-                    var commandParam = ctor.GetParameters()[5];
-                    var commandType = commandParam.ParameterType;
+                cache.Add(regEvent.Key, regEvent.Value);
 
-                    cache.Add(regEvent.Key, (regEvent.Value, commandType));
-                }
+                //var contructors = regEvent.Value.GetConstructors(BindingFlags.Public | BindingFlags.Instance);
+                //var ctor = contructors.FirstOrDefault(p => p.GetParameters().Length == 10);
+                //if (ctor != null)
+                //{
+                //    var commandParam = ctor.GetParameters()[5];
+                //    var commandType = commandParam.ParameterType;
+                //    if (commandType.GetInterface(nameof(ICommand)) != null)
+                //        cache.Add(regEvent.Key, regEvent.Value);
+                //}
             }
             return cache;
         }
@@ -213,7 +215,6 @@ namespace SoftUnlimit.CQRS.Event
         #endregion
 
         #region Nested Clasess
-
         private sealed class KeyPair
         {
             public KeyPair(Type @event, Type handler)

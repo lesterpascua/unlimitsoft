@@ -1,12 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SoftUnlimit.CQRS.Event;
-using SoftUnlimit.CQRS.Message.Json;
+using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.Data;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 
 namespace SoftUnlimit.CQRS.EventSourcing.Json
@@ -19,17 +16,17 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         where TEntity : class, IEventSourced
     {
         private readonly IQueryRepository<JsonVersionedEventPayload> _queryRepository;
-        private readonly Func<string, (Type, Type)> _typeResolver;
+        private readonly IEventNameResolver _resolver;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="queryRepository"></param>
-        /// <param name="typeResolver">Function to receive event name and return (EventType, CommandCreatorType).</param>
-        public JsonEventSourcedRepository(IQueryRepository<JsonVersionedEventPayload> queryRepository, Func<string, (Type, Type)> typeResolver)
+        /// <param name="resolver">Receive (event name, command name) and return (EventType, CommandCreatorType).</param>
+        public JsonEventSourcedRepository(IQueryRepository<JsonVersionedEventPayload> queryRepository, IEventNameResolver resolver)
         {
-            _queryRepository = queryRepository ?? throw new ArgumentNullException(nameof(typeResolver));
-            _typeResolver = typeResolver ?? throw new ArgumentNullException(nameof(typeResolver));
+            _queryRepository = queryRepository ?? throw new ArgumentNullException(nameof(queryRepository));
+            _resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
         }
 
         /// <summary>
@@ -44,10 +41,14 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
                 this._queryRepository.Find(p => p.SourceId == sourceId && p.Version == version) :
                 this._queryRepository.Find(p => p.SourceId == sourceId).OrderByDescending(k => k.Version);
 
-            JsonVersionedEventPayload entity = await query.FirstOrDefaultAsync();
+            JsonVersionedEventPayload eventPayload = await query.FirstOrDefaultAsync();
+            if (eventPayload == null)
+                return null;
 
-            var (eventType, commandType) = _typeResolver(entity.EventName);
-            IEvent @event = JsonEventUtility.Deserializer(entity.Payload, eventType, commandType);
+            var eventType = _resolver.Resolver(eventPayload.EventName);
+            var (commandType, entityType, bodyType) = EventPayload.ResolveType(eventPayload.CommandType, eventPayload.EntityType, eventPayload.BodyType);
+
+            var @event = (IVersionedEvent)JsonEventUtility.Deserializer(eventPayload.Payload, eventType, commandType, entityType, bodyType);
 
             return (TEntity)@event.CurrState;
         }

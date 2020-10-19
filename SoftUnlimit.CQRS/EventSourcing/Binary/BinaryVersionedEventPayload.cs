@@ -1,6 +1,8 @@
 ﻿using Newtonsoft.Json;
 using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Event;
+using SoftUnlimit.CQRS.Event.Json;
+using SoftUnlimit.Map;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -49,6 +51,22 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
             : base(@event)
         {
             Payload = BinaryEventUtility.Serializer(@event);
+        }
+
+        /// <inheritdoc />
+        public override VersionedEventPayload<string> Transform(IMapper mapper, IEventNameResolver resolver)
+        {
+            throw new NotImplementedException();
+        }
+        /// <inheritdoc />
+        public override VersionedEventPayload<string> Transform(IMapper mapper, Type destination, IEventNameResolver resolver)
+        {
+            throw new NotImplementedException();
+        }
+        /// <inheritdoc />
+        public override VersionedEventPayload<string> Transform<TDestination>(IMapper mapper, IEventNameResolver resolver)
+        {
+            throw new NotImplementedException();
         }
     }
 }
