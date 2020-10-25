@@ -138,9 +138,9 @@ namespace SoftUnlimit.CQRS.Event
     /// <summary>
     /// 
     /// </summary>
-    /// <typeparam name="TBody"></typeparam>
+    /// <typeparam name="TPayload"></typeparam>
     [Serializable]
-    public abstract class EventPayload<TBody> : EventPayload
+    public abstract class EventPayload<TPayload> : EventPayload
     {
         /// <summary>
         /// 
@@ -158,7 +158,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Event Type.
         /// </summary>
-        public TBody Payload { get; set; }
+        public TPayload Payload { get; set; }
 
         /// <summary>
         /// Get event name inside the payload.

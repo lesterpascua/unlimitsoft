@@ -24,6 +24,7 @@ namespace SoftUnlimit.EventBus.ActiveMQ
         private readonly string[] _queues;
         private readonly ILogger<ActiveMQEventBus> _logger;
         private readonly ConnectionFactory _connectionFactory;
+        private readonly Func<string, object, object> _transform;
 
         private ISession _session;
         private IConnection _connection;
@@ -39,10 +40,16 @@ namespace SoftUnlimit.EventBus.ActiveMQ
         /// </summary>
         /// <param name="queues"></param>
         /// <param name="brokerUri"></param>
+        /// <param name="transform">
+        /// Transform event payload depending of the destination queue. The function receive queue name, the event could  be 
+        /// <see cref="IEvent"/> or <see cref="EventPayload{T}" /> and the result must be the same argument type with payload updated. This is usefull to 
+        /// control the data publish in diferent queues. if return null means the event not publish in this queue.
+        /// </param>
         /// <param name="logger"></param>
-        public ActiveMQEventBus(IEnumerable<string> queues, string brokerUri, ILogger<ActiveMQEventBus> logger)
+        public ActiveMQEventBus(IEnumerable<string> queues, string brokerUri, Func<string, object, object> transform = null, ILogger<ActiveMQEventBus> logger = null)
         {
             _logger = logger;
+            _transform = transform;
 
             _queues = queues.ToArray();
             _connectionFactory = new ConnectionFactory(brokerUri);
@@ -83,7 +90,7 @@ namespace SoftUnlimit.EventBus.ActiveMQ
         {
             if (!_isDisposed)
             {
-                _logger.LogDebug("Disposing: {Class} with Id: {Id}", nameof(ActiveMQEventBus), _connection.ClientId);
+                _logger?.LogDebug("Disposing: {Class} with Id: {Id}", nameof(ActiveMQEventBus), _connection.ClientId);
 
                 _isDisposed = true;
                 _connectionMonitorCts.Cancel();
@@ -128,30 +135,35 @@ namespace SoftUnlimit.EventBus.ActiveMQ
             if (_connection == null || _session == null)
                 throw new NMSException("ActiveMQ conection is not ready.");
 
-            var message = _session.CreateObjectMessage(new MessageEnvelop {
-                Type = type,
-                Created = DateTime.UtcNow,
-                ServiceId = MicroService.Default?.ServiceId,
-                WorkerId = MicroService.Default?.WorkerId,
-
-                Messaje = graph
-            });
             for (int i = 0; i < _producers.Length; i++)
             {
+                graph = _transform != null ? _transform(_queues[i], graph) : graph;
+                if (graph == null)
+                    continue;
+
+                var message = _session.CreateObjectMessage(new MessageEnvelop {
+                    Type = type,
+                    Created = DateTime.UtcNow,
+                    ServiceId = MicroService.Default?.ServiceId,
+                    WorkerId = MicroService.Default?.WorkerId,
+
+                    Messaje = _transform?.Invoke(_queues[i], graph) ?? graph
+                });
+
                 _producers[i].Send(message);
-                _logger.LogDebug("Published event: {Event} of type: {Type} to queue: {Queue}", graph.ToString(), type, _queues[i]);
+                _logger?.LogDebug("Published event: {Event} of type: {Type} to queue: {Queue}", graph.ToString(), type, _queues[i]);
             }
 
             return Task.CompletedTask;
         }
         private (IConnection, ISession, IDestination[], IMessageProducer[]) TryToReconect(ConnectionFactory factory, IEnumerable<string> queues, ILogger logger, SemaphoreSlim semaphore)
         {
-            logger.LogInformation("Active MQ trying reconect to {Uri}, publicher: {Time}.", factory.BrokerUri, DateTime.UtcNow);
+            logger?.LogInformation("Active MQ trying reconect to {Uri}, publicher: {Time}.", factory.BrokerUri, DateTime.UtcNow);
 
             var connection = factory.CreateConnection();
             connection.Start();
 
-            logger.LogInformation("Active MQ publicher connect to {Uri} success: {Time}.", factory.BrokerUri, DateTime.UtcNow);
+            logger?.LogInformation("Active MQ publicher connect to {Uri} success: {Time}.", factory.BrokerUri, DateTime.UtcNow);
             connection.ConnectionInterruptedListener += () => {
                 Release();
                 semaphore.Release();
@@ -164,7 +176,7 @@ namespace SoftUnlimit.EventBus.ActiveMQ
                         semaphore.Release();
                         break;
                 }
-                logger.LogWarning("Error on {Time} trying to reconect: {Url}", DateTime.UtcNow, factory.BrokerUri);
+                logger?.LogWarning("Error on {Time} trying to reconect: {Url}", DateTime.UtcNow, factory.BrokerUri);
             };
 
             var session = connection.CreateSession();

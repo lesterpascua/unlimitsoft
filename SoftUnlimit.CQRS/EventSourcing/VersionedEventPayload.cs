@@ -11,9 +11,9 @@ namespace SoftUnlimit.CQRS.EventSourcing
     /// <summary>
     /// 
     /// </summary>
-    /// <typeparam name="TBody"></typeparam>
+    /// <typeparam name="TPayload"></typeparam>
     [Serializable]
-    public abstract class VersionedEventPayload<TBody> : EventPayload<TBody>
+    public abstract class VersionedEventPayload<TPayload> : EventPayload<TPayload>
     {
         /// <summary>
         /// 
@@ -42,7 +42,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="mapper"></param>
         /// <param name="resolver"></param>
         /// <returns></returns>
-        public abstract VersionedEventPayload<string> Transform(IMapper mapper, IEventNameResolver resolver);
+        public abstract VersionedEventPayload<TPayload> Transform(IMapper mapper, IEventNameResolver resolver);
         /// <summary>
         /// Transform event entity into other destination using a mapper interface.
         /// </summary>
@@ -50,7 +50,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="destination"></param>
         /// <param name="resolver"></param>
         /// <returns></returns>
-        public abstract VersionedEventPayload<string> Transform(IMapper mapper, Type destination, IEventNameResolver resolver);
+        public abstract VersionedEventPayload<TPayload> Transform(IMapper mapper, Type destination, IEventNameResolver resolver);
         /// <summary>
         /// Transform event entity into other destination using a mapper interface.
         /// </summary>
@@ -58,6 +58,6 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="mapper"></param>
         /// <param name="resolver"></param>
         /// <returns></returns>
-        public abstract VersionedEventPayload<string> Transform<TDestination>(IMapper mapper, IEventNameResolver resolver) where TDestination : class, IEntityInfo;
+        public abstract VersionedEventPayload<TPayload> Transform<TDestination>(IMapper mapper, IEventNameResolver resolver) where TDestination : class, IEntityInfo;
     }
 }

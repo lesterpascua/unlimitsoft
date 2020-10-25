@@ -28,8 +28,6 @@ namespace SoftUnlimit.CQRS.Event
     {
         private readonly int _bachSize;
         private readonly IServiceProvider _provider;
-        private readonly IMapper _mapper;
-        private readonly IEventNameResolver _eventNameResolver;
         private readonly IEventBus _eventBus;
         private readonly MessageType _type;
         private readonly ILogger<IEventPublishWorker> _logger;
@@ -43,16 +41,12 @@ namespace SoftUnlimit.CQRS.Event
         /// 
         /// </summary>
         /// <param name="provider"></param>
-        /// <param name="mapper"></param>
-        /// <param name="eventNameResolver"></param>
         /// <param name="eventBus"></param>
         /// <param name="type"></param>
         /// <param name="logger"></param>
         /// <param name="bachSize"></param>
         public QueueEventPublishWorker(
             IServiceProvider provider, 
-            IMapper mapper,
-            IEventNameResolver eventNameResolver,
             IEventBus eventBus, 
             MessageType type, 
             ILogger<IEventPublishWorker> logger = null, int bachSize = 10)
@@ -61,8 +55,6 @@ namespace SoftUnlimit.CQRS.Event
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
             _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
 
-            _mapper = mapper;
-            _eventNameResolver = eventNameResolver;
             _type = type;
             _logger = logger;
             _bachSize = bachSize;
@@ -135,9 +127,7 @@ namespace SoftUnlimit.CQRS.Event
                         .ToArrayAsync();
                     foreach (var eventPayload in eventsPayload)
                     {
-                        var transformEventPayload = eventPayload.Transform(_mapper, _eventNameResolver);
-
-                        await _eventBus.PublishEventPayloadAsync(transformEventPayload, _type);
+                        await _eventBus.PublishEventPayloadAsync(eventPayload, _type);
                         eventPayload.MarkEventAsPublished();
                     }
                     await unitOfWork.SaveChangesAsync();

@@ -14,8 +14,8 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
     public abstract class BinaryMediatorDispatchEventSourced : MediatorDispatchEventSourced<BinaryVersionedEventPayload>
     {
         /// <inheritdoc />
-        public BinaryMediatorDispatchEventSourced(IServiceProvider provider, bool directlyDispatchNotDomainEvents = false)
-            : base(provider, directlyDispatchNotDomainEvents)
+        public BinaryMediatorDispatchEventSourced(IServiceProvider provider, Type unitOfWorkType, bool directlyDispatchNotDomainEvents = false)
+            : base(provider, unitOfWorkType, directlyDispatchNotDomainEvents)
         {
         }
 

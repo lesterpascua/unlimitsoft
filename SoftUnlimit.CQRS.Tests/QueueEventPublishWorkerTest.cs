@@ -34,12 +34,10 @@ namespace SoftUnlimit.CQRS.Tests
         /// <param name="type"></param>
         public TestQueueEventPublishWorker(
             IServiceProvider provider, 
-            IMapper mapper,
-            IEventNameResolver eventNameResolver, 
             IEventBus eventBus, 
             MessageType type
         )
-            : base(provider, mapper, eventNameResolver, eventBus, type)
+            : base(provider, eventBus, type)
         {
         }
     }
@@ -94,7 +92,7 @@ namespace SoftUnlimit.CQRS.Tests
         }
 
 
-        [Fact(Skip = "Fix test")]
+        [Fact]
         public async Task Publish_Event_And_Destroy_Queue()
         {
             // Arrange
@@ -126,7 +124,7 @@ namespace SoftUnlimit.CQRS.Tests
             services.AddScoped(p => fakeVersionesEventRepository);
             using var provider = services.BuildServiceProvider();
 
-            var queue = new TestQueueEventPublishWorker(provider, null, null, fakeEventBus, MessageType.Json);
+            var queue = new TestQueueEventPublishWorker(provider, fakeEventBus, MessageType.Json);
 
             // Act
             queue.Publish(new IEvent[] { event1 });

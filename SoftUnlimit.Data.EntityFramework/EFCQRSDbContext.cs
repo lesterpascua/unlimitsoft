@@ -147,7 +147,7 @@ namespace SoftUnlimit.Data.EntityFramework
                     entity.ClearVersionedEvents();
                 }
                 if (versionedEvents.Any())
-                    tasks[1] = eventSourcedMediator.DispatchEventsAsync(versionedEvents);
+                    tasks[1] = eventSourcedMediator.DispatchEventsAsync(versionedEvents, false);
             }
 
             await Task.WhenAll(tasks);

@@ -15,11 +15,12 @@ namespace SoftUnlimit.CQRS.EventSourcing
     public interface IMediatorDispatchEventSourced
     {
         /// <summary>
-        /// 
+        /// Send event to save. This operation should be perform transactional.
         /// </summary>
         /// <param name="events"></param>
+        /// <param name="forceSave">If false event is wait for save in cache, else force to save event before to leave this implementation.</param>
         /// <returns></returns>
-        Task DispatchEventsAsync(IEnumerable<IVersionedEvent> events);
+        Task DispatchEventsAsync(IEnumerable<IVersionedEvent> events, bool forceSave);
         /// <summary>
         /// When all event are saved invoqued this method.
         /// </summary>
@@ -33,14 +34,18 @@ namespace SoftUnlimit.CQRS.EventSourcing
     public abstract class MediatorDispatchEventSourced<TPayload> : IMediatorDispatchEventSourced
         where TPayload : class
     {
+        private readonly Type _unitOfWorkType;
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="provider"></param>
+        /// <param name="unitOfWorkType"></param>
         /// <param name="directlyDispatchNotDomainEvents">If true try to dispatch not domain event directly to find if exist any procesor for it.</param>
-        public MediatorDispatchEventSourced(IServiceProvider provider, bool directlyDispatchNotDomainEvents = true)
+        public MediatorDispatchEventSourced(IServiceProvider provider, Type unitOfWorkType, bool directlyDispatchNotDomainEvents = true)
         {
             Provider = provider;
+            _unitOfWorkType = unitOfWorkType;
             DirectlyDispatchNotDomainEvents = directlyDispatchNotDomainEvents;
         }
 
@@ -60,10 +65,16 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// 
         /// </summary>
         protected abstract IEventPublishWorker EventPublishWorker { get; }
+
         /// <summary>
         /// 
         /// </summary>
         protected abstract IRepository<TPayload> VersionedEventRepository { get; }
+        /// <summary>
+        /// Get transactional unit of work.
+        /// </summary>
+        protected virtual IUnitOfWork UnitOfWork => Provider.GetService(typeof(IUnitOfWork)) as IUnitOfWork;
+
 
         /// <summary>
         /// Create new event using versioned event as template.
@@ -72,12 +83,8 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <returns></returns>
         protected abstract TPayload Create(IVersionedEvent @event);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="events"></param>
-        /// <returns></returns>
-        public virtual async Task DispatchEventsAsync(IEnumerable<IVersionedEvent> events)
+        /// <inheritdoc />
+        public virtual async Task DispatchEventsAsync(IEnumerable<IVersionedEvent> events, bool forceSave)
         {
             List<TPayload> remoteEvents = new List<TPayload>();
             foreach (var @event in events)
@@ -99,7 +106,11 @@ namespace SoftUnlimit.CQRS.EventSourcing
             }
             var versionedEventRepository = VersionedEventRepository;
             if (versionedEventRepository != null)
+            {
                 await versionedEventRepository.AddRangeAsync(remoteEvents);
+                if (forceSave)
+                    await UnitOfWork.SaveChangesAsync();
+            }
         }
         /// <summary>
         /// Indicated all event already dispatchers.
