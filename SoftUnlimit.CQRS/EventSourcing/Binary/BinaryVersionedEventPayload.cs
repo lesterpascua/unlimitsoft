@@ -54,19 +54,6 @@ namespace SoftUnlimit.CQRS.EventSourcing.Binary
         }
 
         /// <inheritdoc />
-        public override VersionedEventPayload<byte[]> Transform(IMapper mapper, IEventNameResolver resolver)
-        {
-            throw new NotImplementedException();
-        }
-        /// <inheritdoc />
-        public override VersionedEventPayload<byte[]> Transform(IMapper mapper, Type destination, IEventNameResolver resolver)
-        {
-            throw new NotImplementedException();
-        }
-        /// <inheritdoc />
-        public override VersionedEventPayload<byte[]> Transform<TDestination>(IMapper mapper, IEventNameResolver resolver)
-        {
-            throw new NotImplementedException();
-        }
+        public override EventPayload<byte[]> Transform(IEventNameResolver resolver, IMapper mapper, Type destination) => throw new NotImplementedException();
     }
 }

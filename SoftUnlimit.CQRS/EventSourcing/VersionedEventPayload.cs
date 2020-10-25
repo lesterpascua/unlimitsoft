@@ -37,27 +37,20 @@ namespace SoftUnlimit.CQRS.EventSourcing
         public long Version { get; set; }
 
         /// <summary>
-        /// Transfort to type specified in <see cref="TransformTypeAttribute"/>
-        /// </summary>
-        /// <param name="mapper"></param>
-        /// <param name="resolver"></param>
-        /// <returns></returns>
-        public abstract VersionedEventPayload<TPayload> Transform(IMapper mapper, IEventNameResolver resolver);
-        /// <summary>
         /// Transform event entity into other destination using a mapper interface.
         /// </summary>
-        /// <param name="mapper"></param>
-        /// <param name="destination"></param>
         /// <param name="resolver"></param>
+        /// <param name="mapper"></param>
+        /// <param name="destination">If destination is null get destination from <see cref="TransformTypeAttribute" /> attribute.</param>
         /// <returns></returns>
-        public abstract VersionedEventPayload<TPayload> Transform(IMapper mapper, Type destination, IEventNameResolver resolver);
+        public abstract EventPayload<TPayload> Transform(IEventNameResolver resolver, IMapper mapper, Type destination = null);
         /// <summary>
         /// Transform event entity into other destination using a mapper interface.
         /// </summary>
         /// <typeparam name="TDestination"></typeparam>
-        /// <param name="mapper"></param>
         /// <param name="resolver"></param>
+        /// <param name="mapper"></param>
         /// <returns></returns>
-        public abstract VersionedEventPayload<TPayload> Transform<TDestination>(IMapper mapper, IEventNameResolver resolver) where TDestination : class, IEntityInfo;
+        public EventPayload<TPayload> Transform<TDestination>(IEventNameResolver resolver, IMapper mapper) where TDestination : class, IEntityInfo => Transform(resolver, mapper, typeof(TDestination));
     }
 }

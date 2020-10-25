@@ -59,7 +59,7 @@ namespace App.Manual.Tests.CQRS
                 .Find(p => p.SourceId == sourceId)
                 .OrderByDescending(k => k.Version)
                 .FirstOrDefaultAsync();
-            var tr = eventPayload.Transform<DummyDTO>(_mapper, _eventCommandResolver);
+            var tr = eventPayload.Transform<DummyDTO>(_eventCommandResolver, _mapper);
 
 
             var (queryResponse, result) = await new DummyQuery().ExecuteAsync(_queryDispatcher);

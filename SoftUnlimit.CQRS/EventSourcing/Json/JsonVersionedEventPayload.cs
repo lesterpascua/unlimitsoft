@@ -33,32 +33,23 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         }
 
         /// <inheritdoc />
-        public override VersionedEventPayload<string> Transform(IMapper mapper, IEventNameResolver resolver)
+        public override EventPayload<string> Transform(IEventNameResolver resolver, IMapper mapper, Type destination = null)
         {
             var eventType = resolver.Resolver(EventName);
             var (commandType, entityType, bodyType) = ResolveType(CommandType, EntityType, BodyType);
 
             var versionedEvent = JsonEventUtility.Deserializer(Payload, eventType, commandType, entityType, bodyType);
+            if (destination == null)
+            {
+                var versionedEventType = versionedEvent.GetType();
+                if (!(versionedEventType.GetCustomAttribute(typeof(TransformTypeAttribute)) is TransformTypeAttribute attr))
+                    return this;
 
-            var versionedEventType = versionedEvent.GetType();
-            if (!(versionedEventType.GetCustomAttribute(typeof(TransformTypeAttribute)) is TransformTypeAttribute attr))
-                return this;
+                destination = attr.PublishType;
+            }
 
-            var transformedVersionedEvent = (IVersionedEvent)versionedEvent.Transform(mapper, attr.PublishType);
-            return new JsonVersionedEventPayload(transformedVersionedEvent);
-        }
-        /// <inheritdoc />
-        public override VersionedEventPayload<string> Transform(IMapper mapper, Type destination, IEventNameResolver resolver)
-        {
-            var eventType = resolver.Resolver(EventName);
-            var (commandType, entityType, bodyType) = ResolveType(CommandType, EntityType, BodyType);
-
-            var versionedEvent = JsonEventUtility.Deserializer(Payload, eventType, commandType, entityType, bodyType);
             var transformedVersionedEvent = (IVersionedEvent)versionedEvent.Transform(mapper, destination);
-
             return new JsonVersionedEventPayload(transformedVersionedEvent);
         }
-        /// <inheritdoc />
-        public override VersionedEventPayload<string> Transform<TDestination>(IMapper mapper, IEventNameResolver resolver) => Transform(mapper, typeof(TDestination), resolver);
     }
 }

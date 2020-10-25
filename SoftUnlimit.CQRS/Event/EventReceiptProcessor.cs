@@ -39,9 +39,10 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Call when exist some error processing events.
         /// </summary>
+        /// <param name="eventResponse"></param>
         /// <param name="exception"></param>
         /// <param name="isCatch">If true indicate this exception was catch. If false there is a know exception.</param>
-        protected virtual void HandleError(Exception exception, bool isCatch) { }
+        protected virtual void HandleError(EventResponse eventResponse, Exception exception, bool isCatch) { }
         /// <summary>
         /// If this messaje is accept for processing return true, false in other case.
         /// </summary>
@@ -90,12 +91,12 @@ namespace SoftUnlimit.CQRS.Event
                 {
                     var ex = (Exception)err.GetBody();
                     _logger?.LogError(ex, ErrMessage, eventName, envelop.Created, envelop.ServiceId, envelop.WorkerId);
-                    HandleError(ex, false);
+                    HandleError(err, ex, false);
                 }
             } catch (Exception ex)
             {
                 _logger?.LogError(ex, ErrMessage, eventName, envelop.Created, envelop.ServiceId, envelop.WorkerId);
-                HandleError(ex, true);
+                HandleError(null, ex, true);
             }
             return false;
         }
