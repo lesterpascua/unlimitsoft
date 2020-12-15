@@ -32,15 +32,13 @@ namespace SoftUnlimit.Web.AspNet.Filter
             _logger = logger;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="context"></param>
+        /// <inheritdoc />
         public override void OnActionExecuted(ActionExecutedContext context)
         {
+            var httpContext = context.HttpContext;
+
             if (context.Exception != null && context.Controller is ControllerBase controller)
             {
-                var httpContext = context.HttpContext;
                 _settings.ErrorLogger?.Invoke(_logger, context.Exception, httpContext, _settings.ServerErrorText);
 
                 object body = context.Exception;
@@ -57,7 +55,8 @@ namespace SoftUnlimit.Web.AspNet.Filter
                 };
                 context.Result = controller.StatusCode(StatusCodes.Status500InternalServerError, response);
                 context.Exception = null;
-            }
+            } else
+                _settings.ResponseLogger?.Invoke(_logger, httpContext, context.Result);
         }
         /// <summary>
         /// Convert fluent error in Response error.
@@ -67,14 +66,14 @@ namespace SoftUnlimit.Web.AspNet.Filter
         {
             if (context.Result is BadRequestObjectResult result && result.Value is ValidationProblemDetails validationProblem)
             {
-                _settings.BadRequestLogger?.Invoke(_logger, context.HttpContext, _settings.InvalidArgumentText);
-
                 var response = new Response<IDictionary<string, string[]>> {
                     IsSuccess = false,
                     Code = result.StatusCode.Value,
                     Body = validationProblem.Errors,
                     UIText = _settings.InvalidArgumentText
                 };
+
+                _settings.BadRequestLogger?.Invoke(_logger, context.HttpContext, response, _settings.InvalidArgumentText);
                 context.Result = new BadRequestObjectResult(response);
             }
         }
@@ -109,11 +108,21 @@ namespace SoftUnlimit.Web.AspNet.Filter
             /// <summary>
             /// Log bad request exception
             /// </summary>
-            public Action<ILogger, HttpContext, string> BadRequestLogger { get; set; } = (logger, httpContext, message) => logger.LogInformationJson(new {
+            public Action<ILogger, HttpContext, object, string> BadRequestLogger { get; set; } = (logger, httpContext, response, message) => logger.LogInformationJson(new {
                 TraceId = httpContext.TraceIdentifier,
                 Code = StatusCodes.Status400BadRequest,
                 UserId = httpContext.User.GetSubjectId(),
-                Message = message
+                Message = message,
+                Response = response
+            });
+            /// <summary>
+            /// Log error exception
+            /// </summary>
+            public Action<ILogger, HttpContext, object> ResponseLogger { get; set; } = (logger, httpContext, response) => logger.LogInformationJson(new {
+                TraceId = httpContext.TraceIdentifier,
+                Code = StatusCodes.Status500InternalServerError,
+                UserId = httpContext.User.GetSubjectId(),
+                Response = response
             });
         }
         #endregion
