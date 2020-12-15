@@ -52,7 +52,7 @@ namespace SoftUnlimit.Web.AspNet.Filter
                     Address = httpContext.GetIpAddress(),
                     Body = context.ActionArguments,
                     ConnectionId = httpContext.Connection.Id,
-                    TimeStamp = DateTime.UtcNow,
+                    TraceId = httpContext.TraceIdentifier
                 };
                 var jsonLog = JsonSerializer.Serialize(log, new JsonSerializerOptions { WriteIndented = _settings.Indented });
                 _logger.Log(_settings.LogLevel, jsonLog);

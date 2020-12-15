@@ -14,6 +14,7 @@
     <Description>ASP.NET helpers</Description>
     <LangVersion>8.0</LangVersion>
     <PackageLicenseFile>License.txt</PackageLicenseFile>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\SoftUnlimit.Web\SoftUnlimit.Web.csproj" />
+    <ProjectReference Include="..\SoftUnlimit\SoftUnlimit.csproj" />
   </ItemGroup>
 
   <ItemGroup>

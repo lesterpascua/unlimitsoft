@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Controllers;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
@@ -6,6 +7,7 @@ using Microsoft.Extensions.Options;
 using SoftUnlimit.Web.Security.Claims;
 using System;
 using System.Linq;
+using System.Text.Json;
 
 namespace SoftUnlimit.Web.AspNet.Filter
 {
@@ -42,7 +44,16 @@ namespace SoftUnlimit.Web.AspNet.Filter
                 if (_settings.LogLevel != LogLevel.None)
                 {
                     var httpContext = context.HttpContext;
-                    _logger?.Log(_settings.LogLevel, "ConnectionId: {Id}, Code {Code}, user: {User}, ip: {Ip}", 401, httpContext.Connection.Id, httpContext.User.GetSubjectId(), httpContext.GetIpAddress());
+                    if (_logger != null)
+                    {
+                        var log = new {
+                            TraceId = httpContext.TraceIdentifier,
+                            Code = StatusCodes.Status400BadRequest,
+                            UserId = httpContext.User.GetSubjectId()
+                        };
+                        var jsonLog = JsonSerializer.Serialize(log);
+                        _logger.Log(_settings.LogLevel, jsonLog);
+                    }
                 }
             }
         }

@@ -3,10 +3,12 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using SoftUnlimit.Json;
 using SoftUnlimit.Web.Client;
 using SoftUnlimit.Web.Security.Claims;
 using System;
 using System.Collections.Generic;
+using System.Text.Json;
 
 namespace SoftUnlimit.Web.AspNet.Filter
 {
@@ -39,7 +41,7 @@ namespace SoftUnlimit.Web.AspNet.Filter
             if (context.Exception != null && context.Controller is ControllerBase controller)
             {
                 var httpContext = context.HttpContext;
-                _logger?.LogError(context.Exception, "ConnectionId: {Id}, Code {Code}, user: {User}, ip: {Ip}", httpContext.Connection.Id, 500, httpContext.User.GetSubjectId(), httpContext.GetIpAddress());
+                _settings.ErrorLogger?.Invoke(_logger, context.Exception, httpContext, _settings.ServerErrorText);
 
                 object body = context.Exception;
                 if (!_settings.ShowExceptionDetails)
@@ -65,6 +67,8 @@ namespace SoftUnlimit.Web.AspNet.Filter
         {
             if (context.Result is BadRequestObjectResult result && result.Value is ValidationProblemDetails validationProblem)
             {
+                _settings.BadRequestLogger?.Invoke(_logger, context.HttpContext, _settings.InvalidArgumentText);
+
                 var response = new Response<IDictionary<string, string[]>> {
                     IsSuccess = false,
                     Code = result.StatusCode.Value,
@@ -90,9 +94,27 @@ namespace SoftUnlimit.Web.AspNet.Filter
             /// </summary>
             public string InvalidArgumentText { get; set; } = "Invalid Argument";
             /// <summary>
-            /// 
+            /// Indicate if the filter should log exception request.
             /// </summary>
             public bool ShowExceptionDetails { get; set; } = false;
+            /// <summary>
+            /// Log error exception
+            /// </summary>
+            public Action<ILogger, Exception, HttpContext, string> ErrorLogger { get; set; } = (logger, exception, httpContext, message) => logger.LogErrorJson(new {
+                TraceId = httpContext.TraceIdentifier, 
+                Code = StatusCodes.Status500InternalServerError, 
+                UserId = httpContext.User.GetSubjectId(),
+                Message = message
+            }, exception);
+            /// <summary>
+            /// Log bad request exception
+            /// </summary>
+            public Action<ILogger, HttpContext, string> BadRequestLogger { get; set; } = (logger, httpContext, message) => logger.LogInformationJson(new {
+                TraceId = httpContext.TraceIdentifier,
+                Code = StatusCodes.Status400BadRequest,
+                UserId = httpContext.User.GetSubjectId(),
+                Message = message
+            });
         }
         #endregion
     }

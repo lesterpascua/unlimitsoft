@@ -18,10 +18,10 @@ namespace SoftUnlimit.Data.Reflection
         /// <param name="implementationQueryType"></param>
         public RepositoriesAvailables(Type serviceType, Type serviceQueryType, Type implementationType, Type implementationQueryType)
         {
-            this.ServiceType = serviceType;
-            this.ServiceQueryType = serviceQueryType;
-            this.ImplementationType = implementationType;
-            this.ImplementationQueryType = implementationQueryType;
+            ServiceType = serviceType;
+            ServiceQueryType = serviceQueryType;
+            ImplementationType = implementationType;
+            ImplementationQueryType = implementationQueryType;
         }
 
         /// <summary>

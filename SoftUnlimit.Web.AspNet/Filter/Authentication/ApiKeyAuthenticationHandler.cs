@@ -14,10 +14,18 @@ using System.Threading.Tasks;
 
 namespace SoftUnlimit.Web.AspNet.Filter.Authentication
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="TOption"></typeparam>
+    /// <typeparam name="TUser"></typeparam>
     public class ApiKeyAuthenticationHandler<TOption, TUser> : AuthenticationHandler<TOption>
         where TOption : ApiKeyAuthenticationOptions<TUser>, new()
         where TUser : class
     {
+        /// <summary>
+        /// Header were the API Key supplied.
+        /// </summary>
         public const string HeaderName = "X-API-KEY";
         private const string ContentType = "application/json";
 
@@ -41,6 +49,10 @@ namespace SoftUnlimit.Web.AspNet.Filter.Authentication
         /// </summary>
         protected Func<ApiKeyError, string> ErrorBuilder { get; }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
         protected override Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             if (!Request.Headers.TryGetValue(HeaderName, out var headerValues))

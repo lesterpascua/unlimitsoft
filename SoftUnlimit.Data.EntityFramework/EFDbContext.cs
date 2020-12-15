@@ -113,7 +113,7 @@ namespace SoftUnlimit.Data.EntityFramework
             if (type.BaseType.IsGenericType ? type.BaseType.GetGenericTypeDefinition() == baseType : type.BaseType == baseType)
                 return true;
 
-            return EFDbContext.IsSubTypeOfType(type.BaseType, baseType);
+            return IsSubTypeOfType(type.BaseType, baseType);
         }
 
         #endregion

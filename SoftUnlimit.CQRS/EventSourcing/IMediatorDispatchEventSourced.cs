@@ -73,7 +73,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <summary>
         /// Get transactional unit of work.
         /// </summary>
-        protected virtual IUnitOfWork UnitOfWork => Provider.GetService(typeof(IUnitOfWork)) as IUnitOfWork;
+        protected virtual IUnitOfWork UnitOfWork => Provider.GetService(_unitOfWorkType) as IUnitOfWork;
 
 
         /// <summary>
