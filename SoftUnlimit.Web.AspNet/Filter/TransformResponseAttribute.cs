@@ -120,7 +120,7 @@ namespace SoftUnlimit.Web.AspNet.Filter
             /// </summary>
             public Action<ILogger, HttpContext, object> ResponseLogger { get; set; } = (logger, httpContext, response) => logger.LogInformationJson(new {
                 TraceId = httpContext.TraceIdentifier,
-                Code = StatusCodes.Status500InternalServerError,
+                Code = response is ObjectResult result ? result.StatusCode ?? StatusCodes.Status200OK : StatusCodes.Status200OK,
                 UserId = httpContext.User.GetSubjectId(),
                 Response = response
             });
