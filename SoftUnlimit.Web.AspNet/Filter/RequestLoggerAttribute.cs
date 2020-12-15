@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using System;
 using System.Linq;
-using System.Text.Json;
 
 namespace SoftUnlimit.Web.AspNet.Filter
 {
@@ -54,7 +54,7 @@ namespace SoftUnlimit.Web.AspNet.Filter
                     ConnectionId = httpContext.Connection.Id,
                     TraceId = httpContext.TraceIdentifier
                 };
-                var jsonLog = JsonSerializer.Serialize(log, new JsonSerializerOptions { WriteIndented = _settings.Indented });
+                var jsonLog = JsonConvert.SerializeObject(log, new JsonSerializerSettings { Formatting = _settings.Indented ? Formatting.Indented : Formatting.None });
                 _logger.Log(_settings.LogLevel, jsonLog);
             }
         }
