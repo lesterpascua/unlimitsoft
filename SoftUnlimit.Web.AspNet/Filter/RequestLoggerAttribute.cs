@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using SoftUnlimit.Web.Security.Claims;
 using System;
 using System.Linq;
 
@@ -37,25 +38,18 @@ namespace SoftUnlimit.Web.AspNet.Filter
                 var httpContext = context.HttpContext;
                 var request = httpContext.Request;
 
-                var log = new {
-                    Url = $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}",
-                    User = new {
-                        httpContext.User.Identity.Name,
+                _logger.Log(_settings.LogLevel, "TraceId: {Trace}, User: {@User}, JsonData: {@Response}",
+                    httpContext.TraceIdentifier,
+                    new {
                         IsAuth = httpContext.User.Identity.IsAuthenticated,
                         AuthType = httpContext.User.Identity.AuthenticationType,
-                        Claims = httpContext.User.Claims.Select(s => new {
-                            s.Type,
-                            s.Value,
-                            s.Issuer
-                        })
+                        Claims = httpContext.User.Claims.Select(s => $"{s.Type}={s.Value}, ")
                     },
-                    Address = httpContext.GetIpAddress(),
-                    Body = context.ActionArguments,
-                    ConnectionId = httpContext.Connection.Id,
-                    TraceId = httpContext.TraceIdentifier
-                };
-                var jsonLog = JsonConvert.SerializeObject(log, new JsonSerializerSettings { Formatting = _settings.Indented ? Formatting.Indented : Formatting.None });
-                _logger.Log(_settings.LogLevel, jsonLog);
+                    new {
+                        Url = $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}",
+                        Address = httpContext.GetIpAddress(),
+                        Body = context.ActionArguments
+                    });
             }
         }
 

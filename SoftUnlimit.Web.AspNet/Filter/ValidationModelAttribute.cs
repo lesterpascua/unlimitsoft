@@ -44,16 +44,7 @@ namespace SoftUnlimit.Web.AspNet.Filter
                 if (_settings.LogLevel != LogLevel.None)
                 {
                     var httpContext = context.HttpContext;
-                    if (_logger != null)
-                    {
-                        var log = new {
-                            TraceId = httpContext.TraceIdentifier,
-                            Code = StatusCodes.Status400BadRequest,
-                            UserId = httpContext.User.GetSubjectId()
-                        };
-                        var jsonLog = JsonSerializer.Serialize(log);
-                        _logger.Log(_settings.LogLevel, jsonLog);
-                    }
+                    _logger?.Log(_settings.LogLevel, "TraceId: {Trace}, Code: {Code}, User: {@User}", httpContext.TraceIdentifier, StatusCodes.Status400BadRequest, httpContext.User.GetSubjectId());
                 }
             }
         }
