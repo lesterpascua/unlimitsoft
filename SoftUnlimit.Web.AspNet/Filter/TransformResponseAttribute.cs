@@ -96,34 +96,36 @@ namespace SoftUnlimit.Web.AspNet.Filter
             /// Indicate if the filter should log exception request.
             /// </summary>
             public bool ShowExceptionDetails { get; set; } = false;
+
+
             /// <summary>
             /// Log error exception
             /// </summary>
-            public Action<ILogger, Exception, HttpContext, string> ErrorLogger { get; set; } = (logger, exception, httpContext, message) => logger.LogErrorJson(new {
-                TraceId = httpContext.TraceIdentifier, 
-                Code = StatusCodes.Status500InternalServerError, 
-                UserId = httpContext.User.GetSubjectId(),
-                Message = message
-            }, exception);
+            public Action<ILogger, Exception, HttpContext, string> ErrorLogger { get; set; } = (logger, exception, httpContext, message) => logger.LogError(exception, "TraceId: {Trace}, Code: {Code}, User: {User}, Message: {Message}", 
+                httpContext.TraceIdentifier, 
+                StatusCodes.Status500InternalServerError, 
+                httpContext.User.GetSubjectId(),
+                message
+            );
             /// <summary>
             /// Log bad request exception
             /// </summary>
-            public Action<ILogger, HttpContext, object, string> BadRequestLogger { get; set; } = (logger, httpContext, response, message) => logger.LogInformationJson(new {
-                TraceId = httpContext.TraceIdentifier,
-                Code = StatusCodes.Status400BadRequest,
-                UserId = httpContext.User.GetSubjectId(),
-                Message = message,
-                Response = response
-            });
+            public Action<ILogger, HttpContext, object, string> BadRequestLogger { get; set; } = (logger, httpContext, response, message) => logger.LogInformation("TraceId: {Trace}, Code: {Code}, User: {User}, Message: {Message}, JsonData: {@Response}",
+                httpContext.TraceIdentifier,
+                StatusCodes.Status400BadRequest,
+                httpContext.User.GetSubjectId(),
+                message,
+                response
+            );
             /// <summary>
             /// Log error exception
             /// </summary>
-            public Action<ILogger, HttpContext, object> ResponseLogger { get; set; } = (logger, httpContext, response) => logger.LogInformationJson(new {
-                TraceId = httpContext.TraceIdentifier,
-                Code = response is ObjectResult result ? result.StatusCode ?? StatusCodes.Status200OK : StatusCodes.Status200OK,
-                UserId = httpContext.User.GetSubjectId(),
-                Response = response
-            });
+            public Action<ILogger, HttpContext, object> ResponseLogger { get; set; } = (logger, httpContext, response) => logger.LogInformation("TraceId: {Trace}, Code: {Code}, User: {User}, JsonData: {@Response}",
+                httpContext.TraceIdentifier,
+                response is ObjectResult result ? result.StatusCode ?? StatusCodes.Status200OK : StatusCodes.Status200OK,
+                httpContext.User.GetSubjectId(),
+                response is ObjectResult ? response : "Raw Data"
+            );
         }
         #endregion
     }
