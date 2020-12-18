@@ -1,4 +1,5 @@
-﻿using SoftUnlimit.CQRS.Event;
+﻿using SoftUnlimit.CQRS.Command;
+using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.EventSourcing;
 using System;
 using System.Collections.Generic;
@@ -52,5 +53,9 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         /// Event dispatcher used to handler events.
         /// </summary>
         public Func<IServiceProvider, IEventDispatcher> EventDispatcher { get; set; }
+        /// <summary>
+        /// Trigger some action before dispatch command
+        /// </summary>
+        public Action<IServiceProvider, ICommand> PreeDispatchAction { get; set; }
     }
 }

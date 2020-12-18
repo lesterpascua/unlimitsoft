@@ -61,7 +61,8 @@ namespace SoftUnlimit.CQRS.DependencyInjection
                 services.AddSingleton<ICommandDispatcher>((provider) => {
                     return new ServiceProviderCommandDispatcher(
                         provider,
-                        errorTransforms: ServiceProviderCommandDispatcher.DefaultErrorTransforms
+                        errorTransforms: ServiceProviderCommandDispatcher.DefaultErrorTransforms,
+                        preeDispatch: settings.PreeDispatchAction
                     );
                 });
             }
