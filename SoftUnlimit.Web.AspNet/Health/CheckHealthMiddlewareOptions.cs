@@ -4,6 +4,9 @@ using System.Text;
 
 namespace SoftUnlimit.Web.AspNet.Health
 {
+    /// <summary>
+    /// Health middleware configuration settings.
+    /// </summary>
     public class CheckHealthMiddlewareOptions
     {
 

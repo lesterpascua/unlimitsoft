@@ -8,6 +8,10 @@ using System.Text;
 
 namespace SoftUnlimit.Web.AspNet.Filter.Authentication
 {
+    /// <summary>
+    /// Options for API Key auth method
+    /// </summary>
+    /// <typeparam name="TUser"></typeparam>
     public class ApiKeyAuthenticationOptions<TUser> : AuthenticationSchemeOptions
         where TUser : class
     {

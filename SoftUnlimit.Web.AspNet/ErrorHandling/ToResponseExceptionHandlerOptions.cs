@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 namespace SoftUnlimit.Web.AspNet.ErrorHandling
 {
     /// <summary>
-    /// Transform exception to respond <see cref="Response{IDictionary{string, string[]}}"/>
+    /// Transform exception to respond
     /// </summary>
     public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
     {

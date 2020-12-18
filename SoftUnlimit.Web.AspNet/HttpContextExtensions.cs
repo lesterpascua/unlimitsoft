@@ -7,8 +7,16 @@ using System.Text;
 
 namespace SoftUnlimit.Web.AspNet
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public static class HttpContextExtensions
     {
+        /// <summary>
+        /// Get ip address for the client.
+        /// </summary>
+        /// <param name="context"></param>
+        /// <returns></returns>
         public static string GetIpAddress(this HttpContext context)
         {
             if (context.Request.Headers?.TryGetValue("x-forwarded-for", out StringValues forwardedForOrProto) ?? false)
