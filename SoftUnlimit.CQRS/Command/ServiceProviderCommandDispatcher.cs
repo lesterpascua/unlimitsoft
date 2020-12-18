@@ -22,6 +22,7 @@ namespace SoftUnlimit.CQRS.Command
         private readonly bool _validate, _useCache, _useScope;
         private readonly Func<IList<ValidationFailure>, IDictionary<string, IEnumerable<string>>> _errorTransforms;
         private readonly string _invalidArgumendText;
+        private readonly Action<IServiceProvider, ICommand> _preeDispatch;
 
         private static readonly object _sync = new object();
         private static readonly Dictionary<Type, MethodInfo> _cache = new Dictionary<Type, MethodInfo>();
@@ -41,15 +42,23 @@ namespace SoftUnlimit.CQRS.Command
         /// <param name="useScope">Create scope to resolve element in DPI.</param>
         /// <param name="errorTransforms">Conver error to a Dictionary where key is a propertyName with an error and value is all error description.</param>
         /// <param name="invalidArgumendText">Default text used to response in Inotify object when validation not success.</param>
-        public ServiceProviderCommandDispatcher(IServiceProvider provider, bool validate = true, bool useCache = true, bool useScope = true,
-            Func<IList<ValidationFailure>, IDictionary<string, IEnumerable<string>>> errorTransforms = null, string invalidArgumendText = null)
+        /// <param name="preeDispatch">Before dispatch command flow call this action.</param>
+        public ServiceProviderCommandDispatcher(
+            IServiceProvider provider, 
+            bool validate = true, 
+            bool useCache = true, 
+            bool useScope = true,
+            Func<IList<ValidationFailure>, IDictionary<string, IEnumerable<string>>> errorTransforms = null, 
+            string invalidArgumendText = null, 
+            Action<IServiceProvider, ICommand> preeDispatch = null)
         {
-            this._provider = provider;
-            this._validate = validate;
-            this._useCache = useCache;
-            this._useScope = useScope;
-            this._errorTransforms = errorTransforms;
-            this._invalidArgumendText = invalidArgumendText;
+            _provider = provider;
+            _validate = validate;
+            _useCache = useCache;
+            _useScope = useScope;
+            _errorTransforms = errorTransforms;
+            _invalidArgumendText = invalidArgumendText;
+            _preeDispatch = preeDispatch;
         }
 
         #region Public Methods
@@ -72,6 +81,8 @@ namespace SoftUnlimit.CQRS.Command
         /// <returns></returns>
         public async Task<CommandResponse> DispatchAsync(IServiceProvider provider, ICommand command)
         {
+            _preeDispatch?.Invoke(provider, command);
+
             //
             // before execute command search if has validator and executed.
             object sharedCache;
