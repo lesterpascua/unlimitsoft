@@ -43,7 +43,7 @@ namespace SoftUnlimit.Web.AspNet.Filter
                     new {
                         IsAuth = httpContext.User.Identity.IsAuthenticated,
                         AuthType = httpContext.User.Identity.AuthenticationType,
-                        Claims = httpContext.User.Claims.Select(s => $"{s.Type}={s.Value}, ")
+                        Claims = httpContext.User.Claims.Select(s => $"{s.Type}={s.Value}")
                     },
                     new {
                         Url = $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}",

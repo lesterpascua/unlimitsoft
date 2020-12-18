@@ -8,6 +8,7 @@ using SoftUnlimit.Web.Client;
 using SoftUnlimit.Web.Security.Claims;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json;
 
 namespace SoftUnlimit.Web.AspNet.Filter
@@ -17,6 +18,7 @@ namespace SoftUnlimit.Web.AspNet.Filter
     /// </summary>
     public class TransformResponseAttribute : ActionFilterAttribute
     {
+        private IDictionary<string, object> _requestArguments;
         private readonly Settings _settings;
         private readonly ILogger<TransformResponseAttribute> _logger;
 
@@ -33,13 +35,17 @@ namespace SoftUnlimit.Web.AspNet.Filter
         }
 
         /// <inheritdoc />
+        public override void OnActionExecuting(ActionExecutingContext context)
+        {
+            _requestArguments = context.ActionArguments;
+        }
+        /// <inheritdoc />
         public override void OnActionExecuted(ActionExecutedContext context)
         {
             var httpContext = context.HttpContext;
-
             if (context.Exception != null && context.Controller is ControllerBase controller)
             {
-                _settings.ErrorLogger?.Invoke(_logger, context.Exception, httpContext, _settings.ServerErrorText);
+                _settings.ErrorLogger?.Invoke(_logger, context.Exception, httpContext, _requestArguments);
 
                 object body = context.Exception;
                 if (!_settings.ShowExceptionDetails)
@@ -101,12 +107,21 @@ namespace SoftUnlimit.Web.AspNet.Filter
             /// <summary>
             /// Log error exception
             /// </summary>
-            public Action<ILogger, Exception, HttpContext, string> ErrorLogger { get; set; } = (logger, exception, httpContext, message) => logger.LogError(exception, "TraceId: {Trace}, Code: {Code}, User: {User}, Message: {Message}", 
-                httpContext.TraceIdentifier, 
-                StatusCodes.Status500InternalServerError, 
-                httpContext.User.GetSubjectId(),
-                message
-            );
+            public Action<ILogger, Exception, HttpContext, IDictionary<string, object>> ErrorLogger { get; set; } = (logger, exception, httpContext, requestArguments) => {
+                var request = httpContext.Request;
+                logger.LogError(exception, "TraceId: {Trace}, User: {@User}, JsonData: {@Response}",
+                    httpContext.TraceIdentifier,
+                    new {
+                        IsAuth = httpContext.User.Identity.IsAuthenticated,
+                        AuthType = httpContext.User.Identity.AuthenticationType,
+                        Claims = httpContext.User.Claims.Select(s => $"{s.Type}={s.Value}")
+                    },
+                    new {
+                        Url = $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}",
+                        Address = httpContext.GetIpAddress(),
+                        RequestArguments = requestArguments
+                    });
+            };
             /// <summary>
             /// Log bad request exception
             /// </summary>
