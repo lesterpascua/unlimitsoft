@@ -47,18 +47,29 @@ namespace SoftUnlimit.Web.AspNet.Filter
             {
                 _settings.ErrorLogger?.Invoke(_logger, context.Exception, httpContext, _requestArguments);
 
-                object body = context.Exception;
-                if (!_settings.ShowExceptionDetails)
-                    body = new Dictionary<string, string[]> {
-                        { string.Empty, new string[] { _settings.ServerErrorText } }
+                Response<object> response;
+                if (!(context.Exception is ResponseException exc))
+                {
+                    object body = context.Exception;
+                    if (!_settings.ShowExceptionDetails)
+                        body = new Dictionary<string, string[]> {
+                            { string.Empty, new string[] { _settings.ServerErrorText } }
+                        };
+
+                    response = new Response<object> {
+                        IsSuccess = false,
+                        Code = StatusCodes.Status500InternalServerError,
+                        Body = body,
+                        UIText = _settings.ServerErrorText
+                    };
+                } else
+                    response = new Response<object> {
+                        IsSuccess = false,
+                        Code = exc.Code,
+                        Body = exc.Body,
+                        UIText = exc.Message
                     };
 
-                var response = new Response<object> {
-                    IsSuccess = false,
-                    Code = StatusCodes.Status500InternalServerError,
-                    Body = body,
-                    UIText = _settings.ServerErrorText
-                };
                 context.Result = controller.StatusCode(StatusCodes.Status500InternalServerError, response);
                 context.Exception = null;
             } else
