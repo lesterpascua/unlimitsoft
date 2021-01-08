@@ -44,8 +44,8 @@ namespace SoftUnlimit.CQRS.Tests
 
     public sealed class TestEvent : VersionedEvent<Guid>
     {
-        public TestEvent(Guid id, Guid sourceId, long version, uint serviceId, string workerId, ICommand command, IEntityInfo prevState, IEntityInfo currState, bool isDomainEvent, IEventBodyInfo body = null)
-            : base(id, sourceId, version, serviceId, workerId, command, prevState, currState, isDomainEvent, body)
+        public TestEvent(Guid id, Guid sourceId, long version, uint serviceId, string workerId, string correlationId, ICommand command, IEntityInfo prevState, IEntityInfo currState, bool isDomainEvent, IEventBodyInfo body = null)
+            : base(id, sourceId, version, serviceId, workerId, correlationId, command, prevState, currState, isDomainEvent, body)
         {
         }
     }
@@ -104,6 +104,7 @@ namespace SoftUnlimit.CQRS.Tests
                 1,
                 20, 
                 "12345",
+                "adsd",
                 null, 
                 new TestEntity{ Text ="prev", Value = 10 }, 
                 new TestEntity{ Text ="curr", Value = 11 },

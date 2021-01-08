@@ -36,7 +36,7 @@ namespace App.Manual.Tests.CQRS.Command
                 Name = $"Time: {DateTime.Now}"
             };
 
-            dbObj.AddMasterEvent(_gen.GenerateId(), command, null, dbObj);
+            dbObj.AddMasterEvent(_gen.GenerateId(), "asdsadasd", command, null, dbObj);
 
             await _dummyRepository.AddAsync(dbObj);
             await _unitOfWork.SaveChangesAsync();

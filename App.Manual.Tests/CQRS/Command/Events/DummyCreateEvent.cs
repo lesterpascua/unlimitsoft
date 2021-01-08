@@ -18,8 +18,8 @@ namespace App.Manual.Tests.CQRS.Command.Events
         public DummyCreateEvent()
         {
         }
-        public DummyCreateEvent(Guid id, Guid sourceId, long version, uint serviceId, string workerId, DummyCreateCommand command, IEntityInfo prevState, IEntityInfo currState, bool isDomainEvent, IEventBodyInfo body = null)
-            : base(id, sourceId, version, serviceId, workerId, command, prevState, currState, isDomainEvent, body)
+        public DummyCreateEvent(Guid id, Guid sourceId, long version, uint serviceId, string workerId, string correlationId, DummyCreateCommand command, IEntityInfo prevState, IEntityInfo currState, bool isDomainEvent, IEventBodyInfo body = null)
+            : base(id, sourceId, version, serviceId, workerId, correlationId, command, prevState, currState, isDomainEvent, body)
         {
         }
     }

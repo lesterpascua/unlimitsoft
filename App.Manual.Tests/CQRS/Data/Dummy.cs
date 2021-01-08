@@ -21,6 +21,6 @@ namespace App.Manual.Tests.CQRS.Data
     {
         public string Name { get; set; }
 
-        public void AddMasterEvent(Guid eventId, ICommand creator, Dummy prevState, Dummy currState) => base.AddMasterEvent(eventId, 1, "0", creator, prevState, currState);
+        public void AddMasterEvent(Guid eventId, string correlationId, ICommand creator, Dummy prevState, Dummy currState) => base.AddMasterEvent(eventId, 1, "0", correlationId, creator, prevState, currState);
     }
 }

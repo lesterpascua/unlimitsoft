@@ -37,13 +37,14 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="version"></param>
         /// <param name="serviceId"></param>
         /// <param name="workerId"></param>
+        /// <param name="correlationId"></param>
         /// <param name="isDomainEvent"></param>
         /// <param name="command"></param>
         /// <param name="prevState"></param>
         /// <param name="currState"></param>
         /// <param name="body"></param>
-        protected VersionedEvent(Guid id, TKey sourceId, long version, uint serviceId, string workerId, ICommand command, IEntityInfo prevState, IEntityInfo currState, bool isDomainEvent, IEventBodyInfo body = null)
-            : base(id, sourceId, serviceId, workerId, command, prevState, currState, isDomainEvent, body)
+        protected VersionedEvent(Guid id, TKey sourceId, long version, uint serviceId, string workerId, string correlationId, ICommand command, IEntityInfo prevState, IEntityInfo currState, bool isDomainEvent, IEventBodyInfo body = null)
+            : base(id, sourceId, serviceId, workerId, correlationId, command, prevState, currState, isDomainEvent, body)
         {
             this.Version = version;
             this.Created = DateTime.UtcNow;
@@ -55,11 +56,11 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <inheritdoc />
         public override IEvent Transform(IMapper mapper, Type destination)
         {
-            var currState = (IEntityInfo)mapper.Map(CurrState, CurrState.GetType(), destination);
-            var prevState = (IEntityInfo)mapper.Map(PrevState, PrevState.GetType(), destination);
+            var currState = CurrState != null ? (IEntityInfo)mapper.Map(CurrState, CurrState.GetType(), destination) : null;
+            var prevState = PrevState != null ? (IEntityInfo)mapper.Map(PrevState, PrevState.GetType(), destination) : null;
 
             var type = GetType();
-            var versionedEvent = (IVersionedEvent)Activator.CreateInstance(type, Id, SourceId, Version, ServiceId, WorkerId, Command, prevState, currState, IsDomainEvent, Body);
+            var versionedEvent = (IVersionedEvent)Activator.CreateInstance(type, Id, SourceId, Version, ServiceId, WorkerId, CorrelationId, Command, prevState, currState, IsDomainEvent, Body);
 
             return versionedEvent;
         }

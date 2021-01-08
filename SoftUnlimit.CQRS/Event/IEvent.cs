@@ -27,6 +27,10 @@ namespace SoftUnlimit.CQRS.Event
         /// </summary>
         string WorkerId { get; }
         /// <summary>
+        /// Operation correlation identifier.
+        /// </summary>
+        public string CorrelationId { get; }
+        /// <summary>
         /// Event creation date
         /// </summary>
         DateTime Created { get; }
@@ -89,18 +93,19 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="sourceId"></param>
         /// <param name="serviceId"></param>
         /// <param name="workerId"></param>
+        /// <param name="correlationId"></param>
         /// <param name="command"></param>
         /// <param name="prevState"></param>
         /// <param name="currState"></param>
         /// <param name="isDomain"></param>
         /// <param name="body"></param>
-        protected Event(Guid id, TKey sourceId, uint serviceId, string workerId, ICommand command, IEntityInfo prevState, IEntityInfo currState, bool isDomain, IEventBodyInfo body)
+        protected Event(Guid id, TKey sourceId, uint serviceId, string workerId, string correlationId, ICommand command, IEntityInfo prevState, IEntityInfo currState, bool isDomain, IEventBodyInfo body)
         {
             Id = id;
             SourceId = sourceId;
             ServiceId = serviceId;
             WorkerId = workerId;
-
+            CorrelationId = correlationId;
             Name = GetType().FullName;
 
             Command = command;
@@ -137,6 +142,8 @@ namespace SoftUnlimit.CQRS.Event
         public bool IsDomainEvent { get; set; }
         /// <inheritdoc />
         public IEventBodyInfo Body { get; set; }
+        /// <inheritdoc />
+        public string CorrelationId { get; set; }
 
         /// <inheritdoc />
         public override string ToString() => Name;
@@ -145,11 +152,11 @@ namespace SoftUnlimit.CQRS.Event
         /// <inheritdoc />
         public virtual IEvent Transform(IMapper mapper, Type destination)
         {
-            var currState = (IEntityInfo)mapper.Map(CurrState, CurrState.GetType(), destination);
-            var prevState = (IEntityInfo)mapper.Map(PrevState, PrevState.GetType(), destination);
+            var currState = CurrState != null ? (IEntityInfo)mapper.Map(CurrState, CurrState.GetType(), destination) : null;
+            var prevState = PrevState != null ? (IEntityInfo)mapper.Map(PrevState, PrevState.GetType(), destination) : null;
 
             var type = GetType();
-            var @event = (IEvent)Activator.CreateInstance(type, Id, SourceId, ServiceId, WorkerId, Command, prevState, currState, IsDomainEvent, Body);
+            var @event = (IEvent)Activator.CreateInstance(type, Id, SourceId, ServiceId, WorkerId, CorrelationId, Command, prevState, currState, IsDomainEvent, Body);
 
             return @event;
         }
