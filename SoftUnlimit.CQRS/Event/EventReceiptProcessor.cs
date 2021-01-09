@@ -21,7 +21,7 @@ namespace SoftUnlimit.CQRS.Event
         private readonly IEventNameResolver _resolver;
         private readonly ILogger<EventReceiptProcessor> _logger;
 
-        private const string ErrMessage = "Error executing event {Event} generate on {Time} from {Service}, {Worker}";
+        private const string ErrMessage = "Error executing event: {Type} with message: {Message}";
 
         /// <summary>
         /// 
@@ -58,7 +58,7 @@ namespace SoftUnlimit.CQRS.Event
 
             IEvent @event;
             CombinedEventResponse response;
-            string eventName = envelop.Messaje.ToString();
+            
             try
             {                   
                 switch (envelop.Type)
@@ -90,12 +90,12 @@ namespace SoftUnlimit.CQRS.Event
                 foreach (var err in response.ErrorEvents)
                 {
                     var ex = (Exception)err.GetBody();
-                    _logger?.LogError(ex, ErrMessage, eventName, envelop.Created, envelop.ServiceId, envelop.WorkerId);
+                    _logger?.LogError(ex, ErrMessage, envelop.MessajeType, envelop.Messaje);
                     HandleError(err, ex, false);
                 }
             } catch (Exception ex)
             {
-                _logger?.LogError(ex, ErrMessage, eventName, envelop.Created, envelop.ServiceId, envelop.WorkerId);
+                _logger?.LogError(ex, ErrMessage, envelop.MessajeType, envelop.Messaje);
                 HandleError(null, ex, true);
             }
             return false;

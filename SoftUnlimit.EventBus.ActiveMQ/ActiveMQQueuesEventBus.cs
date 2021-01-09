@@ -16,13 +16,13 @@ namespace SoftUnlimit.EventBus.ActiveMQ
     /// <summary>
     /// Implement event bus based on ActiveMQ technology.
     /// </summary>
-    public class ActiveMQEventBus : IEventBus, IDisposable
+    public class ActiveMQQueuesEventBus : IEventBus, IDisposable
     {
         private bool _isStart = false;
         private bool _isDisposed = false;
 
         private readonly string[] _queues;
-        private readonly ILogger<ActiveMQEventBus> _logger;
+        private readonly ILogger<ActiveMQQueuesEventBus> _logger;
         private readonly ConnectionFactory _connectionFactory;
         private readonly Func<string, object, object> _transform;
 
@@ -46,7 +46,7 @@ namespace SoftUnlimit.EventBus.ActiveMQ
         /// control the data publish in diferent queues. if return null means the event not publish in this queue.
         /// </param>
         /// <param name="logger"></param>
-        public ActiveMQEventBus(IEnumerable<string> queues, string brokerUri, Func<string, object, object> transform = null, ILogger<ActiveMQEventBus> logger = null)
+        public ActiveMQQueuesEventBus(IEnumerable<string> queues, string brokerUri, Func<string, object, object> transform = null, ILogger<ActiveMQQueuesEventBus> logger = null)
         {
             _logger = logger;
             _transform = transform;
@@ -90,7 +90,7 @@ namespace SoftUnlimit.EventBus.ActiveMQ
         {
             if (!_isDisposed)
             {
-                _logger?.LogDebug("Disposing: {Class} with Id: {Id}", nameof(ActiveMQEventBus), _connection.ClientId);
+                _logger?.LogDebug("Disposing: {Class} with Id: {Id}", nameof(ActiveMQQueuesEventBus), _connection.ClientId);
 
                 _isDisposed = true;
                 _connectionMonitorCts.Cancel();
@@ -143,10 +143,7 @@ namespace SoftUnlimit.EventBus.ActiveMQ
 
                 var message = _session.CreateObjectMessage(new MessageEnvelop {
                     Type = type,
-                    Created = DateTime.UtcNow,
-                    ServiceId = MicroService.Default?.ServiceId,
-                    WorkerId = MicroService.Default?.WorkerId,
-
+                    MessajeType = graph.GetType().FullName,
                     Messaje = _transform?.Invoke(_queues[i], graph) ?? graph
                 });
 
