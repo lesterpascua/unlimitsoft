@@ -39,6 +39,9 @@ namespace SoftUnlimit.CQRS.Event
 
             ServiceId = @event.ServiceId;
             WorkerId = @event.WorkerId;
+
+            CorrelationId = @event.CorrelationId;
+
             EventName = @event.Name;
             IsDomain = @event.IsDomainEvent;
 
@@ -81,6 +84,10 @@ namespace SoftUnlimit.CQRS.Event
         /// Worker unique identifier per service.
         /// </summary>
         public string WorkerId { get; set; }
+        /// <summary>
+        /// Event correlation identifier.
+        /// </summary>
+        public string CorrelationId { get; set; }
 
         /// <summary>
         /// Event unique name.
