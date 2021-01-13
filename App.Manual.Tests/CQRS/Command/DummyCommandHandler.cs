@@ -20,8 +20,8 @@ namespace App.Manual.Tests.CQRS.Command
 
         public DummyCommandHandler(
             IIdGenerator<Guid> gen,
-            IUnitOfWork unitOfWork,
-            IRepository<Dummy> dummyRepository
+            IDbUnitOfWork unitOfWork,
+            IDbRepository<Dummy> dummyRepository
         )
         {
             _gen = gen;

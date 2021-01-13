@@ -7,6 +7,7 @@ using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.CQRS.EventSourcing.Json;
 using SoftUnlimit.CQRS.Query;
+using SoftUnlimit.CQRS.Test;
 using SoftUnlimit.Data;
 using SoftUnlimit.Data.EntityFramework;
 using SoftUnlimit.Data.Seed;
@@ -27,15 +28,15 @@ namespace App.Manual.Tests.CQRS
         private readonly ICommandDispatcher _commandDispatcher;
         private readonly IUnitOfWork _unitOfWork;
         private readonly IEventNameResolver _eventCommandResolver;
-        private readonly IRepository<JsonVersionedEventPayload> _versionedEventRepository;
+        private readonly IDbVersionedEventRepository _versionedEventRepository;
 
         public Startup(
             IMapper mapper,
             IQueryDispatcher queryDispatcher, 
             ICommandDispatcher commandDispatcher, 
-            IUnitOfWork unitOfWork, 
+            IDbUnitOfWork unitOfWork, 
             IEventNameResolver eventCommandResolver,
-            IRepository<JsonVersionedEventPayload> versionedEventRepository)
+            IDbVersionedEventRepository versionedEventRepository)
         {
             _mapper = mapper;
             _queryDispatcher = queryDispatcher;
@@ -59,18 +60,18 @@ namespace App.Manual.Tests.CQRS
                 .Find(p => p.SourceId == sourceId)
                 .OrderByDescending(k => k.Version)
                 .FirstOrDefaultAsync();
-            var tr = eventPayload.Transform<DummyDTO>(_eventCommandResolver, _mapper);
+            //var tr = eventPayload.Transform<DummyDTO>(_eventCommandResolver, _mapper);
 
 
             var (queryResponse, result) = await new DummyQuery().ExecuteAsync(_queryDispatcher);
             if (queryResponse.IsSuccess)
                 Console.WriteLine(queryResponse);
 
-            await SeedHelper.Seed(_unitOfWork, typeof(Startup).Assembly, (unitOfWork) => {
-                if (unitOfWork is DbContext dbContext)
-                    return dbContext.Database.MigrateAsync();
-                return Task.CompletedTask;
-            });
+            //await SeedHelper.Seed(_unitOfWork, typeof(Startup).Assembly, (unitOfWork) => {
+            //    if (unitOfWork is DbContext dbContext)
+            //        return dbContext.Database.MigrateAsync();
+            //    return Task.CompletedTask;
+            //});
 
             var command = new DummyCreateCommand {
                 Name = "Hello CQRS"

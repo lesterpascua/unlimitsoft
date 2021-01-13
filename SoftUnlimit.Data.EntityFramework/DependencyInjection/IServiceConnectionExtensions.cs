@@ -5,6 +5,7 @@ using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.CQRS.Query;
 using SoftUnlimit.Data.Reflection;
+using SoftUnlimit.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -65,7 +66,7 @@ namespace SoftUnlimit.Data.EntityFramework.DependencyInjection
             #endregion
 
             #region Versioned Repository
-            services.AddScoped(settings.IUnitOfWork, provider => provider.GetService<DbContextWrite>());
+            services.AddScoped(settings.IUnitOfWork, settings.UnitOfWork);
             if (settings.IVersionedEventRepository != null && settings.VersionedEventRepository != null)
                 services.AddScoped(settings.IVersionedEventRepository, settings.VersionedEventRepository);
             #endregion
@@ -81,8 +82,8 @@ namespace SoftUnlimit.Data.EntityFramework.DependencyInjection
             foreach (var entry in collection)
             {
                 if (entry.ServiceType != null && entry.ImplementationType != null)
-                    services.AddScoped(entry.ServiceType, provider => Activator.CreateInstance(entry.ImplementationType, provider.GetService<DbContextWrite>()));
-                services.AddScoped(entry.ServiceQueryType, provider => Activator.CreateInstance(entry.ImplementationQueryType, provider.GetService<DbContextRead>()));
+                    services.AddScoped(entry.ServiceType, provider => entry.ImplementationType.CreateInstance(provider));
+                services.AddScoped(entry.ServiceQueryType, provider => entry.ImplementationQueryType.CreateInstance(provider));
             }
             #endregion
 

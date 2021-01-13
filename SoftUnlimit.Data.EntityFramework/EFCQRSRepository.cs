@@ -20,7 +20,7 @@ namespace SoftUnlimit.Data.EntityFramework
         /// 
         /// </summary>
         /// <param name="dbContext"></param>
-        public EFCQRSRepository(EFCQRSDbContext dbContext)
+        public EFCQRSRepository(DbContext dbContext)
             : base(dbContext)
         {
         }

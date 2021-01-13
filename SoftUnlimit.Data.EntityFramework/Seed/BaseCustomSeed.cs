@@ -37,9 +37,9 @@ namespace SoftUnlimit.Data.EntityFramework.Seed
         /// <returns></returns>
         public virtual async Task SeedAsync(IUnitOfWork unitOfWork)
         {
-            DbContext dbContext = (DbContext)unitOfWork;
-            if (typeof(TEntity).GetInterfaces().Any(t => t == typeof(IDbEnumeration)))
+            if (typeof(TEntity).GetInterfaces().Any(t => t == typeof(IDbEnumeration)) && unitOfWork is IDbContextWrapper dbContextWrapper)
             {
+                var dbContext = dbContextWrapper.GetDbContext();
                 foreach (var entry in EnumerationHelper.GetAll(typeof(TEntity)).Cast<IDbEnumeration>())
                 {
                     TEntity dbEntity = await dbContext.FindAsync<TEntity>(entry.Id);

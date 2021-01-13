@@ -71,22 +71,24 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
         /// <param name="unitOfWorkType">Unit Of work type.</param>
         /// <param name="assembly">Assembly where looking for the seed. If null get same assembly of unit of work.</param>
         /// <param name="retryCount"></param>
+        /// <param name="condition"></param>
         /// <param name="args"></param>
         /// <returns></returns>
         public static async Task<IServiceScope> ExecuteSeedAndMigrationAsync(
-            IServiceScope scope, ILogger logger, Type unitOfWorkType, Assembly assembly = null, int retryCount = 3, params object[] args)
+            IServiceScope scope, ILogger logger, Type unitOfWorkType, Assembly assembly = null, int retryCount = 3, Func<Type, bool> condition = null, params object[] args)
         {
             var provider = scope.ServiceProvider;
             var unitOfWork = (IUnitOfWork)provider.GetService(unitOfWorkType);
             await SeedHelper.Seed(
+                provider,
                 unitOfWork,
                 assembly ?? unitOfWorkType.Assembly,
                 (unitOfWork) => {
-                    if (unitOfWork is DbContext dbContext)
-                        return ExecuteMigrationAsync(dbContext, logger, retryCount);
+                    if (unitOfWork is IDbContextWrapper dbContext)
+                        return ExecuteMigrationAsync(dbContext.GetDbContext(), logger, retryCount);
                     return Task.CompletedTask;
                 },
-                null,
+                condition,
                 args
             );
 
@@ -109,12 +111,12 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
                 .WaitAndRetryAsync(
                     retryCount,
                     retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
-                    (ex, time) => logger.LogWarning(ex, "Migration error on {TimeOut}s ({ExceptionMessage})", time, ex.Message)
+                    (ex, time) => logger?.LogWarning(ex, "Migration error on {TimeOut}s ({ExceptionMessage})", time, ex.Message)
                 );
             await policy.ExecuteAsync(async () => {
                 var pendingMigration = await dbContext.Database.GetPendingMigrationsAsync();
                 foreach (var migration in pendingMigration)
-                    logger.LogInformation("Run migration: {migration}", migration);
+                    logger?.LogInformation("Run migration: {migration}", migration);
 
                 await dbContext.Database.MigrateAsync();
             });

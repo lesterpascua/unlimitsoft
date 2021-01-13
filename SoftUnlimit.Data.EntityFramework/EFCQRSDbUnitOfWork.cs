@@ -16,18 +16,19 @@ namespace SoftUnlimit.Data.EntityFramework
     /// <summary>
     /// 
     /// </summary>
-    public abstract class EFCQRSDbContext : EFDbContext, ICQRSUnitOfWork
+    public abstract class EFCQRSDbUnitOfWork<TDbContext> : EFDbUnitOfWork<TDbContext>, ICQRSUnitOfWork
+        where TDbContext : DbContext, IDbContextHook
     {
         #region Ctor
 
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="options"></param>
+        /// <param name="dbContext"></param>
         /// <param name="eventMediator"></param>
         /// <param name="eventSourcedMediator"></param>
-        protected EFCQRSDbContext(DbContextOptions options, IMediatorDispatchEvent eventMediator = null, IMediatorDispatchEventSourced eventSourcedMediator = null)
-            : base(options)
+        protected EFCQRSDbUnitOfWork(TDbContext dbContext, IMediatorDispatchEvent eventMediator = null, IMediatorDispatchEventSourced eventSourcedMediator = null)
+            : base(dbContext)
         {
             EventMediator = eventMediator;
             EventSourcedMediator = eventSourcedMediator;
@@ -48,17 +49,17 @@ namespace SoftUnlimit.Data.EntityFramework
         /// 
         /// </summary>
         /// <returns></returns>
-        public Task TransactionCommitAsync() => Database.CurrentTransaction.CommitAsync();
+        public Task TransactionCommitAsync() => DbContext.Database.CurrentTransaction.CommitAsync();
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public Task TransactionRollbackAsync() => Database.CurrentTransaction.RollbackAsync();
+        public Task TransactionRollbackAsync() => DbContext.Database.CurrentTransaction.RollbackAsync();
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public Task<IAsyncDisposable> TransactionCreateAsync() => Database.BeginTransactionAsync().ContinueWith(c => (IAsyncDisposable)c.Result);
+        public async Task<IAsyncDisposable> TransactionCreateAsync() => await DbContext.Database.BeginTransactionAsync();
 
         /// <summary>
         /// 
@@ -73,10 +74,10 @@ namespace SoftUnlimit.Data.EntityFramework
         /// <returns></returns>
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
-            IDbContextTransaction transaction = Database.CurrentTransaction;
+            IDbContextTransaction transaction = DbContext.Database.CurrentTransaction;
             if (transaction == null)
             {
-                return await Database
+                return await DbContext.Database
                     .CreateExecutionStrategy()
                     .ExecuteAsync(() => InnerTransactionSaveChangesAsync(transaction));
             } else
@@ -89,16 +90,16 @@ namespace SoftUnlimit.Data.EntityFramework
             if (transaction == null)
             {
                 isTransactionOwner = true;
-                transaction = await Database.BeginTransactionAsync();
+                transaction = await DbContext.Database.BeginTransactionAsync();
             }
 
             try
             {
-                var changedEntities = ChangeTracker.Entries()
+                var changedEntities = DbContext.ChangeTracker.Entries()
                     .Where(p => p.State != Microsoft.EntityFrameworkCore.EntityState.Unchanged)
                     .Select(s => s.Entity)
                     .ToArray();
-                changes = await base.SaveChangesAsync();
+                changes = await DbContext.SaveChangesAsync();
                 var (count, events, versionedEvents) = await PublishEvents(changedEntities);
 
                 if (isTransactionOwner)
