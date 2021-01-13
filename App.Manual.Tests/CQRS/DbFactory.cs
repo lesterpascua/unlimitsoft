@@ -24,8 +24,6 @@ namespace App.Manual.Tests.CQRS
                 .Options;
 
             var db = new DbContextWrite(options);
-            db.OnModelCreatingCallback(m => db.OnModelCreating(BaseEntityType, m, _ => true));
-
 
             return db;
         }

@@ -31,18 +31,6 @@ namespace App.Manual.Tests.CQRS
         {
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        protected override Type EntityTypeBuilderBaseClass => typeof(_EntityTypeBuilder<>);
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="type"></param>
-        /// <returns></returns>
-        protected override bool AcceptConfigurationType(Type type) => true;
-
         #endregion
     }
 }

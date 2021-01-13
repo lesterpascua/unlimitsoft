@@ -17,7 +17,7 @@ namespace SoftUnlimit.Data.EntityFramework
     /// 
     /// </summary>
     public abstract class EFCQRSDbUnitOfWork<TDbContext> : EFDbUnitOfWork<TDbContext>, ICQRSUnitOfWork
-        where TDbContext : DbContext, IDbContextHook
+        where TDbContext : DbContext
     {
         #region Ctor
 

@@ -24,6 +24,10 @@ namespace App.Manual.Tests.CQRS
         /// 
         /// </summary>
         /// <param name="modelBuilder"></param>
-        protected override void OnModelCreating(ModelBuilder modelBuilder) => this.OnModelCreating(typeof(_EntityTypeBuilder<>), modelBuilder, _ => true);
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+            this.OnModelCreating(typeof(_EntityTypeBuilder<>), modelBuilder, _ => true);
+        }
     }
 }

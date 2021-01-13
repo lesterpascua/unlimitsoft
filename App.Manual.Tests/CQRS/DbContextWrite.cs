@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using App.Manual.Tests.CQRS.Configuration;
+using Microsoft.EntityFrameworkCore;
 using SoftUnlimit.Data.EntityFramework;
 using System;
 using System.Collections.Generic;
@@ -10,11 +11,8 @@ namespace App.Manual.Tests.CQRS
     /// <summary>
     /// 
     /// </summary>
-    public class DbContextWrite : DbContext, IDbContextHook
+    public class DbContextWrite : DbContext
     {
-        private Action<ModelBuilder> _builderAction;
-
-
         /// <summary>
         /// 
         /// </summary>
@@ -26,20 +24,11 @@ namespace App.Manual.Tests.CQRS
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="action"></param>
-        public void OnModelCreatingCallback(Action<ModelBuilder> action)
-        {
-            _builderAction = action;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
         /// <param name="builder"></param>
-        protected override void OnModelCreating(ModelBuilder builder)
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            base.OnModelCreating(builder);
-            _builderAction?.Invoke(builder);
+            base.OnModelCreating(modelBuilder);
+            this.OnModelCreating(typeof(_EntityTypeBuilder<>), modelBuilder, _ => true);
         }
     }
 }
