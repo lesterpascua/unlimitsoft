@@ -12,6 +12,10 @@ namespace SoftUnlimit.Web.Client
     public sealed class Response<T>
     {
         /// <summary>
+        /// Trace operation identifier.
+        /// </summary>
+        public string TraceIdentifier { get; set; }
+        /// <summary>
         /// 
         /// </summary>
         public int Code { get; set; }

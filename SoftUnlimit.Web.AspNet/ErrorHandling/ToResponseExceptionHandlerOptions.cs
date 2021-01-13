@@ -63,6 +63,7 @@ namespace SoftUnlimit.Web.AspNet.ErrorHandling
 
             var reason = showExceptionInfo ? feature.Error : new Exception("Consult admin for more information.");
             var response = new Response<IDictionary<string, Exception>> {
+                TraceIdentifier = context.TraceIdentifier,
                 IsSuccess = false,
                 Code = StatusCodes.Status500InternalServerError,
                 Body = new Dictionary<string, Exception> {

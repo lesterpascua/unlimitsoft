@@ -57,6 +57,7 @@ namespace SoftUnlimit.Web.AspNet.Filter
                         };
 
                     response = new Response<object> {
+                        TraceIdentifier = httpContext.TraceIdentifier,
                         IsSuccess = false,
                         Code = StatusCodes.Status500InternalServerError,
                         Body = body,
@@ -64,6 +65,7 @@ namespace SoftUnlimit.Web.AspNet.Filter
                     };
                 } else
                     response = new Response<object> {
+                        TraceIdentifier = httpContext.TraceIdentifier,
                         IsSuccess = false,
                         Code = exc.Code,
                         Body = exc.Body,
@@ -84,6 +86,7 @@ namespace SoftUnlimit.Web.AspNet.Filter
             if (context.Result is BadRequestObjectResult result && result.Value is ValidationProblemDetails validationProblem)
             {
                 var response = new Response<IDictionary<string, string[]>> {
+                    TraceIdentifier = context.HttpContext.TraceIdentifier,
                     IsSuccess = false,
                     Code = result.StatusCode.Value,
                     Body = validationProblem.Errors,
