@@ -21,7 +21,7 @@ namespace SoftUnlimit.CQRS.Command
         /// </summary>
         public string Name { get; set; }
         /// <summary>
-        /// Indicate if the command has deliver some response
+        /// If true alwais deliver the response, in other case only deliver response if response is an error.
         /// </summary>
         public bool Silent { get; set; }
     }

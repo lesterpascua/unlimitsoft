@@ -40,15 +40,15 @@ namespace SoftUnlimit.AkkaBus
             ILogger<CommandBus> logger = null,
             Action<IActorRefFactory> options = null)
         {
-            this._isOwner = factory == null;
+            _isOwner = factory == null;
 
-            this.Factory = factory ?? ActorSystem.Create("CommandBus");
-            this.Default = this.Factory.ActorOf(
+            Factory = factory ?? ActorSystem.Create("CommandBus");
+            Default = Factory.ActorOf(
                 Props.Create(() => new CoordinatorActor(
                     dispatcher, completionService, process ?? ProcessCommand, logger, instances)));
 
             if (options != null)
-                options.Invoke(this.Factory);
+                options.Invoke(Factory);
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace SoftUnlimit.AkkaBus
         public virtual Task SendAsync(ICommand command)
         {
             var envelopment = new CommandEnvelopment(command, false);
-            this.Default.Tell(envelopment);
+            Default.Tell(envelopment);
 
             return Task.CompletedTask;
         }
@@ -80,7 +80,7 @@ namespace SoftUnlimit.AkkaBus
         public virtual Task<CommandResponse> SendAndWaitAsync(ICommand command)
         {
             var envelopment = new CommandEnvelopment(command, true);
-            return this.Default.Ask<CommandResponse>(envelopment);
+            return Default.Ask<CommandResponse>(envelopment);
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace SoftUnlimit.AkkaBus
         /// </summary>
         public void Dispose()
         {
-            if (this._isOwner && this.Factory is IDisposable disposable)
+            if (_isOwner && Factory is IDisposable disposable)
                 disposable.Dispose();
         }
 
@@ -117,8 +117,12 @@ namespace SoftUnlimit.AkkaBus
 
             if (envelopment.IsAsk)
                 sender.Tell(response);
-            if (completionService != null && !envelopment.Command.GetProps<CommandProps>().Silent)
-                await completionService.SendAsync(response, false);
+            if (completionService != null)
+            {
+                var silent = envelopment.Command.GetProps<CommandProps>().Silent;
+                if (!silent || !response.IsSuccess)
+                    await completionService.SendAsync(response, false);
+            }
         }
 
         #endregion
@@ -148,12 +152,12 @@ namespace SoftUnlimit.AkkaBus
                 ILogger logger,
                 int instances)
             {
-                this._router = Context.ActorOf(
+                _router = Context.ActorOf(
                     Props.Create(() => new WorkerActor(dispatcher, completionService, commandAction, logger))
                         .WithRouter(new SmallestMailboxPool(instances)),
                     "child");
 
-                this.Receive<CommandEnvelopment>(command => this._router.Forward(command));
+                Receive<CommandEnvelopment>(command => _router.Forward(command));
             }
         }
         /// <summary>
@@ -179,12 +183,12 @@ namespace SoftUnlimit.AkkaBus
                 Func<ICommandDispatcher, CommandEnvelopment, IActorRef, ICommandCompletionService, ILogger, Task> action,
                 ILogger logger)
             {
-                this._logger = logger;
-                this._dispatcher = dispatcher;
-                this._completionService = completionService;
+                _logger = logger;
+                _dispatcher = dispatcher;
+                _completionService = completionService;
 
-                this.ReceiveAsync<CommandEnvelopment>(envelopment =>
-                    action.Invoke(this._dispatcher, envelopment, this.Sender, this._completionService, this._logger));
+                ReceiveAsync<CommandEnvelopment>(envelopment =>
+                    action.Invoke(_dispatcher, envelopment, Sender, _completionService, _logger));
             }
         }
 

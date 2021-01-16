@@ -25,8 +25,8 @@ namespace SoftUnlimit.AkkaBus.Message
         public CommandCompletionService(IActorRefFactory factory, string actorPath)
         {
             //"akka.tcp://ServerAkka@localhost:8081/user/RemoteActor"
-            this._factory = factory;
-            this._commandCompletionActor = this._factory.ActorOf(Props.Create(() => new DispatchActor(actorPath)));
+            _factory = factory;
+            _commandCompletionActor = _factory.ActorOf(Props.Create(() => new DispatchActor(actorPath)));
         }
 
         /// <summary>
@@ -37,7 +37,7 @@ namespace SoftUnlimit.AkkaBus.Message
         /// <returns></returns>
         public Task SendAsync(CommandResponse response, bool urgent)
         {
-            this._commandCompletionActor.Tell(response);
+            _commandCompletionActor.Tell(response);
             return Task.CompletedTask;
         }
 
@@ -57,8 +57,8 @@ namespace SoftUnlimit.AkkaBus.Message
             /// <param name="actorPath"></param>
             public DispatchActor(string actorPath)
             {
-                this._remoteActorRef = Context.ActorSelection(actorPath);
-                this.Receive<CommandResponse>(response => this._remoteActorRef.Tell(response));
+                _remoteActorRef = Context.ActorSelection(actorPath);
+                Receive<CommandResponse>(response => _remoteActorRef.Tell(response));
             }
         }
 
