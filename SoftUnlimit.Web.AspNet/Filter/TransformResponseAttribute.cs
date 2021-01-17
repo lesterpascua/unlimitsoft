@@ -123,13 +123,8 @@ namespace SoftUnlimit.Web.AspNet.Filter
             /// </summary>
             public Action<ILogger, Exception, HttpContext, IDictionary<string, object>> ErrorLogger { get; set; } = (logger, exception, httpContext, requestArguments) => {
                 var request = httpContext.Request;
-                logger.LogError(exception, "TraceId: {Trace}, User: {@User}, JsonData: {@Response}",
-                    httpContext.TraceIdentifier,
-                    new {
-                        IsAuth = httpContext.User.Identity.IsAuthenticated,
-                        AuthType = httpContext.User.Identity.AuthenticationType,
-                        Claims = httpContext.User.Claims.Select(s => $"{s.Type}={s.Value}")
-                    },
+                logger.LogError(exception, "User: {User}, Response: {@Response}",
+                    httpContext.User.GetSubjectId(),
                     new {
                         Url = $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}",
                         Address = httpContext.GetIpAddress(),
@@ -139,8 +134,7 @@ namespace SoftUnlimit.Web.AspNet.Filter
             /// <summary>
             /// Log bad request exception
             /// </summary>
-            public Action<ILogger, HttpContext, object, string> BadRequestLogger { get; set; } = (logger, httpContext, response, message) => logger.LogInformation("TraceId: {Trace}, Code: {Code}, User: {User}, Message: {Message}, JsonData: {@Response}",
-                httpContext.TraceIdentifier,
+            public Action<ILogger, HttpContext, object, string> BadRequestLogger { get; set; } = (logger, httpContext, response, message) => logger.LogInformation("Code: {Code}, User: {User}, Message: {Message}, Response: {@Response}",
                 StatusCodes.Status400BadRequest,
                 httpContext.User.GetSubjectId(),
                 message,
@@ -149,8 +143,7 @@ namespace SoftUnlimit.Web.AspNet.Filter
             /// <summary>
             /// Log error exception
             /// </summary>
-            public Action<ILogger, HttpContext, object> ResponseLogger { get; set; } = (logger, httpContext, response) => logger.LogInformation("TraceId: {Trace}, Code: {Code}, User: {User}, JsonData: {@Response}",
-                httpContext.TraceIdentifier,
+            public Action<ILogger, HttpContext, object> ResponseLogger { get; set; } = (logger, httpContext, response) => logger.LogInformation("Code: {Code}, User: {User}, Response: {@Response}",
                 response is ObjectResult result ? result.StatusCode ?? StatusCodes.Status200OK : StatusCodes.Status200OK,
                 httpContext.User.GetSubjectId(),
                 response is ObjectResult ? response : "Raw Data"

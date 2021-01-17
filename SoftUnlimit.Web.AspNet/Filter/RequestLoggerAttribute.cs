@@ -38,13 +38,8 @@ namespace SoftUnlimit.Web.AspNet.Filter
                 var httpContext = context.HttpContext;
                 var request = httpContext.Request;
 
-                _logger.Log(_settings.LogLevel, "TraceId: {Trace}, User: {@User}, JsonData: {@Response}",
-                    httpContext.TraceIdentifier,
-                    new {
-                        IsAuth = httpContext.User.Identity.IsAuthenticated,
-                        AuthType = httpContext.User.Identity.AuthenticationType,
-                        Claims = httpContext.User.Claims.Select(s => $"{s.Type}={s.Value}")
-                    },
+                _logger.Log(_settings.LogLevel, "User: {User}, Request: {@Request}",
+                    httpContext.User.GetSubjectId(),
                     new {
                         Url = $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}",
                         Address = httpContext.GetIpAddress(),
