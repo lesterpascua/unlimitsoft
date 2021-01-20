@@ -16,6 +16,7 @@ namespace SoftUnlimit.AkkaBus
     public class CommandBus : ICommandBus
     {
         private readonly bool _isOwner;
+        private readonly Func<ICommand, Task> _preeSendCommand;
         private readonly static Dictionary<string, string[]> GENERIC_ERROR = new Dictionary<string, string[]> {
             [string.Empty] = new string[] { Resources.Text_GenericError }
         };
@@ -31,6 +32,7 @@ namespace SoftUnlimit.AkkaBus
         /// <param name="instances"></param>
         /// <param name="logger"></param>
         /// <param name="options"></param>
+        /// <param name="preeSendCommand">Before send the command invoke this method.</param>
         public CommandBus(
             ICommandDispatcher dispatcher, 
             ICommandCompletionService completionService, 
@@ -38,11 +40,13 @@ namespace SoftUnlimit.AkkaBus
             IActorRefFactory factory = null, 
             int instances = 2, 
             ILogger<CommandBus> logger = null,
-            Action<IActorRefFactory> options = null)
+            Action<IActorRefFactory> options = null,
+            Func<ICommand, Task> preeSendCommand = null)
         {
             _isOwner = factory == null;
 
             Factory = factory ?? ActorSystem.Create("CommandBus");
+            _preeSendCommand = preeSendCommand;
             Default = Factory.ActorOf(
                 Props.Create(() => new CoordinatorActor(
                     dispatcher, completionService, process ?? ProcessCommand, logger, instances)));
@@ -65,22 +69,26 @@ namespace SoftUnlimit.AkkaBus
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
-        public virtual Task SendAsync(ICommand command)
+        public virtual async Task SendAsync(ICommand command)
         {
             var envelopment = new CommandEnvelopment(command, false);
-            Default.Tell(envelopment);
+            if (_preeSendCommand != null)
+                await _preeSendCommand(command);
 
-            return Task.CompletedTask;
+            Default.Tell(envelopment);
         }
         /// <summary>
         /// Dispatch command and wait for response.
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
-        public virtual Task<CommandResponse> SendAndWaitAsync(ICommand command)
+        public async virtual Task<CommandResponse> SendAndWaitAsync(ICommand command)
         {
             var envelopment = new CommandEnvelopment(command, true);
-            return Default.Ask<CommandResponse>(envelopment);
+            if (_preeSendCommand != null)
+                await _preeSendCommand(command);
+
+            return await Default.Ask<CommandResponse>(envelopment);
         }
 
         /// <summary>
