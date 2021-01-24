@@ -103,17 +103,14 @@ namespace SoftUnlimit.CQRS.Test
         /// <param name="unitOfWorkSettings"></param>
         /// <param name="cqrsSettings"></param>
         /// <returns></returns>
-        public static IServiceCollection RegisterMicroservice<DbContextRead, DbContextWrite>(this IServiceCollection services,
+        public static IServiceCollection RegisterMicroservice(this IServiceCollection services,
             ServiceSettings serviceSettings,
             UnitOfWorkSettings unitOfWorkSettings,
-            CQRSSettings cqrsSettings
-        )
-            where DbContextRead : DbContext
-            where DbContextWrite : DbContext
+            CQRSSettings cqrsSettings)
         {
             services.RegisterCommon(serviceSettings);
             if (unitOfWorkSettings != null)
-                services.AddSoftUnlimitDefaultFrameworkUnitOfWork<DbContextRead, DbContextWrite>(unitOfWorkSettings);
+                services.AddSoftUnlimitDefaultFrameworkUnitOfWork(unitOfWorkSettings);
             if (cqrsSettings != null)
             {
                 //if (cqrsSettings.PreeDispatchAction == null)
@@ -175,9 +172,11 @@ namespace SoftUnlimit.CQRS.Test
             services.AddSingleton<Map.IMapper, AutoMapperObjectMapper>();
 
             ServiceSettings serviceSettings = new ServiceSettings { ServiceId = 1 };
-            services.RegisterMicroservice<DbContextRead, DbContextWrite>(
+            services.RegisterMicroservice(
                 serviceSettings,
                 new UnitOfWorkSettings {
+                    DbContextRead = typeof(DbContextRead),
+                    DbContextWrite = typeof(DbContextWrite),
                     DatabaseSettings = new SoftUnlimit.Data.EntityFramework.Configuration.DatabaseSettings { EnableSensitiveDataLogging = true, MaxRetryCount = 3, MaxRetryDelay = 10 },
                     EntityTypeBuilder = typeof(_EntityTypeBuilder<>),
                     QueryRepository = typeof(DbQueryRepository<>),

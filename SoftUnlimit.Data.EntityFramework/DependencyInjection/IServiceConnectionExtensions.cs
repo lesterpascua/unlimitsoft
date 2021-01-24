@@ -9,6 +9,7 @@ using SoftUnlimit.Reflection;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 
@@ -22,13 +23,9 @@ namespace SoftUnlimit.Data.EntityFramework.DependencyInjection
         /// <summary>
         /// 
         /// </summary>
-        /// <typeparam name="DbContextRead"></typeparam>
-        /// <typeparam name="DbContextWrite"></typeparam>
         /// <param name="services"></param>
         /// <param name="settings"></param>
-        public static IServiceCollection AddSoftUnlimitDefaultFrameworkUnitOfWork<DbContextRead, DbContextWrite>(this IServiceCollection services, UnitOfWorkSettings settings)
-            where DbContextRead : DbContext
-            where DbContextWrite : DbContext
+        public static IServiceCollection AddSoftUnlimitDefaultFrameworkUnitOfWork(this IServiceCollection services, UnitOfWorkSettings settings)
         {
             int connIndex = 0;
             void ReadOptionAction(UnitOfWorkSettings settings, DbContextOptionsBuilder options)
@@ -49,20 +46,70 @@ namespace SoftUnlimit.Data.EntityFramework.DependencyInjection
             static bool IsEventSourceContrain(Type entityType) => entityType.GetInterfaces().Any(p => p == typeof(IEventSourced));
 
 
+            var addDbContextMethod = typeof(EntityFrameworkServiceCollectionExtensions)
+                .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                .Where(p => {
+                    if (p.Name == nameof(EntityFrameworkServiceCollectionExtensions.AddDbContext))
+                        return p.GetGenericArguments().Length == 1 && p.GetParameters().Length == 3;
+                    return false;
+                })
+                .Single();
+            var addDbContextPoolMethod = typeof(EntityFrameworkServiceCollectionExtensions)
+                .GetMethods(BindingFlags.Public | BindingFlags.Static)
+                .Where(p => {
+                    var arguments = p.GetParameters();
+                    if (p.Name == nameof(EntityFrameworkServiceCollectionExtensions.AddDbContextPool) && p.GetGenericArguments().Length == 1 && arguments.Length == 3)
+                        return arguments[1].ParameterType == typeof(Action<DbContextOptionsBuilder>);
+                    return false;
+                })
+                .Single();
+
+
+
             #region Read Context
             if (settings.PoolSizeForRead == 0)
             {
-                services.AddDbContext<DbContextRead>(options => ReadOptionAction(settings, options));
+
+                addDbContextMethod
+                    .MakeGenericMethod(settings.DbContextRead)
+                    .Invoke(null, new object[] {
+                        services,
+                        (Action<DbContextOptionsBuilder>)(options => ReadOptionAction(settings, options))
+                    });
             } else
-                services.AddDbContextPool<DbContextRead>(options => ReadOptionAction(settings, options), settings.PoolSizeForRead);
+            {
+                addDbContextPoolMethod
+                    .MakeGenericMethod(settings.DbContextRead)
+                    .Invoke(null, new object[] {
+                        services,
+                        (Action<DbContextOptionsBuilder>)(options => ReadOptionAction(settings, options)),
+                        settings.PoolSizeForRead
+                    });
+            }
             #endregion
 
             #region Write Context
-            if (settings.PoolSizeForWrite == 0)
+            if (settings.DbContextWrite != null)
             {
-                services.AddDbContext<DbContextWrite>(options => WriteOptionAction(settings, options));
-            } else
-                services.AddDbContextPool<DbContextWrite>(options => WriteOptionAction(settings, options), settings.PoolSizeForWrite);
+                if (settings.PoolSizeForWrite == 0)
+                {
+                    addDbContextMethod
+                        .MakeGenericMethod(settings.DbContextWrite)
+                        .Invoke(null, new object[] {
+                        services,
+                        (Action<DbContextOptionsBuilder>)(options => WriteOptionAction(settings, options))
+                        });
+                } else
+                {
+                    addDbContextPoolMethod
+                        .MakeGenericMethod(settings.DbContextWrite)
+                        .Invoke(null, new object[] {
+                        services,
+                        (Action<DbContextOptionsBuilder>)(options => WriteOptionAction(settings, options)),
+                        settings.PoolSizeForWrite
+                        });
+                }
+            }
             #endregion
 
             #region Versioned Repository
@@ -81,8 +128,9 @@ namespace SoftUnlimit.Data.EntityFramework.DependencyInjection
                 checkContrains: settings.RepositoryContrains ?? IsEventSourceContrain);
             foreach (var entry in collection)
             {
-                if (entry.ServiceType != null && entry.ImplementationType != null)
+                if (settings.DbContextWrite != null && entry.ServiceType != null && entry.ImplementationType != null)
                     services.AddScoped(entry.ServiceType, provider => entry.ImplementationType.CreateInstance(provider));
+
                 services.AddScoped(entry.ServiceQueryType, provider => entry.ImplementationQueryType.CreateInstance(provider));
             }
             #endregion

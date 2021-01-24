@@ -34,10 +34,19 @@ namespace SoftUnlimit.Data.EntityFramework.DependencyInjection
         /// Unit of work implementation type.
         /// </summary>
         public Type UnitOfWork { get; set; }
+
+        /// <summary>
+        /// Db context for read operations
+        /// </summary>
+        public Type DbContextRead { get; set; }
         /// <summary>
         /// Pool size for read DbContext
         /// </summary>
         public ushort PoolSizeForRead { get; set; }
+        /// <summary>
+        /// Db context for write operations
+        /// </summary>
+        public Type DbContextWrite { get; set; }
         /// <summary>
         /// Pool size for write DbContext
         /// </summary>
