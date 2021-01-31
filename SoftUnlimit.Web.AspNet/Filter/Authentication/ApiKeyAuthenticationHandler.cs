@@ -64,17 +64,25 @@ namespace SoftUnlimit.Web.AspNet.Filter.Authentication
             if (apiKey != Options.ApiKey)
                 return Task.FromResult(AuthenticateResult.Fail(ErrorBuilder?.Invoke(ApiKeyError.InvalidAPIKey) ?? "Invalid API Key"));
 
-            TUser userInfo = Options.CreateUserInfo?.Invoke(Request);
-            if (userInfo == null)
-                return Task.FromResult(AuthenticateResult.Fail(ErrorBuilder?.Invoke(ApiKeyError.InvalidUserInfo) ?? "Invalid User Info"));
+            try
+            {
+                TUser userInfo = Options.CreateUserInfo?.Invoke(Request);
+                if (userInfo == null)
+                    return Task.FromResult(AuthenticateResult.Fail(ErrorBuilder?.Invoke(ApiKeyError.InvalidUserInfo) ?? "Invalid User Info"));
 
-            var claims = Options.CreateClaims?.Invoke(userInfo, Request) ?? Array.Empty<Claim>(); ;
+                var claims = Options.CreateClaims?.Invoke(userInfo, Request) ?? Array.Empty<Claim>(); ;
 
-            var identity = new ClaimsIdentity(claims, Options.AuthenticationType);
-            var principal = new ClaimsPrincipal(identity);
-            var ticket = new AuthenticationTicket(principal, Options.Scheme);
+                var identity = new ClaimsIdentity(claims, Options.AuthenticationType);
+                var principal = new ClaimsPrincipal(identity);
+                var ticket = new AuthenticationTicket(principal, Options.Scheme);
 
-            return Task.FromResult(AuthenticateResult.Success(ticket));
+                return Task.FromResult(AuthenticateResult.Success(ticket));
+            }
+            catch (Exception exc)
+            {
+                Logger.LogError(exc, "Invalid auth formar.");
+            }
+            return Task.FromResult(AuthenticateResult.Fail(ErrorBuilder?.Invoke(ApiKeyError.InvalidAPIKey) ?? "Invalid User Info"));
         }
 
         /// <summary>
