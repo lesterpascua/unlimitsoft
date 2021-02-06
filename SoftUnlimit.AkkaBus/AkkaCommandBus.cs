@@ -13,7 +13,7 @@ namespace SoftUnlimit.AkkaBus
     /// <summary>
     /// Implement bus using akka actor system 
     /// </summary>
-    public class CommandBus : ICommandBus
+    public class AkkaCommandBus : ICommandBus
     {
         private readonly bool _isOwner;
         private readonly Func<ICommand, Task> _preeSendCommand;
@@ -33,13 +33,13 @@ namespace SoftUnlimit.AkkaBus
         /// <param name="logger"></param>
         /// <param name="options"></param>
         /// <param name="preeSendCommand">Before send the command invoke this method.</param>
-        public CommandBus(
+        public AkkaCommandBus(
             ICommandDispatcher dispatcher, 
             ICommandCompletionService completionService, 
             Func<ICommandDispatcher, CommandEnvelopment, IActorRef, ICommandCompletionService, ILogger, Task> process = null,
             IActorRefFactory factory = null, 
             int instances = 2, 
-            ILogger<CommandBus> logger = null,
+            ILogger<AkkaCommandBus> logger = null,
             Action<IActorRefFactory> options = null,
             Func<ICommand, Task> preeSendCommand = null)
         {

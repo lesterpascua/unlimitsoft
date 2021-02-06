@@ -61,15 +61,20 @@ namespace SoftUnlimit.Web.AspNet.ErrorHandling
                 foreach (var handler in handlers.Where(x => x.ShouldHandle(context)))
                     await handler.HandleAsync(context);
 
-            var reason = showExceptionInfo ? feature.Error : new Exception("Consult admin for more information.");
-            var response = new Response<IDictionary<string, Exception>> {
+            object body;
+            if (showExceptionInfo)
+            {
+                body = feature.Error;
+            }
+            else
+                body = new Dictionary<string, string[]> { { string.Empty, new string[] { "An error occurred while processing your request. Submit this bug and we'll fix it." } } };
+
+            var response = new Response<object> {
                 TraceIdentifier = context.TraceIdentifier,
                 IsSuccess = false,
                 Code = StatusCodes.Status500InternalServerError,
-                Body = new Dictionary<string, Exception> {
-                    { string.Empty, reason }
-                },
-                UIText = "Server Error"
+                Body = body,
+                UIText = null
             };
 
             context.Response.StatusCode = response.Code;

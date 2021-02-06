@@ -107,7 +107,7 @@ namespace SoftUnlimit.Web.AspNet.Filter
             /// <summary>
             /// 
             /// </summary>
-            public string ServerErrorText { get; set; } = "Server Error";
+            public string ServerErrorText { get; set; } = "An error occurred while processing your request. Submit this bug and we'll fix it.";
             /// <summary>
             /// 
             /// </summary>

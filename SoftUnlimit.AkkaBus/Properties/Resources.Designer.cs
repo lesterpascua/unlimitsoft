@@ -61,7 +61,7 @@ namespace SoftUnlimit.AkkaBus.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to An unexpected error occurred when processing the request so it will be reported for correction..
+        ///   Looks up a localized string similar to    ..
         /// </summary>
         internal static string Text_GenericError {
             get {
