@@ -37,7 +37,7 @@ namespace SoftUnlimit.CQRS.Tests
             IEventBus eventBus, 
             MessageType type
         )
-            : base(provider, eventBus, type)
+            : base(provider, eventBus, type, null)
         {
         }
     }

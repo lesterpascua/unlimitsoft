@@ -1,10 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.Data;
-using SoftUnlimit.Map;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -30,7 +28,8 @@ namespace SoftUnlimit.CQRS.Event
         private readonly IServiceProvider _provider;
         private readonly IEventBus _eventBus;
         private readonly MessageType _type;
-        private readonly ILogger<IEventPublishWorker> _logger;
+        private readonly TimeSpan _checkTime;
+        private readonly ILogger _logger;
         private readonly Task _backgoundWorker;
         private readonly CancellationTokenSource _cts;
         private readonly ConcurrentQueue<Guid> _queue;
@@ -43,19 +42,23 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="provider"></param>
         /// <param name="eventBus"></param>
         /// <param name="type"></param>
+        /// <param name="checkTime"></param>
         /// <param name="logger"></param>
         /// <param name="bachSize"></param>
         public QueueEventPublishWorker(
-            IServiceProvider provider, 
-            IEventBus eventBus, 
-            MessageType type, 
-            ILogger<IEventPublishWorker> logger = null, int bachSize = 10)
+            IServiceProvider provider,
+            IEventBus eventBus,
+            MessageType type,
+            TimeSpan? checkTime = null,
+            ILogger logger = null,
+            int bachSize = 10)
         {
             _disposed = false;
             _provider = provider ?? throw new ArgumentNullException(nameof(provider));
             _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
 
             _type = type;
+            _checkTime = checkTime ?? TimeSpan.FromSeconds(5);
             _logger = logger;
             _bachSize = bachSize;
             _queue = new ConcurrentQueue<Guid>();
@@ -73,7 +76,7 @@ namespace SoftUnlimit.CQRS.Event
                 .FindAll()
                 .Where(p => !p.IsPubliched)
                 .OrderBy(k => k.Created)
-                .Select(s => s.CommandId)
+                .Select(s => s.Id)
                 .ToArray();
             foreach (var eventId in notPublishEvents)
                 _queue.Enqueue(eventId);
@@ -102,9 +105,9 @@ namespace SoftUnlimit.CQRS.Event
         /// Backgound process event to the queue.
         /// </summary>
         /// <returns></returns>
-        private async Task PublishBackground()
+        protected virtual async Task PublishBackground()
         {
-            await Task.Delay(TimeSpan.FromSeconds(5));
+            await Task.Delay(_checkTime);
             while (!_cts.Token.IsCancellationRequested)
             {
                 SpinWait.SpinUntil(() => !_queue.IsEmpty || _cts.Token.IsCancellationRequested);
@@ -135,7 +138,8 @@ namespace SoftUnlimit.CQRS.Event
                     // dequeue all publish events.
                     for (int i = 0; i < count; i++)
                         _queue.TryDequeue(out Guid eventId);
-                } catch (Exception ex)
+                }
+                catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error publish event: {Time}.", DateTime.UtcNow);
                 }
