@@ -44,12 +44,12 @@ namespace SoftUnlimit.CQRS.Tests
 
     public sealed class TestEvent : VersionedEvent<Guid>
     {
-        public TestEvent(Guid id, Guid sourceId, long version, uint serviceId, string workerId, string correlationId, ICommand command, IEntityInfo prevState, IEntityInfo currState, bool isDomainEvent, IEventBodyInfo body = null)
+        public TestEvent(Guid id, Guid sourceId, long version, uint serviceId, string workerId, string correlationId, ICommand command, object prevState, object currState, bool isDomainEvent, IEventBodyInfo body = null)
             : base(id, sourceId, version, serviceId, workerId, correlationId, command, prevState, currState, isDomainEvent, body)
         {
         }
     }
-    public sealed class TestEntity : IEntityInfo
+    public sealed class TestEntity
     {
         public int Value { get; set; }
         public string Text { get; set; }

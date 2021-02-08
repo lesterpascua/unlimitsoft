@@ -43,11 +43,11 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="prevState"></param>
         /// <param name="currState"></param>
         /// <param name="body"></param>
-        protected VersionedEvent(Guid id, TKey sourceId, long version, uint serviceId, string workerId, string correlationId, ICommand command, IEntityInfo prevState, IEntityInfo currState, bool isDomainEvent, IEventBodyInfo body = null)
+        protected VersionedEvent(Guid id, TKey sourceId, long version, uint serviceId, string workerId, string correlationId, ICommand command, object prevState, object currState, bool isDomainEvent, IEventBodyInfo body = null)
             : base(id, sourceId, serviceId, workerId, correlationId, command, prevState, currState, isDomainEvent, body)
         {
-            this.Version = version;
-            this.Created = DateTime.UtcNow;
+            Version = version;
+            Created = DateTime.UtcNow;
         }
 
         /// <inheritdoc />
@@ -56,8 +56,8 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <inheritdoc />
         public override IEvent Transform(IMapper mapper, Type destination)
         {
-            var currState = CurrState != null ? (IEntityInfo)mapper.Map(CurrState, CurrState.GetType(), destination) : null;
-            var prevState = PrevState != null ? (IEntityInfo)mapper.Map(PrevState, PrevState.GetType(), destination) : null;
+            var currState = CurrState != null ? mapper.Map(CurrState, CurrState.GetType(), destination) : null;
+            var prevState = PrevState != null ? mapper.Map(PrevState, PrevState.GetType(), destination) : null;
 
             var type = GetType();
             var versionedEvent = (IVersionedEvent)Activator.CreateInstance(type, Id, SourceId, Version, ServiceId, WorkerId, CorrelationId, Command, prevState, currState, IsDomainEvent, Body);

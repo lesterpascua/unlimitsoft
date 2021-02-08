@@ -125,21 +125,18 @@ namespace SoftUnlimit.CQRS.Event
         /// Resolve types for command, entity and body
         /// </summary>
         /// <param name="commandTypeName"></param>
-        /// <param name="entityTypeName"></param>
         /// <param name="bodyTypeName"></param>
         /// <returns></returns>
-        public static (Type, Type, Type) ResolveType(string commandTypeName, string entityTypeName, string bodyTypeName)
+        public static (Type, Type) ResolveType(string commandTypeName, string bodyTypeName)
         {
-            Type commandType = null, entityType = null, bodyType = null;
+            Type commandType = null, bodyType = null;
 
             if (!string.IsNullOrEmpty(commandTypeName))
                 commandType = Type.GetType(commandTypeName);
-            if (!string.IsNullOrEmpty(entityTypeName))
-                entityType = Type.GetType(entityTypeName);
             if (!string.IsNullOrEmpty(bodyTypeName))
                 bodyType = Type.GetType(bodyTypeName);
 
-            return (commandType, entityType, bodyType);
+            return (commandType, bodyType);
         }
     }
     /// <summary>

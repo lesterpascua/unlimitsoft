@@ -14,35 +14,31 @@ namespace SoftUnlimit.CQRS.Message.Json
     /// </summary>
     public class NewtonsoftCommandConverter : JsonConverter
     {
-        private readonly Type _commandType, _entityType, _bodyType;
+        private readonly Type _commandType, _bodyType;
 
-        private static readonly object _sync = new object();
-        private static readonly Dictionary<Type, JsonSerializerSettings> _cache = new Dictionary<Type, JsonSerializerSettings>();
+        //private static readonly object _sync = new object();
+        //private static readonly Dictionary<Type, JsonSerializerSettings> _cache = new Dictionary<Type, JsonSerializerSettings>();
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="commandType"></param>
-        /// <param name="entityType"></param>
         /// <param name="bodyType"></param>
-        public NewtonsoftCommandConverter(Type commandType, Type entityType, Type bodyType)
+        public NewtonsoftCommandConverter(Type commandType, Type bodyType)
         {
             _commandType = commandType;
-            _entityType = entityType;
             _bodyType = bodyType;
         }
 
         /// <inheritdoc />
         public override bool CanConvert(Type objectType) 
-            => typeof(ICommand) == objectType || typeof(IEntityInfo) == objectType || typeof(IEventBodyInfo) == objectType;
+            => typeof(ICommand) == objectType || typeof(IEventBodyInfo) == objectType;
 
         /// <inheritdoc />
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             if (typeof(ICommand) == objectType)
                 return _commandType != null ? serializer.Deserialize(reader, _commandType) : null;
-            if (typeof(IEntityInfo) == objectType)
-                return _entityType != null ? serializer.Deserialize(reader, _entityType) : null;
             if (typeof(IEventBodyInfo) == objectType)
                 return _bodyType != null ? serializer.Deserialize(reader, _bodyType) : null;
 
@@ -56,15 +52,14 @@ namespace SoftUnlimit.CQRS.Message.Json
         /// 
         /// </summary>
         /// <param name="commandType"></param>
-        /// <param name="entityType">Type of the entity to deserialize.</param>
         /// <param name="bodyType">Type of the body</param>
         /// <returns></returns>
-        public static JsonSerializerSettings CreateOptions(Type commandType, Type entityType, Type bodyType)
+        public static JsonSerializerSettings CreateOptions(Type commandType, Type bodyType)
         {
             var value = new JsonSerializerSettings() {
                 ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor
             };
-            value.Converters.Add(new NewtonsoftCommandConverter(commandType, entityType, bodyType));
+            value.Converters.Add(new NewtonsoftCommandConverter(commandType, bodyType));
 
 
             //if (!_cache.TryGetValue(commandType, out JsonSerializerSettings value))

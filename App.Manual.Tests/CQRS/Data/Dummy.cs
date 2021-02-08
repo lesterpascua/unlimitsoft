@@ -10,14 +10,14 @@ using System.Text;
 namespace App.Manual.Tests.CQRS.Data
 {
     [Serializable]
-    public sealed class DummyDTO : IEntityInfo
+    public sealed class DummyDTO
     {
         public Guid ID { get; set; }
         public string Name { get; set; }
     }
 
     [AutoMapCustom(typeof(DummyDTO), ReverseMap = true)]
-    public class Dummy : EventSourced<Guid>, IEntityInfo
+    public class Dummy : EventSourced<Guid>
     {
         public string Name { get; set; }
 

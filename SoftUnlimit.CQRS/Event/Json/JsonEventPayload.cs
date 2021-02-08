@@ -34,12 +34,12 @@ namespace SoftUnlimit.CQRS.Event.Json
         /// <param name="mapper"></param>
         /// <param name="resolver"></param>
         /// <returns></returns>
-        public EventPayload<string> Transform<TDestination>(IMapper mapper, IEventNameResolver resolver) where TDestination : class, IEntityInfo
+        public EventPayload<string> Transform<TDestination>(IMapper mapper, IEventNameResolver resolver) where TDestination : class
         {
             var eventType = resolver.Resolver(EventName);
-            var (commandType, entityType, bodyType) = ResolveType(CommandType, EntityType, BodyType);
+            var (commandType, bodyType) = ResolveType(CommandType, BodyType);
 
-            var @event = JsonEventUtility.Deserializer(Payload, eventType, commandType, entityType, bodyType);
+            var @event = JsonEventUtility.Deserializer(Payload, eventType, commandType, bodyType);
             var transformedEvent = @event.Transform<TDestination>(mapper);
 
             return new JsonEventPayload(transformedEvent);

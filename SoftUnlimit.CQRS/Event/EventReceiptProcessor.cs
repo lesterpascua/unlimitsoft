@@ -73,9 +73,9 @@ namespace SoftUnlimit.CQRS.Event
                     case MessageType.Json:
                         var jsonMessage = (EventPayload<string>)envelop.Messaje;
                         var eventType = _resolver.Resolver(jsonMessage.EventName);
-                        var (commandType, entityType, bodyType) = EventPayload.ResolveType(jsonMessage.CommandType, jsonMessage.EntityType, jsonMessage.BodyType);
+                        var (commandType, bodyType) = EventPayload.ResolveType(jsonMessage.CommandType, jsonMessage.BodyType);
 
-                        @event = JsonEventUtility.Deserializer(jsonMessage.Payload, eventType, commandType, entityType, bodyType);
+                        @event = JsonEventUtility.Deserializer(jsonMessage.Payload, eventType, commandType, bodyType);
                         break;
                     default:
                         throw new NotSupportedException($"Envelop type: {envelop.Type} not suported");

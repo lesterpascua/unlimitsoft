@@ -51,6 +51,6 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="resolver"></param>
         /// <param name="mapper"></param>
         /// <returns></returns>
-        public EventPayload<TPayload> Transform<TDestination>(IEventNameResolver resolver, IMapper mapper) where TDestination : class, IEntityInfo => Transform(resolver, mapper, typeof(TDestination));
+        public EventPayload<TPayload> Transform<TDestination>(IEventNameResolver resolver, IMapper mapper) where TDestination : class => Transform(resolver, mapper, typeof(TDestination));
     }
 }
