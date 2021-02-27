@@ -19,7 +19,7 @@ namespace SoftUnlimit.Web.AspNet.Filter
     public class TransformResponseAttribute : ActionFilterAttribute
     {
         private IDictionary<string, object> _requestArguments;
-        private readonly Settings _settings;
+        private readonly TransformResponseAttributeOptions _options;
         private readonly ILogger<TransformResponseAttribute> _logger;
 
 
@@ -28,9 +28,9 @@ namespace SoftUnlimit.Web.AspNet.Filter
         /// </summary>
         /// <param name="options"></param>
         /// <param name="logger"></param>
-        public TransformResponseAttribute(IOptions<Settings> options, ILogger<TransformResponseAttribute> logger = null)
+        public TransformResponseAttribute(IOptions<TransformResponseAttributeOptions> options, ILogger<TransformResponseAttribute> logger = null)
         {
-            _settings = options.Value;
+            _options = options.Value;
             _logger = logger;
         }
 
@@ -45,22 +45,22 @@ namespace SoftUnlimit.Web.AspNet.Filter
             var httpContext = context.HttpContext;
             if (context.Exception != null && context.Controller is ControllerBase controller)
             {
-                _settings.ErrorLogger?.Invoke(_logger, context.Exception, httpContext, _requestArguments);
+                _options.ErrorLogger?.Invoke(_logger, context.Exception, httpContext, _requestArguments);
 
                 Exception exception = null;
                 IActionResult result = null;
-                if (_settings.HandlerException == null)
-                    (result, exception) = _settings.HandlerException(context);
+                if (_options.HandlerException != null)
+                    (result, exception) = _options.HandlerException(context);
 
-                if (_settings.HandlerException == null || result == null)
+                if (_options.HandlerException == null || result == null)
                 {
                     Response<object> response;
                     if (!(context.Exception is ResponseException exc))
                     {
                         object body = context.Exception;
-                        if (!_settings.ShowExceptionDetails)
+                        if (!_options.ShowExceptionDetails)
                             body = new Dictionary<string, string[]> {
-                            { string.Empty, new string[] { _settings.ServerErrorText } }
+                            { string.Empty, new string[] { _options.ServerErrorText } }
                         };
 
                         response = new Response<object>
@@ -69,7 +69,7 @@ namespace SoftUnlimit.Web.AspNet.Filter
                             IsSuccess = false,
                             Code = StatusCodes.Status500InternalServerError,
                             Body = body,
-                            UIText = _settings.ServerErrorText
+                            UIText = _options.ServerErrorText
                         };
                     }
                     else
@@ -87,8 +87,9 @@ namespace SoftUnlimit.Web.AspNet.Filter
                 }
                 else
                     (context.Result, context.Exception) = (result, exception);
-            } else
-                _settings.ResponseLogger?.Invoke(_logger, httpContext, context.Result);
+            }
+            else
+                _options.ResponseLogger?.Invoke(_logger, httpContext, context.Result);
         }
         /// <summary>
         /// Convert fluent error in Response error.
@@ -98,77 +99,79 @@ namespace SoftUnlimit.Web.AspNet.Filter
         {
             if (context.Result is BadRequestObjectResult result && result.Value is ValidationProblemDetails validationProblem)
             {
-                var response = new Response<IDictionary<string, string[]>> {
+                var response = new Response<IDictionary<string, string[]>>
+                {
                     TraceIdentifier = context.HttpContext.TraceIdentifier,
                     IsSuccess = false,
                     Code = result.StatusCode.Value,
                     Body = validationProblem.Errors,
-                    UIText = _settings.InvalidArgumentText
+                    UIText = _options.InvalidArgumentText
                 };
 
-                _settings.BadRequestLogger?.Invoke(_logger, context.HttpContext, response, _settings.InvalidArgumentText);
+                _options.BadRequestLogger?.Invoke(_logger, context.HttpContext, response, _options.InvalidArgumentText);
                 context.Result = new BadRequestObjectResult(response);
             }
         }
 
-        #region Nested Classes
+
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    public class TransformResponseAttributeOptions
+    {
         /// <summary>
         /// 
         /// </summary>
-        public class Settings
+        public string ServerErrorText { get; set; } = "An error occurred while processing your request. Submit this bug and we'll fix it.";
+        /// <summary>
+        /// 
+        /// </summary>
+        public string InvalidArgumentText { get; set; } = "Invalid Argument";
+        /// <summary>
+        /// Indicate if the filter should log exception request.
+        /// </summary>
+        public bool ShowExceptionDetails { get; set; } = false;
+
+
+        /// <summary>
+        /// Log error exception
+        /// </summary>
+        public Action<ILogger, Exception, HttpContext, IDictionary<string, object>> ErrorLogger { get; set; } = (logger, exception, httpContext, requestArguments) =>
         {
-            /// <summary>
-            /// 
-            /// </summary>
-            public string ServerErrorText { get; set; } = "An error occurred while processing your request. Submit this bug and we'll fix it.";
-            /// <summary>
-            /// 
-            /// </summary>
-            public string InvalidArgumentText { get; set; } = "Invalid Argument";
-            /// <summary>
-            /// Indicate if the filter should log exception request.
-            /// </summary>
-            public bool ShowExceptionDetails { get; set; } = false;
-
-
-            /// <summary>
-            /// Log error exception
-            /// </summary>
-            public Action<ILogger, Exception, HttpContext, IDictionary<string, object>> ErrorLogger { get; set; } = (logger, exception, httpContext, requestArguments) => {
-                var request = httpContext.Request;
-                logger.LogError(exception, "User: {User}, Response: {@Response}",
-                    httpContext.User.GetSubjectId(),
-                    new {
-                        Url = $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}",
-                        Address = httpContext.GetIpAddress(),
-                        RequestArguments = requestArguments
-                    });
-            };
-            /// <summary>
-            /// Log bad request exception
-            /// </summary>
-            public Action<ILogger, HttpContext, object, string> BadRequestLogger { get; set; } = (logger, httpContext, response, message) => logger.LogInformation("Code: {Code}, User: {User}, Message: {Message}, Response: {@Response}",
-                StatusCodes.Status400BadRequest,
+            var request = httpContext.Request;
+            logger.LogError(exception, "User: {User}, Response: {@Response}",
                 httpContext.User.GetSubjectId(),
-                message,
-                response
-            );
-            /// <summary>
-            /// Log error exception
-            /// </summary>
-            public Action<ILogger, HttpContext, object> ResponseLogger { get; set; } = (logger, httpContext, response) => logger.LogInformation("Code: {Code}, User: {User}, Response: {@Response}",
-                response is ObjectResult result ? result.StatusCode ?? StatusCodes.Status200OK : StatusCodes.Status200OK,
-                httpContext.User.GetSubjectId(),
-                response is ObjectResult ? response : "Raw Data"
-            );
-            /// <summary>
-            /// Custom handler exception and transform into other response.
-            /// </summary>
-            /// <remarks>
-            /// If we don't process this exception just return (null, null) and the default behavior is executed.
-            /// </remarks>
-            public Func<ActionExecutedContext, (IActionResult, Exception)> HandlerException { get; set; }
-        }
-        #endregion
+                new
+                {
+                    Url = $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}",
+                    Address = httpContext.GetIpAddress(),
+                    RequestArguments = requestArguments
+                });
+        };
+        /// <summary>
+        /// Log bad request exception
+        /// </summary>
+        public Action<ILogger, HttpContext, object, string> BadRequestLogger { get; set; } = (logger, httpContext, response, message) => logger.LogInformation("Code: {Code}, User: {User}, Message: {Message}, Response: {@Response}",
+            StatusCodes.Status400BadRequest,
+            httpContext.User.GetSubjectId(),
+            message,
+            response
+        );
+        /// <summary>
+        /// Log error exception
+        /// </summary>
+        public Action<ILogger, HttpContext, object> ResponseLogger { get; set; } = (logger, httpContext, response) => logger.LogInformation("Code: {Code}, User: {User}, Response: {@Response}",
+            response is ObjectResult result ? result.StatusCode ?? StatusCodes.Status200OK : StatusCodes.Status200OK,
+            httpContext.User.GetSubjectId(),
+            response is ObjectResult ? response : "Raw Data"
+        );
+        /// <summary>
+        /// Custom handler exception and transform into other response.
+        /// </summary>
+        /// <remarks>
+        /// If we don't process this exception just return (null, null) and the default behavior is executed.
+        /// </remarks>
+        public Func<ActionExecutedContext, (IActionResult, Exception)> HandlerException { get; set; }
     }
 }
