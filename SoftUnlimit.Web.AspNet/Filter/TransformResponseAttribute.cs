@@ -46,7 +46,13 @@ namespace SoftUnlimit.Web.AspNet.Filter
             if (context.Exception != null && context.Controller is ControllerBase controller)
             {
                 _settings.ErrorLogger?.Invoke(_logger, context.Exception, httpContext, _requestArguments);
+
+                Exception exception = null;
+                IActionResult result = null;
                 if (_settings.HandlerException == null)
+                    (result, exception) = _settings.HandlerException(context);
+
+                if (_settings.HandlerException == null || result == null)
                 {
                     Response<object> response;
                     if (!(context.Exception is ResponseException exc))
@@ -80,7 +86,7 @@ namespace SoftUnlimit.Web.AspNet.Filter
                     context.Exception = null;
                 }
                 else
-                    (context.Result, context.Exception) = _settings.HandlerException(context);
+                    (context.Result, context.Exception) = (result, exception);
             } else
                 _settings.ResponseLogger?.Invoke(_logger, httpContext, context.Result);
         }
@@ -158,6 +164,9 @@ namespace SoftUnlimit.Web.AspNet.Filter
             /// <summary>
             /// Custom handler exception and transform into other response.
             /// </summary>
+            /// <remarks>
+            /// If we don't process this exception just return (null, null) and the default behavior is executed.
+            /// </remarks>
             public Func<ActionExecutedContext, (IActionResult, Exception)> HandlerException { get; set; }
         }
         #endregion
