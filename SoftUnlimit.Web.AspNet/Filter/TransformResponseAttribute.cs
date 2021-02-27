@@ -46,34 +46,41 @@ namespace SoftUnlimit.Web.AspNet.Filter
             if (context.Exception != null && context.Controller is ControllerBase controller)
             {
                 _settings.ErrorLogger?.Invoke(_logger, context.Exception, httpContext, _requestArguments);
-
-                Response<object> response;
-                if (!(context.Exception is ResponseException exc))
+                if (_settings.HandlerException == null)
                 {
-                    object body = context.Exception;
-                    if (!_settings.ShowExceptionDetails)
-                        body = new Dictionary<string, string[]> {
+                    Response<object> response;
+                    if (!(context.Exception is ResponseException exc))
+                    {
+                        object body = context.Exception;
+                        if (!_settings.ShowExceptionDetails)
+                            body = new Dictionary<string, string[]> {
                             { string.Empty, new string[] { _settings.ServerErrorText } }
                         };
 
-                    response = new Response<object> {
-                        TraceIdentifier = httpContext.TraceIdentifier,
-                        IsSuccess = false,
-                        Code = StatusCodes.Status500InternalServerError,
-                        Body = body,
-                        UIText = _settings.ServerErrorText
-                    };
-                } else
-                    response = new Response<object> {
-                        TraceIdentifier = httpContext.TraceIdentifier,
-                        IsSuccess = false,
-                        Code = exc.Code,
-                        Body = exc.Body,
-                        UIText = exc.Message
-                    };
+                        response = new Response<object>
+                        {
+                            TraceIdentifier = httpContext.TraceIdentifier,
+                            IsSuccess = false,
+                            Code = StatusCodes.Status500InternalServerError,
+                            Body = body,
+                            UIText = _settings.ServerErrorText
+                        };
+                    }
+                    else
+                        response = new Response<object>
+                        {
+                            TraceIdentifier = httpContext.TraceIdentifier,
+                            IsSuccess = false,
+                            Code = exc.Code,
+                            Body = exc.Body,
+                            UIText = exc.Message
+                        };
 
-                context.Result = controller.StatusCode(StatusCodes.Status500InternalServerError, response);
-                context.Exception = null;
+                    context.Result = controller.StatusCode(StatusCodes.Status500InternalServerError, response);
+                    context.Exception = null;
+                }
+                else
+                    (context.Result, context.Exception) = _settings.HandlerException(context);
             } else
                 _settings.ResponseLogger?.Invoke(_logger, httpContext, context.Result);
         }
@@ -148,6 +155,10 @@ namespace SoftUnlimit.Web.AspNet.Filter
                 httpContext.User.GetSubjectId(),
                 response is ObjectResult ? response : "Raw Data"
             );
+            /// <summary>
+            /// Custom handler exception and transform into other response.
+            /// </summary>
+            public Func<ActionExecutedContext, (IActionResult, Exception)> HandlerException { get; set; }
         }
         #endregion
     }
