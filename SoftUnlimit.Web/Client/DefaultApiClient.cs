@@ -32,7 +32,7 @@ namespace SoftUnlimit.Web.Client
         }
 
         /// <inheritdoc/>
-        public async Task<TModel> SendAsync<TModel>(HttpMethod method, string uri, Action<HttpRequestMessage> setup = null, object model = null)
+        public async Task<(TModel, HttpStatusCode)> SendAsync<TModel>(HttpMethod method, string uri, Action<HttpRequestMessage> setup = null, object model = null)
         {
             string completeUri = uri;
             string jsonContent = null;
@@ -50,11 +50,11 @@ namespace SoftUnlimit.Web.Client
             if (jsonContent != null)
                 content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            await this.BeforeSendRequestAsync(content, method, uri);
+            await BeforeSendRequestAsync(content, method, uri);
             return await SendWithContentAsync<TModel>(_httpClient, method, completeUri, content, setup);
         }
         /// <inheritdoc/>
-        public async Task<TModel> UploadAsync<TModel>(HttpMethod method, string uri, string fileName, IEnumerable<Stream> streams, Action<HttpRequestMessage> setup = null, object qs = null)
+        public async Task<(TModel, HttpStatusCode)> UploadAsync<TModel>(HttpMethod method, string uri, string fileName, IEnumerable<Stream> streams, Action<HttpRequestMessage> setup = null, object qs = null)
         {
             if (method == HttpMethod.Get)
                 throw new NotSupportedException("Get method don't allow upload image.");
@@ -82,7 +82,7 @@ namespace SoftUnlimit.Web.Client
 
         #region Private Methods
 
-        private static async Task<TModel> SendWithContentAsync<TModel>(HttpClient httpClient, HttpMethod method, string completeUri, HttpContent content, Action<HttpRequestMessage> setup)
+        private static async Task<(TModel, HttpStatusCode)> SendWithContentAsync<TModel>(HttpClient httpClient, HttpMethod method, string completeUri, HttpContent content, Action<HttpRequestMessage> setup)
         {
             HttpRequestMessage message = new HttpRequestMessage(method, completeUri);
             if (content != null)
@@ -94,17 +94,11 @@ namespace SoftUnlimit.Web.Client
             if (!response.IsSuccessStatusCode)
             {
                 string body = await response.Content.ReadAsStringAsync();
-                switch (response.StatusCode)
-                {
-                    case HttpStatusCode.NotFound:
-                    case HttpStatusCode.BadRequest:
-                        throw new HttpException(response.StatusCode, response.ToString(), body);
-                }
-                throw new HttpException(HttpStatusCode.InternalServerError, response.ToString(), body);
+                throw new HttpException(response.StatusCode, response.ToString(), body);
             }
 
             var json = await response.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<TModel>(json);
+            return (JsonConvert.DeserializeObject<TModel>(json), response.StatusCode);
         }
 
         #endregion
