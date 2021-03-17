@@ -57,7 +57,8 @@ namespace SoftUnlimit.CQRS.Message.Json
         public static JsonSerializerSettings CreateOptions(Type commandType, Type bodyType)
         {
             var value = new JsonSerializerSettings() {
-                ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor
+                ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
             };
             value.Converters.Add(new NewtonsoftCommandConverter(commandType, bodyType));
 
