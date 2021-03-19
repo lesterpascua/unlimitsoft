@@ -18,7 +18,6 @@ namespace SoftUnlimit.Web.Client
     {
         private readonly HttpClient _httpClient;
 
-
         /// <summary>
         /// 
         /// </summary>
@@ -30,6 +29,11 @@ namespace SoftUnlimit.Web.Client
             if (!string.IsNullOrEmpty(baseUrl))
                 httpClient.BaseAddress = new Uri(baseUrl);
         }
+
+        /// <summary>
+        /// Expose internal HttpClient
+        /// </summary>
+        public HttpClient HttpClient => _httpClient;
 
         /// <inheritdoc/>
         public async Task<(TModel, HttpStatusCode)> SendAsync<TModel>(HttpMethod method, string uri, Action<HttpRequestMessage> setup = null, object model = null)
