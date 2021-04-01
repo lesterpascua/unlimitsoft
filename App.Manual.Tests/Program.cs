@@ -132,7 +132,7 @@ namespace SoftUnlimit.CQRS.Test
     public class EmailUpdateEvent : VersionedEvent<Guid>
     {
         /// <inheritdoc/>
-        public EmailUpdateEvent(Guid id, Guid sourceId, long version, uint serviceId, string workerId, string correlationId, ICommand command, object prevState, object currState, bool isDomainEvent, IEventBodyInfo body)
+        public EmailUpdateEvent(Guid id, Guid sourceId, long version, uint serviceId, string workerId, string correlationId, ICommand command, object prevState, object currState, bool isDomainEvent, object body)
             : base(id, sourceId, version, serviceId, workerId, correlationId, command, prevState, currState, isDomainEvent, body)
         {
         }

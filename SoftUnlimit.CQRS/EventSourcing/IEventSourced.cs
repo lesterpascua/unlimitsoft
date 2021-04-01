@@ -83,7 +83,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="isDomain"></param>
         /// <param name="prevState">Previous entity snapshot.</param>
         /// <param name="body"></param>
-        protected IVersionedEvent AddMasterEvent(Guid eventId, uint serviceId, string workerId, string correlationId, ICommand command, object prevState, object currState = null, bool isDomain = false, IEventBodyInfo body = null)
+        protected IVersionedEvent AddMasterEvent(Guid eventId, uint serviceId, string workerId, string correlationId, ICommand command, object prevState, object currState = null, bool isDomain = false, object body = null)
         {
             IVersionedEvent @event = null;
             Type eventType = command.GetMasterEvent();
@@ -115,7 +115,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="prevState">Previous entity snapshot.</param>
         /// <param name="body"></param>
         /// <returns></returns>
-        protected virtual IVersionedEvent EventFactory(Type eventType, Guid eventId, TKey sourceId, long version, uint serviceId, string workerId, string correlationId, ICommand creator, object prevState, object currState, bool isDomain, IEventBodyInfo body) => (IVersionedEvent)Activator.CreateInstance(eventType, eventId, sourceId, version, serviceId, workerId, correlationId, creator, prevState, currState, isDomain, body);
+        protected virtual IVersionedEvent EventFactory(Type eventType, Guid eventId, TKey sourceId, long version, uint serviceId, string workerId, string correlationId, ICommand creator, object prevState, object currState, bool isDomain, object body) => (IVersionedEvent)Activator.CreateInstance(eventType, eventId, sourceId, version, serviceId, workerId, correlationId, creator, prevState, currState, isDomain, body);
 
         #endregion
     }

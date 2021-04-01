@@ -32,15 +32,13 @@ namespace SoftUnlimit.CQRS.Message.Json
 
         /// <inheritdoc />
         public override bool CanConvert(Type objectType) 
-            => typeof(ICommand) == objectType || typeof(IEventBodyInfo) == objectType;
+            => typeof(ICommand) == objectType;
 
         /// <inheritdoc />
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
             if (typeof(ICommand) == objectType)
                 return _commandType != null ? serializer.Deserialize(reader, _commandType) : null;
-            if (typeof(IEventBodyInfo) == objectType)
-                return _bodyType != null ? serializer.Deserialize(reader, _bodyType) : null;
 
             return null;
         }

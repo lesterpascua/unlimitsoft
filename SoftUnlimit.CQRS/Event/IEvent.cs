@@ -57,7 +57,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Event extra information
         /// </summary>
-        public IEventBodyInfo Body { get; }
+        public object Body { get; }
 
         /// <summary>
         /// Transform event into other event with diferent entity type. Usefull to publish event without sensitive data or a public representation of the event.
@@ -99,7 +99,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="currState"></param>
         /// <param name="isDomain"></param>
         /// <param name="body"></param>
-        protected Event(Guid id, TKey sourceId, uint serviceId, string workerId, string correlationId, ICommand command, object prevState, object currState, bool isDomain, IEventBodyInfo body)
+        protected Event(Guid id, TKey sourceId, uint serviceId, string workerId, string correlationId, ICommand command, object prevState, object currState, bool isDomain, object body)
         {
             Id = id;
             SourceId = sourceId;
@@ -141,7 +141,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <inheritdoc />
         public bool IsDomainEvent { get; set; }
         /// <inheritdoc />
-        public IEventBodyInfo Body { get; set; }
+        public object Body { get; set; }
         /// <inheritdoc />
         public string CorrelationId { get; set; }
 
