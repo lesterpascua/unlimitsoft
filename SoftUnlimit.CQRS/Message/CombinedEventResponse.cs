@@ -20,8 +20,8 @@ namespace SoftUnlimit.CQRS.Message
         /// <param name="events"></param>
         public CombinedEventResponse(IEnumerable<EventResponse> events)
         {
-            this.Success = true;
-            this.Events = events;
+            Success = true;
+            Events = events;
 
             List<EventResponse> errorEvents = new List<EventResponse>();
             List<EventResponse> successEvents = new List<EventResponse>();
@@ -29,15 +29,15 @@ namespace SoftUnlimit.CQRS.Message
             {
                 if (!@event.Success)
                 {
-                    this.Success = false;
+                    Success = false;
                     errorEvents.Add(@event);
                 } else
                     successEvents.Add(@event);
             }
 
-            this.Events = events;
-            this.ErrorEvents = errorEvents;
-            this.SuccessEvents = successEvents;
+            Events = events;
+            ErrorEvents = errorEvents;
+            SuccessEvents = successEvents;
         }
 
         /// <summary>

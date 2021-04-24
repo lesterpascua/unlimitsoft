@@ -10,6 +10,7 @@ using Chronicle;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
@@ -41,6 +42,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
+using Microsoft.Extensions.Logging;
 
 namespace SoftUnlimit.CQRS.Test
 {
@@ -236,6 +238,12 @@ namespace SoftUnlimit.CQRS.Test
                     EventDispatcher = provider => new ServiceProviderEventDispatcher(provider)
                 });
 
+            services.AddLogging(config =>
+            {
+                config.SetMinimumLevel(LogLevel.Trace);
+                config.AddConsole();
+            });
+
 
             //services.AddDbContext<DbContextRead>(options => {
             //    options.UseSqlServer(DesignTimeDbContextFactory.ConnStringRead);
@@ -294,7 +302,6 @@ namespace SoftUnlimit.CQRS.Test
                 null,
                 typeof(IDbUnitOfWork),
                 typeof(DummySeed).Assembly);
-
 
             await provider.GetService<App.Manual.Tests.CQRS.Startup>().Start();
         }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.EventSourcing;
@@ -59,10 +60,12 @@ namespace SoftUnlimit.CQRS.DependencyInjection
                 ServiceProviderCommandDispatcher.RegisterCommandHandler(services, settings.ICommandHandler, settings.Assemblies, settings.Assemblies);
 
                 services.AddSingleton<ICommandDispatcher>((provider) => {
+                    var logger = provider.GetService<ILogger<ServiceProviderCommandDispatcher>>();
                     return new ServiceProviderCommandDispatcher(
                         provider,
                         errorTransforms: ServiceProviderCommandDispatcher.DefaultErrorTransforms,
-                        preeDispatch: settings.PreeDispatchAction
+                        preeDispatch: settings.PreeDispatchAction, 
+                        logger: logger
                     );
                 });
             }

@@ -1,5 +1,7 @@
 ﻿using App.Manual.Tests.CQRS.Data;
+using FluentValidation;
 using SoftUnlimit.CQRS.Command;
+using SoftUnlimit.CQRS.Command.Validation;
 using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.Data;
 using SoftUnlimit.Map;
@@ -12,6 +14,8 @@ using System.Threading.Tasks;
 namespace App.Manual.Tests.CQRS.Command
 {
     public class DummyCommandHandler :
+        ICommandHandlerValidator,
+        ICommandHandlerCompliance,
         ICommandHandler<DummyCreateCommand>
     {
         private readonly IIdGenerator<Guid> _gen;
@@ -29,6 +33,22 @@ namespace App.Manual.Tests.CQRS.Command
             _dummyRepository = dummyRepository;
         }
 
+        public IValidator BuildValidator(IValidator v) => v switch
+        {
+            CommandValidator<DummyCreateCommand> validator => BuildValidator(validator),
+            _ => throw new NotSupportedException("This handler not implement this validator"),
+        };
+
+        private IValidator BuildValidator(CommandValidator<DummyCreateCommand> validator)
+        {
+            validator.RuleFor(p => p.Name)
+                .Must(name =>
+                {
+                    return name.Length > 3;
+                });
+            return validator;
+        }
+
         public async Task<CommandResponse> HandleAsync(DummyCreateCommand command, object validationCache)
         {
             var dbObj = new Dummy {
@@ -42,6 +62,11 @@ namespace App.Manual.Tests.CQRS.Command
             await _unitOfWork.SaveChangesAsync();
 
             return command.OkResponse(true);
+        }
+
+        public Task<CommandResponse> HandleComplianceAsync(ICommand command)
+        {
+            return Task.FromResult(command.OkResponse(true));
         }
     }
 }

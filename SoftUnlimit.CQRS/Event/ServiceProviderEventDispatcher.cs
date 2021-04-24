@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Message;
 using System;
@@ -18,6 +19,7 @@ namespace SoftUnlimit.CQRS.Event
     public class ServiceProviderEventDispatcher : IEventDispatcher
     {
         private readonly bool _useCache, _useScope;
+        private readonly ILogger<ServiceProviderEventDispatcher> _logger;
         private readonly IServiceProvider _provider;
 
         private static readonly object _sync = new object();
@@ -31,11 +33,13 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="provider"></param>
         /// <param name="useCache"></param>
         /// <param name="useScope"></param>
-        public ServiceProviderEventDispatcher(IServiceProvider provider, bool useCache = true, bool useScope = true)
+        /// <param name="logger"></param>
+        public ServiceProviderEventDispatcher(IServiceProvider provider, bool useCache = true, bool useScope = true, ILogger<ServiceProviderEventDispatcher> logger = null)
         {
-            this._provider = provider;
-            this._useCache = useCache;
-            this._useScope = useScope;
+            _provider = provider;
+            _useCache = useCache;
+            _useScope = useScope;
+            _logger = logger;
         }
 
         /// <summary>
@@ -59,17 +63,25 @@ namespace SoftUnlimit.CQRS.Event
         /// <returns></returns>
         public Task<CombinedEventResponse> DispatchEventAsync(IServiceProvider provider, IEvent @event)
         {
+            _logger?.LogDebug("Process event: {@Event}", @event);
+
             //
             // get handler and execute event.
             Type eventType = @event.GetType();
             List<Task<EventResponse>> eventTasks = new List<Task<EventResponse>>();
 
-            IEnumerable<IEventHandler> handlers = GetHandlers(provider, @event.GetType());
+            IEnumerable<IEventHandler> handlers = GetHandlers(provider, eventType);
             if (handlers?.Any() != true)
-                return Task.FromResult(CombinedEventResponse.Empty);
-
-            if (this._useCache)
             {
+                _logger?.LogDebug("Not fount handler for event: {Event}", eventType);
+                return Task.FromResult(CombinedEventResponse.Empty);
+            }
+
+
+            _logger?.LogDebug("Found {Count} handlers for event: {Type}", handlers.Count(), eventType);
+            if (_useCache)
+            {
+                _logger?.LogDebug("Event cache event is enable");
                 foreach (var handler in handlers)
                 {
                     KeyPair key = new KeyPair(eventType, handler.GetType());
@@ -91,8 +103,13 @@ namespace SoftUnlimit.CQRS.Event
                         eventTasks.Add(taskResponse);
                     }
                 }
-                return Task.WhenAll(eventTasks).ContinueWith(c => new CombinedEventResponse(c.Result));
+                return Task.WhenAll(eventTasks).ContinueWith(c => {
+                    _logger?.LogDebug("Event handler responses: {@Responses}", c.Result);
+                    return new CombinedEventResponse(c.Result);
+                });
             }
+            else
+                _logger?.LogDebug("Event cache event is disabled");
 
             foreach (var handler in handlers)
                 eventTasks.Add(((dynamic)handler).HandleAsync((dynamic)@event));
