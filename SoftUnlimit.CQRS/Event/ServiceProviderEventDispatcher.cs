@@ -103,7 +103,8 @@ namespace SoftUnlimit.CQRS.Event
                         eventTasks.Add(taskResponse);
                     }
                 }
-                return Task.WhenAll(eventTasks).ContinueWith(c => {
+                return Task.WhenAll(eventTasks).ContinueWith(c =>
+                {
                     _logger?.LogDebug("Event handler responses: {@Responses}", c.Result);
                     return new CombinedEventResponse(c.Result);
                 });
