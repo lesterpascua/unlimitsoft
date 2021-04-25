@@ -14,7 +14,7 @@ namespace SoftUnlimit.CQRS.Event.Json
         /// Get event asociate to supplied names.
         /// </summary>
         /// <param name="eventName"></param>
-        /// <returns></returns>
+        /// <returns>Type register with the name, null if no type asociate.</returns>
         Type Resolver(string eventName);
     }
 }

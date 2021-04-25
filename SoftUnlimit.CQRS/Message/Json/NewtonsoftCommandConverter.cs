@@ -16,18 +16,16 @@ namespace SoftUnlimit.CQRS.Message.Json
     {
         private readonly Type _commandType, _bodyType;
 
-        //private static readonly object _sync = new object();
-        //private static readonly Dictionary<Type, JsonSerializerSettings> _cache = new Dictionary<Type, JsonSerializerSettings>();
+        private static readonly object _sync = new object();
+        private static readonly Dictionary<Type, JsonSerializerSettings> _cache = new Dictionary<Type, JsonSerializerSettings>();
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="commandType"></param>
-        /// <param name="bodyType"></param>
-        public NewtonsoftCommandConverter(Type commandType, Type bodyType)
+        public NewtonsoftCommandConverter(Type commandType)
         {
             _commandType = commandType;
-            _bodyType = bodyType;
         }
 
         /// <inheritdoc />
@@ -49,29 +47,20 @@ namespace SoftUnlimit.CQRS.Message.Json
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="commandType"></param>
-        /// <param name="bodyType">Type of the body</param>
+        /// <param name="commandType">Type of the command in the event. If null asume as generic object.</param>
         /// <returns></returns>
-        public static JsonSerializerSettings CreateOptions(Type commandType, Type bodyType)
+        public static JsonSerializerSettings CreateOptions(Type commandType)
         {
-            var value = new JsonSerializerSettings() {
-                ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
-                ReferenceLoopHandling = ReferenceLoopHandling.Ignore
-            };
-            value.Converters.Add(new NewtonsoftCommandConverter(commandType, bodyType));
+            commandType ??= typeof(object);
+            if (!_cache.TryGetValue(commandType, out JsonSerializerSettings value))
+                lock (_sync)
+                    if (!_cache.TryGetValue(commandType, out value))
+                    {
+                        value = new JsonSerializerSettings() { ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor };
+                        value.Converters.Add(new NewtonsoftCommandConverter(commandType));
 
-
-            //if (!_cache.TryGetValue(commandType, out JsonSerializerSettings value))
-            //    lock (_sync)
-            //        if (!_cache.TryGetValue(commandType, out value))
-            //        {
-            //            value = new JsonSerializerSettings() {
-            //                ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor
-            //            };
-            //            value.Converters.Add(new NewtonsoftCommandConverter(commandType));
-
-            //            _cache.Add(commandType, value);
-            //        }
+                        _cache.Add(commandType, value);
+                    }
             return value;
         }
     }

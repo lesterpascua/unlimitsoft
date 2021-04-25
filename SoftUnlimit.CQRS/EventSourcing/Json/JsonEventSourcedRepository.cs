@@ -46,9 +46,9 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
                 return null;
 
             var eventType = _resolver.Resolver(eventPayload.EventName);
-            var (commandType, bodyType) = EventPayload.ResolveType(eventPayload.CommandType, eventPayload.BodyType);
+            var (commandType, _) = EventPayload.ResolveType(eventPayload.CommandType, eventPayload.BodyType);
 
-            var @event = (IVersionedEvent)JsonEventUtility.Deserializer(eventPayload.Payload, eventType, commandType, bodyType);
+            var @event = (IVersionedEvent)JsonEventUtility.Deserializer(eventPayload.Payload, eventType, commandType);
 
             return (TEntity)@event.CurrState;
         }

@@ -28,13 +28,13 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         public static string Serializer(IEvent @event)
         {
             var commandType = @event.Command?.GetType();
-            var bodyType = (@event.Body)?.GetType();
+            //var bodyType = (@event.Body)?.GetType();
 
             if (UseNewtonsoftSerializer)
             {
                 if (commandType != null)
                 {
-                    var option = NewtonsoftCommandConverter.CreateOptions(commandType, bodyType);
+                    var option = NewtonsoftCommandConverter.CreateOptions(commandType);
                     return JsonConvert.SerializeObject(@event, option);
                 }
                 return JsonConvert.SerializeObject(@event);
@@ -54,13 +54,12 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         /// <param name="payload"></param>
         /// <param name="eventType"></param>
         /// <param name="commandType"></param>
-        /// <param name="bodyType"></param>
         /// <returns></returns>
-        public static IEvent Deserializer(string payload, Type eventType, Type commandType, Type bodyType)
+        public static IEvent Deserializer(string payload, Type eventType, Type commandType)
         {
             if (UseNewtonsoftSerializer)
             {
-                var option = NewtonsoftCommandConverter.CreateOptions(commandType, bodyType);
+                var option = NewtonsoftCommandConverter.CreateOptions(commandType);
                 return (IEvent)JsonConvert.DeserializeObject(payload, eventType, option);
             } else
             {

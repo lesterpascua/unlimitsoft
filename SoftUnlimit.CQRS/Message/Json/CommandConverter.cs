@@ -52,18 +52,19 @@ namespace SoftUnlimit.CQRS.Message.Json
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="type"></param>
+        /// <param name="commandType">Type of the command in the event. If null asume as generic object.</param>
         /// <returns></returns>
-        public static JsonSerializerOptions CreateOptions(Type type)
+        public static JsonSerializerOptions CreateOptions(Type commandType)
         {
-            if (!_cache.TryGetValue(type, out JsonSerializerOptions value))
+            commandType ??= typeof(object);
+            if (!_cache.TryGetValue(commandType, out JsonSerializerOptions value))
                 lock (_sync)
-                    if (!_cache.TryGetValue(type, out value))
+                    if (!_cache.TryGetValue(commandType, out value))
                     {
                         value = new JsonSerializerOptions();
-                        value.Converters.Add(new CommandConverter(type));
+                        value.Converters.Add(new CommandConverter(commandType));
 
-                        _cache.Add(type, value);
+                        _cache.Add(commandType, value);
                     }
             return value;
         }

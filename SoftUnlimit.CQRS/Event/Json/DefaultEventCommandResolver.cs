@@ -21,6 +21,11 @@ namespace SoftUnlimit.CQRS.Event.Json
         }
 
         /// <inheritdoc />
-        public Type Resolver(string eventName) => _typeResolverCache[eventName];
+        public Type Resolver(string eventName)
+        {
+            if (_typeResolverCache.TryGetValue(eventName, out var type))
+                return type;
+            return null;
+        }
     }
 }
