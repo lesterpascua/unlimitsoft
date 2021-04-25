@@ -31,5 +31,14 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="type">Messaje format type.</param>
         /// <returns></returns>
         Task PublishEventPayloadAsync<T>(EventPayload<T> @event, MessageType type);
+        /// <summary>
+        /// Publish a raw object in the bus
+        /// </summary>
+        /// <param name="graph"></param>
+        /// <param name="id"></param>
+        /// <param name="eventName"></param>
+        /// <param name="correlationId"></param>
+        /// <returns></returns>
+        Task PublishAsync(object graph, Guid id, string eventName, string correlationId);
     }
 }

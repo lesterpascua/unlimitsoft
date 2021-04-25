@@ -108,6 +108,8 @@ namespace SoftUnlimit.EventBus.ActiveMQ
         public Task PublishEventAsync(IEvent @event) => PublishAsync(@event, MessageType.Event);
         /// <inheritdoc />
         public Task PublishEventPayloadAsync<T>(EventPayload<T> @event, MessageType type) => PublishAsync(@event, type);
+        /// <inheritdoc />
+        public Task PublishAsync(object graph, Guid id, string eventName, string correlationId) => throw new NotImplementedException();
 
 
         #region Private Methods
