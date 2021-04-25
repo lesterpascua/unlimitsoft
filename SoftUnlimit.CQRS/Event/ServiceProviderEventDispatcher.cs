@@ -19,6 +19,7 @@ namespace SoftUnlimit.CQRS.Event
     public class ServiceProviderEventDispatcher : IEventDispatcher
     {
         private readonly bool _useCache, _useScope;
+        private readonly Action<IServiceProvider, IEvent> _preeDispatch;
         private readonly ILogger<ServiceProviderEventDispatcher> _logger;
         private readonly IServiceProvider _provider;
 
@@ -33,12 +34,19 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="provider"></param>
         /// <param name="useCache"></param>
         /// <param name="useScope"></param>
+        /// <param name="preeDispatch"></param>
         /// <param name="logger"></param>
-        public ServiceProviderEventDispatcher(IServiceProvider provider, bool useCache = true, bool useScope = true, ILogger<ServiceProviderEventDispatcher> logger = null)
+        public ServiceProviderEventDispatcher(
+            IServiceProvider provider, 
+            bool useCache = true, 
+            bool useScope = true,
+            Action<IServiceProvider, IEvent> preeDispatch = null,
+            ILogger<ServiceProviderEventDispatcher> logger = null)
         {
             _provider = provider;
             _useCache = useCache;
             _useScope = useScope;
+            _preeDispatch = preeDispatch;
             _logger = logger;
         }
 
@@ -64,6 +72,7 @@ namespace SoftUnlimit.CQRS.Event
         public Task<CombinedEventResponse> DispatchEventAsync(IServiceProvider provider, IEvent @event)
         {
             _logger?.LogDebug("Process event: {@Event}", @event);
+            _preeDispatch?.Invoke(provider, @event);
 
             //
             // get handler and execute event.
