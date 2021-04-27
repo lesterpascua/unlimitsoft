@@ -56,7 +56,11 @@ namespace SoftUnlimit.CQRS.Message.Json
                 lock (_sync)
                     if (!_cache.TryGetValue(commandType, out value))
                     {
-                        value = new JsonSerializerSettings() { ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor };
+                        value = new JsonSerializerSettings()
+                        {
+                            ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
+                            ReferenceLoopHandling = ReferenceLoopHandling.Ignore
+                        };
                         value.Converters.Add(new NewtonsoftCommandConverter(commandType));
 
                         _cache.Add(commandType, value);
