@@ -46,7 +46,7 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
             builder.Property(p => p.ServiceId);
             builder.Property(p => p.WorkerId).IsRequired();
             builder.Property(p => p.EventName).IsRequired().HasMaxLength(255);
-            builder.Property(p => p.CommandType).IsRequired().HasMaxLength(255);
+            builder.Property(p => p.CommandType).HasMaxLength(255);
             builder.Property(p => p.EntityType).HasMaxLength(255);
 
             var payloadPropertyBuilder = builder.Property(p => p.Payload).IsRequired();
