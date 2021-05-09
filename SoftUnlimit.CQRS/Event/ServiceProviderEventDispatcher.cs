@@ -55,13 +55,13 @@ namespace SoftUnlimit.CQRS.Event
         /// </summary>
         /// <param name="event"></param>
         /// <returns></returns>
-        public Task<CombinedEventResponse> DispatchEventAsync(IEvent @event)
+        public async Task<CombinedEventResponse> DispatchEventAsync(IEvent @event)
         {
-            if (!this._useScope)
-                return this.DispatchEventAsync(this._provider, @event);
+            if (!_useScope)
+                return await DispatchEventAsync(this._provider, @event);
 
             using IServiceScope scope = this._provider.CreateScope();
-            return this.DispatchEventAsync(scope.ServiceProvider, @event);
+            return await DispatchEventAsync(scope.ServiceProvider, @event);
         }
         /// <summary>
         /// 
@@ -69,7 +69,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="provider"></param>
         /// <param name="event"></param>
         /// <returns></returns>
-        public Task<CombinedEventResponse> DispatchEventAsync(IServiceProvider provider, IEvent @event)
+        public async Task<CombinedEventResponse> DispatchEventAsync(IServiceProvider provider, IEvent @event)
         {
             _logger?.LogDebug("Process event: {@Event}", @event);
             _preeDispatch?.Invoke(provider, @event);
@@ -77,13 +77,13 @@ namespace SoftUnlimit.CQRS.Event
             //
             // get handler and execute event.
             Type eventType = @event.GetType();
-            List<Task<EventResponse>> eventTasks = new List<Task<EventResponse>>();
+            List<EventResponse> eventTasks = new List<EventResponse>();
 
             IEnumerable<IEventHandler> handlers = GetHandlers(provider, eventType);
             if (handlers?.Any() != true)
             {
                 _logger?.LogDebug("Not fount handler for event: {Event}", eventType);
-                return Task.FromResult(CombinedEventResponse.Empty);
+                return CombinedEventResponse.Empty;
             }
 
 
@@ -99,31 +99,28 @@ namespace SoftUnlimit.CQRS.Event
                     try
                     {
                         var task = (Task<EventResponse>)method.Invoke(handler, new object[] { @event });
-                        var taskResponse = task.ContinueWith(c => {
-                            if (c.Exception != null)
-                                return @event.ErrorResponse(c.Exception.InnerException ?? c.Exception);
-                            return c.Result;
-                        });
-                        eventTasks.Add(taskResponse);
+                        var response = await task;
+
+                        _logger?.LogDebug("Event handler responses: {@Responses}", response);
+                        eventTasks.Add(response);
                     } catch (Exception ex)
                     {
                         var response = @event.ErrorResponse(ex.InnerException ?? ex);
-                        var taskResponse = Task.FromResult(response);
-                        eventTasks.Add(taskResponse);
+                        eventTasks.Add(response);
                     }
                 }
-                return Task.WhenAll(eventTasks).ContinueWith(c =>
-                {
-                    _logger?.LogDebug("Event handler responses: {@Responses}", c.Result);
-                    return new CombinedEventResponse(c.Result);
-                });
+                return new CombinedEventResponse(eventTasks);
             }
             else
                 _logger?.LogDebug("Event cache event is disabled");
 
             foreach (var handler in handlers)
-                eventTasks.Add(((dynamic)handler).HandleAsync((dynamic)@event));
-            return Task.WhenAll(eventTasks).ContinueWith(c => new CombinedEventResponse(c.Result));
+            {
+                EventResponse response = await ((dynamic)handler).HandleAsync((dynamic)@event);
+                eventTasks.Add(response);
+            }
+
+            return new CombinedEventResponse(eventTasks);
         }
 
         #region Static Methods
