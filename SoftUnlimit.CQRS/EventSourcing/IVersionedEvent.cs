@@ -43,7 +43,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="prevState"></param>
         /// <param name="currState"></param>
         /// <param name="body"></param>
-        protected VersionedEvent(Guid id, TKey sourceId, long version, uint serviceId, string workerId, string correlationId, ICommand command, object prevState, object currState, bool isDomainEvent, object body = null)
+        protected VersionedEvent(Guid id, TKey sourceId, long version, uint serviceId, string workerId, string correlationId, object command, object prevState, object currState, bool isDomainEvent, object body = null)
             : base(id, sourceId, serviceId, workerId, correlationId, command, prevState, currState, isDomainEvent, body)
         {
             Version = version;
@@ -66,5 +66,12 @@ namespace SoftUnlimit.CQRS.EventSourcing
         }
         /// <inheritdoc />
         public override IEvent Transform<TDestination>(IMapper mapper) => Transform(mapper, typeof(TDestination));
+    }
+    /// <summary>
+    /// Generic versioned event use to deserialize any kind of event.
+    /// </summary>
+    [Serializable]
+    public sealed class GenericVersionedEvent : Event<object>
+    {
     }
 }

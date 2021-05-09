@@ -30,8 +30,11 @@ namespace SoftUnlimit.CQRS.Event
 
             Id = @event.Id;
 
-            var props = @event.Command?.GetProps<CommandProps>();
-            CommandId = props?.Id ?? Guid.Empty;
+            if (@event.Command is ICommand cmd)
+            {
+                var props = cmd?.GetProps<CommandProps>();
+                CommandId = props?.Id ?? Guid.Empty;
+            }
             CommandType = @event.Command?.GetType()?.AssemblyQualifiedName;
 
             SourceId = @event.SourceId.ToString();

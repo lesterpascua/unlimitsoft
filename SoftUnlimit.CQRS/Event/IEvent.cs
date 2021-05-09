@@ -41,7 +41,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Command where event is originate (fullname).
         /// </summary>
-        ICommand Command { get; }
+        object Command { get; }
         /// <summary>
         /// Previous snapshot in json representation.
         /// </summary>
@@ -99,7 +99,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="currState"></param>
         /// <param name="isDomain"></param>
         /// <param name="body"></param>
-        protected Event(Guid id, TKey sourceId, uint serviceId, string workerId, string correlationId, ICommand command, object prevState, object currState, bool isDomain, object body)
+        protected Event(Guid id, TKey sourceId, uint serviceId, string workerId, string correlationId, object command, object prevState, object currState, bool isDomain, object body)
         {
             Id = id;
             SourceId = sourceId;
@@ -132,7 +132,7 @@ namespace SoftUnlimit.CQRS.Event
         public string Name { get; set; }
 
         /// <inheritdoc />
-        public ICommand Command { get; set; }
+        public object Command { get; set; }
         /// <inheritdoc />
         public object PrevState { get; set; }
         /// <inheritdoc />
@@ -169,5 +169,13 @@ namespace SoftUnlimit.CQRS.Event
         object IEvent.SourceId { get => SourceId; set => SourceId = (TKey)value; }
 
         #endregion
+    }
+
+    /// <summary>
+    /// Generic event use to deserialize any kind of event.
+    /// </summary>
+    [Serializable]
+    public sealed class GenericEvent : Event<object>
+    {
     }
 }

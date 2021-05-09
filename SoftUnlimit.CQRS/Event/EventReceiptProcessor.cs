@@ -19,6 +19,7 @@ namespace SoftUnlimit.CQRS.Event
     {
         private readonly IEventDispatcher _eventDispatcher;
         private readonly IEventNameResolver _resolver;
+        private readonly Action<EventResponse, Exception, bool> _handlerError;
         private readonly ILogger<EventReceiptProcessor> _logger;
 
         private const string ErrMessage = "Error executing event: {Type} with message: {Message}";
@@ -28,21 +29,20 @@ namespace SoftUnlimit.CQRS.Event
         /// </summary>
         /// <param name="eventDispatcher"></param>
         /// <param name="resolver"></param>
+        /// <param name="handlerError"></param>
         /// <param name="logger"></param>
-        public EventReceiptProcessor(IEventDispatcher eventDispatcher, IEventNameResolver resolver, ILogger<EventReceiptProcessor> logger = null)
+        public EventReceiptProcessor(
+            IEventDispatcher eventDispatcher, 
+            IEventNameResolver resolver, 
+            Action<EventResponse, Exception, bool> handlerError = null,
+            ILogger<EventReceiptProcessor> logger = null)
         {
             _eventDispatcher = eventDispatcher;
             _resolver = resolver;
+            _handlerError = handlerError;
             _logger = logger;
         }
 
-        /// <summary>
-        /// Call when exist some error processing events.
-        /// </summary>
-        /// <param name="eventResponse"></param>
-        /// <param name="exception"></param>
-        /// <param name="isCatch">If true indicate this exception was catch. If false there is a know exception.</param>
-        protected virtual void HandleError(EventResponse eventResponse, Exception exception, bool isCatch) { }
         /// <summary>
         /// If this messaje is accept for processing return true, false in other case.
         /// </summary>
@@ -54,7 +54,10 @@ namespace SoftUnlimit.CQRS.Event
         public async Task<bool> Process(MessageEnvelop envelop)
         {
             if (!Accept(envelop))
+            {
+                _logger?.LogInformation("Ignore event: {@Event} of type: {Type} at {Time}", envelop.Messaje, envelop.Type, DateTime.UtcNow);
                 return false;
+            }
 
             IEvent @event;
             CombinedEventResponse response;
@@ -73,15 +76,14 @@ namespace SoftUnlimit.CQRS.Event
                     case MessageType.Json:
                         var jsonMessage = (EventPayload<string>)envelop.Messaje;
                         var eventType = _resolver.Resolver(jsonMessage.EventName);
-                        var (commandType, _) = EventPayload.ResolveType(jsonMessage.CommandType, jsonMessage.BodyType);
 
-                        @event = JsonEventUtility.Deserializer(jsonMessage.Payload, eventType, commandType);
+                        @event = JsonEventUtility.Deserializer(jsonMessage.Payload, eventType);
                         break;
                     default:
                         throw new NotSupportedException($"Envelop type: {envelop.Type} not suported");
                 }
 
-                _logger?.LogDebug("Receive event: {Event} of type: {Type} at {Time} and body: {Body}.", envelop.Messaje, envelop.Type, DateTime.UtcNow, @event.Body);
+                _logger?.LogDebug("Receive event: {@Event} of type: {Type} at {Time} and body: {@Body}.", envelop.Messaje, envelop.Type, DateTime.UtcNow, @event.Body);
                 response = await _eventDispatcher.DispatchEventAsync(@event);
                 if (response?.ErrorEvents?.Any() != true)
                     return true;
@@ -91,12 +93,12 @@ namespace SoftUnlimit.CQRS.Event
                 {
                     var ex = (Exception)err.GetBody();
                     _logger?.LogError(ex, ErrMessage, envelop.MessajeType, envelop.Messaje);
-                    HandleError(err, ex, false);
+                    _handlerError?.Invoke(err, ex, false);
                 }
             } catch (Exception ex)
             {
                 _logger?.LogError(ex, ErrMessage, envelop.MessajeType, envelop.Messaje);
-                HandleError(null, ex, true);
+                _handlerError?.Invoke(null, ex, true);
             }
             return false;
         }

@@ -38,17 +38,15 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         public async Task<TEntity> FindById(string sourceId, long? version = null)
         {
             IQueryable<JsonVersionedEventPayload> query = version.HasValue ?
-                this._queryRepository.Find(p => p.SourceId == sourceId && p.Version == version) :
-                this._queryRepository.Find(p => p.SourceId == sourceId).OrderByDescending(k => k.Version);
+                _queryRepository.Find(p => p.SourceId == sourceId && p.Version == version) :
+                _queryRepository.Find(p => p.SourceId == sourceId).OrderByDescending(k => k.Version);
 
             JsonVersionedEventPayload eventPayload = await query.FirstOrDefaultAsync();
             if (eventPayload == null)
                 return null;
 
             var eventType = _resolver.Resolver(eventPayload.EventName);
-            var (commandType, _) = EventPayload.ResolveType(eventPayload.CommandType, eventPayload.BodyType);
-
-            var @event = (IVersionedEvent)JsonEventUtility.Deserializer(eventPayload.Payload, eventType, commandType);
+            var @event = (IVersionedEvent)JsonEventUtility.Deserializer(eventPayload.Payload, eventType);
 
             return (TEntity)@event.CurrState;
         }

@@ -36,9 +36,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         public override EventPayload<string> Transform(IEventNameResolver resolver, IMapper mapper, Type destination = null)
         {
             var eventType = resolver.Resolver(EventName);
-            var (commandType, _) = ResolveType(CommandType, BodyType);
-
-            var versionedEvent = JsonEventUtility.Deserializer(Payload, eventType, commandType);
+            var versionedEvent = JsonEventUtility.Deserializer(Payload, eventType);
             if (destination == null)
             {
                 var versionedEventType = versionedEvent.GetType();

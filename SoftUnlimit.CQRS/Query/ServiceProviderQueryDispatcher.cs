@@ -1,18 +1,15 @@
 ﻿using FluentValidation;
 using FluentValidation.Results;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Query.Internal;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.CQRS.Query.Compliance;
-using SoftUnlimit.CQRS.Specification;
+using SoftUnlimit.CQRS.Query.Validation;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SoftUnlimit.CQRS.Query
@@ -25,6 +22,7 @@ namespace SoftUnlimit.CQRS.Query
         private readonly IServiceProvider _provider;
         private readonly bool _validate;
         private readonly string _invalidArgumendText;
+        private readonly ILogger<ServiceProviderQueryDispatcher> _logger;
         private readonly Func<IList<ValidationFailure>, IDictionary<string, IEnumerable<string>>> _errorTransforms;
 
 
@@ -36,43 +34,86 @@ namespace SoftUnlimit.CQRS.Query
         /// <param name="useCache"></param>
         /// <param name="errorTransforms"></param>
         /// <param name="invalidArgumendText"></param>
+        /// <param name="logger"></param>
         public ServiceProviderQueryDispatcher(IServiceProvider provider, bool validate = true, bool useCache = true,
-            Func<IList<ValidationFailure>, IDictionary<string, IEnumerable<string>>> errorTransforms = null, string invalidArgumendText = null)
+            Func<IList<ValidationFailure>, IDictionary<string, IEnumerable<string>>> errorTransforms = null, string invalidArgumendText = null, 
+            ILogger<ServiceProviderQueryDispatcher> logger = null
+        )
             : base(useCache)
         {
             _provider = provider;
             _validate = validate;
-            _errorTransforms = errorTransforms;
+            _errorTransforms = errorTransforms ?? ServiceProviderCommandDispatcher.DefaultErrorTransforms;
             _invalidArgumendText = invalidArgumendText;
+            _logger = logger;
         }
 
         /// <summary>
         /// 
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
-        /// <param name="args"></param>
+        /// <param name="query"></param>
         /// <returns></returns>
-        public async Task<QueryResponse> DispatchAsync<TResult>(IQuery args)
+        public async Task<QueryResponse> DispatchAsync<TResult>(IQuery query)
         {
-            Type queryType = args.GetType();
+            Type queryType = query.GetType();
             Type entityType = typeof(TResult);
 
             if (_validate)
             {
-                var errors = await ValidateAsync(_provider, args, ServiceProviderCommandDispatcher.DefaultErrorTransforms);
+                var errors = await ValidateAsync(_provider, query, _errorTransforms);
                 if (errors != null)
-                    return args.BadResponse(errors, _invalidArgumendText);
+                    return query.BadResponse(errors, _invalidArgumendText);
             }
             //
             // before execute query search if has compliance and executed
-            var response = await CheckAndExecuteQueryComplianceAsync(_provider, args);
+            var response = await CheckAndExecuteQueryComplianceAsync(_provider, query);
             if (response?.IsSuccess == false)
                 return response;
 
+            _logger?.LogDebug("Execute Query type: {Type}", queryType);
             var handler = GetQueryHandler(_provider, entityType, queryType);
-            TResult result = await ExecuteHandlerForQueryAsync<TResult>(handler, args, queryType, UseCache);
 
-            return args.OkResponse(result);
+            #region Verify if query implement internal validation
+            if (handler is IQueryHandlerValidator QueryHandlerValidator)
+            {
+                _logger?.LogDebug("Query handler implement internal validation");
+
+                var validatorType = typeof(QueryValidator<>).MakeGenericType(queryType);
+                IValidator validator = (IValidator)Activator.CreateInstance(validatorType);
+                validator = QueryHandlerValidator.BuildValidator(validator);
+
+                var valContext = new ValidationContext<IQuery>(query);
+                var errors = await validator.ValidateAsync(valContext);
+
+                _logger?.LogDebug("Evaluate validator process result: {@Errors}", errors);
+                if (errors?.IsValid == false)
+                {
+                    if (_errorTransforms == null)
+                        return query.BadResponse(errors.Errors, _invalidArgumendText);
+                    return query.BadResponse(_errorTransforms(errors.Errors), _invalidArgumendText);
+                }
+            }
+            else
+                _logger?.LogDebug("Query not handler implement internal validation");
+            #endregion
+
+            #region Verify if Query implement internal compliance
+            if (handler is IQueryHandlerCompliance queryHandlerCompliance)
+            {
+                _logger?.LogDebug("Query handler implement internal compliance");
+
+                response = await queryHandlerCompliance.HandleComplianceAsync(query);
+                if (!response.IsSuccess)
+                    return response;
+            }
+            else
+                _logger?.LogDebug("Query not handler implement internal compliance");
+            #endregion
+
+            TResult result = await ExecuteHandlerForQueryAsync<TResult>(handler, query, queryType, UseCache);
+
+            return query.OkResponse(result);
         }
 
         /// <summary>
@@ -107,46 +148,46 @@ namespace SoftUnlimit.CQRS.Query
         /// <returns></returns>
         public static async Task<QueryResponse> CheckAndExecuteQueryComplianceAsync(IServiceProvider provider, IQuery args)
         {
-            Type commandType = args.GetType();
-            Type commandComplianceType = typeof(IQueryCompliance<>).MakeGenericType(commandType);
+            Type QueryType = args.GetType();
+            Type QueryComplianceType = typeof(IQueryCompliance<>).MakeGenericType(QueryType);
 
-            IQueryCompliance queryCompliance = (IQueryCompliance)provider.GetService(commandComplianceType);
+            IQueryCompliance queryCompliance = (IQueryCompliance)provider.GetService(QueryComplianceType);
             if (queryCompliance != null)
                 return await queryCompliance.ExecuteAsync(args);
             return null;
         }
 
         /// <summary>
-        /// Register CommandCompliance in DPI.
+        /// Register QueryCompliance in DPI.
         /// </summary>
         /// <param name="services"></param>
-        /// <param name="queryComplianceInterface">Interface used to register tha binding between CommandCompliance and command.</param>
+        /// <param name="queryComplianceInterface">Interface used to register tha binding between QueryCompliance and Query.</param>
         /// <param name="complianceAssembly"></param>
         public static void RegisterQueryCompliance(IServiceCollection services, Type queryComplianceInterface, IEnumerable<Assembly> complianceAssembly)
         {
-            List<Type> existCommandCompliance = new List<Type>();
+            List<Type> existQueryCompliance = new List<Type>();
             foreach (var assembly in complianceAssembly)
             {
                 var query = assembly
                     .GetTypes()
                     .Where(p => p.IsClass && p.IsAbstract == false && p.GetInterfaces().Contains(typeof(IQueryCompliance)));
-                existCommandCompliance.AddRange(query);
+                existQueryCompliance.AddRange(query);
             }
 
-            foreach (var commandComplianceImplementation in existCommandCompliance)
+            foreach (var QueryComplianceImplementation in existQueryCompliance)
             {
-                var commandComplianceImplementedInterfaces = commandComplianceImplementation.GetInterfaces()
+                var QueryComplianceImplementedInterfaces = QueryComplianceImplementation.GetInterfaces()
                     .Where(p =>
                         p.IsGenericType &&
                         p.GetGenericArguments().Length == 1 &&
                         p.GetGenericTypeDefinition() == queryComplianceInterface);
 
-                foreach (var complianceInterface in commandComplianceImplementedInterfaces)
+                foreach (var complianceInterface in QueryComplianceImplementedInterfaces)
                 {
-                    var commandType = complianceInterface.GetGenericArguments().Single();
-                    var wellKnowCommandComplianceInterface = typeof(IQueryCompliance<>).MakeGenericType(commandType);
+                    var QueryType = complianceInterface.GetGenericArguments().Single();
+                    var wellKnowQueryComplianceInterface = typeof(IQueryCompliance<>).MakeGenericType(QueryType);
 
-                    services.AddScoped(wellKnowCommandComplianceInterface, commandComplianceImplementation);
+                    services.AddScoped(wellKnowQueryComplianceInterface, QueryComplianceImplementation);
                 }
             }
         }

@@ -124,7 +124,7 @@ namespace SoftUnlimit.CQRS.Command
             {
                 _logger?.LogDebug("Command handler implement internal validation");
 
-                var validatorType = typeof(CommandValidator<>).MakeGenericType(command.GetType());
+                var validatorType = typeof(CommandValidator<>).MakeGenericType(commandType);
                 IValidator validator = (IValidator)Activator.CreateInstance(validatorType);
                 validator = commandHandlerValidator.BuildValidator(validator);
 
