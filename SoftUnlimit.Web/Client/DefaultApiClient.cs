@@ -25,9 +25,13 @@ namespace SoftUnlimit.Web.Client
         /// <param name="baseUrl"></param>
         public DefaultApiClient(HttpClient httpClient, string baseUrl = null)
         {
-            this._httpClient = httpClient;
+            _httpClient = httpClient;
             if (!string.IsNullOrEmpty(baseUrl))
+            {
+                if (baseUrl[baseUrl.Length - 1] != '/')
+                    baseUrl += '/';
                 httpClient.BaseAddress = new Uri(baseUrl);
+            }
         }
 
         /// <summary>
@@ -35,6 +39,8 @@ namespace SoftUnlimit.Web.Client
         /// </summary>
         public HttpClient HttpClient => _httpClient;
 
+        /// <inheritdoc />
+        public void Dispose() => HttpClient.Dispose();
         /// <inheritdoc/>
         public async Task<(TModel, HttpStatusCode)> SendAsync<TModel>(HttpMethod method, string uri, Action<HttpRequestMessage> setup = null, object model = null)
         {

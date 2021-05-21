@@ -14,8 +14,13 @@ namespace SoftUnlimit.Web.Client
     /// <summary>
     /// 
     /// </summary>
-    public interface IApiClient
+    public interface IApiClient : IDisposable
     {
+        /// <summary>
+        /// Get internal http client resource.
+        /// </summary>
+        HttpClient HttpClient { get; }
+
         /// <summary>
         /// 
         /// </summary>

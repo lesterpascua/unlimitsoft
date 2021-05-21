@@ -47,5 +47,19 @@ namespace SoftUnlimit.Web.Client
         /// </summary>
         /// <returns></returns>
         public Dictionary<string, string[]> GetStandardErrors() => _stdErrorCache ??= JsonConvert.DeserializeObject<Dictionary<string, string[]>>(Body);
+
+        /// <inheritdoc />
+        public override string ToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            var message = Message.Replace(Environment.NewLine, $"{Environment.NewLine}   ");
+
+            sb.AppendLine("Message: ").Append("   ").AppendLine(message);
+            sb.AppendLine("StackTrace: ").AppendLine(StackTrace);
+
+            if (!string.IsNullOrEmpty(Body))
+                sb.AppendLine("Body: ").Append("   ").AppendLine(Body);
+            return sb.ToString();
+        }
     }
 }

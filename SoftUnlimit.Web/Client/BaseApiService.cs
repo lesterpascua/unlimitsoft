@@ -9,7 +9,7 @@ namespace SoftUnlimit.Web.Client
     /// <summary>
     /// 
     /// </summary>
-    public abstract class BaseApiService : IApiService
+    public abstract class BaseApiService : IApiService, IDisposable
     {
         /// <summary>
         /// 
@@ -31,6 +31,9 @@ namespace SoftUnlimit.Web.Client
             Cache = cache;
             CacheItemPolicy = cacheItemPolicy;
         }
+
+        /// <inheritdoc />
+        public void Dispose() => ApiClient.Dispose();
 
         /// <summary>
         /// 
@@ -109,5 +112,6 @@ namespace SoftUnlimit.Web.Client
             var result = await func();
             return AddDataToCache(result);
         }
+
     }
 }
