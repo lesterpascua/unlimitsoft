@@ -10,6 +10,7 @@ namespace SoftUnlimit.CQRS.Command.Validation
     /// <summary>
     /// 
     /// </summary>
+    [Obsolete("ICommandHandlerValidator")]
     public interface ICommandSharedCache
     {
         /// <summary>
@@ -27,6 +28,7 @@ namespace SoftUnlimit.CQRS.Command.Validation
     /// Wrap command into object to allow capability to share cache between all command processor flow. Validation, Compliance, Handling.
     /// </summary>
     /// <typeparam name="TCommand"></typeparam>
+    [Obsolete("ICommandHandlerValidator")]
     public class CommandSharedCache<TCommand> : ICommandSharedCache
         where TCommand : ICommand
     {

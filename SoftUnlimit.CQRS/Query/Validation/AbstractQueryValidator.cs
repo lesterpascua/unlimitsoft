@@ -9,6 +9,7 @@ namespace SoftUnlimit.CQRS.Query.Validation
     /// Base class for validate all query if data of command is correct. 
     /// </summary>
     /// <typeparam name="TQuery"></typeparam>
+    [Obsolete("IQueryHandlerValidator")]
     public abstract class AbstractQueryValidator<TQuery> : AbstractValidator<TQuery>
         where TQuery : IQuery
     {

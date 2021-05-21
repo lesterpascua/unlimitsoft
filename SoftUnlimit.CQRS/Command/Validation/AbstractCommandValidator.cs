@@ -9,6 +9,7 @@ namespace SoftUnlimit.CQRS.Command.Validation
     /// Base class for validate all command if data of command is correct. 
     /// </summary>
     /// <typeparam name="TCommand"></typeparam>
+    [Obsolete("ICommandHandlerValidator")]
     public abstract class AbstractCommandValidator<TCommand> : AbstractValidator<CommandSharedCache<TCommand>>
         where TCommand : ICommand
     {

@@ -7,6 +7,7 @@ namespace SoftUnlimit.CQRS.Command.Validation
     /// <summary>
     /// Attribute to set the cache type used by the command in validation process.
     /// </summary>
+    [Obsolete("ICommandHandlerValidator")]
     [AttributeUsage(AttributeTargets.Class)]
     public sealed class CacheTypeAttribute : Attribute
     {
