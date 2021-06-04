@@ -30,7 +30,7 @@ namespace SoftUnlimit.Data.MongoDb
             return EntityState.Added;
         }
         public void AddRange(params TEntity[] entities) => _repository.InsertMany(_session, entities);
-        public Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default) => _repository.InsertManyAsync(_session, entities, null, cancellationToken);
+        public async Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default) => await _repository.InsertManyAsync(_session, entities, null, cancellationToken);
 
         public EntityState Remove(TEntity entity)
         {

@@ -21,9 +21,11 @@ namespace SoftUnlimit.CQRS.Query
         /// </summary>
         /// <param name="dispatcher"></param>
         /// <returns></returns>
-        public Task<(QueryResponse, TResult)> ExecuteAsync(IQueryDispatcher dispatcher) 
-            => dispatcher.DispatchAsync<TResult>(this).ContinueWith(c => (c.Result, c.Result.IsSuccess ? c.Result.GetBody<TResult>() : default));
-
+        public async Task<(QueryResponse, TResult)> ExecuteAsync(IQueryDispatcher dispatcher)
+        {
+            var response = await dispatcher.DispatchAsync<TResult>(this);
+            return (response, response.IsSuccess ? response.GetBody<TResult>() : default);
+        }
         /// <summary>
         /// Return metadata props associate with the query.
         /// </summary>

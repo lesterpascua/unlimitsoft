@@ -38,6 +38,6 @@ namespace SoftUnlimit.Data.EntityFramework
         /// </summary>
         /// <param name="keyValues"></param>
         /// <returns></returns>
-        public ValueTask<TEntity> FindAsync(params object[] keyValues) => this.DbContext.Set<TEntity>().FindAsync(keyValues);
+        public async ValueTask<TEntity> FindAsync(params object[] keyValues) => await DbContext.Set<TEntity>().FindAsync(keyValues);
     }
 }

@@ -49,12 +49,12 @@ namespace SoftUnlimit.Data.EntityFramework
         /// 
         /// </summary>
         /// <returns></returns>
-        public Task TransactionCommitAsync() => DbContext.Database.CurrentTransaction.CommitAsync();
+        public async Task TransactionCommitAsync() => await DbContext.Database.CurrentTransaction.CommitAsync();
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
-        public Task TransactionRollbackAsync() => DbContext.Database.CurrentTransaction.RollbackAsync();
+        public async Task TransactionRollbackAsync() => await DbContext.Database.CurrentTransaction.RollbackAsync();
         /// <summary>
         /// 
         /// </summary>

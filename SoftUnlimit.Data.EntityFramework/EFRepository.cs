@@ -67,7 +67,7 @@ namespace SoftUnlimit.Data.EntityFramework
         /// <param name="entities"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        public Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default) => DbContext.Set<TEntity>().AddRangeAsync(entities, cancellationToken);
+        public async Task AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken cancellationToken = default) => await DbContext.Set<TEntity>().AddRangeAsync(entities, cancellationToken);
         /// <summary>
         /// 
         /// </summary>

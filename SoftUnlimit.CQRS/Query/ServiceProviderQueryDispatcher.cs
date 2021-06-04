@@ -203,14 +203,14 @@ namespace SoftUnlimit.CQRS.Query
 
             return queryHandler;
         }
-        private static Task<TEntity> ExecuteHandlerForQueryAsync<TEntity>(IQueryHandler handler, IQuery args, Type queryType, bool useCache)
+        private static async Task<TEntity> ExecuteHandlerForQueryAsync<TEntity>(IQueryHandler handler, IQuery args, Type queryType, bool useCache)
         {
             if (useCache)
             {
                 var method = GetFromCache(queryType, handler, true);
-                return (Task<TEntity>)method.Invoke(handler, new object[] { args });
+                return await (Task<TEntity>)method.Invoke(handler, new object[] { args });
             }
-            return ((dynamic)handler).HandlerAsync((dynamic)args);
+            return await ((dynamic)handler).HandlerAsync((dynamic)args);
         }
         
         #endregion
