@@ -48,9 +48,6 @@ namespace SoftUnlimit.CQRS.Event
             EventName = @event.Name;
             IsDomain = @event.IsDomainEvent;
 
-            IsStartAction = @event is IStartActionEvent;
-            IsFinalAction = @event is IFinalActionEvent;
-
             Created = @event.Created;
             IsPubliched = false;
 
@@ -96,15 +93,6 @@ namespace SoftUnlimit.CQRS.Event
         /// Event unique name.
         /// </summary>
         public string EventName { get; set; }
-
-        /// <summary>
-        /// This event is the first event in action it's generate directly by a command.
-        /// </summary>
-        public bool IsStartAction { get; set; }
-        /// <summary>
-        /// This event is the final event in action can generate response.
-        /// </summary>
-        public bool IsFinalAction { get; set; }
 
         /// <summary>
         /// 

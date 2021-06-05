@@ -8,6 +8,7 @@ namespace SoftUnlimit.CQRS.Event
     /// <summary>
     /// Indicate this is a final event in saga process.
     /// </summary>
+    [Obsolete]
     public interface IFinalActionEvent : IEvent
     {
         /// <summary>

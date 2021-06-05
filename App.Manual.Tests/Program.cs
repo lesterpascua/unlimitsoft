@@ -2,17 +2,13 @@
 using App.Manual.Tests.CQRS;
 using App.Manual.Tests.CQRS.Configuration;
 using App.Manual.Tests.CQRS.Events;
-using App.Manual.Tests.CQRS.Query;
 using App.Manual.Tests.CQRS.Seed;
 using App.Manual.Tests.MongoDb;
 using AutoMapper;
 using Chronicle;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using MongoDB.Bson;
-using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Driver;
 using SoftUnlimit.AutoMapper;
 using SoftUnlimit.CQRS.Command;
@@ -23,26 +19,19 @@ using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.CQRS.EventSourcing.Json;
 using SoftUnlimit.CQRS.Query;
-using SoftUnlimit.CQRS.Query.Compliance;
 using SoftUnlimit.Data;
 using SoftUnlimit.Data.EntityFramework;
 using SoftUnlimit.Data.EntityFramework.DependencyInjection;
 using SoftUnlimit.Data.EntityFramework.Utility;
 using SoftUnlimit.Data.MongoDb;
-using SoftUnlimit.Data.Reflection;
 using SoftUnlimit.Security;
 using SoftUnlimit.Security.Cryptography;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Linq.Expressions;
-using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Threading.Tasks.Dataflow;
-using Microsoft.Extensions.Logging;
 
 namespace SoftUnlimit.CQRS.Test
 {
@@ -161,12 +150,16 @@ namespace SoftUnlimit.CQRS.Test
     {
         public static async Task Main()
         {
-            DefaultEventCommandResolver r = new DefaultEventCommandResolver(new Dictionary<string, Type> { { "asd", typeof(string) } });
-            var type = r.Resolver("ss");
+            //long version = 0;
+            //var aa = Interlocked.Increment(ref version);
 
 
-            string payload = "{\"Version\":0,\"Id\":\"00394c53-4cbd-b4c9-2431-50ff03000000\",\"SourceId\":\"00394608-290c-2823-2431-50ff03000000\",\"ServiceId\":2,\"WorkerId\":\"AAP/UDEk\",\"Created\":\"2021-02-08T15:50:32.6020993Z\",\"Name\":\"JNGroup.OneJN.Account.Domain.Command.Email.Events.EmailUpdateEvent\",\"Command\":{\"Email\":\"yhynyny@1145879632541\",\"SendCode\":false,\"SendCodeInResponse\":null,\"CommandProps\":{\"User\":{\"Id\":\"00394608-290c-2823-2431-50ff03000000\",\"FirstName\":\"Anisley\",\"LastName\":\"Suarez\",\"ClientId\":\"interactive\",\"Email\":\"anisley@generalsoftwareinc.com\",\"EmailVerified\":true,\"Phone\":\"+5354177943\",\"PhoneVerified\":true,\"IsProfileActive\":true,\"Role\":\"user,admin\"},\"Id\":\"00394c53-4ca2-0aca-2431-50ff03000000\",\"Name\":\"JNGroup.OneJN.Account.Domain.Command.Email.EmailUpdateCommand\",\"Silent\":false}},\"PrevState\":{\"FistName\":\"Anisley\",\"LastName\":\"Suarez\",\"IdentificationConfirmed\":true,\"TrnConfirmed\":true,\"AddressConfirmed\":true,\"ProfileConfirmed\":true,\"IsProfileActive\":true,\"Version\":-1,\"UserRoles\":null,\"UserMarketings\":null,\"Id\":\"00394608-290c-2823-2431-50ff03000000\",\"UserName\":\"anisley.suarez\",\"NormalizedUserName\":\"ANISLEY.SUAREZ\",\"Email\":\"anisley@generalsoftwareinc.com\",\"NormalizedEmail\":\"ANISLEY@GENERALSOFTWAREINC.COM\",\"EmailConfirmed\":true,\"PasswordHash\":\"AQAAAAEAACcQAAAAEMpAB32X64fDbJY9DCcDvPTgKXB7kJmQPTSYQC51T4NWl+YeTgPqLiCagDNlaMNdhQ==\",\"SecurityStamp\":\"AZYXEMBHCCNMNSAWFXGLUSSFJ52SVUHW\",\"ConcurrencyStamp\":\"b90173b7-f45b-4385-9ba1-479fdcfcc2d5\",\"PhoneNumber\":\"+5354177943\",\"PhoneNumberConfirmed\":true,\"TwoFactorEnabled\":true,\"LockoutEnd\":\"2021-02-04T19:18:40.1293851+00:00\",\"LockoutEnabled\":true,\"AccessFailedCount\":0},\"CurrState\":{\"FistName\":\"Anisley\",\"LastName\":\"Suarez\",\"IdentificationConfirmed\":true,\"TrnConfirmed\":true,\"AddressConfirmed\":true,\"ProfileConfirmed\":true,\"IsProfileActive\":false,\"Version\":0,\"UserRoles\":null,\"UserMarketings\":null,\"Id\":\"00394608-290c-2823-2431-50ff03000000\",\"UserName\":\"anisley.suarez\",\"NormalizedUserName\":\"ANISLEY.SUAREZ\",\"Email\":\"yhynyny@1145879632541\",\"NormalizedEmail\":\"YHYNYNY@1145879632541\",\"EmailConfirmed\":false,\"PasswordHash\":\"AQAAAAEAACcQAAAAEMpAB32X64fDbJY9DCcDvPTgKXB7kJmQPTSYQC51T4NWl+YeTgPqLiCagDNlaMNdhQ==\",\"SecurityStamp\":\"AZYXEMBHCCNMNSAWFXGLUSSFJ52SVUHW\",\"ConcurrencyStamp\":\"a3befe1d-96fb-4095-b71a-7e58d510ae49\",\"PhoneNumber\":\"+5354177943\",\"PhoneNumberConfirmed\":true,\"TwoFactorEnabled\":true,\"LockoutEnd\":\"2021-02-04T19:18:40.1293851+00:00\",\"LockoutEnabled\":true,\"AccessFailedCount\":0},\"IsDomainEvent\":false,\"Body\":null,\"CorrelationId\":\"8000b3f2-0002-ed00-b63f-84710c7967bb\"}";
-            var @event = JsonEventUtility.Deserializer(payload, typeof(EmailUpdateEvent));
+            //DefaultEventCommandResolver r = new DefaultEventCommandResolver(new Dictionary<string, Type> { { "asd", typeof(string) } });
+            //var type = r.Resolver("ss");
+
+
+            //string payload = "{\"Version\":0,\"Id\":\"00394c53-4cbd-b4c9-2431-50ff03000000\",\"SourceId\":\"00394608-290c-2823-2431-50ff03000000\",\"ServiceId\":2,\"WorkerId\":\"AAP/UDEk\",\"Created\":\"2021-02-08T15:50:32.6020993Z\",\"Name\":\"JNGroup.OneJN.Account.Domain.Command.Email.Events.EmailUpdateEvent\",\"Command\":{\"Email\":\"yhynyny@1145879632541\",\"SendCode\":false,\"SendCodeInResponse\":null,\"CommandProps\":{\"User\":{\"Id\":\"00394608-290c-2823-2431-50ff03000000\",\"FirstName\":\"Anisley\",\"LastName\":\"Suarez\",\"ClientId\":\"interactive\",\"Email\":\"anisley@generalsoftwareinc.com\",\"EmailVerified\":true,\"Phone\":\"+5354177943\",\"PhoneVerified\":true,\"IsProfileActive\":true,\"Role\":\"user,admin\"},\"Id\":\"00394c53-4ca2-0aca-2431-50ff03000000\",\"Name\":\"JNGroup.OneJN.Account.Domain.Command.Email.EmailUpdateCommand\",\"Silent\":false}},\"PrevState\":{\"FistName\":\"Anisley\",\"LastName\":\"Suarez\",\"IdentificationConfirmed\":true,\"TrnConfirmed\":true,\"AddressConfirmed\":true,\"ProfileConfirmed\":true,\"IsProfileActive\":true,\"Version\":-1,\"UserRoles\":null,\"UserMarketings\":null,\"Id\":\"00394608-290c-2823-2431-50ff03000000\",\"UserName\":\"anisley.suarez\",\"NormalizedUserName\":\"ANISLEY.SUAREZ\",\"Email\":\"anisley@generalsoftwareinc.com\",\"NormalizedEmail\":\"ANISLEY@GENERALSOFTWAREINC.COM\",\"EmailConfirmed\":true,\"PasswordHash\":\"AQAAAAEAACcQAAAAEMpAB32X64fDbJY9DCcDvPTgKXB7kJmQPTSYQC51T4NWl+YeTgPqLiCagDNlaMNdhQ==\",\"SecurityStamp\":\"AZYXEMBHCCNMNSAWFXGLUSSFJ52SVUHW\",\"ConcurrencyStamp\":\"b90173b7-f45b-4385-9ba1-479fdcfcc2d5\",\"PhoneNumber\":\"+5354177943\",\"PhoneNumberConfirmed\":true,\"TwoFactorEnabled\":true,\"LockoutEnd\":\"2021-02-04T19:18:40.1293851+00:00\",\"LockoutEnabled\":true,\"AccessFailedCount\":0},\"CurrState\":{\"FistName\":\"Anisley\",\"LastName\":\"Suarez\",\"IdentificationConfirmed\":true,\"TrnConfirmed\":true,\"AddressConfirmed\":true,\"ProfileConfirmed\":true,\"IsProfileActive\":false,\"Version\":0,\"UserRoles\":null,\"UserMarketings\":null,\"Id\":\"00394608-290c-2823-2431-50ff03000000\",\"UserName\":\"anisley.suarez\",\"NormalizedUserName\":\"ANISLEY.SUAREZ\",\"Email\":\"yhynyny@1145879632541\",\"NormalizedEmail\":\"YHYNYNY@1145879632541\",\"EmailConfirmed\":false,\"PasswordHash\":\"AQAAAAEAACcQAAAAEMpAB32X64fDbJY9DCcDvPTgKXB7kJmQPTSYQC51T4NWl+YeTgPqLiCagDNlaMNdhQ==\",\"SecurityStamp\":\"AZYXEMBHCCNMNSAWFXGLUSSFJ52SVUHW\",\"ConcurrencyStamp\":\"a3befe1d-96fb-4095-b71a-7e58d510ae49\",\"PhoneNumber\":\"+5354177943\",\"PhoneNumberConfirmed\":true,\"TwoFactorEnabled\":true,\"LockoutEnd\":\"2021-02-04T19:18:40.1293851+00:00\",\"LockoutEnabled\":true,\"AccessFailedCount\":0},\"IsDomainEvent\":false,\"Body\":null,\"CorrelationId\":\"8000b3f2-0002-ed00-b63f-84710c7967bb\"}";
+            //var @event = JsonEventUtility.Deserializer(payload, typeof(EmailUpdateEvent));
             await MainCQRS();
         }
 

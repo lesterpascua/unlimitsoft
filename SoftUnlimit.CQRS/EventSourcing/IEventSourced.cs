@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.Design;
 using System.Text;
+using System.Threading;
 
 namespace SoftUnlimit.CQRS.EventSourcing
 {
@@ -39,6 +40,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
     /// </remarks>
     public abstract class EventSourced<TKey> : AggregateRoot<TKey>, IEventSourced
     {
+        private long _version;
         private readonly List<IVersionedEvent> _versionedEvents;
 
 
@@ -47,7 +49,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// </summary>
         protected EventSourced()
         {
-            Version = -1;
+            _version = -1;
             _versionedEvents = new List<IVersionedEvent>();
         }
 
@@ -56,9 +58,9 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <summary>
         /// Gets the entity's version. As the entity is being updated and events being generated, the version is incremented.
         /// </summary>
-        public long Version
+        public long Version 
         {
-            get; set;
+            get => _version; set => _version = value;
         }
 
         /// <summary>
@@ -72,6 +74,43 @@ namespace SoftUnlimit.CQRS.EventSourcing
         public IReadOnlyCollection<IVersionedEvent> GetVersionedEvents() => _versionedEvents;
 
         /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="event"></param>
+        protected void AddVersionedEvent(IVersionedEvent @event) => _versionedEvents.Add(@event);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="eventType"></param>
+        /// <param name="eventId"></param>
+        /// <param name="serviceId"></param>
+        /// <param name="workerId">Worker identifier. Can't be null.</param>
+        /// <param name="correlationId">Correlation identifier to trace the events.</param>
+        /// <param name="command"></param>
+        /// <param name="prevState"></param>
+        /// <param name="currState"></param>
+        /// <param name="isDomain"></param>
+        /// <param name="body"></param>
+        protected void AddVersionedEvent(Type eventType, Guid eventId, uint serviceId, string workerId, string correlationId, ICommand command, object prevState, object currState = null, bool isDomain = false, object body = null)
+        {
+            var tmp = EventFactory(
+                eventType,
+                eventId,
+                this.Id,
+                Interlocked.Increment(ref _version),
+                serviceId,
+                workerId,
+                correlationId,
+                command,
+                prevState,
+                currState,
+                isDomain,
+                body
+            );
+            AddVersionedEvent(tmp);
+        }
+
+        /// <summary>
         /// Add event asociate with the command and adding to the event list. Every time added a new event the version of entity increment in one.
         /// </summary>
         /// <param name="eventId">Event identifier.</param>
@@ -83,22 +122,26 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="isDomain"></param>
         /// <param name="prevState">Previous entity snapshot.</param>
         /// <param name="body"></param>
-        protected IVersionedEvent AddMasterEvent(Guid eventId, uint serviceId, string workerId, string correlationId, ICommand command, object prevState, object currState = null, bool isDomain = false, object body = null)
+        protected IEnumerable<IVersionedEvent> AddMasterEvent(Guid eventId, uint serviceId, string workerId, string correlationId, ICommand command, object prevState, object currState = null, bool isDomain = false, object body = null)
         {
-            IVersionedEvent @event = null;
-            Type eventType = command.GetMasterEvent();
-            if (eventType != null)
-            {
-                @event = EventFactory(eventType, eventId, Id, ++Version, serviceId, workerId, correlationId, command, prevState, currState, isDomain, body);
-                AddVersionedEvent(@event);
-            }
-            return @event;
+            var events = AddMasterEvent(
+                EventFactory,
+                AddVersionedEvent,
+                Id,
+                ref _version,
+                eventId,
+                serviceId,
+                workerId,
+                correlationId,
+                command,
+                prevState,
+                currState,
+                isDomain,
+                body
+            );
+            return events;
         }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="event"></param>
-        protected void AddVersionedEvent(IVersionedEvent @event) => _versionedEvents.Add(@event);
+
         /// <summary>
         /// Create versioned event factory
         /// </summary>
@@ -117,6 +160,69 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <returns></returns>
         protected virtual IVersionedEvent EventFactory(Type eventType, Guid eventId, TKey sourceId, long version, uint serviceId, string workerId, string correlationId, ICommand creator, object prevState, object currState, bool isDomain, object body) => (IVersionedEvent)Activator.CreateInstance(eventType, eventId, sourceId, version, serviceId, workerId, correlationId, creator, prevState, currState, isDomain, body);
 
+        #endregion
+
+        #region Static Properties
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="eventFactory"></param>
+        /// <param name="addVersionedEvent"></param>
+        /// <param name="sourceId"></param>
+        /// <param name="version"></param>
+        /// <param name="eventId"></param>
+        /// <param name="serviceId"></param>
+        /// <param name="workerId">Worker identifier. Can't be null.</param>
+        /// <param name="correlationId">Correlation identifier to trace the events.</param>
+        /// <param name="command"></param>
+        /// <param name="prevState"></param>
+        /// <param name="currState"></param>
+        /// <param name="isDomain"></param>
+        /// <param name="body"></param>
+        /// <returns></returns>
+        public static IEnumerable<IVersionedEvent> AddMasterEvent(
+            Func<Type, Guid, TKey, long, uint, string, string, ICommand, object, object, bool, object, IVersionedEvent> eventFactory,
+            Action<IVersionedEvent> addVersionedEvent,
+            TKey sourceId,
+            ref long version,
+            Guid eventId,
+            uint serviceId,
+            string workerId,
+            string correlationId,
+            ICommand command,
+            object prevState,
+            object currState = null,
+            bool isDomain = false,
+            object body = null
+        )
+        {
+            var events = new List<IVersionedEvent>();
+            var eventTypes = command.GetMasterEvent();
+            if (eventTypes != null)
+            {
+                foreach (var eventType in eventTypes)
+                {
+                    var tmp = eventFactory(
+                        eventType, 
+                        eventId, 
+                        sourceId, 
+                        Interlocked.Increment(ref version), 
+                        serviceId, 
+                        workerId, 
+                        correlationId, 
+                        command, 
+                        prevState, 
+                        currState, 
+                        isDomain, 
+                        body
+                    );
+                    addVersionedEvent(tmp);
+
+                    events.Add(tmp);
+                }
+            }
+            return events;
+        }
         #endregion
     }
 }

@@ -30,13 +30,13 @@ namespace SoftUnlimit.CQRS.Command
         /// </summary>
         /// <param name="command"></param>
         /// <returns></returns>
-        public static Type GetMasterEvent(this ICommand command)
+        public static IEnumerable<Type> GetMasterEvent(this ICommand command)
         {
-            MasterEventAttribute attr = (MasterEventAttribute)command.GetType()
-                .GetCustomAttributes(typeof(MasterEventAttribute), false)
-                .FirstOrDefault();
+            var attr = command.GetType()
+                .GetCustomAttributes(typeof(MasterEventAttribute), true)
+                .Cast< MasterEventAttribute>();
 
-            return attr?.EventType;
+            return attr?.Select(s => s.EventType);
         }
 
         /// <summary>
