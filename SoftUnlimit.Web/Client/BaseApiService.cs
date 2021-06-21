@@ -32,7 +32,7 @@ namespace SoftUnlimit.Web.Client
             ApiClient = apiClient;
             Cache = cache;
             CacheItemPolicy = cacheItemPolicy;
-            if (!ignorePrevCache)
+            if (!ignorePrevCache && CacheItemPolicy != null)
                 CacheItemPolicy.RemovedCallback = (arguments) =>
                 {
                     if (arguments.RemovedReason == CacheEntryRemovedReason.Expired)
