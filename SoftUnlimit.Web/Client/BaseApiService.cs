@@ -11,6 +11,7 @@ namespace SoftUnlimit.Web.Client
     /// </summary>
     public abstract class BaseApiService : IApiService, IDisposable
     {
+
         /// <summary>
         /// 
         /// </summary>
@@ -25,12 +26,24 @@ namespace SoftUnlimit.Web.Client
         /// <param name="apiClient"></param>
         /// <param name="cache"></param>
         /// <param name="cacheItemPolicy"></param>
-        protected BaseApiService(IApiClient apiClient, ObjectCache cache, CacheItemPolicy cacheItemPolicy)
+        /// <param name="ignorePrevCache"></param>
+        protected BaseApiService(IApiClient apiClient, ObjectCache cache, CacheItemPolicy cacheItemPolicy, bool ignorePrevCache = false)
         {
             ApiClient = apiClient;
             Cache = cache;
             CacheItemPolicy = cacheItemPolicy;
+            if (!ignorePrevCache)
+                CacheItemPolicy.RemovedCallback = (arguments) =>
+                {
+                    if (arguments.RemovedReason == CacheEntryRemovedReason.Expired)
+                        PrevCache = arguments.CacheItem.Value;
+                };
         }
+
+        /// <summary>
+        /// Old cache value.
+        /// </summary>
+        protected object PrevCache { get; private set; }
 
         /// <inheritdoc />
         public void Dispose() => ApiClient.Dispose();
@@ -100,6 +113,9 @@ namespace SoftUnlimit.Web.Client
         /// <summary>
         /// Try to get data from cache if not exist execute function and update cache object.
         /// </summary>
+        /// <remarks>
+        /// If the endpoint is not available and the cache was load in some time alwais return the old cache data.
+        /// </remarks>
         /// <typeparam name="TResult"></typeparam>
         /// <param name="func"></param>
         /// <returns></returns>
@@ -109,9 +125,18 @@ namespace SoftUnlimit.Web.Client
             if (data != null)
                 return data;
 
-            var result = await func();
-            return AddDataToCache(result);
-        }
+            try
+            {
+                var result = await func();
+                return AddDataToCache(result);
+            }
+            catch
+            {
+                if (PrevCache != null)
+                    return (TResult)PrevCache;
 
+                throw;
+            }
+        }
     }
 }
