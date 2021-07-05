@@ -95,8 +95,6 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
             return scope;
         }
 
-        #region Private Methods
-
         /// <summary>
         /// Run all database migrations.
         /// </summary>
@@ -104,7 +102,7 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
         /// <param name="logger"></param>
         /// <param name="retryCount"></param>
         /// <returns></returns>
-        private static async Task ExecuteMigrationAsync(DbContext dbContext, ILogger logger, int retryCount)
+        public static async Task ExecuteMigrationAsync(DbContext dbContext, ILogger logger, int retryCount)
         {
             var policy = Policy
                 .Handle<Exception>()
@@ -121,6 +119,5 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
                 await dbContext.Database.MigrateAsync();
             });
         }
-        #endregion
     }
 }
