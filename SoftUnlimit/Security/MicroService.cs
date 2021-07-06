@@ -32,8 +32,8 @@ namespace SoftUnlimit.Security
         /// <returns></returns>
         public static MicroService Init(uint serviceId, string workerId)
         {
-            if (Default != null)
-                throw new InvalidOperationException("Only one initialization allowed");
+            //if (Default != null)
+            //    throw new InvalidOperationException("Only one initialization allowed");
             return Default = new MicroService(serviceId, workerId);
         }
     }
