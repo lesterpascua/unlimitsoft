@@ -75,19 +75,28 @@ namespace SoftUnlimit.Data.EntityFramework
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
             IDbContextTransaction transaction = DbContext.Database.CurrentTransaction;
-            if (transaction == null)
+            bool allowTransaction = DbContext.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory";
+            if (allowTransaction && transaction == null)
             {
                 return await DbContext.Database
                     .CreateExecutionStrategy()
-                    .ExecuteAsync(() => InnerTransactionSaveChangesAsync(transaction));
-            } else
-                return await InnerTransactionSaveChangesAsync(transaction);
+                    .ExecuteAsync(() => InnerTransactionSaveChangesAsync(transaction, allowTransaction));
+            }
+            else
+                return await InnerTransactionSaveChangesAsync(transaction, allowTransaction);
         }
-        private async Task<int> InnerTransactionSaveChangesAsync(IDbContextTransaction transaction)
+
+        /// <summary>
+        /// Inner transaction save
+        /// </summary>
+        /// <param name="transaction"></param>
+        /// <param name="allowTransaction"></param>
+        /// <returns></returns>
+        private async Task<int> InnerTransactionSaveChangesAsync(IDbContextTransaction transaction, bool allowTransaction)
         {
             int changes;
             bool isTransactionOwner = false;
-            if (transaction == null)
+            if (transaction == null && allowTransaction)
             {
                 isTransactionOwner = true;
                 transaction = await DbContext.Database.BeginTransactionAsync();
@@ -109,14 +118,14 @@ namespace SoftUnlimit.Data.EntityFramework
                     await EventMediator.EventsDispatchedAsync(events);
                 if (versionedEvents?.Any() == true && EventSourcedMediator != null)
                     await EventSourcedMediator.EventsDispatchedAsync(versionedEvents);
-            } finally
+            }
+            finally
             {
                 if (isTransactionOwner)
                     await transaction.DisposeAsync();
             }
             return changes;
         }
-
         /// <summary>
         /// 
         /// </summary>
@@ -152,7 +161,7 @@ namespace SoftUnlimit.Data.EntityFramework
             }
 
             await Task.WhenAll(tasks);
-            int saved = await base.SaveChangesAsync();
+            int saved = await DbContext.SaveChangesAsync();
 
             return (saved, events, versionedEvents);
         }
