@@ -30,7 +30,7 @@ namespace SoftUnlimit.CQRS.Event
         private readonly MessageType _type;
         private readonly TimeSpan _checkTime;
         private readonly ILogger _logger;
-        private readonly Task _backgoundWorker;
+        private Task _backgoundWorker;
         private readonly CancellationTokenSource _cts;
         private readonly ConcurrentQueue<Guid> _queue;
         private bool _disposed;
@@ -63,8 +63,8 @@ namespace SoftUnlimit.CQRS.Event
             _bachSize = bachSize;
             _queue = new ConcurrentQueue<Guid>();
 
+            _backgoundWorker = null;
             _cts = new CancellationTokenSource();
-            _backgoundWorker = Task.Run(PublishBackground, _cts.Token);
         }
 
         /// <inheritdoc />
@@ -80,6 +80,8 @@ namespace SoftUnlimit.CQRS.Event
                 .ToArray();
             foreach (var eventId in notPublishEvents)
                 _queue.Enqueue(eventId);
+
+            _backgoundWorker = Task.Run(PublishBackground, _cts.Token);
         }
         /// <summary>
         /// Release processor
@@ -88,7 +90,8 @@ namespace SoftUnlimit.CQRS.Event
         public async ValueTask DisposeAsync()
         {
             _cts.Cancel();
-            await _backgoundWorker;
+            if (_backgoundWorker != null)
+                await _backgoundWorker;
             _disposed = true;
         }
         /// <inheritdoc />
