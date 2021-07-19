@@ -70,14 +70,22 @@ namespace SoftUnlimit.CQRS.Event
         /// <inheritdoc />
         public void Init()
         {
+            StartAsync().Wait();
+        }
+        /// <inheritdoc />
+        public async Task StartAsync(CancellationToken ct = default)
+        {
+            if (_backgoundWorker != null)
+                throw new InvalidProgramException("Already initialized");
+
             using var scope = _provider.CreateScope();
             var eventPayloadRepository = scope.ServiceProvider.GetService<TVersionedEventRepository>();
-            var notPublishEvents = eventPayloadRepository
+            var notPublishEvents = await eventPayloadRepository
                 .FindAll()
                 .Where(p => !p.IsPubliched)
                 .OrderBy(k => k.Created)
                 .Select(s => s.Id)
-                .ToArray();
+                .ToArrayAsync(ct);
             foreach (var eventId in notPublishEvents)
                 _queue.Enqueue(eventId);
 

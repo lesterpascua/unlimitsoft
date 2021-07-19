@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SoftUnlimit.CQRS.Event
 {
@@ -12,7 +14,14 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Initialize worker.
         /// </summary>
-        public void Init();
+        void Init();
+        /// <summary>
+        /// Initialize worker
+        /// </summary>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        Task StartAsync(CancellationToken ct = default);
+
         /// <summary>
         /// Add collection of events to worker.
         /// </summary>
