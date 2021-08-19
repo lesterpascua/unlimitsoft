@@ -38,8 +38,12 @@ namespace SoftUnlimit.Web.AspNet.Filter
                 var httpContext = context.HttpContext;
                 var request = httpContext.Request;
 
+                var sub = httpContext.User.GetSubjectId();
+                if (!string.IsNullOrEmpty(sub) && Guid.TryParse(sub, out var subGuid))
+                    sub = subGuid.ToString();
+
                 _logger.Log(_settings.LogLevel, "User: {User}, Request: {@Request}",
-                    httpContext.User.GetSubjectId(),
+                    sub,
                     new {
                         Url = $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}",
                         Address = httpContext.GetIpAddress(),

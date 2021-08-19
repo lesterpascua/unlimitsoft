@@ -1,12 +1,7 @@
 ﻿using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Data;
-using SoftUnlimit.CQRS.Event;
-using SoftUnlimit.Data;
-using SoftUnlimit.Web.Model;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Text;
 using System.Threading;
 
 namespace SoftUnlimit.CQRS.EventSourcing
@@ -91,6 +86,40 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="currState"></param>
         /// <param name="isDomain"></param>
         /// <param name="body"></param>
+        protected IVersionedEvent AddVersionedEvent(Type eventType, Guid eventId, uint serviceId, string workerId, string correlationId, object body)
+        {
+            var tmp = EventFactory(
+                eventType,
+                eventId,
+                Id,
+                Interlocked.Increment(ref _version),
+                serviceId,
+                workerId,
+                correlationId,
+                null,
+                null,
+                null,
+                false,
+                body
+            );
+            AddVersionedEvent(tmp);
+            return tmp;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="eventType"></param>
+        /// <param name="eventId"></param>
+        /// <param name="serviceId"></param>
+        /// <param name="workerId">Worker identifier. Can't be null.</param>
+        /// <param name="correlationId">Correlation identifier to trace the events.</param>
+        /// <param name="command"></param>
+        /// <param name="prevState"></param>
+        /// <param name="currState"></param>
+        /// <param name="isDomain"></param>
+        /// <param name="body"></param>
+        [Obsolete("AddVersionedEvent(Type eventType, Guid eventId, uint serviceId, string workerId, string correlationId, bool isDomain = false, object body = null)")]
         protected void AddVersionedEvent(Type eventType, Guid eventId, uint serviceId, string workerId, string correlationId, ICommand command, object prevState, object currState = null, bool isDomain = false, object body = null)
         {
             var tmp = EventFactory(

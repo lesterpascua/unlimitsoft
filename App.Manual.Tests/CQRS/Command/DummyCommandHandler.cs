@@ -4,11 +4,9 @@ using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Command.Validation;
 using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.Data;
-using SoftUnlimit.Map;
 using SoftUnlimit.Security.Cryptography;
 using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace App.Manual.Tests.CQRS.Command
@@ -67,6 +65,11 @@ namespace App.Manual.Tests.CQRS.Command
         public Task<CommandResponse> HandleComplianceAsync(ICommand command)
         {
             return Task.FromResult(command.OkResponse(true));
+        }
+
+        public Task<CommandResponse> HandleAsync(DummyCreateCommand command, CancellationToken ct = default)
+        {
+            throw new NotImplementedException();
         }
     }
 }

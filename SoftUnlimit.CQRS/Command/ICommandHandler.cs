@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SoftUnlimit.CQRS.Command
@@ -24,6 +25,15 @@ namespace SoftUnlimit.CQRS.Command
         /// <param name="command"></param>
         /// <param name="validationCache">Object with validation cache resulting of command validation.</param>
         /// <returns></returns>
+        [Obsolete("Implement the logic in HandleAsync(TCommand command, CancellationToken ct = default) and call this method from this command. Will be removed in the future.")]
         Task<CommandResponse> HandleAsync(TCommand command, object validationCache);
+
+        /// <summary>  
+        /// Handler a command.
+        /// </summary>
+        /// <param name="command"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        Task<CommandResponse> HandleAsync(TCommand command, CancellationToken ct = default);
     }
 }

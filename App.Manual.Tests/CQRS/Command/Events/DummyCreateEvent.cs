@@ -7,6 +7,7 @@ using SoftUnlimit.Web.Model;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace App.Manual.Tests.CQRS.Command.Events
@@ -27,6 +28,11 @@ namespace App.Manual.Tests.CQRS.Command.Events
     public class DummyCreateEventHandler : IEventHandler<DummyCreateEvent>
     {
         public Task<EventResponse> HandleAsync(DummyCreateEvent @event)
+        {
+            return Task.FromResult(@event.OkResponse(true));
+        }
+
+        public Task<EventResponse> HandleAsync(DummyCreateEvent @event, CancellationToken ct)
         {
             return Task.FromResult(@event.OkResponse(true));
         }

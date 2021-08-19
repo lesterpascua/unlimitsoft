@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SoftUnlimit.CQRS.Event
@@ -55,6 +56,7 @@ namespace SoftUnlimit.CQRS.Event
         /// </summary>
         /// <param name="event"></param>
         /// <returns></returns>
+        [Obsolete("Use DispatchAsync")]
         public async Task<CombinedEventResponse> DispatchEventAsync(IEvent @event)
         {
             if (!_useScope)
@@ -69,6 +71,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="provider"></param>
         /// <param name="event"></param>
         /// <returns></returns>
+        [Obsolete("Use DispatchAsync")]
         public async Task<CombinedEventResponse> DispatchEventAsync(IServiceProvider provider, IEvent @event)
         {
             _logger?.LogDebug("Process event: {@Event}", @event);
@@ -123,6 +126,59 @@ namespace SoftUnlimit.CQRS.Event
             return new CombinedEventResponse(eventTasks);
         }
 
+        /// <inheritdoc />
+        public async Task<EventResponse> DispatchAsync(IEvent @event, CancellationToken ct = default)
+        {
+            if (!_useScope)
+                return await DispatchAsync(this._provider, @event);
+
+            using IServiceScope scope = this._provider.CreateScope();
+            return await DispatchAsync(scope.ServiceProvider, @event, ct);
+        }
+        /// <inheritdoc />
+        public async Task<EventResponse> DispatchAsync(IServiceProvider provider, IEvent @event, CancellationToken ct = default)
+        {
+            _logger?.LogDebug("Process event: {@Event}", @event);
+            _preeDispatch?.Invoke(provider, @event);
+
+            //
+            // get handler and execute event.
+            var eventType = @event.GetType();
+            var handlers = GetHandlers(provider, eventType);
+
+            var count = handlers?.Count() ?? 0;
+            if (count == 0)
+            {
+                _logger?.LogDebug("Not fount handler for event: {Event}", eventType);
+                return @event.OkResponse(true);
+            }
+            if (count > 1)
+            {
+                _logger?.LogDebug("Multiples handler is deprecate for event: {Event}", eventType);
+                throw new NotSupportedException("Multiples handler is deprecate for event");
+            }
+
+            EventResponse response;
+            _logger?.LogDebug("Found handler for event: {Type}", eventType);
+            if (_useCache)
+            {
+                _logger?.LogDebug("Event cache event is enable");
+                var handler = handlers.Single();
+                KeyPair key = new KeyPair(eventType, handler.GetType());
+                var method = GetFromCache(key, handler, true);
+
+                response = await (Task<EventResponse>)method.Invoke(handler, new object[] { @event });
+            }
+            else
+            {
+                _logger?.LogDebug("Event cache event is disabled");
+                var handler = handlers.Single();
+                response = await ((dynamic)handler).HandleAsync((dynamic)@event);
+            }
+
+            _logger?.LogDebug("Event handler responses: {@Responses}", response);
+            return response;
+        }
         #region Static Methods
 
         /// <summary>

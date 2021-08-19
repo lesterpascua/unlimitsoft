@@ -150,6 +150,7 @@ namespace SoftUnlimit.CQRS.Test
     {
         public static async Task Main()
         {
+            var aa = Guid.Parse("0039b6307e16f53ed134a0ff03000000").ToString();
             //long version = 0;
             //var aa = Interlocked.Increment(ref version);
 

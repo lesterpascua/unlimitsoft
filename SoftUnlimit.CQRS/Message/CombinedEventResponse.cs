@@ -7,6 +7,7 @@ namespace SoftUnlimit.CQRS.Message
     /// <summary>
     /// 
     /// </summary>
+    [Obsolete("no longer used")]
     public sealed class CombinedEventResponse
     {
         /// <summary>
