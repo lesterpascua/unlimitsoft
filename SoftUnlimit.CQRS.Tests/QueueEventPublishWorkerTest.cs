@@ -3,12 +3,9 @@ using MockQueryable.Moq;
 using Moq;
 using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Event;
-using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.CQRS.EventSourcing.Json;
 using SoftUnlimit.Data;
-using SoftUnlimit.Map;
-using SoftUnlimit.Web.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 namespace SoftUnlimit.CQRS.Tests
 {
     /// <summary>

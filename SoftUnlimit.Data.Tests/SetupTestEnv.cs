@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Xunit;
 
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 namespace SoftUnlimit.Data.Tests
 {
     public class SetupTestEnv : IAsyncLifetime

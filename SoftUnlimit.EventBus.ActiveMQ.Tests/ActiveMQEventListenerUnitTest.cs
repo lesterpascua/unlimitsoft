@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
 
+[assembly: CollectionBehavior(DisableTestParallelization = true)]
 namespace SoftUnlimit.EventBus.ActiveMQ.Tests
 {
     public class ActiveMQEventListenerUnitTest
