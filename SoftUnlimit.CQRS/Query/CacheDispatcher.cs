@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 
 namespace SoftUnlimit.CQRS.Query
 {
@@ -13,8 +14,8 @@ namespace SoftUnlimit.CQRS.Query
     /// </summary>
     public abstract class CacheDispatcher
     {
-        private static readonly object _sync = new object();
-        private static readonly Dictionary<Type, MethodInfo> _cache = new Dictionary<Type, MethodInfo>();
+        private static object _sync;
+        private static Dictionary<Type, MethodInfo> _cache;
 
 
 
@@ -24,7 +25,7 @@ namespace SoftUnlimit.CQRS.Query
         /// <param name="useCache"></param>
         protected CacheDispatcher(bool useCache = true)
         {
-            this.UseCache = useCache;
+            UseCache = useCache;
         }
 
 
@@ -33,6 +34,25 @@ namespace SoftUnlimit.CQRS.Query
         /// </summary>
         protected bool UseCache { get; }
 
+
+        private static object Sync
+        {
+            get
+            {
+                if (_sync == null)
+                    Interlocked.CompareExchange(ref _sync, new object(), null);
+                return _sync;
+            }
+        }
+        private static Dictionary<Type, MethodInfo> Cache
+        {
+            get
+            {
+                if (_cache == null)
+                    Interlocked.CompareExchange(ref _cache, new Dictionary<Type, MethodInfo>(), null);
+                return _cache;
+            }
+        }
         /// <summary>
         /// 
         /// </summary>
@@ -42,10 +62,11 @@ namespace SoftUnlimit.CQRS.Query
         /// <returns></returns>
         protected static MethodInfo GetFromCache(Type type, object handler, bool isAsync)
         {
-            if (!_cache.TryGetValue(type, out MethodInfo method))
+            var cache = Cache;
+            if (!cache.TryGetValue(type, out MethodInfo method))
             {
-                lock (_sync)
-                    if (!_cache.TryGetValue(type, out method))
+                lock (Sync)
+                    if (!cache.TryGetValue(type, out method))
                     {
                         method = handler
                             .GetType()
@@ -53,7 +74,7 @@ namespace SoftUnlimit.CQRS.Query
                         if (method == null)
                             throw new KeyNotFoundException($"Not found handler, is Async: {isAsync} for {handler}");
 
-                        _cache.Add(type, method);
+                        cache.Add(type, method);
                     }
             }
             return method;

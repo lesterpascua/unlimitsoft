@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SoftUnlimit.CQRS.Command
@@ -25,8 +26,9 @@ namespace SoftUnlimit.CQRS.Command
         private readonly string _invalidArgumendText;
         private readonly Action<IServiceProvider, ICommand> _preeDispatch;
         private readonly ILogger<ServiceProviderCommandDispatcher> _logger;
-        private static readonly object _sync = new object();
-        private static readonly Dictionary<Type, MethodInfo> _cache = new Dictionary<Type, MethodInfo>();
+
+        private static object _sync;
+        private static Dictionary<Type, MethodInfo> _cache;
 
         /// <summary>
         /// Default function used to convert error transform to standard ASP.NET format
@@ -46,12 +48,12 @@ namespace SoftUnlimit.CQRS.Command
         /// <param name="preeDispatch">Before dispatch command flow call this action.</param>
         /// <param name="logger"></param>
         public ServiceProviderCommandDispatcher(
-            IServiceProvider provider, 
-            bool validate = true, 
-            bool useCache = true, 
+            IServiceProvider provider,
+            bool validate = true,
+            bool useCache = true,
             bool useScope = true,
-            Func<IList<ValidationFailure>, IDictionary<string, IEnumerable<string>>> errorTransforms = null, 
-            string invalidArgumendText = null, 
+            Func<IList<ValidationFailure>, IDictionary<string, IEnumerable<string>>> errorTransforms = null,
+            string invalidArgumendText = null,
             Action<IServiceProvider, ICommand> preeDispatch = null, ILogger<ServiceProviderCommandDispatcher> logger = null)
         {
             _provider = provider;
@@ -173,6 +175,24 @@ namespace SoftUnlimit.CQRS.Command
 
         #region Static Methods
 
+        private static object Sync
+        {
+            get
+            {
+                if (_sync == null)
+                    Interlocked.CompareExchange(ref _sync, new object(), null);
+                return _sync;
+            }
+        }
+        private static Dictionary<Type, MethodInfo> Cache
+        {
+            get
+            {
+                if (_cache == null)
+                    Interlocked.CompareExchange(ref _cache, new Dictionary<Type, MethodInfo>(), null);
+                return _cache;
+            }
+        }
         /// <summary>
         /// 
         /// </summary>
@@ -183,11 +203,12 @@ namespace SoftUnlimit.CQRS.Command
         /// <returns></returns>
         private static MethodInfo GetFromCache(Type type, object handler, bool isAsync, ILogger logger = null)
         {
-            if (!_cache.TryGetValue(type, out MethodInfo method))
+            var cache = Cache;
+            if (!cache.TryGetValue(type, out MethodInfo method))
             {
                 logger?.LogDebug("Not found in cache proceed created.");
-                lock (_sync)
-                    if (!_cache.TryGetValue(type, out method))
+                lock (Sync)
+                    if (!cache.TryGetValue(type, out method))
                     {
                         method = handler
                             .GetType()
@@ -195,7 +216,7 @@ namespace SoftUnlimit.CQRS.Command
                         if (method == null)
                             throw new KeyNotFoundException($"Not found command handler, is Async: {isAsync} for {handler}");
 
-                        _cache.Add(type, method);
+                        cache.Add(type, method);
                     }
             }
             else
@@ -259,7 +280,7 @@ namespace SoftUnlimit.CQRS.Command
         /// <param name="commandHandlerInterface">Interface used to register tha binding between command handler and command.</param>
         /// <param name="commandAssembly"></param>
         /// <param name="validatorAssembly"></param>
-        public static void RegisterCommandHandler(IServiceCollection services, Type commandHandlerInterface, IEnumerable<Assembly> commandAssembly, IEnumerable <Assembly> validatorAssembly = null)
+        public static void RegisterCommandHandler(IServiceCollection services, Type commandHandlerInterface, IEnumerable<Assembly> commandAssembly, IEnumerable<Assembly> validatorAssembly = null)
         {
             Dictionary<Type, Type> cache = new Dictionary<Type, Type>();
             if (validatorAssembly != null)
