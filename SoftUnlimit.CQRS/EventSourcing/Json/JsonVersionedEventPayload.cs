@@ -1,12 +1,8 @@
 ﻿using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.Map;
-using SoftUnlimit.Web.Model;
 using System;
-using System.Collections.Generic;
 using System.Reflection;
-using System.Text;
-using System.Text.Json;
 
 namespace SoftUnlimit.CQRS.EventSourcing.Json
 {

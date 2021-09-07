@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 
 namespace SoftUnlimit.Reflection
 {
@@ -35,9 +34,13 @@ namespace SoftUnlimit.Reflection
         /// resolver, automatically stop the resolution over provider and otherArgs parameter will be concatenated.
         /// </param>
         /// <param name="bindingFlags"></param>
-        /// <param name="otherArgs">Extra argument passed to seed. This arguments will be added when find one argument in the constructor imposible to resolver by the provider.</param>
+        /// <param name="resolver">If the parameter don't exist in the IOC, resolve manual.</param>
         /// <returns></returns>
-        public static object CreateInstance(this Type type, IServiceProvider provider, BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.Public, params object[] otherArgs)
+        public static object CreateInstance(this Type type,
+            IServiceProvider provider,
+            BindingFlags bindingFlags = BindingFlags.Instance | BindingFlags.Public,
+            Func<ParameterInfo, object> resolver = null
+        )
         {
             var constructors = type.GetConstructors(bindingFlags);
             if (constructors.Length > 1)
@@ -45,7 +48,7 @@ namespace SoftUnlimit.Reflection
 
             //
             // Resolve constructor argument using Service Provider.
-            object[] args = otherArgs;
+            object[] args;
             var ctor = constructors.FirstOrDefault();
             if (ctor != null)
             {
@@ -54,14 +57,14 @@ namespace SoftUnlimit.Reflection
                 {
                     var instance = provider.GetService(parameter.ParameterType);
                     if (instance == null)
-                        break;
+                        instance = resolver?.Invoke(parameter);
 
                     tmp.Add(instance);
                 }
-                if (otherArgs.Any())
-                    tmp.AddRange(otherArgs);
                 args = tmp.ToArray();
             }
+            else
+                args = Array.Empty<object>();
 
             return Activator.CreateInstance(type, args);
         }

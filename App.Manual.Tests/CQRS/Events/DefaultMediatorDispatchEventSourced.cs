@@ -1,13 +1,7 @@
 ﻿using SoftUnlimit.CQRS.Event;
-using SoftUnlimit.CQRS.EventSourcing;
-using SoftUnlimit.CQRS.EventSourcing.Binary;
 using SoftUnlimit.CQRS.EventSourcing.Json;
 using SoftUnlimit.Data;
-using SoftUnlimit.Data.EntityFramework;
 using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace App.Manual.Tests.CQRS.Events
 {

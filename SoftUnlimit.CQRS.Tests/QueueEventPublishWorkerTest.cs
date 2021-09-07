@@ -71,8 +71,8 @@ namespace SoftUnlimit.CQRS.Tests
         {
             var fakeEventBus = new Mock<IEventBus>();
             fakeEventBus
-                .Setup(s => s.PublishEventPayloadAsync(It.IsAny<JsonVersionedEventPayload>(), It.Is<MessageType>(p => p == MessageType.Json)))
-                .Returns<JsonVersionedEventPayload, MessageType>((payload, type) => {
+                .Setup(s => s.PublishEventPayloadAsync(It.IsAny<JsonVersionedEventPayload>(), It.Is<MessageType>(p => p == MessageType.Json), It.IsAny<CancellationToken>()))
+                .Returns<JsonVersionedEventPayload, MessageType, CancellationToken>((payload, type, ct) => {
                     action?.Invoke(payload, type);
                     return Task.CompletedTask;
                 });

@@ -4,7 +4,6 @@ using Apache.NMS.ActiveMQ.Commands;
 using Microsoft.Extensions.Logging;
 using Polly;
 using SoftUnlimit.CQRS.Event;
-using SoftUnlimit.Security;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,7 +15,7 @@ namespace SoftUnlimit.EventBus.ActiveMQ
     /// <summary>
     /// Implement event bus based on ActiveMQ technology.
     /// </summary>
-    public class ActiveMQQueuesEventBus : IEventBus, IDisposable
+    public class ActiveMQQueuesEventBus : IEventBus, IAsyncDisposable
     {
         private bool _isStart = false;
         private bool _isDisposed = false;
@@ -57,9 +56,30 @@ namespace SoftUnlimit.EventBus.ActiveMQ
         }
 
         /// <summary>
-        /// Start process.
+        /// Release all resources.
         /// </summary>
-        public void Start(TimeSpan waitRetry)
+        public async ValueTask DisposeAsync()
+        {
+            if (!_isDisposed)
+            {
+                _logger?.LogDebug("Disposing: {Class} with Id: {Id}", nameof(ActiveMQQueuesEventBus), _connection.ClientId);
+
+                _isDisposed = true;
+                _connectionMonitorCts.Cancel();
+                while (!_connectionMonitor.IsCanceled && !_connectionMonitor.IsCompleted)
+                    await Task.Delay(10);
+
+                _connectionMonitor?.Dispose();
+
+                _connection?.Stop();
+                Release();
+            }
+        }
+        /// <inheritdoc />
+        public void Start(TimeSpan waitRetry) => StartAsync(waitRetry, default).Wait();
+
+        /// <inheritdoc />
+        public Task StartAsync(TimeSpan waitRetry, CancellationToken _)
         {
             if (_isDisposed)
                 throw new ObjectDisposedException(this.GetType().FullName);
@@ -82,34 +102,14 @@ namespace SoftUnlimit.EventBus.ActiveMQ
                     }
                 }, token);
             }
+            return Task.CompletedTask;
         }
-        /// <summary>
-        /// Release all resources.
-        /// </summary>
-        public void Dispose()
-        {
-            if (!_isDisposed)
-            {
-                _logger?.LogDebug("Disposing: {Class} with Id: {Id}", nameof(ActiveMQQueuesEventBus), _connection.ClientId);
-
-                _isDisposed = true;
-                _connectionMonitorCts.Cancel();
-                while (!_connectionMonitor.IsCanceled && !_connectionMonitor.IsCompleted)
-                    Task.Delay(10).Wait();
-
-                _connectionMonitor?.Dispose();
-
-                _connection?.Stop();
-                Release();
-            }
-        }
-
         /// <inheritdoc />
-        public async Task PublishEventAsync(IEvent @event) => await PublishAsync(@event, MessageType.Event);
+        public async Task PublishEventAsync(IEvent @event, CancellationToken ct) => await PublishAsync(@event, MessageType.Event, ct);
         /// <inheritdoc />
-        public async Task PublishEventPayloadAsync<T>(EventPayload<T> @event, MessageType type) => await PublishAsync(@event, type);
+        public async Task PublishEventPayloadAsync<T>(EventPayload<T> @event, MessageType type, CancellationToken ct) => await PublishAsync(@event, type, ct);
         /// <inheritdoc />
-        public Task PublishAsync(object graph, Guid id, string eventName, string correlationId) => throw new NotImplementedException();
+        public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, CancellationToken ct) => throw new NotImplementedException();
 
 
         #region Private Methods
@@ -130,7 +130,7 @@ namespace SoftUnlimit.EventBus.ActiveMQ
             _session = null;
             _connection = null;
         }
-        private Task PublishAsync(object graph, MessageType type)
+        private Task PublishAsync(object graph, MessageType type, CancellationToken _)
         {
             if (_isDisposed)
                 throw new ObjectDisposedException(this.GetType().FullName);

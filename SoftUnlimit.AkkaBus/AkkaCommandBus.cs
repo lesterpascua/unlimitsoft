@@ -6,6 +6,7 @@ using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Message;
 using System;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SoftUnlimit.AkkaBus
@@ -68,8 +69,9 @@ namespace SoftUnlimit.AkkaBus
         /// Dispatch command.
         /// </summary>
         /// <param name="command"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
-        public virtual async Task SendAsync(ICommand command)
+        public virtual async Task SendAsync(ICommand command, CancellationToken ct)
         {
             var envelopment = new CommandEnvelopment(command, false);
             if (_preeSendCommand != null)
@@ -81,8 +83,9 @@ namespace SoftUnlimit.AkkaBus
         /// Dispatch command and wait for response.
         /// </summary>
         /// <param name="command"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
-        public async virtual Task<CommandResponse> SendAndWaitAsync(ICommand command)
+        public async virtual Task<CommandResponse> SendAndWaitAsync(ICommand command, CancellationToken ct)
         {
             var envelopment = new CommandEnvelopment(command, true);
             if (_preeSendCommand != null)

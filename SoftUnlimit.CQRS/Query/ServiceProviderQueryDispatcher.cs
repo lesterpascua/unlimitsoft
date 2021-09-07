@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SoftUnlimit.CQRS.Query
@@ -53,8 +54,9 @@ namespace SoftUnlimit.CQRS.Query
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
         /// <param name="query"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
-        public async Task<QueryResponse> DispatchAsync<TResult>(IQuery query)
+        public async Task<QueryResponse> DispatchAsync<TResult>(IQuery query, CancellationToken ct = default)
         {
             Type queryType = query.GetType();
             Type entityType = typeof(TResult);
@@ -111,7 +113,7 @@ namespace SoftUnlimit.CQRS.Query
                 _logger?.LogDebug("Query not handler implement internal compliance");
             #endregion
 
-            TResult result = await ExecuteHandlerForQueryAsync<TResult>(handler, query, queryType, UseCache);
+            TResult result = await ExecuteHandlerForQueryAsync<TResult>(handler, query, queryType, UseCache, ct);
 
             return query.OkResponse(result);
         }
@@ -203,14 +205,14 @@ namespace SoftUnlimit.CQRS.Query
 
             return queryHandler;
         }
-        private static async Task<TEntity> ExecuteHandlerForQueryAsync<TEntity>(IQueryHandler handler, IQuery args, Type queryType, bool useCache)
+        private static async Task<TEntity> ExecuteHandlerForQueryAsync<TEntity>(IQueryHandler handler, IQuery args, Type queryType, bool useCache, CancellationToken ct)
         {
             if (useCache)
             {
-                var method = GetFromCache(queryType, handler, true);
-                return await (Task<TEntity>)method.Invoke(handler, new object[] { args });
+                var method = GetFromCache(queryType, handler);
+                return await (Task<TEntity>)method.Invoke(handler, new object[] { args, ct });
             }
-            return await ((dynamic)handler).HandlerAsync((dynamic)args);
+            return await ((dynamic)handler).HandlerAsync((dynamic)args, ct);
         }
         
         #endregion

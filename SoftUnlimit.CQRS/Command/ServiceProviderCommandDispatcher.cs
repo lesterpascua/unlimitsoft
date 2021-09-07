@@ -68,23 +68,14 @@ namespace SoftUnlimit.CQRS.Command
 
         #region Public Methods
 
-        /// <summary>
-        /// Executed command asynchronous.
-        /// </summary>
-        /// <param name="command"></param>
-        /// <returns></returns>
-        public async Task<CommandResponse> DispatchAsync(ICommand command)
+        /// <inheritdoc />
+        public async Task<CommandResponse> DispatchAsync(ICommand command, CancellationToken ct)
         {
             using IServiceScope scope = _provider.CreateScope();
-            return await DispatchAsync(scope.ServiceProvider, command);
+            return await DispatchAsync(scope.ServiceProvider, command, ct);
         }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="provider"></param>
-        /// <param name="command"></param>
-        /// <returns></returns>
-        public async Task<CommandResponse> DispatchAsync(IServiceProvider provider, ICommand command)
+        /// <inheritdoc />
+        public async Task<CommandResponse> DispatchAsync(IServiceProvider provider, ICommand command, CancellationToken ct)
         {
             _logger?.LogDebug("Invoke pree dispatch method.");
             _preeDispatch?.Invoke(provider, command);
@@ -162,7 +153,7 @@ namespace SoftUnlimit.CQRS.Command
             {
                 _logger?.LogDebug("Execute command type from cache enable");
 
-                var method = GetFromCache(commandType, handler, true, _logger);
+                var method = GetFromCache(commandType, handler, _logger);
                 return await (Task<CommandResponse>)method.Invoke(handler, new object[] { command, sharedCache });
             }
             else
@@ -201,7 +192,7 @@ namespace SoftUnlimit.CQRS.Command
         /// <param name="isAsync"></param>
         /// <param name="logger"></param>
         /// <returns></returns>
-        private static MethodInfo GetFromCache(Type type, object handler, bool isAsync, ILogger logger = null)
+        private static MethodInfo GetFromCache(Type type, object handler, ILogger logger = null)
         {
             var cache = Cache;
             if (!cache.TryGetValue(type, out MethodInfo method))
@@ -214,7 +205,7 @@ namespace SoftUnlimit.CQRS.Command
                             .GetType()
                             .GetMethod(nameof(ICommandHandler<ICommand>.HandleAsync), new Type[] { type, typeof(object) });
                         if (method == null)
-                            throw new KeyNotFoundException($"Not found command handler, is Async: {isAsync} for {handler}");
+                            throw new KeyNotFoundException($"Not found command handler for {handler}");
 
                         cache.Add(type, method);
                     }

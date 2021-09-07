@@ -28,12 +28,12 @@ namespace SoftUnlimit.CQRS.Event
         private readonly IServiceProvider _provider;
         private readonly IEventBus _eventBus;
         private readonly MessageType _type;
-        private readonly TimeSpan _checkTime;
+        private readonly TimeSpan _startDelay, _errorDelay;
         private readonly ILogger _logger;
-        private Task _backgoundWorker;
         private readonly CancellationTokenSource _cts;
         private readonly ConcurrentQueue<Guid> _queue;
         private bool _disposed;
+        private Task _backgoundWorker;
 
 
         /// <summary>
@@ -42,14 +42,16 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="provider"></param>
         /// <param name="eventBus"></param>
         /// <param name="type"></param>
-        /// <param name="checkTime"></param>
+        /// <param name="startDelay">Wait time before start the listener.</param>
+        /// <param name="errorDelay">Wait time if some error happened in the bus, 20 second default time.</param>
         /// <param name="logger"></param>
         /// <param name="bachSize"></param>
         public QueueEventPublishWorker(
             IServiceProvider provider,
             IEventBus eventBus,
             MessageType type,
-            TimeSpan? checkTime = null,
+            TimeSpan? startDelay = null,
+            TimeSpan? errorDelay = null,
             ILogger logger = null,
             int bachSize = 10)
         {
@@ -58,23 +60,39 @@ namespace SoftUnlimit.CQRS.Event
             _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
 
             _type = type;
-            _checkTime = checkTime ?? TimeSpan.FromSeconds(5);
+            _startDelay = startDelay ?? TimeSpan.FromSeconds(5);
+            _errorDelay = errorDelay ?? TimeSpan.FromSeconds(20);
             _logger = logger;
             _bachSize = bachSize;
-            _queue = new ConcurrentQueue<Guid>();
-
             _backgoundWorker = null;
+            _queue = new ConcurrentQueue<Guid>();
             _cts = new CancellationTokenSource();
         }
 
+        /// <summary>
+        /// Queue of pending event identifier.
+        /// </summary>
+        protected ConcurrentQueue<Guid> Queue => _queue;
+
         /// <inheritdoc />
-        public void Init()
+        public void Init() => StartAsync(_cts.Token).Wait();
+        /// <inheritdoc />
+        public void Publish(IEnumerable<IEvent> events) => PublishAsync(events, _cts.Token).Wait();
+
+        /// <inheritdoc />
+        public async ValueTask DisposeAsync()
         {
-            StartAsync().Wait();
+            _cts.Cancel();
+            if (_backgoundWorker != null)
+                await _backgoundWorker;
+            _disposed = true;
         }
+
         /// <inheritdoc />
-        public async Task StartAsync(CancellationToken ct = default)
+        public async Task StartAsync(CancellationToken ct)
         {
+            if (_disposed)
+                throw new ObjectDisposedException(GetType().FullName);
             if (_backgoundWorker != null)
                 throw new InvalidProgramException("Already initialized");
 
@@ -91,25 +109,23 @@ namespace SoftUnlimit.CQRS.Event
 
             _backgoundWorker = Task.Run(PublishBackground, _cts.Token);
         }
-        /// <summary>
-        /// Release processor
-        /// </summary>
-        /// <returns></returns>
-        public async ValueTask DisposeAsync()
-        {
-            _cts.Cancel();
-            if (_backgoundWorker != null)
-                await _backgoundWorker;
-            _disposed = true;
-        }
         /// <inheritdoc />
-        public void Publish(IEnumerable<IEvent> events)
+        public Task RetryPublishAsync(Guid id, CancellationToken ct)
         {
             if (_disposed)
-                throw new ObjectDisposedException(this.GetType().FullName);
+                throw new ObjectDisposedException(GetType().FullName);
+            _queue.Enqueue(id);
+            return Task.CompletedTask;
+        }
+        /// <inheritdoc />
+        public Task PublishAsync(IEnumerable<IEvent> events, CancellationToken ct)
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(GetType().FullName);
 
             foreach (var @event in events)
                 _queue.Enqueue(@event.Id);
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -118,7 +134,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <returns></returns>
         protected virtual async Task PublishBackground()
         {
-            await Task.Delay(_checkTime);
+            await Task.Delay(_startDelay, _cts.Token);
             while (!_cts.Token.IsCancellationRequested)
             {
                 SpinWait.SpinUntil(() => !_queue.IsEmpty || _cts.Token.IsCancellationRequested);
@@ -126,6 +142,7 @@ namespace SoftUnlimit.CQRS.Event
                     break;
                 _logger?.LogDebug("Start to publish events {Time}", DateTime.UtcNow);
 
+                TVersionedEventPayload lastEvent;
                 int count = Math.Min(_queue.Count, _bachSize);
                 var buffer = _queue.Take(count).ToArray();
                 try
@@ -136,23 +153,30 @@ namespace SoftUnlimit.CQRS.Event
 
                     var eventsPayload = await eventPayloadRepository
                         .FindAll()
-                        .Where(p => buffer.Contains(p.Id))
+                        .Where(p => buffer.Contains(p.Id) && !p.IsPubliched)
                         .OrderBy(k => k.Created)
                         .ToArrayAsync();
-                    foreach (var eventPayload in eventsPayload)
+                    foreach (var ePayload in eventsPayload)
                     {
-                        await _eventBus.PublishEventPayloadAsync(eventPayload, _type);
-                        eventPayload.MarkEventAsPublished();
+                        lastEvent = ePayload;
+                        await _eventBus.PublishEventPayloadAsync(
+                            lastEvent, 
+                            _type, 
+                            _cts.Token
+                        );
+
+                        lastEvent.MarkEventAsPublished();
+                        await unitOfWork.SaveChangesAsync();
                     }
-                    await unitOfWork.SaveChangesAsync();
                     //
                     // dequeue all publish events.
-                    for (int i = 0; i < count; i++)
+                    for (var i = 0; i < count; i++)
                         _queue.TryDequeue(out Guid eventId);
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Error publish event: {Time}.", DateTime.UtcNow);
+                    await Task.Delay(_errorDelay, _cts.Token);
                 }
             }
         }

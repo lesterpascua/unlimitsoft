@@ -14,48 +14,6 @@ namespace SoftUnlimit.Data.Seed
     public static class SeedHelper
     {
         /// <summary>
-        /// Initicalized database value
-        /// </summary>
-        /// <param name="unitOfWork"></param>
-        /// <param name="assembly"></param>
-        /// <param name="migrateCallback"></param>
-        /// <param name="condition">Check if type can be initialized.</param>
-        /// <param name="args">Extra argument passed to seed</param>
-        public static async Task Seed(IUnitOfWork unitOfWork, Assembly assembly,
-            Func<IUnitOfWork, Task> migrateCallback = null, Func<Type, bool> condition = null, params object[] args)
-        {
-            if (migrateCallback != null)
-                await migrateCallback(unitOfWork);
-
-            var typesToSeed =
-                from type in assembly.GetTypes()
-                where type.BaseType != null
-                        && !type.IsAbstract
-                        && type.BaseType.IsGenericType
-                        && type.GetInterfaces().Any(p => p.IsGenericType && p.GetGenericTypeDefinition() == typeof(ICustomEntitySeed<>))
-                select type;
-
-            List<ICustomEntitySeed> allSeed = new List<ICustomEntitySeed>();
-            Dictionary<Type, Type> entityCache = unitOfWork.GetModelEntityTypes().ToDictionary(k => k);
-            foreach (var seedType in typesToSeed)
-            {
-                if (!entityCache.ContainsKey(seedType.BaseType.GenericTypeArguments.Single()))
-                    continue;
-
-                allSeed.Add((ICustomEntitySeed)Activator.CreateInstance(seedType, args));
-            }
-
-            foreach (var entry in allSeed.OrderBy(k => k.Priority))
-            {
-                if (condition != null && !condition.Invoke(entry.GetType()))
-                    continue;
-
-                await entry.SeedAsync(unitOfWork);
-                await unitOfWork.SaveChangesAsync();
-            }
-        }
-
-        /// <summary>
         /// Initicalized database value.
         /// </summary>
         /// <param name="provider">
@@ -66,9 +24,10 @@ namespace SoftUnlimit.Data.Seed
         /// <param name="assembly"></param>
         /// <param name="migrateCallback"></param>
         /// <param name="condition">Check if type can be initialized.</param>
+        /// <param name="resolver"></param>
         /// <param name="otherArgs">Extra argument passed to seed. This arguments will be added when find one argument in the constructor imposible to resolver by the provider.</param>
         public static async Task Seed(IServiceProvider provider, IUnitOfWork unitOfWork, Assembly assembly,
-            Func<IUnitOfWork, Task> migrateCallback = null, Func<Type, bool> condition = null, params object[] otherArgs)
+            Func<IUnitOfWork, Task> migrateCallback = null, Func<Type, bool> condition = null, Func<ParameterInfo, object> resolver = null)
         {
             if (migrateCallback != null)
                 await migrateCallback(unitOfWork);
@@ -89,7 +48,7 @@ namespace SoftUnlimit.Data.Seed
                 if (!entityCache.ContainsKey(entity))
                     continue;
 
-                allSeed.Add((ICustomEntitySeed)seedType.CreateInstance(provider, otherArgs: otherArgs));
+                allSeed.Add((ICustomEntitySeed)seedType.CreateInstance(provider, resolver: resolver));
             }
 
             foreach (var entry in allSeed.OrderBy(k => k.Priority))

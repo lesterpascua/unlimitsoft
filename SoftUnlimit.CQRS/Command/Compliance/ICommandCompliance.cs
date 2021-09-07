@@ -1,7 +1,5 @@
 ﻿using SoftUnlimit.CQRS.Message;
 using System;
-using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SoftUnlimit.CQRS.Command.Compliance
@@ -9,6 +7,7 @@ namespace SoftUnlimit.CQRS.Command.Compliance
     /// <summary>
     /// This interface is only for reference please inplement ICommandCompliance in TCommand to correct resolution using DPI
     /// </summary>
+    [Obsolete("Use ICommandHandlerCompliance")]
     public interface ICommandCompliance
     {
         /// <summary>
@@ -22,6 +21,7 @@ namespace SoftUnlimit.CQRS.Command.Compliance
     /// <summary>
     /// 
     /// </summary>
+    [Obsolete("Use ICommandHandlerCompliance")]
     public interface ICommandCompliance<TCommand> : ICommandCompliance
         where TCommand : ICommand
     {

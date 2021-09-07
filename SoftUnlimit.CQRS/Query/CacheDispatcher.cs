@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 
 namespace SoftUnlimit.CQRS.Query
@@ -16,7 +15,6 @@ namespace SoftUnlimit.CQRS.Query
     {
         private static object _sync;
         private static Dictionary<Type, MethodInfo> _cache;
-
 
 
         /// <summary>
@@ -60,7 +58,7 @@ namespace SoftUnlimit.CQRS.Query
         /// <param name="handler"></param>
         /// <param name="isAsync"></param>
         /// <returns></returns>
-        protected static MethodInfo GetFromCache(Type type, object handler, bool isAsync)
+        protected static MethodInfo GetFromCache(Type type, object handler)
         {
             var cache = Cache;
             if (!cache.TryGetValue(type, out MethodInfo method))
@@ -70,9 +68,9 @@ namespace SoftUnlimit.CQRS.Query
                     {
                         method = handler
                             .GetType()
-                            .GetMethod(isAsync ? "HandlerAsync" : "Handler", new Type[] { type });
+                            .GetMethod(nameof(IQueryHandler<int, IQuery<int>>.HandlerAsync), new Type[] { type, typeof(CancellationToken) });
                         if (method == null)
-                            throw new KeyNotFoundException($"Not found handler, is Async: {isAsync} for {handler}");
+                            throw new KeyNotFoundException($"Not found handler, for {handler}");
 
                         cache.Add(type, method);
                     }
