@@ -1,15 +1,10 @@
-﻿using Newtonsoft.Json;
-using SoftUnlimit.CQRS.Properties;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
 
 namespace SoftUnlimit.CQRS.Command
 {
     /// <summary>
     /// Information about command.
     /// </summary>
-    [Serializable]
     public class CommandProps
     {
         /// <summary>

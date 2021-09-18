@@ -12,9 +12,17 @@ namespace SoftUnlimit.CQRS.Query
     public abstract class Query<TResult, TProps> : IQuery<TResult>
     {
         /// <summary>
+        /// Get or set metadata props associate with the command.
+        /// </summary>
+        public TProps Props { get; set; }
+
+        /// <summary>
         /// Get or set metadata props associate with the query.
         /// </summary>
-        public TProps QueryProps { get; protected set; }
+        [Obsolete("Use Props")]
+        [Newtonsoft.Json.JsonIgnore]
+        [System.Text.Json.Serialization.JsonIgnore]
+        public TProps QueryProps => Props;
 
         /// <summary>
         /// Auto execute query.
@@ -48,7 +56,7 @@ namespace SoftUnlimit.CQRS.Query
         /// <param name="props"></param>
         public SealedQueryAsync(QueryProps props)
         {
-            QueryProps = props;
+            Props = props;
         }
     }
 }

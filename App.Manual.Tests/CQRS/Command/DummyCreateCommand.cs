@@ -2,8 +2,6 @@
 using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.EventSourcing;
 using System;
-using System.Collections.Generic;
-using System.Text;
 
 namespace App.Manual.Tests.CQRS.Command
 {
@@ -13,7 +11,7 @@ namespace App.Manual.Tests.CQRS.Command
     {
         public DummyCreateCommand()
         {
-            CommandProps = new CommandProps {
+            Props = new CommandProps {
                 Id = Guid.NewGuid(),
                 Name = GetType().FullName,
                 Silent = false
