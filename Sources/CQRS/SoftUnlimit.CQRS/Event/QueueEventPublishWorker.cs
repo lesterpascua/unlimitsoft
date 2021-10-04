@@ -147,7 +147,7 @@ namespace SoftUnlimit.CQRS.Event
                     foreach (var ePayload in eventsPayload)
                     {
                         var lastEvent = ePayload;
-                        await _eventBus.PublishEventPayloadAsync(lastEvent, _type, _cts.Token);
+                        await _eventBus.PublishPayloadAsync(lastEvent, _type, _cts.Token);
 
                         lastEvent.MarkEventAsPublished();
                         await unitOfWork.SaveChangesAsync(_cts.Token);

@@ -42,7 +42,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="prevState"></param>
         /// <param name="currState"></param>
         /// <param name="body"></param>
-        protected VersionedEvent(Guid id, TKey sourceId, long version, uint serviceId, string workerId, string correlationId, object command, object prevState, object currState, bool isDomainEvent, object body = null)
+        protected VersionedEvent(Guid id, TKey sourceId, long version, ushort serviceId, string workerId, string correlationId, object command, object prevState, object currState, bool isDomainEvent, object body = null)
             : base(id, sourceId, serviceId, workerId, correlationId, command, prevState, currState, isDomainEvent, body)
         {
             Version = version;

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
@@ -6,14 +6,18 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.10" />
+    <PackageReference Include="Serilog.AspNetCore" Version="3.4.0" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.2" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\Sources\Core\SoftUnlimit.AutoMapper\SoftUnlimit.AutoMapper.csproj" />
+    <ProjectReference Include="..\..\Sources\Core\SoftUnlimit.Logger\SoftUnlimit.Logger.csproj" />
     <ProjectReference Include="..\..\Sources\Core\SoftUnlimit\SoftUnlimit.csproj" />
     <ProjectReference Include="..\..\Sources\CQRS\SoftUnlimit.AkkaBus\SoftUnlimit.AkkaBus.csproj" />
     <ProjectReference Include="..\..\Sources\CQRS\SoftUnlimit.CQRS\SoftUnlimit.CQRS.csproj" />
+    <ProjectReference Include="..\..\Sources\CQRS\SoftUnlimit.EventBus.Azure\SoftUnlimit.EventBus.Azure.csproj" />
     <ProjectReference Include="..\..\Sources\Data\SoftUnlimit.Data.EntityFramework\SoftUnlimit.Data.EntityFramework.csproj" />
     <ProjectReference Include="..\..\Sources\Data\SoftUnlimit.Data\SoftUnlimit.Data.csproj" />
     <ProjectReference Include="..\..\Sources\Web\SoftUnlimit.Web.AspNet\SoftUnlimit.Web.AspNet.csproj" />

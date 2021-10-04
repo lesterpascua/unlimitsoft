@@ -14,7 +14,7 @@ namespace SoftUnlimit.WebApi.Sources.CQRS.Event
     }
     public class TestEvent : MyEvent
     {
-        public TestEvent(Guid id, Guid sourceId, long version, uint serviceId, string workerId, string correlationId, object command, object prevState, object currState, bool isDomainEvent, TestEventBody body = null)
+        public TestEvent(Guid id, Guid sourceId, long version, ushort serviceId, string workerId, string correlationId, object command, object prevState, object currState, bool isDomainEvent, TestEventBody body = null)
             : base(id, sourceId, version, serviceId, workerId, correlationId, command, prevState, currState, isDomainEvent, body)
         {
         }

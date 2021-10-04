@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using SoftUnlimit.Logger;
 using SoftUnlimit.Web.Client;
 using SoftUnlimit.Web.Security;
 using SoftUnlimit.Web.Security.Claims;
@@ -17,10 +18,6 @@ namespace SoftUnlimit.WebApi.Sources.Web
         /// User access scopes
         /// </summary>
         public const string Scope = "scope";
-        /// <summary>
-        /// Correlation identifier.
-        /// </summary>
-        public const string CorrelationHeader = "X-Correlation-ID";
 
 
         /// <summary>
@@ -46,7 +43,7 @@ namespace SoftUnlimit.WebApi.Sources.Web
             var role = aux.Any() ? aux.Aggregate((a, b) => $"{a},{b}") : null;
 
             string correlationId = @this.HttpContext.TraceIdentifier;
-            if (@this.HttpContext.Request.Headers.TryGetValue(CorrelationHeader, out var correlation))
+            if (@this.HttpContext.Request.Headers.TryGetValue(CorrelationContextAttribute.CorrelationHeader, out var correlation))
                 correlationId = correlation.FirstOrDefault();
 
             return new IdentityInfo(id, role, scope, @this.HttpContext.TraceIdentifier, correlationId);

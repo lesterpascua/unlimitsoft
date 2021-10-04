@@ -13,22 +13,16 @@ namespace SoftUnlimit.CQRS.Event
         /// When implement start event bus connection. If connection fail should recover.
         /// </summary>
         /// <param name="waitRetry">If fail indicate time to wait until retry again.</param>
-        [Obsolete("Use StartAsync")]
-        void Start(TimeSpan waitRetry);
-
-        /// <summary>
-        /// When implement start event bus connection. If connection fail should recover.
-        /// </summary>
-        /// <param name="waitRetry">If fail indicate time to wait until retry again.</param>
         /// <param name="ct"></param>
-        Task StartAsync(TimeSpan waitRetry, CancellationToken ct = default);
+        ValueTask StartAsync(TimeSpan waitRetry, CancellationToken ct = default);
+
         /// <summary>
         /// Publis event in bus.
         /// </summary>
         /// <param name="event"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task PublishEventAsync(IEvent @event, CancellationToken ct = default);
+        Task PublishAsync(IEvent @event, CancellationToken ct = default);
         /// <summary>
         /// Publis event in bus.
         /// </summary>
@@ -36,7 +30,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="type">Messaje format type.</param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task PublishEventPayloadAsync<T>(EventPayload<T> @event, MessageType type, CancellationToken ct = default);
+        Task PublishPayloadAsync<T>(EventPayload<T> @event, MessageType type, CancellationToken ct = default);
         /// <summary>
         /// Publish a raw object in the bus
         /// </summary>

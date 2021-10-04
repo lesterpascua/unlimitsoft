@@ -1,22 +1,39 @@
 ﻿using AutoMapper;
+using Azure.Messaging.ServiceBus;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 using SoftUnlimit.AutoMapper;
 using SoftUnlimit.CQRS.DependencyInjection;
+using SoftUnlimit.CQRS.Event;
+using SoftUnlimit.CQRS.Event.Json;
+using SoftUnlimit.CQRS.EventSourcing;
+using SoftUnlimit.CQRS.Message;
+using SoftUnlimit.Data;
 using SoftUnlimit.Data.EntityFramework.Configuration;
 using SoftUnlimit.Data.EntityFramework.DependencyInjection;
-using SoftUnlimit.Json;
+using SoftUnlimit.EventBus.Azure;
+using SoftUnlimit.EventBus.Azure.Configuration;
+using SoftUnlimit.Logger;
+using SoftUnlimit.Logger.Configuration;
+using SoftUnlimit.Logger.DependencyInjection;
 using SoftUnlimit.Reflection;
 using SoftUnlimit.Security;
 using SoftUnlimit.Web.AspNet.Filter;
+using SoftUnlimit.WebApi.Sources.CQRS.Command;
+using SoftUnlimit.WebApi.Sources.CQRS.Event;
 using SoftUnlimit.WebApi.Sources.Security.Cryptography;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SoftUnlimit.WebApi.DependencyInjection
 {
@@ -37,7 +54,6 @@ namespace SoftUnlimit.WebApi.DependencyInjection
         public static IServiceCollection AddConfiguration(this IServiceCollection services,
             IConfiguration configuration,
             out string[] corsOrigin,
-            //out ServiceSettings serviceSettings,
             out DatabaseSettings databaseSettings,
             //out AuthorizeSettings authorizeSettings,
             out RequestLoggerAttribute.Settings filterRequestLoggerSettings,
@@ -72,6 +88,40 @@ namespace SoftUnlimit.WebApi.DependencyInjection
 
             return services;
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="environment"></param>
+        /// <param name="compilation"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddLogger(this IServiceCollection services, string environment = null, string compilation = null)
+        {
+            const string OutputTemplate = "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}";
+
+            services.AddSofUnlimitLogger(
+                new LoggerOption
+                {
+                    Default = LogLevel.Debug,
+                    Override = new Dictionary<string, LogLevel> {
+                        { "Microsoft", LogLevel.Warning },
+                        { "Microsoft.EntityFrameworkCore", LogLevel.Information },
+                        { "System", LogLevel.Warning }
+                    }
+                },
+                environment,
+                compilation,
+                setup: setup =>
+                {
+                    setup.WriteTo.Console(
+                        restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Debug,
+                        theme: AnsiConsoleTheme.Code,
+                        outputTemplate: OutputTemplate
+                    );
+                }
+            );
+            return services;
+        }
 
         /// <summary>
         /// Register:
@@ -104,8 +154,8 @@ namespace SoftUnlimit.WebApi.DependencyInjection
             {
                 if (cqrsSettings.PreeDispatchAction == null)
                     cqrsSettings.PreeDispatchAction = (provider, command) => {
-                        //var jnCommand = (Command)command;
-                        //UpdateTraceAndCorrelation(provider, jnCommand.Props.User.TraceId, jnCommand.Props.User.CorrelationId);
+                        var identity = command.GetProps<MyCommandProps>().User;
+                        Utility.SafeUpdateCorrelationContext(provider.GetService<ICorrelationContextAccessor>(), provider.GetService<ICorrelationContext>(), identity.CorrelationId);
                     };
                 services.AddSoftUnlimitDefaultCQRS(cqrsSettings);
             }
@@ -143,7 +193,82 @@ namespace SoftUnlimit.WebApi.DependencyInjection
 
             return services;
         }
+        /// <summary>
+        /// Register azure event bus in the DPI.
+        /// </summary>
+        /// <typeparam name="TUnitOfWork"></typeparam>
+        /// <typeparam name="TAlias"></typeparam>
+        /// <param name="services"></param>
+        /// <param name="options">Bus configurations.</param>
+        /// <param name="filter">Filter if this event able to sent to specifix queue, function (queueName, eventName) => bool</param>
+        /// <param name="transform">Transform event into a diferent event (queueName, eventName, event) => event</param>
+        /// <param name="beforeProcess">Raise error to the buss so the event will be retry.</param>
+        /// <param name="onError">Call this function if some error exist.</param>
+        /// <param name="maxConcurrentCalls">Maximun thread for process events.</param>
+        /// <returns></returns>
+        public static IServiceCollection AddAzureEventBus<TUnitOfWork, TAlias, TEvent>(this IServiceCollection services,
+            AzureEventBusOptions<TAlias> options,
+            Func<IServiceProvider, TAlias, string, object, bool> filter,
+            Func<IServiceProvider, TAlias, string, object, object> transform,
+            Action<TEvent> beforeProcess = null,
+            Func<IServiceProvider, Exception, TEvent, MessageEnvelop, CancellationToken, Task> onError = null,
+            int maxConcurrentCalls = 1
+        )
+            where TUnitOfWork : IUnitOfWork
+            where TAlias : Enum
+            where TEvent : class, IEvent
+        {
+            var activeQueue = options.PublishQueues
+                .Where(p => p.Active == true)
+                .ToArray();
+            if (activeQueue.Length != 0)
+            {
+                services.AddSingleton<IEventBus>(provider =>
+                {
+                    var logger = provider.GetService<ILogger<AzureEventBus<TAlias>>>();
+                    var eventNameResolver = provider.GetService<IEventNameResolver>();
 
+                    Func<TAlias, string, object, bool> busFilter = null;
+                    Func<TAlias, string, object, object> busTransform = null;
+                    if (filter != null)
+                        busFilter = (queueName, eventName, @event) => filter(provider, queueName, eventName, @event);
+                    if (transform != null)
+                        busTransform = (queueName, eventName, @event) => transform(provider, queueName, eventName, @event);
+
+                    return new AzureEventBus<TAlias>(options.Endpoint, options.PublishQueues, eventNameResolver, busFilter, busTransform, logger);
+                });
+                services.AddSingleton<IEventPublishWorker>(provider =>
+                {
+                    var eventBus = provider.GetService<IEventBus>();
+                    var logger = provider.GetService<ILogger<MyQueueEventPublishWorker<TUnitOfWork>>>();
+                    return new MyQueueEventPublishWorker<TUnitOfWork>(provider.GetService<IServiceScopeFactory>(), eventBus, MessageType.Event, logger: logger);
+                });
+            }
+            if (options.Queue?.Active == true)
+            {
+                // 
+                // register event listener
+                services.AddSingleton((Func<IServiceProvider, IEventListener>)(provider =>
+                {
+                    var resolver = provider.GetService<IEventNameResolver>();
+                    var eventDispatcher = provider.GetService<IEventDispatcher>();
+                    var logger = provider.GetService<ILogger<AzureEventListener<TAlias>>>();
+
+                    Func<Exception, TEvent, MessageEnvelop, CancellationToken, Task> listenerOnError = null;
+                    if (onError != null)
+                        listenerOnError = async (ex, @event, messageEnvelop, ct) => await onError(provider, ex, @event, messageEnvelop, ct);
+
+                    return new AzureEventListener<TAlias>(
+                        options.Endpoint,
+                        options.Queue,
+                        (envelop, message, ct) => ProcessorUtility.Default(eventDispatcher, resolver, envelop, message, beforeProcess, listenerOnError, logger, ct),
+                        maxConcurrentCalls,
+                        logger);
+                }));
+            }
+
+            return services;
+        }
         /// <summary>
         /// 
         /// </summary>
@@ -183,6 +308,7 @@ namespace SoftUnlimit.WebApi.DependencyInjection
                     options.Filters.Add(new AuthorizeFilter(policy));
                 }
 
+                options.Filters.Add(typeof(CorrelationContextAttribute));
                 if (useRequestLoggerAttribute)
                     options.Filters.Add(typeof(RequestLoggerAttribute));
 

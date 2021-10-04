@@ -57,7 +57,7 @@ namespace SoftUnlimit.Web.AspNet.Filter
         /// <typeparam name="TAttribute"></typeparam>
         /// <param name="descriptor"></param>
         /// <returns></returns>
-        protected bool SkipDependingOfAttribute<TAttribute>(ControllerActionDescriptor descriptor) where TAttribute : Attribute
+        protected static bool SkipDependingOfAttribute<TAttribute>(ControllerActionDescriptor descriptor) where TAttribute : Attribute
         {
             if (descriptor == null || !descriptor.MethodInfo.GetCustomAttributes(typeof(TAttribute), true).Any())
                 return false;

@@ -18,7 +18,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Identifier of service where event is created
         /// </summary>
-        uint ServiceId { get; }
+        ushort ServiceId { get; }
         /// <summary>
         /// Identifier of the worker were the event is create.
         /// </summary>
@@ -80,7 +80,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="currState"></param>
         /// <param name="isDomain"></param>
         /// <param name="body"></param>
-        protected Event(Guid id, TKey sourceId, uint serviceId, string workerId, string correlationId, object command, object prevState, object currState, bool isDomain, object body)
+        protected Event(Guid id, TKey sourceId, ushort serviceId, string workerId, string correlationId, object command, object prevState, object currState, bool isDomain, object body)
         {
             Id = id;
             SourceId = sourceId;
@@ -104,7 +104,7 @@ namespace SoftUnlimit.CQRS.Event
         /// </summary>
         public TKey SourceId { get; set; }
         /// <inheritdoc />
-        public uint ServiceId { get; set; }
+        public ushort ServiceId { get; set; }
         /// <inheritdoc />
         public string WorkerId { get; set; }
         /// <inheritdoc />

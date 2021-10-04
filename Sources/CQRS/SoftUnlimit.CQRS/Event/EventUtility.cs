@@ -11,7 +11,7 @@ namespace SoftUnlimit.CQRS.Event
     /// <summary>
     /// Event utility
     /// </summary>
-    public static class Utility
+    public static class EventUtility
     {
         /// <summary>
         /// 
