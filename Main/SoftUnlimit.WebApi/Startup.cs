@@ -47,7 +47,8 @@ namespace SoftUnlimit.WebApi
         public void ConfigureServices(IServiceCollection services)
         {
             ushort serviceId = 1;
-            var connString = "MyTestDatabase";  //_configuration.GetConnectionString("Local");
+            var connString = _configuration.GetConnectionString("Local");
+            var endpoint = _configuration.GetConnectionString("Endpoint");
 
             //var loggerSettings = _configuration.GetSection("Logger").Get<LoggerSettings>();
 #if DEBUG
@@ -68,10 +69,7 @@ namespace SoftUnlimit.WebApi
                 out TransformResponseAttributeOptions transformResponseOptions);
 
             // bus config by code.
-            var eventBusOptions = new AzureEventBusOptions<QueueIdentifier>
-            {
-                Endpoint = _configuration.GetConnectionString("Endpoint")
-            };
+            var eventBusOptions = new AzureEventBusOptions<QueueIdentifier> { Endpoint = endpoint };
             eventBusOptions.Queue ??= new QueueAlias<QueueIdentifier> { 
                 Active = true, 
                 Alias = QueueIdentifier.MyQueue, Queue = QueueIdentifier.MyQueue.ToPrettyString()
