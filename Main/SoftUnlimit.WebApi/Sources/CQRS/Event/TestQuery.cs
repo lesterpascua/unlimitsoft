@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json.Linq;
-using SoftUnlimit.CQRS.Event;
+﻿using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.CQRS.Query;
 using System;
