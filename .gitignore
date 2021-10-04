@@ -263,3 +263,4 @@ __pycache__/
 /Own.Serialize.JSon
 /Own.Serialize.JSon.Test
 /BenchmarkDotNet.Artifacts
+/Main/SoftUnlimit.WebApi/appsettings.Development.json

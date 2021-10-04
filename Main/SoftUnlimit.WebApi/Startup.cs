@@ -70,7 +70,7 @@ namespace SoftUnlimit.WebApi
             // bus config by code.
             var eventBusOptions = new AzureEventBusOptions<QueueIdentifier>
             {
-                Endpoint = "Endpoint=sb://onejn-develop.servicebus.windows.net/;SharedAccessKeyName=onejn-app;SharedAccessKey=6OuNTAXmlPTCugdOWd9aZ2KYnQRYb99ClrVEQD3fpEo="
+                Endpoint = _configuration.GetConnectionString("Endpoint")
             };
             eventBusOptions.Queue ??= new QueueAlias<QueueIdentifier> { 
                 Active = true, 
