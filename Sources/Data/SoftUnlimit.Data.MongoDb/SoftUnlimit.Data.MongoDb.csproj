@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+    <Authors>Lester Pastrana</Authors>
+    <Company>Private</Company>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">0.0.0.1</Version>
+    <Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
+    <RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+    <Description>Data library with Repository and UnitOfWork for mongo db driver</Description>
+    <LangVersion>8.0</LangVersion>
+    <PackageLicenseFile>License.txt</PackageLicenseFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="License.txt">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MongoDB.Driver" Version="2.11.6" />
+  </ItemGroup>
+
+</Project>

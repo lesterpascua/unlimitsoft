@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.10" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.2" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Sources\Core\SoftUnlimit.AutoMapper\SoftUnlimit.AutoMapper.csproj" />
+    <ProjectReference Include="..\..\Sources\Core\SoftUnlimit\SoftUnlimit.csproj" />
+    <ProjectReference Include="..\..\Sources\CQRS\SoftUnlimit.AkkaBus\SoftUnlimit.AkkaBus.csproj" />
+    <ProjectReference Include="..\..\Sources\CQRS\SoftUnlimit.CQRS\SoftUnlimit.CQRS.csproj" />
+    <ProjectReference Include="..\..\Sources\Data\SoftUnlimit.Data.EntityFramework\SoftUnlimit.Data.EntityFramework.csproj" />
+    <ProjectReference Include="..\..\Sources\Data\SoftUnlimit.Data\SoftUnlimit.Data.csproj" />
+    <ProjectReference Include="..\..\Sources\Web\SoftUnlimit.Web.AspNet\SoftUnlimit.Web.AspNet.csproj" />
+    <ProjectReference Include="..\..\Sources\Web\SoftUnlimit.Web\SoftUnlimit.Web.csproj" />
+  </ItemGroup>
+
+</Project>

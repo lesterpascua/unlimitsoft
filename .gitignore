@@ -262,3 +262,4 @@ __pycache__/
 /Own.CQRS.Test
 /Own.Serialize.JSon
 /Own.Serialize.JSon.Test
+/BenchmarkDotNet.Artifacts
