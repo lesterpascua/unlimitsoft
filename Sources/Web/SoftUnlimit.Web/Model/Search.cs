@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SoftUnlimit.Web.Model
+﻿namespace SoftUnlimit.Web.Model
 {
     /// <summary>
     /// Model with search data.
@@ -18,7 +14,7 @@ namespace SoftUnlimit.Web.Model
         /// <summary>
         /// Contain page information
         /// </summary>
-        public Pagging Pagging { get; set; }
+        public Paging Paging { get; set; }
         /// <summary>
         /// Array of column, the ordenation is in the order on the array.
         /// </summary>

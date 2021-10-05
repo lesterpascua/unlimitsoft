@@ -11,7 +11,7 @@ namespace SoftUnlimit.CQRS.Query
         /// <summary>
         /// 
         /// </summary>
-        Pagging Pagging { get; set; }
+        Paging Pagging { get; set; }
         /// <summary>
         /// 
         /// </summary>

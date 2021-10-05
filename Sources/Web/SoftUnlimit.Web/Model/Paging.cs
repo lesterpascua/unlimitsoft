@@ -3,7 +3,7 @@
     /// <summary>
     /// 
     /// </summary>
-    public class Pagging
+    public class Paging
     {
         /// <summary>
         /// Curren diplayed page

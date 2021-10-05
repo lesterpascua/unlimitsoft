@@ -15,7 +15,7 @@ namespace SoftUnlimit.CQRS.Specification
         /// <summary>
         /// 
         /// </summary>
-        Pagging Pagging { get; }
+        Paging Pagging { get; }
         /// <summary>
         /// 
         /// </summary>
@@ -39,7 +39,7 @@ namespace SoftUnlimit.CQRS.Specification
         /// </summary>
         /// <param name="pagging"></param>
         /// <param name="order"></param>
-        public SearchSpecification(Pagging pagging, IReadOnlyList<ColumnName> order)
+        public SearchSpecification(Paging pagging, IReadOnlyList<ColumnName> order)
             : this(null, pagging, order)
         {
         }
@@ -49,7 +49,7 @@ namespace SoftUnlimit.CQRS.Specification
         /// <param name="inner"></param>
         /// <param name="pagging"></param>
         /// <param name="order"></param>
-        public SearchSpecification(ISpecification<TEntity> inner, Pagging pagging, IReadOnlyList<ColumnName> order)
+        public SearchSpecification(ISpecification<TEntity> inner, Paging pagging, IReadOnlyList<ColumnName> order)
             : base(inner?.Criteria, inner?.Includes)
         {
             Order = order;
@@ -59,7 +59,7 @@ namespace SoftUnlimit.CQRS.Specification
         /// <summary>
         /// 
         /// </summary>
-        public Pagging Pagging { get; }
+        public Paging Pagging { get; }
         /// <summary>
         /// Array of columns specified order of sorting.
         /// </summary>
