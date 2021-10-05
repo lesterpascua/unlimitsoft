@@ -25,20 +25,20 @@ namespace SoftUnlimit.Data.EntityFramework.DependencyInjection
         /// </summary>
         /// <param name="services"></param>
         /// <param name="settings"></param>
-        public static IServiceCollection AddSoftUnlimitDefaultFrameworkUnitOfWork(this IServiceCollection services, UnitOfWorkSettings settings)
+        public static IServiceCollection AddSoftUnlimitDefaultFrameworkUnitOfWork(this IServiceCollection services, UnitOfWorkOptions settings)
         {
             int connIndex = 0;
-            void ReadOptionAction(UnitOfWorkSettings settings, DbContextOptionsBuilder options)
+            void ReadOptionAction(UnitOfWorkOptions settings, DbContextOptionsBuilder options)
             {
                 int currConn = Math.Abs(Interlocked.Increment(ref connIndex) % settings.ReadConnString.Length);
 
-                if (settings.DatabaseSettings.EnableSensitiveDataLogging)
+                if (settings.Database.EnableSensitiveDataLogging)
                     options.EnableSensitiveDataLogging();
                 settings.ReadBuilder(settings, options, settings.ReadConnString[currConn]);
             }
-            static void WriteOptionAction(UnitOfWorkSettings settings, DbContextOptionsBuilder options)
+            static void WriteOptionAction(UnitOfWorkOptions settings, DbContextOptionsBuilder options)
             {
-                if (settings.DatabaseSettings.EnableSensitiveDataLogging)
+                if (settings.Database.EnableSensitiveDataLogging)
                     options.EnableSensitiveDataLogging();
                 settings.WriteBuilder(settings, options, settings.WriteConnString);
             }

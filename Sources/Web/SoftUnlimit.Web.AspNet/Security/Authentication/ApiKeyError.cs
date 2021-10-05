@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SoftUnlimit.Web.AspNet.Filter.Authentication
+﻿namespace SoftUnlimit.Web.AspNet.Security.Authentication
 {
     /// <summary>
     /// API key error codes.

@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Azure.Messaging.ServiceBus;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
@@ -12,8 +12,6 @@ using SoftUnlimit.AutoMapper;
 using SoftUnlimit.CQRS.DependencyInjection;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.Event.Json;
-using SoftUnlimit.CQRS.EventSourcing;
-using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.Data;
 using SoftUnlimit.Data.EntityFramework.Configuration;
 using SoftUnlimit.Data.EntityFramework.DependencyInjection;
@@ -25,8 +23,12 @@ using SoftUnlimit.Logger.DependencyInjection;
 using SoftUnlimit.Reflection;
 using SoftUnlimit.Security;
 using SoftUnlimit.Web.AspNet.Filter;
+using SoftUnlimit.Web.AspNet.Security;
+using SoftUnlimit.Web.AspNet.Security.Authentication;
+using SoftUnlimit.WebApi.Sources.CQRS.Bus;
 using SoftUnlimit.WebApi.Sources.CQRS.Command;
 using SoftUnlimit.WebApi.Sources.CQRS.Event;
+using SoftUnlimit.WebApi.Sources.Security;
 using SoftUnlimit.WebApi.Sources.Security.Cryptography;
 using System;
 using System.Collections.Generic;
@@ -54,8 +56,8 @@ namespace SoftUnlimit.WebApi.DependencyInjection
         public static IServiceCollection AddConfiguration(this IServiceCollection services,
             IConfiguration configuration,
             out string[] corsOrigin,
-            out DatabaseSettings databaseSettings,
-            //out AuthorizeSettings authorizeSettings,
+            out DatabaseOptions databaseSettings,
+            out AuthorizeOptions authorizeOptions,
             out RequestLoggerAttribute.Settings filterRequestLoggerSettings,
             out ValidationModelAttribute.Settings filterValidationSettings,
             out TransformResponseAttributeOptions filterTransformResponseOptions
@@ -64,23 +66,23 @@ namespace SoftUnlimit.WebApi.DependencyInjection
             corsOrigin = configuration.GetSection("AllowedCors").Get<string[]>();
 
             var databaseSection = configuration.GetSection("Database");
-            //var authorizeSection = configuration.GetSection("Authorize");
+            var authorizeSection = configuration.GetSection("Authorize");
 
             var filterRequestLoggerSection = configuration.GetSection("Filter:RequestLogger");
             var filterValidationSection = configuration.GetSection("Filter:Validation");
             var filterTransformResponseSection = configuration.GetSection("Filter:TransformResponse");
 
 
-            services.Configure<DatabaseSettings>(databaseSection);
-            //services.Configure<AuthorizeSettings>(authorizeSection);
+            services.Configure<DatabaseOptions>(databaseSection);
+            services.Configure<AuthorizeOptions>(authorizeSection);
 
             services.Configure<RequestLoggerAttribute.Settings>(filterRequestLoggerSection);
             services.Configure<ValidationModelAttribute.Settings>(filterValidationSection);
             services.Configure<TransformResponseAttributeOptions>(filterTransformResponseSection);
 
 
-            databaseSettings = databaseSection.Get<DatabaseSettings>();
-            //authorizeSettings = authorizeSection.Get<AuthorizeSettings>();
+            databaseSettings = databaseSection.Get<DatabaseOptions>();
+            authorizeOptions = authorizeSection.Get<AuthorizeOptions>();
 
             filterRequestLoggerSettings = filterRequestLoggerSection.Get<RequestLoggerAttribute.Settings>();
             filterValidationSettings = filterValidationSection.Get<ValidationModelAttribute.Settings>();
@@ -139,7 +141,7 @@ namespace SoftUnlimit.WebApi.DependencyInjection
         /// <returns></returns>
         public static IServiceCollection AddCQRS(this IServiceCollection services,
             ushort serviceId,
-            IEnumerable<UnitOfWorkSettings> unitOfWorkSettings,
+            IEnumerable<UnitOfWorkOptions> unitOfWorkSettings,
             CQRSSettings cqrsSettings)
         {
             var gen = new MyIdGenerator(serviceId);
@@ -206,16 +208,15 @@ namespace SoftUnlimit.WebApi.DependencyInjection
         /// <param name="onError">Call this function if some error exist.</param>
         /// <param name="maxConcurrentCalls">Maximun thread for process events.</param>
         /// <returns></returns>
-        public static IServiceCollection AddAzureEventBus<TUnitOfWork, TAlias, TEvent>(this IServiceCollection services,
-            AzureEventBusOptions<TAlias> options,
-            Func<IServiceProvider, TAlias, string, object, bool> filter,
-            Func<IServiceProvider, TAlias, string, object, object> transform,
+        public static IServiceCollection AddAzureEventBus<TUnitOfWork, TEvent>(this IServiceCollection services,
+            AzureEventBusOptions<QueueIdentifier> options,
+            Func<IServiceProvider, QueueIdentifier, string, object, bool> filter,
+            Func<IServiceProvider, QueueIdentifier, string, object, object> transform,
             Action<TEvent> beforeProcess = null,
             Func<IServiceProvider, Exception, TEvent, MessageEnvelop, CancellationToken, Task> onError = null,
             int maxConcurrentCalls = 1
         )
             where TUnitOfWork : IUnitOfWork
-            where TAlias : Enum
             where TEvent : class, IEvent
         {
             var activeQueue = options.PublishQueues
@@ -225,17 +226,17 @@ namespace SoftUnlimit.WebApi.DependencyInjection
             {
                 services.AddSingleton<IEventBus>(provider =>
                 {
-                    var logger = provider.GetService<ILogger<AzureEventBus<TAlias>>>();
+                    var logger = provider.GetService<ILogger<AzureEventBus<QueueIdentifier>>>();
                     var eventNameResolver = provider.GetService<IEventNameResolver>();
 
-                    Func<TAlias, string, object, bool> busFilter = null;
-                    Func<TAlias, string, object, object> busTransform = null;
+                    Func<QueueIdentifier, string, object, bool> busFilter = null;
+                    Func<QueueIdentifier, string, object, object> busTransform = null;
                     if (filter != null)
                         busFilter = (queueName, eventName, @event) => filter(provider, queueName, eventName, @event);
                     if (transform != null)
                         busTransform = (queueName, eventName, @event) => transform(provider, queueName, eventName, @event);
 
-                    return new AzureEventBus<TAlias>(options.Endpoint, options.PublishQueues, eventNameResolver, busFilter, busTransform, logger);
+                    return new AzureEventBus<QueueIdentifier>(options.Endpoint, options.PublishQueues, eventNameResolver, busFilter, busTransform, logger);
                 });
                 services.AddSingleton<IEventPublishWorker>(provider =>
                 {
@@ -248,23 +249,24 @@ namespace SoftUnlimit.WebApi.DependencyInjection
             {
                 // 
                 // register event listener
-                services.AddSingleton((Func<IServiceProvider, IEventListener>)(provider =>
+                services.AddSingleton<IEventListener>(provider =>
                 {
                     var resolver = provider.GetService<IEventNameResolver>();
                     var eventDispatcher = provider.GetService<IEventDispatcher>();
-                    var logger = provider.GetService<ILogger<AzureEventListener<TAlias>>>();
+                    var logger = provider.GetService<ILogger<AzureEventListener<QueueIdentifier>>>();
 
                     Func<Exception, TEvent, MessageEnvelop, CancellationToken, Task> listenerOnError = null;
                     if (onError != null)
                         listenerOnError = async (ex, @event, messageEnvelop, ct) => await onError(provider, ex, @event, messageEnvelop, ct);
 
-                    return new AzureEventListener<TAlias>(
+                    return new AzureEventListener<QueueIdentifier>(
                         options.Endpoint,
                         options.Queue,
                         (envelop, message, ct) => ProcessorUtility.Default(eventDispatcher, resolver, envelop, message, beforeProcess, listenerOnError, logger, ct),
                         maxConcurrentCalls,
-                        logger);
-                }));
+                        logger
+                    );
+                });
             }
 
             return services;
@@ -287,7 +289,6 @@ namespace SoftUnlimit.WebApi.DependencyInjection
             string[] corsOrigin,
             bool useRequestLoggerAttribute,
             string corsPolicy = "default",
-            bool authorizeRequire = true,
             bool addViewToController = false,
             bool useNewtonsoft = true,
             Action<IMvcBuilder> mvcBuilderOption = null,
@@ -300,14 +301,6 @@ namespace SoftUnlimit.WebApi.DependencyInjection
             // uncomment, if you want to add an MVC-based UI
             void defaultMvcOptions(MvcOptions options)
             {
-                if (authorizeRequire)
-                {
-                    var policy = new AuthorizationPolicyBuilder()
-                        .RequireAuthenticatedUser()
-                        .Build();
-                    options.Filters.Add(new AuthorizeFilter(policy));
-                }
-
                 options.Filters.Add(typeof(CorrelationContextAttribute));
                 if (useRequestLoggerAttribute)
                     options.Filters.Add(typeof(RequestLoggerAttribute));
@@ -353,5 +346,40 @@ namespace SoftUnlimit.WebApi.DependencyInjection
 
             return services;
       }
+
+        /// <summary>
+        /// Adding Api key scheme.
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="config"></param>
+        /// <returns></returns>
+        public static AuthenticationBuilder AddMyAuthentication(this IServiceCollection services, Action<MyAuthenticationOptions> config)
+        {
+            return services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = ApiKeyAuthenticationOptions.DefaultAuthenticationScheme;
+                options.DefaultChallengeScheme = ApiKeyAuthenticationOptions.DefaultAuthenticationScheme;
+            }).AddScheme<MyAuthenticationOptions, ApiKeyAuthenticationHandler<MyAuthenticationOptions>>(ApiKeyAuthenticationOptions.DefaultAuthenticationScheme, config);
+        }
+        /// <summary>
+        /// Add authorization services based in roles and scopes.
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="defaultPolicy">Allow set extra policies.</param>
+        /// <returns></returns>
+        public static IServiceCollection AddMyAuthorization(this IServiceCollection services, Action<AuthorizationPolicyBuilder> defaultPolicy = null)
+        {
+            services.AddAuthorization(options =>
+            {
+                var builder = new AuthorizationPolicyBuilder().RequireAuthenticatedUser();
+
+                defaultPolicy?.Invoke(builder);
+                options.DefaultPolicy = builder.Build();
+            });
+            services.AddTransient<IAuthorizationPolicyProvider, ScopePolicyProvider>();
+            services.AddTransient<IAuthorizationHandler, ScopeAuthorizationRequirementHandler>();
+
+            return services;
+        }
     }
 }

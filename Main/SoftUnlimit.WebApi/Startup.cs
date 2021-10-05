@@ -26,6 +26,7 @@ using SoftUnlimit.WebApi.Sources.CQRS.Event;
 using SoftUnlimit.WebApi.Sources.CQRS.Query;
 using SoftUnlimit.WebApi.Sources.Data;
 using SoftUnlimit.WebApi.Sources.Data.Configuration;
+using SoftUnlimit.WebApi.Sources.Security;
 using System.Linq;
 using System.Reflection;
 
@@ -62,8 +63,8 @@ namespace SoftUnlimit.WebApi
             #region Config
             services.AddConfiguration(_configuration,
                 out string[] corsOrigin,
-                out DatabaseSettings databaseSettings,
-                //out AuthorizeSettings authorizeSettings,
+                out DatabaseOptions databaseSettings,
+                out AuthorizeOptions authorizeOption,
                 out RequestLoggerAttribute.Settings requestLoggerSettings,
                 out ValidationModelAttribute.Settings validationModelSettings,
                 out TransformResponseAttributeOptions transformResponseOptions);
@@ -89,9 +90,9 @@ namespace SoftUnlimit.WebApi
             var inMemoryDatabaseRoot = new InMemoryDatabaseRoot();
             services.AddCQRS(
                 serviceId,
-                new UnitOfWorkSettings[] {
-                    new UnitOfWorkSettings {
-                        DatabaseSettings = new DatabaseSettings {
+                new UnitOfWorkOptions[] {
+                    new UnitOfWorkOptions {
+                        Database = new DatabaseOptions {
                             EnableSensitiveDataLogging = true,
                             MaxRetryCount = 3,
                             MaxRetryDelay = 1
@@ -133,7 +134,7 @@ namespace SoftUnlimit.WebApi
             #endregion
 
             #region EventBus
-            services.AddAzureEventBus<IMyUnitOfWork, QueueIdentifier, TestEvent>(
+            services.AddAzureEventBus<IMyUnitOfWork, TestEvent>(
                 eventBusOptions,
                 filter: TransformEventToDomain.Filter,
                 transform: TransformEventToDomain.Transform,
@@ -149,27 +150,14 @@ namespace SoftUnlimit.WebApi
             services.AddAspNet<Startup>(
                 corsOrigin, 
                 requestLoggerSettings is not null && requestLoggerSettings.LogLevel != LogLevel.None, 
-                useNewtonsoft: false,
-                authorizeRequire: false
+                useNewtonsoft: false
             );
             //services.AddHostedService<BackgroundJob>();
             #endregion
 
             #region Authentication & Authorization
-
-            //services.AddRubiconAuthentication(options => {
-            //    options.ApiKey = authorizeSettings.ApiKey;
-            //});
-
-            //services.AddAuthorization(options => {
-            //    options.DefaultPolicy = new AuthorizationPolicyBuilder()
-            //        .RequireAuthenticatedUser()
-            //        //.RequireScope("JNGroup.OneJN.Partner")
-            //        .Build();
-            //});
-
-            //services.AddSingleton<IAuthorizationHandler, ScopeAuthorizationRequirementHandler>();
-
+            services.AddMyAuthentication(options => options.ApiKey = authorizeOption.ApiKey);
+            services.AddMyAuthorization();
             #endregion
 
             services.AddHealthChecks();
@@ -213,9 +201,10 @@ namespace SoftUnlimit.WebApi
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseEndpoints(endpoints => endpoints.MapControllers());
+            app.UseEndpoints(endpoints => endpoints.MapControllers().RequireAuthorization());
         }
     }
 }

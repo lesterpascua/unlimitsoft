@@ -1,19 +1,15 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Http;
-using SoftUnlimit.Web.Security;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
-using System.Text;
 
-namespace SoftUnlimit.Web.AspNet.Filter.Authentication
+namespace SoftUnlimit.Web.AspNet.Security.Authentication
 {
     /// <summary>
     /// Options for API Key auth method
     /// </summary>
-    /// <typeparam name="TUser"></typeparam>
-    public class ApiKeyAuthenticationOptions<TUser> : AuthenticationSchemeOptions
-        where TUser : class
+    public abstract class ApiKeyAuthenticationOptions : AuthenticationSchemeOptions
     {
         /// <summary>
         /// 
@@ -34,12 +30,15 @@ namespace SoftUnlimit.Web.AspNet.Filter.Authentication
         /// </summary>
         public string ApiKey { get; set; }
         /// <summary>
-        /// Retrive user associate with the request if null means no user asociate and the apiKey is invalid.
+        /// Supplied error code and get string representation.
         /// </summary>
-        public Func<HttpRequest, TUser> CreateUserInfo { get; set; }
+        protected internal Func<ApiKeyError, string> ErrorBuilder { get; }
+
         /// <summary>
         /// Return claims associate to principal identity. The result could be null. 
         /// </summary>
-        public Func<TUser, HttpRequest, IEnumerable<Claim>> CreateClaims { get; set; }
+        /// <param name="httpRequest"></param>
+        /// <returns></returns>
+        protected internal abstract IEnumerable<Claim> CreateClaims(HttpRequest httpRequest);
     }
 }

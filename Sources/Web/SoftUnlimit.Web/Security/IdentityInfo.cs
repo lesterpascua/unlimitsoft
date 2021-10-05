@@ -6,10 +6,14 @@ namespace SoftUnlimit.Web.Security
     /// <summary>
     /// Short information about the customer, use in commands and queries
     /// </summary>
-    public record IdentityInfo
+    public class IdentityInfo
     {
         private string[] _roles, _scopes;
 
+        /// <summary>
+        /// 
+        /// </summary>
+        public IdentityInfo() { }
         /// <summary>
         /// 
         /// </summary>
@@ -23,23 +27,23 @@ namespace SoftUnlimit.Web.Security
         /// <summary>
         /// User identifier
         /// </summary>
-        public Guid Id { get; }
+        public Guid Id { get; set; }
         /// <summary>
         /// Roles separate by coma of the identity
         /// </summary>
-        public string Role { get; }
+        public string Role { get; set; }
         /// <summary>
         /// Stope separate by coma of the identitty
         /// </summary>
-        public string Scope { get; }
+        public string Scope { get; set; }
         /// <summary>
         /// Operation trace identifier.
         /// </summary>
-        public string TraceId { get; }
+        public string TraceId { get; set; }
         /// <summary>
         /// Correlation trace identifier.
         /// </summary>
-        public string CorrelationId { get; }
+        public string CorrelationId { get; set; }
 
         /// <summary>
         /// 

@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SoftUnlimit.Data.EntityFramework.Configuration
+﻿namespace SoftUnlimit.Data.EntityFramework.Configuration
 {
     /// <summary>
     /// 
     /// </summary>
-    public class DatabaseSettings
+    public class DatabaseOptions
     {
         /// <summary>
         /// Maximun second amound for retry delay.

@@ -7,7 +7,7 @@ namespace SoftUnlimit.Data.EntityFramework.DependencyInjection
     /// <summary>
     /// 
     /// </summary>
-    public sealed class UnitOfWorkSettings
+    public sealed class UnitOfWorkOptions
     {
         /// <summary>
         /// 
@@ -20,7 +20,7 @@ namespace SoftUnlimit.Data.EntityFramework.DependencyInjection
         /// <summary>
         /// 
         /// </summary>
-        public DatabaseSettings DatabaseSettings { get; set; }
+        public DatabaseOptions Database { get; set; }
 
         /// <summary>
         /// Type of the interface used as Unit of Work
@@ -85,13 +85,13 @@ namespace SoftUnlimit.Data.EntityFramework.DependencyInjection
         /// <summary>
         /// Map current DbContext. 
         /// </summary>
-        public Action<UnitOfWorkSettings, DbContextOptionsBuilder, string> ReadBuilder { get; set; }
+        public Action<UnitOfWorkOptions, DbContextOptionsBuilder, string> ReadBuilder { get; set; }
         /// <summary>
         /// Map current DbContext. 
         /// </summary>
         /// <example>
         /// options.UseNpgsql(connString);
         /// </example>
-        public Action<UnitOfWorkSettings, DbContextOptionsBuilder, string> WriteBuilder { get; set; }
+        public Action<UnitOfWorkOptions, DbContextOptionsBuilder, string> WriteBuilder { get; set; }
     }
 }

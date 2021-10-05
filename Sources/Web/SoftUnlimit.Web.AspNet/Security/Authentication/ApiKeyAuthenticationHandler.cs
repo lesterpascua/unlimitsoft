@@ -8,19 +8,16 @@ using System;
 using System.Linq;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
-using System.Text.Json;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.Web.AspNet.Filter.Authentication
+namespace SoftUnlimit.Web.AspNet.Security.Authentication
 {
     /// <summary>
     /// 
     /// </summary>
     /// <typeparam name="TOption"></typeparam>
-    /// <typeparam name="TUser"></typeparam>
-    public class ApiKeyAuthenticationHandler<TOption, TUser> : AuthenticationHandler<TOption>
-        where TOption : ApiKeyAuthenticationOptions<TUser>, new()
-        where TUser : class
+    public class ApiKeyAuthenticationHandler<TOption> : AuthenticationHandler<TOption>
+        where TOption : ApiKeyAuthenticationOptions, new()
     {
         /// <summary>
         /// Header were the API Key supplied.
@@ -36,17 +33,11 @@ namespace SoftUnlimit.Web.AspNet.Filter.Authentication
         /// <param name="logger"></param>
         /// <param name="encoder"></param>
         /// <param name="clock"></param>
-        /// <param name="errStringFactory"></param>
-        public ApiKeyAuthenticationHandler(IOptionsMonitor<TOption> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock, Func<ApiKeyError, string> errStringFactory = null)
+        public ApiKeyAuthenticationHandler(IOptionsMonitor<TOption> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock)
             : base(options, logger, encoder, clock)
         {
-            ErrorBuilder = errStringFactory;
         }
 
-        /// <summary>
-        /// Supplied error code and get string representation.
-        /// </summary>
-        protected Func<ApiKeyError, string> ErrorBuilder { get; }
 
         /// <summary>
         /// 
@@ -61,15 +52,13 @@ namespace SoftUnlimit.Web.AspNet.Filter.Authentication
             if (string.IsNullOrWhiteSpace(apiKey))
                 return Task.FromResult(AuthenticateResult.NoResult());
             if (apiKey != Options.ApiKey)
-                return Task.FromResult(AuthenticateResult.Fail(ErrorBuilder?.Invoke(ApiKeyError.InvalidAPIKey) ?? "Invalid API Key"));
+                return Task.FromResult(AuthenticateResult.Fail(Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidAPIKey) ?? "Invalid API Key"));
 
             try
             {
-                TUser userInfo = Options.CreateUserInfo?.Invoke(Request);
-                if (userInfo == null)
-                    return Task.FromResult(AuthenticateResult.Fail(ErrorBuilder?.Invoke(ApiKeyError.InvalidUserInfo) ?? "Invalid User Info"));
-
-                var claims = Options.CreateClaims?.Invoke(userInfo, Request) ?? Array.Empty<Claim>(); ;
+                var claims = Options.CreateClaims(Request);
+                if (claims == null)
+                    return Task.FromResult(AuthenticateResult.Fail(Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidUserInfo) ?? "Invalid User Info"));
 
                 var identity = new ClaimsIdentity(claims, Options.AuthenticationType);
                 var principal = new ClaimsPrincipal(identity);
@@ -81,7 +70,7 @@ namespace SoftUnlimit.Web.AspNet.Filter.Authentication
             {
                 Logger.LogError(exc, "Invalid auth format.");
             }
-            return Task.FromResult(AuthenticateResult.Fail(ErrorBuilder?.Invoke(ApiKeyError.InvalidAPIKey) ?? "Invalid User Info"));
+            return Task.FromResult(AuthenticateResult.Fail(Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidUserInfo) ?? "Invalid User Info"));
         }
 
         /// <summary>
@@ -94,7 +83,7 @@ namespace SoftUnlimit.Web.AspNet.Filter.Authentication
             Response.ContentType = ContentType;
             Response.StatusCode = StatusCodes.Status401Unauthorized;
 
-            var uiText = ErrorBuilder?.Invoke(ApiKeyError.InvalidAPIKey) ?? "Invalid API Key";
+            var uiText = Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidAPIKey) ?? "Invalid API Key";
             var problemDetails = new Response<object>(StatusCodes.Status401Unauthorized, null, uiText, Context.TraceIdentifier);
 
             await Response.WriteAsync(JsonUtility.Serialize(problemDetails));
@@ -112,7 +101,7 @@ namespace SoftUnlimit.Web.AspNet.Filter.Authentication
             var problemDetails = new Response<object>(
                 StatusCodes.Status403Forbidden,
                 null,
-                ErrorBuilder?.Invoke(ApiKeyError.InvalidUserPermission) ?? "User no have permission for the operation",
+                Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidUserPermission) ?? "User no have permission for the operation",
                 Context.TraceIdentifier
             );
             await Response.WriteAsync(JsonUtility.Serialize(problemDetails));
