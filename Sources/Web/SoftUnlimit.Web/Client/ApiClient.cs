@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SoftUnlimit.Web.Client
@@ -25,8 +26,9 @@ namespace SoftUnlimit.Web.Client
         /// <param name="uri"></param>
         /// <param name="setup">Allow configuration of current execution context before perform the request.</param>
         /// <param name="model"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
-        Task<(TModel, HttpStatusCode)> SendAsync<TModel>(HttpMethod method, string uri, Action<HttpRequestMessage> setup = null, object model = null);
+        Task<(TModel, HttpStatusCode)> SendAsync<TModel>(HttpMethod method, string uri, Action<HttpRequestMessage> setup = null, object model = null, CancellationToken ct = default);
         /// <summary>
         /// Upload file (multipart/form-data)
         /// </summary>
@@ -37,7 +39,8 @@ namespace SoftUnlimit.Web.Client
         /// <param name="streams"></param>
         /// <param name="setup">Allow configuration of current execution context before perform the request.</param>
         /// <param name="qs"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
-        Task<(TModel, HttpStatusCode)> UploadAsync<TModel>(HttpMethod method, string uri, string fileName, IEnumerable<Stream> streams, Action<HttpRequestMessage> setup = null, object qs = null);
+        Task<(TModel, HttpStatusCode)> UploadAsync<TModel>(HttpMethod method, string uri, string fileName, IEnumerable<Stream> streams, Action<HttpRequestMessage> setup = null, object qs = null, CancellationToken ct = default);
     }
 }

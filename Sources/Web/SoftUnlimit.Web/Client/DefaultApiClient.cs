@@ -7,6 +7,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SoftUnlimit.Web.Client
@@ -42,7 +43,7 @@ namespace SoftUnlimit.Web.Client
         /// <inheritdoc />
         public void Dispose() => HttpClient.Dispose();
         /// <inheritdoc/>
-        public async Task<(TModel, HttpStatusCode)> SendAsync<TModel>(HttpMethod method, string uri, Action<HttpRequestMessage> setup = null, object model = null)
+        public async Task<(TModel, HttpStatusCode)> SendAsync<TModel>(HttpMethod method, string uri, Action<HttpRequestMessage> setup = null, object model = null, CancellationToken ct = default)
         {
             string completeUri = uri;
             string jsonContent = null;
@@ -56,15 +57,23 @@ namespace SoftUnlimit.Web.Client
                 } else
                     jsonContent = JsonConvert.SerializeObject(model);
             }
-            HttpContent content = null;
-            if (jsonContent != null)
-                content = new StringContent(jsonContent, Encoding.UTF8, "application/json");
+            HttpContent httpContent = null;
+            try
+            {
+                if (jsonContent != null)
+                    httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-            await BeforeSendRequestAsync(content, method, uri);
-            return await SendWithContentAsync<TModel>(_httpClient, method, completeUri, content, setup);
+                await BeforeSendRequestAsync(httpContent, method, completeUri, ct);
+                return await SendWithContentAsync<TModel>(_httpClient, method, completeUri, httpContent, setup);
+            }
+            finally
+            {
+                if (httpContent != null)
+                    httpContent.Dispose();
+            }
         }
         /// <inheritdoc/>
-        public async Task<(TModel, HttpStatusCode)> UploadAsync<TModel>(HttpMethod method, string uri, string fileName, IEnumerable<Stream> streams, Action<HttpRequestMessage> setup = null, object qs = null)
+        public async Task<(TModel, HttpStatusCode)> UploadAsync<TModel>(HttpMethod method, string uri, string fileName, IEnumerable<Stream> streams, Action<HttpRequestMessage> setup = null, object qs = null, CancellationToken ct = default)
         {
             if (method == HttpMethod.Get)
                 throw new NotSupportedException("Get method don't allow upload image.");
@@ -87,19 +96,20 @@ namespace SoftUnlimit.Web.Client
         /// <param name="content"></param>
         /// <param name="method"></param>
         /// <param name="uri"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
-        protected virtual Task BeforeSendRequestAsync(HttpContent content, HttpMethod method, string uri) => Task.CompletedTask;
+        protected virtual Task BeforeSendRequestAsync(HttpContent content, HttpMethod method, string uri, CancellationToken ct = default) => Task.CompletedTask;
 
         #region Private Methods
 
-        private static async Task<(TModel, HttpStatusCode)> SendWithContentAsync<TModel>(HttpClient httpClient, HttpMethod method, string completeUri, HttpContent content, Action<HttpRequestMessage> setup)
+        private static async Task<(TModel, HttpStatusCode)> SendWithContentAsync<TModel>(HttpClient httpClient, HttpMethod method, string completeUri, HttpContent content, Action<HttpRequestMessage> setup, CancellationToken ct = default)
         {
-            var message = new HttpRequestMessage(method, completeUri);
+            using var message = new HttpRequestMessage(method, completeUri);
             if (content != null)
                 message.Content = content;
 
             setup?.Invoke(message);
-            var response = await httpClient.SendAsync(message);
+            using var response = await httpClient.SendAsync(message, ct);
 
             if (!response.IsSuccessStatusCode)
             {

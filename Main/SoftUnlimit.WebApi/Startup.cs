@@ -13,6 +13,7 @@ using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.Data.EntityFramework.Configuration;
 using SoftUnlimit.Data.EntityFramework.DependencyInjection;
 using SoftUnlimit.Data.EntityFramework.Utility;
+using SoftUnlimit.DespendencyInjections;
 using SoftUnlimit.EventBus.Azure.Configuration;
 using SoftUnlimit.Json;
 using SoftUnlimit.Logger;
@@ -163,10 +164,12 @@ namespace SoftUnlimit.WebApi
             services.AddHealthChecks();
 
             #region Api Services
-            //services.AddApiServices(
-            //    servicesAddress,
-            //    resolver: null,
-            //    extraAssemblies: new Assembly[] { });
+            services.AddApiServices(
+                assembly => "https://mock.codes/",
+                extraAssemblies: new Assembly[] {
+                    typeof(Sources.Adapter.IMockService).Assembly
+                }
+            );
             #endregion
 
             services.AddControllers();

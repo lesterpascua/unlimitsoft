@@ -13,18 +13,10 @@ namespace SoftUnlimit.Web.Client
         /// 
         /// </summary>
         /// <param name="apiClient"></param>
-        protected BaseApiService(IApiClient apiClient)
-            : this(apiClient, null, null)
-        {
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="apiClient"></param>
         /// <param name="cache"></param>
         /// <param name="cacheItemPolicy"></param>
         /// <param name="ignorePrevCache"></param>
-        protected BaseApiService(IApiClient apiClient, ObjectCache cache, CacheItemPolicy cacheItemPolicy, bool ignorePrevCache = false)
+        protected BaseApiService(IApiClient apiClient, ObjectCache cache = null, CacheItemPolicy cacheItemPolicy = null, bool ignorePrevCache = false)
         {
             ApiClient = apiClient;
             Cache = cache;
