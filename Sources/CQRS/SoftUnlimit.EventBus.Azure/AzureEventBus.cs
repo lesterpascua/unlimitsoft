@@ -1,5 +1,7 @@
 ﻿using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Logging;
+using Polly;
+using Polly.Retry;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.EventBus.Azure.Configuration;
@@ -14,12 +16,13 @@ using System.Threading.Tasks;
 namespace SoftUnlimit.EventBus.Azure
 {
     /// <summary>
-    /// Implement a bus using azure resources.
+    /// Implement a bus to send message using azure resources.
     /// </summary>
     public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
         where TAlias : Enum
     {
         private ServiceBusClient _client;
+        private AsyncRetryPolicy _retryPolicy;
 
         private readonly IEnumerable<QueueAlias<TAlias>> _queues;
         private readonly string _endpoint;
@@ -62,6 +65,14 @@ namespace SoftUnlimit.EventBus.Azure
         public ValueTask StartAsync(TimeSpan waitRetry, CancellationToken ct)
         {
             _logger?.LogDebug("AzureEventBus start");
+
+            _retryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(
+                    3,
+                    retryAttempt => waitRetry,
+                    (ex, time) => _logger?.LogWarning(ex, "Retry {Time} publish in EventBus, error: {Message}", time, ex.Message)
+                );
             _client = new ServiceBusClient(_endpoint);
 
             return ValueTask.CompletedTask;
@@ -94,8 +105,9 @@ namespace SoftUnlimit.EventBus.Azure
                     throw new NotSupportedException();
             }
         }
+
         /// <summary>
-        /// 
+        /// Raw object publush
         /// </summary>
         /// <param name="graph"></param>
         /// <param name="id"></param>
@@ -124,39 +136,31 @@ namespace SoftUnlimit.EventBus.Azure
         }
         private async Task PublishMessageInQueueAsync(object graph, Guid id, string eventName, string correlationId, MessageType type, QueueAlias<TAlias> queue, CancellationToken ct)
         {
-            try
+            await using var sender = _client.CreateSender(queue.Queue);
+            var transformed = _transform?.Invoke(queue.Alias, eventName, graph) ?? graph;
+
+            var messageEnvelop = new MessageEnvelop
             {
-                await using var sender = _client.CreateSender(queue.Queue);
-                var transformed = _transform?.Invoke(queue.Alias, eventName, graph) ?? graph;
+                Type = type,
+                Messaje = transformed,
+                MessajeType = transformed.GetType().FullName
+            };
 
-                var messageEnvelop = new MessageEnvelop
-                {
-                    Type = type,
-                    Messaje = transformed,
-                    MessajeType = transformed.GetType().FullName
-                };
+            var json = JsonUtility.Serialize(messageEnvelop);
+            var raw = Encoding.UTF8.GetBytes(json);
 
-                var json = JsonUtility.Serialize(messageEnvelop);
-                var raw = Encoding.UTF8.GetBytes(json);
+            var message = new ServiceBusMessage(raw);
+            if (!string.IsNullOrEmpty(correlationId))
+                message.CorrelationId = correlationId;
 
-                var message = new ServiceBusMessage(raw);
-                if (!string.IsNullOrEmpty(correlationId))
-                    message.CorrelationId = correlationId;
+            message.MessageId = id.ToString();
+            message.ContentType = "application/json";
 
-                message.MessageId = id.ToString();
-                message.ContentType = "application/json";
+            message.ApplicationProperties[BusProperty.EventName] = eventName;
+            message.ApplicationProperties[BusProperty.MessageType] = transformed.GetType().AssemblyQualifiedName;
 
-                message.ApplicationProperties[BusProperty.EventName] = eventName;
-                message.ApplicationProperties[BusProperty.MessageType] = transformed.GetType().AssemblyQualifiedName;
-
-                await sender.SendMessageAsync(message, ct);
-                _logger?.LogInformation("Publish to {Queue} event: {@Event}", queue.Queue, graph);
-            }
-            catch (Exception ex)
-            {
-                _logger?.LogError(ex, "Error publish to {Queue} event: {@Event}", queue.Queue, graph);
-                throw new AggregateException($"Error publish event", ex);
-            }
+            await _retryPolicy.ExecuteAsync((cancelationToken) => sender.SendMessageAsync(message, cancelationToken), ct);
+            _logger?.LogInformation("Publish to {Queue} event: {@Event}", queue.Queue, graph);
         }
         #endregion
     }

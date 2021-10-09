@@ -58,7 +58,6 @@ namespace SoftUnlimit.CQRS.Event
             //
             // get handler and execute event.
             Type eventType = @event.GetType();
-            _logger?.LogDebug("Execute evet type: {Type}", eventType);
 
             var handler = GetEventHandler(provider, eventType);
             return await ExecuteHandlerForCommandAsync(handler, @event, eventType, UseCache, ct);

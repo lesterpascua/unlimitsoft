@@ -1,6 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SoftUnlimit.CQRS.Event
@@ -14,13 +13,15 @@ namespace SoftUnlimit.CQRS.Event
         /// 
         /// </summary>
         /// <param name="entities"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
-        Task DispatchEventsAsync(IEnumerable<IEvent> entities);
+        Task DispatchEventsAsync(IEnumerable<IEvent> entities, CancellationToken ct);
         /// <summary>
         /// When all event are saved invoqued this method. 
         /// </summary>
         /// <param name="entities"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
-        Task EventsDispatchedAsync(IEnumerable<IEvent> entities);
+        ValueTask EventsDispatchedAsync(IEnumerable<IEvent> entities, CancellationToken ct);
     }
 }

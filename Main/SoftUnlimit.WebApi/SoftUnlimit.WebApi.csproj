@@ -6,12 +6,18 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="5.0.10" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="5.0.10">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
     <PackageReference Include="Serilog.AspNetCore" Version="3.4.0" />
     <PackageReference Include="Serilog.Sinks.Console" Version="4.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.2.2" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Sources\Core\SoftUnlimit.AutoMapper.DependencyInjection\SoftUnlimit.AutoMapper.DependencyInjection.csproj" />
     <ProjectReference Include="..\..\Sources\Core\SoftUnlimit.AutoMapper\SoftUnlimit.AutoMapper.csproj" />
     <ProjectReference Include="..\..\Sources\Core\SoftUnlimit.Logger\SoftUnlimit.Logger.csproj" />
     <ProjectReference Include="..\..\Sources\Core\SoftUnlimit\SoftUnlimit.csproj" />

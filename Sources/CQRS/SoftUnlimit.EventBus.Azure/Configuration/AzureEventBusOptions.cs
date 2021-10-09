@@ -27,11 +27,11 @@ namespace SoftUnlimit.EventBus.Azure.Configuration
         /// </summary>
         public string Endpoint { get; set; }
         /// <summary>
-        /// Queue asociate with the current service.
+        /// Queues used for the current service to listener messages.
         /// </summary>
-        public QueueAlias<TAlias> Queue { get; set; }
+        public QueueAlias<TAlias>[] ListenQueues { get; set; }
         /// <summary>
-        /// Queues where this service can publish event.
+        /// Queues used for the current service to publish messages event.
         /// </summary>
         public QueueAlias<TAlias>[] PublishQueues { get; set; }
 

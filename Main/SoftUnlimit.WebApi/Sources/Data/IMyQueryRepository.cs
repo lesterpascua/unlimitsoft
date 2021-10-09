@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace SoftUnlimit.WebApi.Sources.Data
 {
-    public interface IMyQueryRepository
+    public interface IMyQueryRepository : IDbConnectionFactory
     {
         Task<IEnumerable> GetAll();
     }

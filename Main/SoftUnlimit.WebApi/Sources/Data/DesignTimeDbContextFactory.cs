@@ -1,5 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
+using Microsoft.Extensions.Configuration;
+using System.IO;
 
 namespace SoftUnlimit.WebApi.Sources.Data
 {
@@ -14,13 +16,13 @@ namespace SoftUnlimit.WebApi.Sources.Data
         /// <returns></returns>
         public DbContextWrite CreateDbContext(string[] args)
         {
-            //var builder = new ConfigurationBuilder()
-            //    .AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), "appsettings.Design.json"))
-            //    .Build();
-            //var connString = builder.GetConnectionString("JnIdentificationScan");
+            var builder = new ConfigurationBuilder()
+                .AddJsonFile(Path.Combine(Directory.GetCurrentDirectory(), "appsettings.Development.json"))
+                .Build();
+            var connString = builder.GetConnectionString("Local");
 
             var options = new DbContextOptionsBuilder<DbContextWrite>()
-                //.UseSqlServer(connString)
+                .UseSqlServer(connString)
                 .Options;
 
             return new DbContextWrite(options);

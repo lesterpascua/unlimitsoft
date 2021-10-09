@@ -1,6 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
+using System.Data;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SoftUnlimit.Data
@@ -13,17 +13,21 @@ namespace SoftUnlimit.Data
         /// <summary>
         /// Commit hight level transaction
         /// </summary>
+        /// <param name="ct"></param>
         /// <returns></returns>
-        Task TransactionCommitAsync();
+        Task TransactionCommitAsync(CancellationToken ct = default);
         /// <summary>
         /// Reject hight level transaction
         /// </summary>
+        /// <param name="ct"></param>
         /// <returns></returns>
-        Task TransactionRollbackAsync();
+        Task TransactionRollbackAsync(CancellationToken ct = default);
         /// <summary>
         /// Create a hight level transaction inside the transactional life cicle.
         /// </summary>
+        /// <param name="level"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
-        Task<IAsyncDisposable> TransactionCreateAsync();
+        Task<IAsyncDisposable> TransactionCreateAsync(IsolationLevel level = IsolationLevel.ReadCommitted, CancellationToken ct = default);
     }
 }

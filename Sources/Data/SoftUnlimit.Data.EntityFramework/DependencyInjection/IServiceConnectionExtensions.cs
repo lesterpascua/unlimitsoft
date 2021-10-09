@@ -1,16 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using SoftUnlimit.CQRS.Command;
-using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.EventSourcing;
-using SoftUnlimit.CQRS.Query;
 using SoftUnlimit.Data.Reflection;
 using SoftUnlimit.Reflection;
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 
 namespace SoftUnlimit.Data.EntityFramework.DependencyInjection

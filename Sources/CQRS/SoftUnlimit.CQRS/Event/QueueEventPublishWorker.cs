@@ -12,8 +12,12 @@ using System.Threading.Tasks;
 namespace SoftUnlimit.CQRS.Event
 {
     /// <summary>
-    /// Create a backgound process to publish all dispatcher events
+    /// Create a backgound process to publish all dispatcher events.
     /// </summary>
+    /// <remarks>
+    /// The implementation asume the event is store in the <see cref="IUnitOfWork"/> instance. Only store the unique event id and when need to 
+    /// publish the background process will read from the <see cref="IRepository{TEntity}"/> and publish in the event bus.
+    /// </remarks>
     /// <typeparam name="TUnitOfWork">Register Unit of Work interface. Late used by <see cref="IServiceProvider"/> to update event state in database.</typeparam>
     /// <typeparam name="TEventRepository"></typeparam>
     /// <typeparam name="TEventPayload"></typeparam>
@@ -92,13 +96,23 @@ namespace SoftUnlimit.CQRS.Event
 
             using var scope = _factory.CreateScope();
             var eventPayloadRepository = scope.ServiceProvider.GetService<TEventRepository>();
-            var nonPublishEvents = await Task
-                .Run(() => eventPayloadRepository.FindAll().Where(p => !p.IsPubliched).OrderBy(k => k.Created).Select(s => s.Id).ToArray(), ct);
+            var nonPublishEvents = await Task.Run(
+                () => eventPayloadRepository
+                        .FindAll()
+                        .Where(p => !p.IsPubliched)
+                        .OrderBy(k => k.Created)
+                        .Select(s => s.Id)
+                        .ToArray(),
+                ct
+            );
 
             foreach (var eventId in nonPublishEvents)
                 _queue.Enqueue(eventId);
 
-            _backgoundWorker = Task.Run(PublishBackground, _cts.Token);
+#pragma warning disable CA2016 // Forward the 'CancellationToken' parameter to methods that take one
+            // Create an independance task to publish all event in the event bus.
+            _backgoundWorker = Task.Run(PublishBackground);
+#pragma warning restore CA2016 // Forward the 'CancellationToken' parameter to methods that take one
         }
         /// <inheritdoc />
         public ValueTask RetryPublishAsync(Guid id, CancellationToken ct)
@@ -134,6 +148,7 @@ namespace SoftUnlimit.CQRS.Event
                     break;
                 _logger?.LogDebug("Start to publish events {Time}", DateTime.UtcNow);
 
+                TEventPayload lastEvent = null;
                 int count = Math.Min(_queue.Count, _bachSize);
                 var buffer = _queue.Take(count).ToArray();
                 try
@@ -142,11 +157,17 @@ namespace SoftUnlimit.CQRS.Event
                     var unitOfWork = scope.ServiceProvider.GetService<TUnitOfWork>();
                     var eventPayloadRepository = scope.ServiceProvider.GetService<TEventRepository>();
 
-                    var eventsPayload = await Task
-                        .Run(() => eventPayloadRepository.FindAll().Where(p => buffer.Contains(p.Id) && !p.IsPubliched).OrderBy(k => k.Created).ToArray(), _cts.Token);
+                    var eventsPayload = await Task.Run(
+                        () => eventPayloadRepository
+                                .FindAll()
+                                .Where(p => buffer.Contains(p.Id) && !p.IsPubliched)
+                                .OrderBy(k => k.Created)
+                                .ToArray(), 
+                        _cts.Token
+                    );
                     foreach (var ePayload in eventsPayload)
                     {
-                        var lastEvent = ePayload;
+                        lastEvent = ePayload;
                         await _eventBus.PublishPayloadAsync(lastEvent, _type, _cts.Token);
 
                         lastEvent.MarkEventAsPublished();
@@ -159,7 +180,7 @@ namespace SoftUnlimit.CQRS.Event
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "Error publish event: {Time}.", DateTime.UtcNow);
+                    _logger.LogError(ex, "Error publish on {Time} the event: {@Event}.", DateTime.UtcNow, lastEvent);
                     await Task.Delay(_errorDelay, _cts.Token);
                 }
             }

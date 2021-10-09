@@ -164,37 +164,7 @@ namespace SoftUnlimit.WebApi.DependencyInjection
             return services;
         }
 
-        /// <summary>
-        /// Register automapper for the entity.
-        /// </summary>
-        /// <param name="services"></param>
-        /// <param name="assemblies"></param>
-        /// <param name="setup"></param>
-        /// <returns></returns>
-        public static IServiceCollection AddMapper(this IServiceCollection services, Assembly[] assemblies, Action<IServiceProvider, IMapperConfigurationExpression> setup = null)
-        {
-            services.AddSingleton<IMapper>(provider => new Mapper(new MapperConfiguration(config => {
-                config.AllowNullCollections = true;
-                config.AllowNullDestinationValues = true;
-
-                config.AddDeepMaps(assemblies);
-                config.AddCustomMaps(assemblies);
-
-                config.ConstructServicesUsing(t =>
-                {
-                    var converter = provider.GetService(t);
-                    if (converter != null)
-                        return converter;
-
-                    return t.CreateInstance(provider);
-                });
-
-                setup?.Invoke(provider, config);
-            })));
-            services.AddSingleton<Map.IMapper, AutoMapperObjectMapper>();
-
-            return services;
-        }
+        
         /// <summary>
         /// Register azure event bus in the DPI.
         /// </summary>
@@ -219,10 +189,12 @@ namespace SoftUnlimit.WebApi.DependencyInjection
             where TUnitOfWork : IUnitOfWork
             where TEvent : class, IEvent
         {
-            var activeQueue = options.PublishQueues
+
+            #region Register Publishers
+            var publishs = options.PublishQueues?
                 .Where(p => p.Active == true)
                 .ToArray();
-            if (activeQueue.Length != 0)
+            if (publishs?.Any() == true)
             {
                 services.AddSingleton<IEventBus>(provider =>
                 {
@@ -236,7 +208,7 @@ namespace SoftUnlimit.WebApi.DependencyInjection
                     if (transform != null)
                         busTransform = (queueName, eventName, @event) => transform(provider, queueName, eventName, @event);
 
-                    return new AzureEventBus<QueueIdentifier>(options.Endpoint, options.PublishQueues, eventNameResolver, busFilter, busTransform, logger);
+                    return new AzureEventBus<QueueIdentifier>(options.Endpoint, publishs, eventNameResolver, busFilter, busTransform, logger);
                 });
                 services.AddSingleton<IEventPublishWorker>(provider =>
                 {
@@ -245,7 +217,13 @@ namespace SoftUnlimit.WebApi.DependencyInjection
                     return new MyQueueEventPublishWorker<TUnitOfWork>(provider.GetService<IServiceScopeFactory>(), eventBus, MessageType.Event, logger: logger);
                 });
             }
-            if (options.Queue?.Active == true)
+            #endregion
+
+            #region Register Listeners
+            var listerners = options.ListenQueues?
+                .Where(p => p.Active == true)
+                .ToArray();
+            if (listerners?.Any() == true)
             {
                 // 
                 // register event listener
@@ -261,13 +239,14 @@ namespace SoftUnlimit.WebApi.DependencyInjection
 
                     return new AzureEventListener<QueueIdentifier>(
                         options.Endpoint,
-                        options.Queue,
+                        listerners,
                         (envelop, message, ct) => ProcessorUtility.Default(eventDispatcher, resolver, envelop, message, beforeProcess, listenerOnError, logger, ct),
                         maxConcurrentCalls,
                         logger
                     );
                 });
             }
+            #endregion
 
             return services;
         }

@@ -1,8 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
-using SoftUnlimit.Reflection;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,10 +22,10 @@ namespace SoftUnlimit.Data.EntityFramework
     /// <summary>
     /// 
     /// </summary>
-    public abstract class EFDbUnitOfWork<TDbContext> : IDbContextWrapper, IUnitOfWork
+    public abstract class EFDbUnitOfWork<TDbContext> : IDbContextWrapper, IUnitOfWork, IDbConnectionFactory
         where TDbContext : DbContext
     {
-        #region Ctor
+        private int? _timeOut;
 
         /// <summary>
         /// 
@@ -37,27 +36,52 @@ namespace SoftUnlimit.Data.EntityFramework
             DbContext = dbContext;
         }
 
-        #endregion
 
-        #region Protected Properties
-
+        /// <inheritdoc />
+        public int TimeOut
+        {
+            get
+            {
+                if (!_timeOut.HasValue)
+                    _timeOut = GetTimeOutFromConnectionString(GetDbConnection().ConnectionString);
+                return _timeOut.Value;
+            }
+        }
         /// <summary>
         /// Internal db context.
         /// </summary>
-        protected TDbContext DbContext { get; }
+        protected TDbContext DbContext { get; private set; }
 
-        #endregion
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
         public DbContext GetDbContext() => DbContext;
+        /// <inheritdoc />
+        public IDbConnection GetDbConnection() => DbContext.Database.GetDbConnection();
+        /// <inheritdoc />
+        public virtual IDbConnection CreateNewDbConnection() => throw new NotImplementedException("Implement this Create to enable this feature");
 
+        /// <inheritdoc />
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
         /// <summary>
-        /// Dispose internal db context.
+        /// 
         /// </summary>
-        public virtual void Dispose() => DbContext.Dispose();
+        /// <param name="disposing"></param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing && DbContext != null)
+            {
+                DbContext.Dispose();
+                DbContext = null;
+            }
+        }
+
         /// <summary>
         /// Get all types inside of this unit of work.
         /// </summary>
@@ -76,6 +100,12 @@ namespace SoftUnlimit.Data.EntityFramework
         /// <returns></returns>
         public virtual async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default) => await DbContext.SaveChangesAsync(cancellationToken);
 
-        
+        /// <summary>
+        /// Get connection string builder asociate to string.
+        /// </summary>
+        /// <param name="connString"></param>
+        /// <returns>Return amount of second for execution command time out.</returns>
+        protected virtual int GetTimeOutFromConnectionString(string connString) => throw new NotImplementedException("Implement GetTimeOutFromConnectionString to enable this feature.");
+
     }
 }

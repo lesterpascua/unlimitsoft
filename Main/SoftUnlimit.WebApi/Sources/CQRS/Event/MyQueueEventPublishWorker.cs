@@ -7,6 +7,7 @@ using System;
 
 namespace SoftUnlimit.WebApi.Sources.CQRS.Event
 {
+    /// <inheritdoc />
     public class MyQueueEventPublishWorker<TUnitOfWork> : QueueEventPublishWorker<TUnitOfWork, IMyVersionedEventRepository, JsonVersionedEventPayload, string>
         where TUnitOfWork : IUnitOfWork
     {

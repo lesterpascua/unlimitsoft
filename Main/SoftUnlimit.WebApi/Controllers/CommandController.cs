@@ -1,6 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using SoftUnlimit.CQRS.Command;
-using SoftUnlimit.Security.Cryptography;
 using SoftUnlimit.WebApi.Sources.CQRS.Command;
 using SoftUnlimit.WebApi.Sources.Security.Cryptography;
 using SoftUnlimit.WebApi.Sources.Web;
@@ -12,6 +12,7 @@ namespace SoftUnlimit.WebApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]
+    [AllowAnonymous]
     public class CommandController : ControllerBase
     {
         private readonly IMyIdGenerator _gen;
@@ -32,7 +33,7 @@ namespace SoftUnlimit.WebApi.Controllers
         [HttpPost]
         public async Task<ActionResult<int>> Post(CancellationToken ct)
         {
-            var command = new TestCommand(Guid.NewGuid(), this.GetIdentity());
+            var command = new TestCommand(_gen.GenerateId(), this.GetIdentity());
             var response = await _dispatcher.DispatchAsync(command, ct);
 
             return this.ToActionResult(response);

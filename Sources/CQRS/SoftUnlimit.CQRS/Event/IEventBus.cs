@@ -31,15 +31,5 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="ct"></param>
         /// <returns></returns>
         Task PublishPayloadAsync<T>(EventPayload<T> @event, MessageType type, CancellationToken ct = default);
-        /// <summary>
-        /// Publish a raw object in the bus
-        /// </summary>
-        /// <param name="graph"></param>
-        /// <param name="id"></param>
-        /// <param name="eventName"></param>
-        /// <param name="correlationId"></param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        Task PublishAsync(object graph, Guid id, string eventName, string correlationId, CancellationToken ct = default);
     }
 }

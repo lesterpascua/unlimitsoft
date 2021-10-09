@@ -1,7 +1,10 @@
-﻿using SoftUnlimit.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using SoftUnlimit.Data;
 using SoftUnlimit.Data.EntityFramework.Seed;
 using SoftUnlimit.WebApi.Sources.Data.Model;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,7 +14,7 @@ namespace SoftUnlimit.WebApi.Sources.Data.Seed
     {
         private readonly IMyRepository<Customer> _customerRepository;
 
-        public CustomerSeed(IUnitOfWork unitOfWork, IMyRepository<Customer> customerRepository, int priority = 1000) :
+        public CustomerSeed(IMyUnitOfWork unitOfWork, IMyRepository<Customer> customerRepository, int priority = 1000) :
             base(unitOfWork, priority)
         {
             _customerRepository = customerRepository;
@@ -19,11 +22,16 @@ namespace SoftUnlimit.WebApi.Sources.Data.Seed
 
         public override async Task SeedAsync(CancellationToken ct = default)
         {
-            await _customerRepository.AddRangeAsync(new Customer[] {
-                new Customer { Id = Guid.NewGuid(), Name = "Lester" },
-                new Customer { Id = Guid.NewGuid(), Name = "Dianelis" },
-                new Customer { Id = Guid.NewGuid(), Name = "Liam" }
-            }, ct);
+            var seed = new List<Customer>();
+            if (await _customerRepository.FindAll().AnyAsync(p => p.Name == "Lester") == false)
+                seed.Add(new Customer { Id = Guid.NewGuid(), Name = "Lester" });
+            if (await _customerRepository.FindAll().AnyAsync(p => p.Name == "Dianelis") == false)
+                seed.Add(new Customer { Id = Guid.NewGuid(), Name = "Dianelis" });
+            if (await _customerRepository.FindAll().AnyAsync(p => p.Name == "Liam") == false)
+                seed.Add(new Customer { Id = Guid.NewGuid(), Name = "Liam" });
+
+            if (seed.Any())
+                await _customerRepository.AddRangeAsync(seed, ct);
         }
     }
 }

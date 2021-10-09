@@ -1,5 +1,8 @@
-﻿using SoftUnlimit.CQRS.EventSourcing;
+﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
+using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.Data.EntityFramework;
+using System.Data;
 
 namespace SoftUnlimit.WebApi.Sources.Data
 {
@@ -15,6 +18,9 @@ namespace SoftUnlimit.WebApi.Sources.Data
             : base(dbContext, null, eventSourcedMediator)
         {
         }
+
+        public override IDbConnection CreateNewDbConnection() => new SqlConnection(this.DbContext.Database.GetConnectionString());
+        protected override int GetTimeOutFromConnectionString(string connString) => new SqlConnectionStringBuilder(connString).ConnectTimeout;
         #endregion
     }
 }

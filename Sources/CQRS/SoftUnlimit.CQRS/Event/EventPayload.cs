@@ -49,6 +49,11 @@ namespace SoftUnlimit.CQRS.Event
         /// 
         /// </summary>
         public bool IsPubliched { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void MarkEventAsPublished() => IsPubliched = true;
     }
     /// <summary>
     /// 
@@ -79,9 +84,5 @@ namespace SoftUnlimit.CQRS.Event
         /// </summary>
         /// <returns></returns>
         public override string ToString() => EventName;
-        /// <summary>
-        /// 
-        /// </summary>
-        public void MarkEventAsPublished() => IsPubliched = true;
     }
 }

@@ -8,6 +8,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
+using SoftUnlimit.AutoMapper.DependencyInjection;
 using SoftUnlimit.CQRS.DependencyInjection;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.Data.EntityFramework.Configuration;
@@ -72,9 +73,11 @@ namespace SoftUnlimit.WebApi
 
             // bus config by code.
             var eventBusOptions = new AzureEventBusOptions<QueueIdentifier> { Endpoint = endpoint };
-            eventBusOptions.Queue ??= new QueueAlias<QueueIdentifier> { 
-                Active = true, 
-                Alias = QueueIdentifier.MyQueue, Queue = QueueIdentifier.MyQueue.ToPrettyString()
+            eventBusOptions.ListenQueues ??= new QueueAlias<QueueIdentifier>[] {
+                new QueueAlias<QueueIdentifier> {
+                    Active = true,
+                    Alias = QueueIdentifier.MyQueue, Queue = QueueIdentifier.MyQueue.ToPrettyString()
+                }
             };
             eventBusOptions.ActivateQueues(true, QueueIdentifier.MyQueue);
 
@@ -82,7 +85,7 @@ namespace SoftUnlimit.WebApi
             {
                 setup.Endpoint = eventBusOptions.Endpoint;
                 setup.PublishQueues = eventBusOptions.PublishQueues;
-                setup.Queue = eventBusOptions.Queue;
+                setup.ListenQueues = eventBusOptions.ListenQueues;
             });
             #endregion
 
@@ -105,7 +108,7 @@ namespace SoftUnlimit.WebApi
                         IRepository = typeof(IMyRepository<>),
                         IUnitOfWork = typeof(IMyUnitOfWork),
                         UnitOfWork = typeof(MyUnitOfWork),
-                        RepositoryContrains = null,
+                        RepositoryContrains = type => true,
                         DbContextRead = typeof(DbContextRead),
                         PoolSizeForRead = 128,
                         DbContextWrite = typeof(DbContextWrite),
@@ -114,8 +117,23 @@ namespace SoftUnlimit.WebApi
                         IVersionedEventRepository = typeof(IMyVersionedEventRepository),
                         VersionedEventRepository = typeof(MyVersionedEventRepository<DbContextWrite>),
                         WriteConnString = connString,
-                        ReadBuilder = (settings, options, connString) => options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).UseInMemoryDatabase(connString, inMemoryDatabaseRoot),
-                        WriteBuilder = (settings, options, connString) => options.UseInMemoryDatabase(connString, inMemoryDatabaseRoot),
+                        ReadBuilder = (settings, options, connString) =>
+                        {
+                            options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+                            if (connString == "Local")
+                            {
+                                options.UseInMemoryDatabase(connString, inMemoryDatabaseRoot);
+                            } else
+                                options.UseSqlServer(connString);
+                        },
+                        WriteBuilder = (settings, options, connString) =>
+                        {
+                            if (connString == "Local")
+                            {
+                                options.UseInMemoryDatabase(connString, inMemoryDatabaseRoot);
+                            } else
+                                options.UseSqlServer(connString);
+                        },
                     }
                 },
                 new CQRSSettings
@@ -167,7 +185,7 @@ namespace SoftUnlimit.WebApi
             services.AddApiServices(
                 assembly => "https://mock.codes/",
                 extraAssemblies: new Assembly[] {
-                    typeof(Sources.Adapter.IMockService).Assembly
+                    typeof(Sources.Adapter.ITestApiService).Assembly
                 }
             );
             #endregion
@@ -187,7 +205,7 @@ namespace SoftUnlimit.WebApi
             InitHelper.InitAsync<IMyUnitOfWork>(
                 factory,
                 eventBus: eventBus,
-                eventListener: eventBusOption.Value.Queue.Active ?? false,
+                eventListener: eventBusOption.Value.ListenQueues?.Any(p => p.Active == true) ?? false,
                 publishWorker: eventBus,
                 logger: logger
             ).Wait();

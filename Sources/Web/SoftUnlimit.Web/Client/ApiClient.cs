@@ -27,6 +27,7 @@ namespace SoftUnlimit.Web.Client
         /// <param name="setup">Allow configuration of current execution context before perform the request.</param>
         /// <param name="model"></param>
         /// <param name="ct"></param>
+        /// <exception cref="HttpException">If the error code is diferent of success.</exception>
         /// <returns></returns>
         Task<(TModel, HttpStatusCode)> SendAsync<TModel>(HttpMethod method, string uri, Action<HttpRequestMessage> setup = null, object model = null, CancellationToken ct = default);
         /// <summary>
