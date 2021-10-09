@@ -1,5 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using SoftUnlimit.Data.EntityFramework;
+using System.Data;
 
 namespace SoftUnlimit.WebApi.Sources.Data
 {
@@ -19,6 +21,7 @@ namespace SoftUnlimit.WebApi.Sources.Data
         {
         }
 
+        public override IDbConnection CreateNewDbConnection() => new SqlConnection(DbContext.Database.GetConnectionString());
         protected override int GetTimeOutFromConnectionString(string connString) => new SqlConnectionStringBuilder(connString).ConnectTimeout;
     }
 }

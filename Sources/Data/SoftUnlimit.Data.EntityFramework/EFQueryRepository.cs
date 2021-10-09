@@ -31,7 +31,7 @@ namespace SoftUnlimit.Data.EntityFramework
             get
             {
                 if (!_timeOut.HasValue)
-                    _timeOut = GetTimeOutFromConnectionString(GetDbConnection().ConnectionString);
+                    _timeOut = GetTimeOutFromConnectionString(DbContext.Database.GetConnectionString());
                 return _timeOut.Value;
             }
         }

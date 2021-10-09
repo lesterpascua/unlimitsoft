@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SoftUnlimit.CQRS.Query;
-using SoftUnlimit.Security.Cryptography;
 using SoftUnlimit.Web.Client;
+using SoftUnlimit.Web.Model;
+using SoftUnlimit.WebApi.Model;
 using SoftUnlimit.WebApi.Sources.CQRS.Query;
 using SoftUnlimit.WebApi.Sources.Data.Model;
 using SoftUnlimit.WebApi.Sources.Security.Cryptography;
@@ -14,9 +15,8 @@ namespace SoftUnlimit.WebApi.Controllers
     [ApiController]
     [Route("[controller]")]
     [AllowAnonymous]
-    public class QueryController : ControllerBase
+    public class SearchQueryController : ControllerBase
     {
-        private readonly IMyIdGenerator _gen;
         private readonly IQueryDispatcher _queryDispatcher;
 
 
@@ -24,17 +24,20 @@ namespace SoftUnlimit.WebApi.Controllers
         /// 
         /// </summary>
         /// <param name="queryDispatcher"></param>
-        /// <param name="gen"></param>
-        public QueryController(IMyIdGenerator gen, IQueryDispatcher queryDispatcher)
+        public SearchQueryController(IQueryDispatcher queryDispatcher)
         {
-            _gen = gen;
             _queryDispatcher = queryDispatcher;
         }
 
         [HttpGet]
-        public async Task<ActionResult<Response<Customer[]>>> Get()
+        public async Task<ActionResult<Response<SearchModel<Customer>>>> Get([FromQuery] SearchCustomer vm)
         {
-            var query = new TestQuery(this.GetIdentity());
+            var query = new SearchTestQuery(this.GetIdentity())
+            {
+                Filter = vm.Filter,
+                Order = vm.Order,
+                Pagging = vm.Paging
+            };
             var (response, _) = await query.ExecuteAsync(_queryDispatcher);
 
             return this.ToActionResult(response);

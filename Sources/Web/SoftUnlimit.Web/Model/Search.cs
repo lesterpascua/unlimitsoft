@@ -4,17 +4,13 @@
     /// Model with search data.
     /// </summary>
     /// <typeparam name="TFilter"></typeparam>
-    public abstract class Search<TFilter>
+    public class Search<TFilter>
         where TFilter : class
     {
         /// <summary>
-        /// Data to be include in query.
-        /// </summary>
-        public string[] Include { get; set; }
-        /// <summary>
         /// Contain page information
         /// </summary>
-        public Paging Paging { get; set; }
+        public Paging Paging { get; set; } = new Paging();
         /// <summary>
         /// Array of column, the ordenation is in the order on the array.
         /// </summary>

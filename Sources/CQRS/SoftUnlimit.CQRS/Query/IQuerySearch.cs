@@ -15,10 +15,6 @@ namespace SoftUnlimit.CQRS.Query
         /// <summary>
         /// 
         /// </summary>
-        IEnumerable<string> Include { get; set; }
-        /// <summary>
-        /// 
-        /// </summary>
         IReadOnlyList<ColumnName> Order { get; set; }
     }
 }
