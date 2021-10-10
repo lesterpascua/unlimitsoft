@@ -2,6 +2,7 @@
 using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Message;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SoftUnlimit.AkkaBus.Message
@@ -33,8 +34,9 @@ namespace SoftUnlimit.AkkaBus.Message
         /// <param name="command"></param>
         /// <param name="response"></param>
         /// <param name="ex"></param>
+        /// <param name="ct"></param>
         /// <returns></returns>
-        public Task SendAsync(ICommand command, ICommandResponse response, Exception ex = null)
+        public Task CompleteAsync(ICommand command, ICommandResponse response, Exception ex = null, CancellationToken ct = default)
         {
             _commandCompletionActor.Tell(response);
             return Task.CompletedTask;

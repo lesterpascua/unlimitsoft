@@ -16,6 +16,29 @@ namespace SoftUnlimit.Data.EntityFramework
         /// <summary>
         /// Execute query for search.
         /// </summary>
+        /// <remarks>
+        /// For search need execute 2 query 1 for get amount other for get the element, this will execute secuencial.
+        /// </remarks>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="this"></param>
+        /// <param name="pagging"></param>
+        /// <param name="ordered"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public static async Task<(int, TEntity[])> ToSearchAsync<TEntity>(this IQueryable<TEntity> @this, Paging pagging, IEnumerable<ColumnName> ordered, CancellationToken ct = default)
+            where TEntity : class
+        {
+            var count = await @this.CountAsync(ct);
+            var search = await @this.ApplySearch(pagging, ordered).ToArrayAsync(ct);
+
+            return (count, search);
+        }
+        /// <summary>
+        /// Execute query for search.
+        /// </summary>
+        /// <remarks>
+        /// For search need execute 2 query 1 for get amount other for get the element. For beeter optimization execute both in parallel.
+        /// </remarks>
         /// <typeparam name="TEntity"></typeparam>
         /// <param name="this"></param>
         /// <param name="factory">Allow create a parallel connection to execute count query to get the total amount of result.</param>

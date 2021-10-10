@@ -7,11 +7,11 @@ namespace SoftUnlimit.Benchmark
     {
         static void Main()
         {
-            var aa = new SearchTestQueryTest();
-            var r1 = aa.Parallel().Result;
-            var r2 = aa.Secuencial().Result;
+            //var aa = new SearchTestQueryTest();
+            //var r1 = aa.Parallel().Result;
+            //var r2 = aa.Secuencial().Result;
 
-            //BenchmarkRunner.Run<SearchTestQueryTest>();
+            BenchmarkRunner.Run<SearchTestQueryTest>();
         }
     }
 }

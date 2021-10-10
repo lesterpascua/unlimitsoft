@@ -11,8 +11,11 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using SoftUnlimit.AutoMapper.DependencyInjection;
+using SoftUnlimit.Bus.Hangfire;
+using SoftUnlimit.Bus.Hangfire.DependencyInjection;
 using SoftUnlimit.CQRS.DependencyInjection;
 using SoftUnlimit.CQRS.Event;
+using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.CQRS.Query;
 using SoftUnlimit.Data.EntityFramework;
 using SoftUnlimit.Data.EntityFramework.Configuration;
@@ -170,6 +173,25 @@ namespace SoftUnlimit.WebApi
             );
             #endregion
 
+            #region Hangfire
+            services.AddScoped<ICommandCompletionService, MyCommandCompletionService>();
+            services.AddHangfireCommandBus(
+                new HangfireOptions
+                {
+                    ConnectionString = connString,
+                    Logger = Hangfire.Logging.LogLevel.Info,
+                    SchedulePollingInterval = TimeSpan.FromSeconds(15),
+                    Scheme = "hf",
+                    WorkerCount = 1
+                },
+                preeProcessCommand: (command, meta) =>
+                {
+                    if (command is MyCommand cmd)
+                        cmd.Props.JobId = meta.Id;
+                }
+            );
+            #endregion
+
             #region AutoMapper
             services.AddMapper(new Assembly[] { typeof(Startup).Assembly });
             #endregion
@@ -233,6 +255,7 @@ namespace SoftUnlimit.WebApi
 
             app.UseAuthentication();
             app.UseAuthorization();
+            app.UseCommandBusHangfireServer(1, TimeSpan.FromSeconds(15));
 
             app.UseEndpoints(endpoints => endpoints.MapControllers().RequireAuthorization());
         }

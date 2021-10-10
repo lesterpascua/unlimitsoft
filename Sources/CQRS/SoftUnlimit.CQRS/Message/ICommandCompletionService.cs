@@ -1,11 +1,12 @@
 ﻿using SoftUnlimit.CQRS.Command;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace SoftUnlimit.CQRS.Message
 {
     /// <summary>
-    /// Send command response.
+    /// Allow perform operation asociate with some complete command operation.
     /// </summary>
     public interface ICommandCompletionService
     {
@@ -15,7 +16,8 @@ namespace SoftUnlimit.CQRS.Message
         /// <param name="command"></param>
         /// <param name="response"></param>
         /// <param name="ex">If some exception happened send here</param>
+        /// <param name="ct"></param>
         /// <returns></returns>
-        Task SendAsync(ICommand command, ICommandResponse response, Exception ex = null);
+        Task CompleteAsync(ICommand command, ICommandResponse response, Exception ex = null, CancellationToken ct = default);
     }
 }

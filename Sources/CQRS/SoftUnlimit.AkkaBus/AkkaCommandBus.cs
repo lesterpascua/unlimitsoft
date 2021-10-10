@@ -69,13 +69,14 @@ namespace SoftUnlimit.AkkaBus
         /// <param name="command"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public virtual async Task SendAsync(ICommand command, CancellationToken ct)
+        public virtual async Task<object> SendAsync(ICommand command, CancellationToken ct)
         {
             var envelopment = new CommandEnvelopment(command, false);
             if (_preeSendCommand != null)
                 await _preeSendCommand(command);
 
             Default.Tell(envelopment);
+            return null;
         }
 
         /// <summary>
@@ -118,7 +119,7 @@ namespace SoftUnlimit.AkkaBus
             {
                 var silent = envelopment.Command.GetProps<CommandProps>().Silent;
                 if (!silent || !response.IsSuccess)
-                    await completionService.SendAsync(envelopment.Command, response, err);
+                    await completionService.CompleteAsync(envelopment.Command, response, err);
             }
         }
 

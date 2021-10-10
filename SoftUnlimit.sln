@@ -47,6 +47,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.EventBus.Azure"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.AutoMapper.DependencyInjection", "Sources\Core\SoftUnlimit.AutoMapper.DependencyInjection\SoftUnlimit.AutoMapper.DependencyInjection.csproj", "{838ABB07-8C85-4DBD-A001-7623E7CFEA36}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MicroServices", "MicroServices", "{CDFFDD3E-7B89-4459-BAA4-7FABB9973391}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.Bus.Hangfire", "Sources\CQRS\SoftUnlimit.Bus.Hangfire\SoftUnlimit.Bus.Hangfire.csproj", "{759666F9-0CDB-4D8D-9D1A-8DDB01B9579C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -109,6 +113,10 @@ Global
 		{838ABB07-8C85-4DBD-A001-7623E7CFEA36}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{838ABB07-8C85-4DBD-A001-7623E7CFEA36}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{838ABB07-8C85-4DBD-A001-7623E7CFEA36}.Release|Any CPU.Build.0 = Release|Any CPU
+		{759666F9-0CDB-4D8D-9D1A-8DDB01B9579C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{759666F9-0CDB-4D8D-9D1A-8DDB01B9579C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{759666F9-0CDB-4D8D-9D1A-8DDB01B9579C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{759666F9-0CDB-4D8D-9D1A-8DDB01B9579C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -133,6 +141,7 @@ Global
 		{50CCF9F6-A645-476B-BC78-4E80F9450F8A} = {23719B5B-044A-4D14-9192-A84CCD213D99}
 		{2F9F474D-59E0-4649-BC87-CED9743C0A99} = {EDC44552-59C5-4FC1-88DA-B24429BFA6F0}
 		{838ABB07-8C85-4DBD-A001-7623E7CFEA36} = {23719B5B-044A-4D14-9192-A84CCD213D99}
+		{759666F9-0CDB-4D8D-9D1A-8DDB01B9579C} = {EDC44552-59C5-4FC1-88DA-B24429BFA6F0}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9B9451D6-06A9-4FE7-BD5A-062F758B8538}

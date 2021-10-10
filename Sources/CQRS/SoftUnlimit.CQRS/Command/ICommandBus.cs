@@ -14,7 +14,7 @@ namespace SoftUnlimit.CQRS.Command
         /// </summary>
         /// <param name="command"></param>
         /// <param name="ct">Cancelation token to stop the publish operation not for the command processing operation.</param>
-        /// <returns></returns>
-        Task SendAsync(ICommand command, CancellationToken ct = default);
+        /// <returns>Some information about the command</returns>
+        Task<object> SendAsync(ICommand command, CancellationToken ct = default);
     }
 }
