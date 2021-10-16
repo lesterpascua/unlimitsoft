@@ -3,7 +3,7 @@
     /// <summary>
     /// 
     /// </summary>
-    public static class Utility
+    public static class LoggerUtility
     {
         /// <summary>
         /// Update the current correlation context with the correlation in the parameter.

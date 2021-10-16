@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\SoftUnlimit.Cloud.VirusScan.Data\SoftUnlimit.Cloud.VirusScan.Data.csproj" />
+  </ItemGroup>
+</Project>

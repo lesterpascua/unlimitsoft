@@ -124,14 +124,14 @@ namespace SoftUnlimit.CQRS.Event
             return ValueTask.CompletedTask;
         }
         /// <inheritdoc />
-        public Task PublishAsync(IEnumerable<IEvent> events, CancellationToken ct)
+        public ValueTask PublishAsync(IEnumerable<IEvent> events, CancellationToken ct)
         {
             if (_disposed)
                 throw new ObjectDisposedException(GetType().FullName);
 
             foreach (var @event in events)
                 _queue.Enqueue(@event.Id);
-            return Task.CompletedTask;
+            return ValueTask.CompletedTask;
         }
 
         /// <summary>

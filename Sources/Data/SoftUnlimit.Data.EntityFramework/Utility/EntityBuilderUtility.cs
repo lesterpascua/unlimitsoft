@@ -28,7 +28,7 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
         )
             where TVersionedEvent : VersionedEventPayload<TPayload>
         {
-            builder.ToTable("VersionedEventPayload");
+            builder.ToTable("VersionedEvent");
             builder.HasKey(k => k.Id);
 
             builder.Property(p => p.Id).ValueGeneratedNever();                      // Guid

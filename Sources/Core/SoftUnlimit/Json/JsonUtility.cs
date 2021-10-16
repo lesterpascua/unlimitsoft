@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Text.Json;
 
@@ -42,9 +43,11 @@ namespace SoftUnlimit.Json
         /// <returns></returns>
         public static string Serialize(object data)
         {
+            if (data == null)
+                return null;
+
             if (UseNewtonsoftSerializer)
                 return JsonConvert.SerializeObject(data, NewtonsoftSettings);
-                
             return System.Text.Json.JsonSerializer.Serialize(data, TestJsonSettings);
         }
         /// <summary>
@@ -52,11 +55,13 @@ namespace SoftUnlimit.Json
         /// </summary>
         /// <param name="payload"></param>
         /// <returns></returns>
-        public static T Deserializer<T>(string payload)
+        public static T Deserialize<T>(string payload)
         {
+            if (payload == null)
+                return default;
+
             if (UseNewtonsoftSerializer)
                 return JsonConvert.DeserializeObject<T>(payload, NewtonsoftSettings);
-
             return System.Text.Json.JsonSerializer.Deserialize<T>(payload, TestJsonSettings);
         }
         /// <summary>
@@ -65,12 +70,25 @@ namespace SoftUnlimit.Json
         /// <param name="eventType"></param>
         /// <param name="payload"></param>
         /// <returns></returns>
-        public static object Deserializer(Type eventType, string payload)
+        public static object Deserialize(Type eventType, string payload)
         {
             if (UseNewtonsoftSerializer)
                 return JsonConvert.DeserializeObject(payload, eventType, NewtonsoftSettings);
 
             return System.Text.Json.JsonSerializer.Deserialize(payload, eventType, TestJsonSettings);
         }
+
+        /// <summary>
+        /// Verify if the object is of type T or <see cref="JObject"/> and try to deserialize using correct method.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        public static T Cast<T>(object data) => data switch
+        {
+            T body => body,
+            JObject body => body.ToObject<T>(),
+            _ => throw new NotSupportedException()
+        };
     }
 }

@@ -113,7 +113,7 @@ namespace SoftUnlimit.CQRS.Command
                 #endregion
 
                 #region Verify if command implement internal compliance
-                var complianceHandlerType = typeof(ICommandHandlerValidator<>).MakeGenericType(commandType);
+                var complianceHandlerType = typeof(ICommandHandlerCompliance<>).MakeGenericType(commandType);
                 if (interfaces.Any(type => type == complianceHandlerType))
                 {
                     _logger?.LogDebug("Command handler implement internal compliance");

@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json.Linq;
 using SoftUnlimit.CQRS.Message;
+using SoftUnlimit.Json;
 using System;
 
 namespace SoftUnlimit.CQRS.Event
@@ -15,12 +16,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <typeparam name="T"></typeparam>
         /// <param name="event"></param>
         /// <returns></returns>
-        public static T GetBody<T>(this IEvent @event) => @event.Body switch
-        {
-            T body => body,
-            JObject _ => ((JObject)@event.Body).ToObject<T>(),
-            _ => throw new NotSupportedException()
-        };
+        public static T GetBody<T>(this IEvent @event) => JsonUtility.Cast<T>(@event.Body);
 
         /// <summary>
         /// Generate a success response using event data.

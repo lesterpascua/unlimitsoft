@@ -95,7 +95,7 @@ namespace SoftUnlimit.EventBus.Azure
                     var eventType = _eventNameResolver.Resolver(eventPayload.EventName);
                     if (eventType != null)
                     {
-                        var @event = JsonUtility.Deserializer(eventType, payload);
+                        var @event = JsonUtility.Deserialize(eventType, payload);
                         await SendMessageAsync(@event, eventPayload.Id, eventPayload.EventName, eventPayload.CorrelationId, type, ct);
                     }
                     else
@@ -155,6 +155,13 @@ namespace SoftUnlimit.EventBus.Azure
 
             message.MessageId = id.ToString();
             message.ContentType = "application/json";
+
+            if (graph is IDelayEvent delayEvent)
+            {
+                var delay = delayEvent.GetDelay();
+                if (delay.HasValue && delay != TimeSpan.Zero)
+                    message.ScheduledEnqueueTime = DateTime.UtcNow.Add(delay.Value);
+            }
 
             message.ApplicationProperties[BusProperty.EventName] = eventName;
             message.ApplicationProperties[BusProperty.MessageType] = transformed.GetType().AssemblyQualifiedName;

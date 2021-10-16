@@ -14,6 +14,20 @@ namespace SoftUnlimit.Web.Client
         /// </summary>
         /// <param name="apiClient"></param>
         /// <param name="cache"></param>
+        /// <param name="slidingExpiration"></param>
+        /// <param name="ignorePrevCache"></param>
+        protected BaseApiService(IApiClient apiClient, ObjectCache cache = null, TimeSpan? slidingExpiration = null, bool ignorePrevCache = false)
+        {
+            ApiClient = apiClient;
+            Cache = cache;
+            SlidingExpiration = slidingExpiration;
+            IgnorePrevCache = ignorePrevCache;
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="apiClient"></param>
+        /// <param name="cache"></param>
         /// <param name="cacheItemPolicy"></param>
         /// <param name="ignorePrevCache"></param>
         protected BaseApiService(IApiClient apiClient, ObjectCache cache = null, CacheItemPolicy cacheItemPolicy = null, bool ignorePrevCache = false)
@@ -32,7 +46,7 @@ namespace SoftUnlimit.Web.Client
         /// <summary>
         /// Old cache value.
         /// </summary>
-        protected object PrevCache { get; private set; }
+        protected static object PrevCache { get; private set; }
 
         /// <inheritdoc />
         public void Dispose() => ApiClient.Dispose();
@@ -46,20 +60,18 @@ namespace SoftUnlimit.Web.Client
         /// </summary>
         protected ObjectCache Cache { get; }
         /// <summary>
-        /// 
+        /// If false save the previous value in the cache to in case the service is not available return this value.
+        /// </summary>
+        protected bool IgnorePrevCache { get; }
+        /// <summary>
+        /// Create a cache to expire in some time inmidliatly after a valid request. Can't set if <see cref="CacheItemPolicy"/> is not null.
+        /// </summary>
+        protected TimeSpan? SlidingExpiration { get; }
+        /// <summary>
+        /// Cache item policy to use by default. Can't set if <see cref="SlidingExpiration"/> is not null.
         /// </summary>
         protected CacheItemPolicy CacheItemPolicy { get; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="TResult"></typeparam>
-        /// <returns></returns>
-        protected TResult GetDataFromCache<TResult>() where TResult : class
-        {
-            var cacheKey = typeof(TResult).FullName;
-            return GetDataFromCache<TResult>(cacheKey);
-        }
         /// <summary>
         /// 
         /// </summary>
@@ -76,17 +88,6 @@ namespace SoftUnlimit.Web.Client
         /// 
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        protected TResult AddDataToCache<TResult>(TResult data) where TResult : class
-        {
-            var cacheKey = typeof(TResult).FullName;
-            return AddDataToCache(cacheKey, data);
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="TResult"></typeparam>
         /// <param name="cacheKey"></param>
         /// <param name="data"></param>
         /// <returns></returns>
@@ -95,7 +96,26 @@ namespace SoftUnlimit.Web.Client
             if (Cache?.Contains(cacheKey) == false)
                 lock (Cache)
                     if (!Cache.Contains(cacheKey))
-                        Cache.Add(cacheKey, data, CacheItemPolicy);
+                    {
+                        CacheItemPolicy policy;
+                        if (SlidingExpiration.HasValue || CacheItemPolicy is not null)
+                        {
+                            policy = CacheItemPolicy ?? new CacheItemPolicy { AbsoluteExpiration = DateTime.UtcNow.Add(SlidingExpiration.Value) };
+                        }
+                        else
+                            policy = null;
+
+                        if (!IgnorePrevCache && policy is not null)
+                        {
+                            CacheItemPolicy.RemovedCallback = (arguments) =>
+                            {
+                                if (arguments.RemovedReason == CacheEntryRemovedReason.Expired)
+                                    PrevCache = arguments.CacheItem.Value;
+                            };
+                        }
+
+                        Cache.Add(cacheKey, data, policy);
+                    }
             return data;
         }
 
@@ -110,14 +130,16 @@ namespace SoftUnlimit.Web.Client
         /// <returns></returns>
         protected async Task<TResult> TryCacheFirst<TResult>(Func<Task<TResult>> func) where TResult : class
         {
-            var data = GetDataFromCache<TResult>();
+            var cacheKey = typeof(TResult).FullName;
+
+            var data = GetDataFromCache<TResult>(cacheKey);
             if (data != null)
                 return data;
 
             try
             {
                 var result = await func();
-                return AddDataToCache(result);
+                return AddDataToCache(cacheKey, result);
             }
             catch
             {

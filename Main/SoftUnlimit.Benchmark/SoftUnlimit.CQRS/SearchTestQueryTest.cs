@@ -96,7 +96,7 @@ namespace SoftUnlimit.Benchmark.SoftUnlimit.CQRS
                     MediatorDispatchEventSourced = typeof(MyMediatorDispatchEventSourced<IMyUnitOfWork>),
                     EventDispatcher = provider => new ServiceProviderEventDispatcher(
                         provider,
-                        preeDispatch: (provider, e) => Utility.SafeUpdateCorrelationContext(provider.GetService<ICorrelationContextAccessor>(), provider.GetService<ICorrelationContext>(), e.CorrelationId),
+                        preeDispatch: (provider, e) => LoggerUtility.SafeUpdateCorrelationContext(provider.GetService<ICorrelationContextAccessor>(), provider.GetService<ICorrelationContext>(), e.CorrelationId),
                         logger: provider.GetService<ILogger<ServiceProviderEventDispatcher>>()
                     )
                 }

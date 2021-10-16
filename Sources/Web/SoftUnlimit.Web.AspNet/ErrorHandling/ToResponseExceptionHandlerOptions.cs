@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using SoftUnlimit.Json;
 using SoftUnlimit.Web.Client;
 using System;
 using System.Collections.Generic;
@@ -80,7 +81,7 @@ namespace SoftUnlimit.Web.AspNet.ErrorHandling
 
             context.Response.StatusCode = response.Code;
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(jsonHelper.Serialize(response).ToString());
+            await context.Response.WriteAsync(JsonUtility.Serialize(response));
         }
     }
 }

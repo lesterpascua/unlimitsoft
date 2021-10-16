@@ -26,7 +26,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Operation correlation identifier.
         /// </summary>
-        public string CorrelationId { get; }
+        string CorrelationId { get; }
         /// <summary>
         /// Event creation date
         /// </summary>
@@ -34,7 +34,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Event name general is the type fullname
         /// </summary>
-        public string Name { get; }
+        string Name { get; }
         /// <summary>
         /// Command where event is originate (fullname).
         /// </summary>
@@ -54,7 +54,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Event extra information
         /// </summary>
-        public object Body { get; }
+        object Body { get; }
     }
     /// <summary>
     /// Represents an event message.
@@ -107,6 +107,8 @@ namespace SoftUnlimit.CQRS.Event
         public ushort ServiceId { get; set; }
         /// <inheritdoc />
         public string WorkerId { get; set; }
+        /// <inheritdoc />
+        public TimeSpan? Delay { get; set; }
         /// <inheritdoc />
         public DateTime Created { get; set; }
         /// <inheritdoc />

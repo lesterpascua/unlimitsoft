@@ -38,7 +38,7 @@ namespace SoftUnlimit.Logger
             if (context.HttpContext.Request.Headers.TryGetValue(CorrelationHeader, out var correlationHeader))
                 correlationId = correlationHeader;
 
-            Utility.SafeUpdateCorrelationContext(_accessor, _context, correlationId);
+            LoggerUtility.SafeUpdateCorrelationContext(_accessor, _context, correlationId);
 
             _logger.LogInformation("Associate {Trace} with {Correlation}", context.HttpContext.TraceIdentifier, _context.CorrelationId);
         }

@@ -47,7 +47,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
                 return null;
 
             var eventType = _resolver.Resolver(eventPayload.EventName);
-            var @event = (IVersionedEvent)JsonUtility.Deserializer(eventType, eventPayload.Payload);
+            var @event = (IVersionedEvent)JsonUtility.Deserialize(eventType, eventPayload.Payload);
 
             return (TEntity)@event.CurrState;
         }

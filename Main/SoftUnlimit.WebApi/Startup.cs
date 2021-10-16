@@ -1,5 +1,3 @@
-using BenchmarkDotNet.Attributes;
-using BenchmarkDotNet.Running;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -16,8 +14,6 @@ using SoftUnlimit.Bus.Hangfire.DependencyInjection;
 using SoftUnlimit.CQRS.DependencyInjection;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.Message;
-using SoftUnlimit.CQRS.Query;
-using SoftUnlimit.Data.EntityFramework;
 using SoftUnlimit.Data.EntityFramework.Configuration;
 using SoftUnlimit.Data.EntityFramework.DependencyInjection;
 using SoftUnlimit.Data.EntityFramework.Utility;
@@ -27,7 +23,6 @@ using SoftUnlimit.Json;
 using SoftUnlimit.Logger;
 using SoftUnlimit.Web;
 using SoftUnlimit.Web.AspNet.Filter;
-using SoftUnlimit.Web.Model;
 using SoftUnlimit.WebApi.DependencyInjection;
 using SoftUnlimit.WebApi.Sources.CQRS;
 using SoftUnlimit.WebApi.Sources.CQRS.Bus;
@@ -36,13 +31,10 @@ using SoftUnlimit.WebApi.Sources.CQRS.Event;
 using SoftUnlimit.WebApi.Sources.CQRS.Query;
 using SoftUnlimit.WebApi.Sources.Data;
 using SoftUnlimit.WebApi.Sources.Data.Configuration;
-using SoftUnlimit.WebApi.Sources.Data.Model;
 using SoftUnlimit.WebApi.Sources.Security;
 using System;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace SoftUnlimit.WebApi
 {
@@ -157,7 +149,7 @@ namespace SoftUnlimit.WebApi
                     MediatorDispatchEventSourced = typeof(MyMediatorDispatchEventSourced<IMyUnitOfWork>),
                     EventDispatcher = provider => new ServiceProviderEventDispatcher(
                         provider,
-                        preeDispatch: (provider, e) => Logger.Utility.SafeUpdateCorrelationContext(provider.GetService<ICorrelationContextAccessor>(), provider.GetService<ICorrelationContext>(), e.CorrelationId),
+                        preeDispatch: (provider, e) => Logger.LoggerUtility.SafeUpdateCorrelationContext(provider.GetService<ICorrelationContextAccessor>(), provider.GetService<ICorrelationContext>(), e.CorrelationId),
                         logger: provider.GetService<ILogger<ServiceProviderEventDispatcher>>()
                     )
                 }

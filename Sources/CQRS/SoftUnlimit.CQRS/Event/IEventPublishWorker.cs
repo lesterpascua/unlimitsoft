@@ -30,6 +30,6 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="events"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task PublishAsync(IEnumerable<IEvent> events, CancellationToken ct = default);
+        ValueTask PublishAsync(IEnumerable<IEvent> events, CancellationToken ct = default);
     }
 }

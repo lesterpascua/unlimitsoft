@@ -26,7 +26,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="logger"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public static async Task<(IEventResponse, Exception)> Process<TEvent>(
+        public static async Task<(IEventResponse, Exception)> ProcessAsync<TEvent>(
             string eventName, MessageEnvelop envelop, IEventDispatcher dispatcher, IEventNameResolver resolver,
             Action<TEvent> beforeProcess = null, Func<Exception, TEvent, MessageEnvelop, CancellationToken, Task> onError = null, ILogger logger = null, CancellationToken ct = default
         )
@@ -50,7 +50,7 @@ namespace SoftUnlimit.CQRS.Event
                 }
 
                 var payload = envelop.Messaje.ToString();
-                if (JsonUtility.Deserializer(eventType, payload) is TEvent @event)
+                if (JsonUtility.Deserialize(eventType, payload) is TEvent @event)
                 {
                     curr = @event;
                     beforeProcess?.Invoke(@event);

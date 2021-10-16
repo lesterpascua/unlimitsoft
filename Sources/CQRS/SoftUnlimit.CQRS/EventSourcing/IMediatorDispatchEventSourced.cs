@@ -27,7 +27,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="events"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task EventsDispatchedAsync(IEnumerable<IVersionedEvent> events, CancellationToken ct = default);
+        ValueTask EventsDispatchedAsync(IEnumerable<IVersionedEvent> events, CancellationToken ct = default);
     }
     /// <summary>
     /// 
@@ -115,12 +115,12 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="events"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public virtual Task EventsDispatchedAsync(IEnumerable<IVersionedEvent> events, CancellationToken ct)
+        public virtual ValueTask EventsDispatchedAsync(IEnumerable<IVersionedEvent> events, CancellationToken ct)
         {
             var publish = EventPublishWorker;
             if (publish != null)
                 return publish.PublishAsync(events, ct);
-            return Task.CompletedTask;
+            return ValueTask.CompletedTask;
         }
     }
 }

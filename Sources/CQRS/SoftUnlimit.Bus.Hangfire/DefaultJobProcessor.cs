@@ -71,7 +71,7 @@ namespace SoftUnlimit.Bus.Hangfire
         {
             Exception err = null;
             ICommandResponse response;
-            var command = (ICommand)JsonUtility.Deserializer(type, json);
+            var command = (ICommand)JsonUtility.Deserialize(type, json);
 
             var processor = (IJobProcessor)this;
             var props = command.GetProps<CommandProps>();

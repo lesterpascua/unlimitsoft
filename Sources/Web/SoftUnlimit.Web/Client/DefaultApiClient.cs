@@ -111,14 +111,11 @@ namespace SoftUnlimit.Web.Client
             setup?.Invoke(message);
             using var response = await httpClient.SendAsync(message, ct);
 
+            string body = await response.Content.ReadAsStringAsync();
             if (!response.IsSuccessStatusCode)
-            {
-                string body = await response.Content.ReadAsStringAsync();
                 throw new HttpException(response.StatusCode, response.ToString(), body);
-            }
 
-            var json = await response.Content.ReadAsStringAsync();
-            return (JsonConvert.DeserializeObject<TModel>(json), response.StatusCode);
+            return (JsonConvert.DeserializeObject<TModel>(body), response.StatusCode);
         }
 
         #endregion

@@ -42,7 +42,7 @@ namespace SoftUnlimit.EventBus.Azure
             message.ApplicationProperties.TryGetValue(BusProperty.EventName, out var eventName);
             message.ApplicationProperties.TryGetValue(BusProperty.MessageType, out var messageType);
 
-            return await EventUtility.Process(eventName?.ToString(), envelop, dispatcher, resolver, beforeProcess, onError, logger, ct);
+            return await EventUtility.ProcessAsync(eventName?.ToString(), envelop, dispatcher, resolver, beforeProcess, onError, logger, ct);
         }
     }
 }

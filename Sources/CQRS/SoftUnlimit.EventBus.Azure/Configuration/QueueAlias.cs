@@ -5,7 +5,7 @@ namespace SoftUnlimit.EventBus.Azure.Configuration
     /// <summary>
     /// 
     /// </summary>
-    public sealed class QueueAlias<TAlias>
+    public class QueueAlias<TAlias>
         where TAlias : Enum
     {
         /// <summary>

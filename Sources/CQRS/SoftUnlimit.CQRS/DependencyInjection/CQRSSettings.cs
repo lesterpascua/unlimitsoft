@@ -13,7 +13,7 @@ namespace SoftUnlimit.CQRS.DependencyInjection
     public sealed class CQRSSettings
     {
         /// <summary>
-        /// 
+        /// Assemblies used to scan for CommandHandler, QueryHandler and EventHandler
         /// </summary>
         public IEnumerable<Assembly> Assemblies { get; set; }
         /// <summary>

@@ -34,7 +34,7 @@ namespace SoftUnlimit.WebApi.Sources.Security
 
                 json = Encoding.UTF8.GetString(Convert.FromBase64String(json));
             }
-            var identity = JsonUtility.Deserializer<IdentityInfo>(json);
+            var identity = JsonUtility.Deserialize<IdentityInfo>(json);
 
             var claims = new List<Claim> {
                 new Claim(ClaimExtension.Subject, identity.Id.ToString("N")),

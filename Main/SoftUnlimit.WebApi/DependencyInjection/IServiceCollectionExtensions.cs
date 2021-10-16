@@ -48,7 +48,7 @@ namespace SoftUnlimit.WebApi.DependencyInjection
         /// <param name="configuration"></param>
         /// <param name="corsOrigin"></param>
         /// <param name="databaseSettings"></param>
-        ///// <param name="authorizeSettings">Security configuration setting.</param>
+        /// <param name="authorizeOptions">Security configuration setting.</param>
         /// <param name="filterRequestLoggerSettings"></param>
         /// <param name="filterValidationSettings"></param>
         /// <param name="filterTransformResponseOptions"></param>
@@ -157,7 +157,7 @@ namespace SoftUnlimit.WebApi.DependencyInjection
                 if (cqrsSettings.PreeDispatchAction == null)
                     cqrsSettings.PreeDispatchAction = (provider, command) => {
                         var identity = command.GetProps<MyCommandProps>().User;
-                        Utility.SafeUpdateCorrelationContext(provider.GetService<ICorrelationContextAccessor>(), provider.GetService<ICorrelationContext>(), identity.CorrelationId);
+                        LoggerUtility.SafeUpdateCorrelationContext(provider.GetService<ICorrelationContextAccessor>(), provider.GetService<ICorrelationContext>(), identity.CorrelationId);
                     };
                 services.AddSoftUnlimitDefaultCQRS(cqrsSettings);
             }
