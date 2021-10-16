@@ -287,7 +287,7 @@ namespace SoftUnlimit.Cloud.VirusScan.Domain.Handler.Command
                 await DeleteBlobUriAsync(ct);
 
             var metadata = JsonUtility.Deserialize<object>(_request.Metadata);
-            var body = new RequestCompleteBody(_request.CustomerId, _request.RequestId, _request.BlobUri, metadata, downloadStatus, scanStatus, false);
+            var body = new RequestCompleteBody(_request.CustomerId, _request.RequestId, _request.BlobUri, metadata, downloadStatus, scanStatus, scanStatus == ScanStatus.Clean);
             complete.AddEvent(typeof(RequestCompleteEvent), _gen, _request.CorrelationId, body);
 
             return (complete, metadata);
