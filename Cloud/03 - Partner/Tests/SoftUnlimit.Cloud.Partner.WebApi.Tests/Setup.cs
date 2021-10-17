@@ -6,7 +6,6 @@ using SoftUnlimit.Cloud.Partner.Data;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.Web.AspNet.Testing;
 using System;
-using System.IO;
 using Xunit;
 
 [assembly: CollectionBehavior(DisableTestParallelization = true)]

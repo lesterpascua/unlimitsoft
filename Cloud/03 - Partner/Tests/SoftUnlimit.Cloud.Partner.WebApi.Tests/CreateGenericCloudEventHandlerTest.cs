@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using SoftUnlimit.Cloud.Partner.Data;
 using SoftUnlimit.Cloud.Partner.Data.Model;
 using SoftUnlimit.Cloud.Partner.Domain.Handler.Events;
+using SoftUnlimit.Json;
 using SoftUnlimit.Web.AspNet.Testing;
 using System;
 using System.Threading.Tasks;
@@ -21,10 +22,7 @@ namespace SoftUnlimit.Cloud.Partner.WebApi.Tests
 
         public CreateGenericCloudEventHandlerTest()
         {
-            _appFactory = Setup.Factory(services =>
-            {
-                services.RemoveAll<IBackgroundJobClient>();
-            });
+            _appFactory = Setup.Factory();
         }
 
         public void Dispose()
@@ -50,19 +48,41 @@ namespace SoftUnlimit.Cloud.Partner.WebApi.Tests
 
 
             // Act
-            var body = new {  };
+            var body = new { Test = "asdsa" };
             var listener = _appFactory.Services.GetService<ListenerFake>();
 
             var @event = listener.CreateEvent<CreateGenericCloudEvent>(body);
+            @event.Name = "TestEvent";
+            @event.PartnerId = PartnerValues.JnReward;
             var (eventResponse, exc) = await listener.SimulateReceiveAsync(@event);
 
 
             // Assert
-            var request = await pendingQueryRepository.FindAll().FirstAsync();
+            var pending = await pendingQueryRepository.FindAll().FirstAsync();
             var complete = await completeQueryRepository.FindAll().FirstOrDefaultAsync();
 
             exc.Should().BeNull();
             complete.Should().BeNull();
+
+            pending.Body.Should().Be(JsonUtility.Serialize(body));
+            pending.CorrelationId.Should().Be(@event.CorrelationId);
+
+            pending.Created.Should().BeAfter(startOn);
+            pending.Created.Should().BeBefore(DateTime.UtcNow);
+
+            pending.EventId.Should().Be(@event.Id);
+            pending.IdentityId.Should().Be(@event.IdentityId);
+            pending.Name.Should().Be(@event.Name);
+            pending.PartnerId.Should().Be(@event.PartnerId);
+            pending.Retry.Should().Be(0);
+
+            pending.Scheduler.Should().BeAfter(startOn);
+            pending.Scheduler.Should().BeBefore(DateTime.UtcNow);
+
+            pending.ServiceId.Should().Be(@event.ServiceId);
+            pending.SourceId.Should().Be(@event.SourceId.ToString());
+            pending.Version.Should().Be(@event.Version);
+            pending.WorkerId.Should().Be(@event.WorkerId);
         }
     }
 }

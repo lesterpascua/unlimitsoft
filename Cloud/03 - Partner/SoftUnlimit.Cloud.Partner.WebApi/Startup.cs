@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -19,6 +20,7 @@ using SoftUnlimit.Cloud.Partner.Data;
 using SoftUnlimit.Cloud.Partner.Data.Configuration;
 using SoftUnlimit.Cloud.Partner.Domain.Handler;
 using SoftUnlimit.Cloud.Partner.Domain.Handler.Configuration;
+using SoftUnlimit.Cloud.Partner.Domain.Handler.Events;
 using SoftUnlimit.Cloud.Partner.Domain.Handler.Services;
 using SoftUnlimit.Cloud.Partner.WebApi.Background;
 using SoftUnlimit.Cloud.Security;
@@ -28,6 +30,7 @@ using SoftUnlimit.Cloud.VirusScan.Domain.Handler.Events;
 using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.DependencyInjection;
 using SoftUnlimit.CQRS.Event;
+using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.Data.EntityFramework.Configuration;
 using SoftUnlimit.Data.EntityFramework.DependencyInjection;
 using SoftUnlimit.Data.EntityFramework.Utility;
@@ -156,6 +159,8 @@ namespace SoftUnlimit.Cloud.Partner.WebApi
                     )
                 }
             );
+            // Override EventNameResolver to use alwais the same event.
+            services.Replace(new ServiceDescriptor(typeof(IEventNameResolver), new GenericEventNameResolver()));
             #endregion
 
             #region EventBus
