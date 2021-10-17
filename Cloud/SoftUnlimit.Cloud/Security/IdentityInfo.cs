@@ -6,7 +6,7 @@ namespace SoftUnlimit.Cloud.Security
     /// <summary>
     /// Short information about the customer, use in commands and queries
     /// </summary>
-    public class IdentityInfo
+    public sealed class IdentityInfo
     {
         private string[] _roles, _scopes;
 

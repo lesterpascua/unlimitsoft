@@ -4,9 +4,11 @@ namespace SoftUnlimit.Cloud.Bus
 {
     public enum QueueIdentifier
     {
-        [PrettyName("filescanning-lester")]
-        VirusScan = 1,
+        [PrettyName("partner-lester")]
+        Partner = 3,
         [PrettyName("document-lester")]
-        Document = 2
+        Document = 13,
+        [PrettyName("filescanning-lester")]
+        VirusScan = 14,
     }
 }

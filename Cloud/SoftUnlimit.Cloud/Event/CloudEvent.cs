@@ -1,4 +1,5 @@
-﻿using SoftUnlimit.Cloud.Security;
+﻿using SoftUnlimit.Cloud.Partner;
+using SoftUnlimit.Cloud.Security;
 using SoftUnlimit.CQRS.EventSourcing;
 using System;
 
@@ -14,12 +15,15 @@ namespace SoftUnlimit.Cloud.Event
         /// <summary>
         /// Get identity identifier owner of the event.
         /// </summary>
-        public Guid IdentityId { get; set; }
+        public Guid? IdentityId { get; set; }
+        /// <summary>
+        /// Parner were the event comming from. If is null is internal event (OneJN).
+        /// </summary>
+        public PartnerValues? PartnerId { get; set; }
     }
     public abstract class CloudEvent<TBody> : CloudEvent
-        where TBody : class
     {
-        public CloudEvent(Guid id, Guid sourceId, long version, ushort serviceId, string workerId, string correlationId, object command, object prevState, object currState, bool isDomainEvent, TBody body = null) 
+        public CloudEvent(Guid id, Guid sourceId, long version, ushort serviceId, string workerId, string correlationId, object command, object prevState, object currState, bool isDomainEvent, TBody body) 
             : base(id, sourceId, version, serviceId, workerId, correlationId, command, prevState, currState, isDomainEvent, body)
         {
         }
@@ -34,6 +38,6 @@ namespace SoftUnlimit.Cloud.Event
         /// <param name="this"></param>
         /// <param name="local"></param>
         /// <returns></returns>
-        public static IdentityInfo GetIdentity(this CloudEvent @this, IdentityInfo local) => new(@this.IdentityId, local.Role, local.Scope, @this.CorrelationId, @this.CorrelationId);
+        public static IdentityInfo GetIdentity(this CloudEvent @this, IdentityInfo local) => new(@this.IdentityId ?? local.Id, local.Role, local.Scope, @this.CorrelationId, @this.CorrelationId);
     }
 }

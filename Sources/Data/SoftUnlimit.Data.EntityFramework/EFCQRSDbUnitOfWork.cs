@@ -43,14 +43,6 @@ namespace SoftUnlimit.Data.EntityFramework
         /// </summary>
         public IMediatorDispatchEventSourced EventSourcedMediator { get; }
 
-
-        /// <inheritdoc />
-        public async Task TransactionCommitAsync(CancellationToken ct) => await DbContext.Database.CurrentTransaction.CommitAsync(ct);
-        /// <inheritdoc />
-        public async Task TransactionRollbackAsync(CancellationToken ct) => await DbContext.Database.CurrentTransaction.RollbackAsync(ct);
-        /// <inheritdoc />
-        public async Task<IAsyncDisposable> TransactionCreateAsync(IsolationLevel level, CancellationToken ct) => await DbContext.Database.BeginTransactionAsync(level, ct);
-
         /// <summary>
         /// 
         /// </summary>

@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net5.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Adapter\SoftUnlimit.Cloud.Partner.Saleforce\SoftUnlimit.Cloud.Partner.Saleforce.csproj" />
+    <ProjectReference Include="..\SoftUnlimit.Cloud.Partner.Data\SoftUnlimit.Cloud.Partner.Data.csproj" />
+  </ItemGroup>
+</Project>

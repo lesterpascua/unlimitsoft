@@ -22,7 +22,7 @@ namespace SoftUnlimit.Data.EntityFramework
     /// <summary>
     /// 
     /// </summary>
-    public abstract class EFDbUnitOfWork<TDbContext> : IDbContextWrapper, IUnitOfWork, IDbConnectionFactory
+    public abstract class EFDbUnitOfWork<TDbContext> : IDbContextWrapper, IUnitOfWork, IDbConnectionFactory, IAdvancedUnitOfWork
         where TDbContext : DbContext
     {
         private int? _timeOut;
@@ -52,6 +52,12 @@ namespace SoftUnlimit.Data.EntityFramework
         /// </summary>
         protected TDbContext DbContext { get; private set; }
 
+        /// <inheritdoc />
+        public async Task TransactionCommitAsync(CancellationToken ct) => await DbContext.Database.CurrentTransaction.CommitAsync(ct);
+        /// <inheritdoc />
+        public async Task TransactionRollbackAsync(CancellationToken ct) => await DbContext.Database.CurrentTransaction.RollbackAsync(ct);
+        /// <inheritdoc />
+        public async Task<IAsyncDisposable> TransactionCreateAsync(IsolationLevel level, CancellationToken ct) => await DbContext.Database.BeginTransactionAsync(level, ct);
 
         /// <summary>
         /// 
@@ -106,6 +112,5 @@ namespace SoftUnlimit.Data.EntityFramework
         /// <param name="connString"></param>
         /// <returns>Return amount of second for execution command time out.</returns>
         protected virtual int GetTimeOutFromConnectionString(string connString) => throw new NotImplementedException("Implement GetTimeOutFromConnectionString to enable this feature.");
-
     }
 }
