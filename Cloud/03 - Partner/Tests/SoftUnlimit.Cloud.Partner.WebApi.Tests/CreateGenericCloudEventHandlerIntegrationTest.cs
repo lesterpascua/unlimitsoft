@@ -1,12 +1,16 @@
 ﻿using FluentAssertions;
+using SoftUnlimit.Web;
 using Hangfire;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using SoftUnlimit.Cloud.Bus;
 using SoftUnlimit.Cloud.Partner.Data;
 using SoftUnlimit.Cloud.Partner.Data.Model;
 using SoftUnlimit.Cloud.Partner.Domain.Handler.Events;
+using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.Json;
 using SoftUnlimit.Security;
 using SoftUnlimit.Web.AspNet.Testing;
@@ -16,14 +20,14 @@ using Xunit;
 
 namespace SoftUnlimit.Cloud.Partner.WebApi.Tests
 {
-    public class CreateGenericCloudEventHandlerTest : IDisposable
+    public class CreateGenericCloudEventHandlerIntegrationTest : IDisposable
     {
         private readonly WebApplicationFactory<Startup> _appFactory;
 
 
-        public CreateGenericCloudEventHandlerTest()
+        public CreateGenericCloudEventHandlerIntegrationTest()
         {
-            _appFactory = Setup.Factory();
+            _appFactory = TestFactory.Factory<Startup>(false);
         }
 
         public void Dispose()
@@ -36,7 +40,8 @@ namespace SoftUnlimit.Cloud.Partner.WebApi.Tests
         /// Process event, save event in database, scheduler event job.
         /// </summary>
         /// <returns></returns>
-        [Fact]
+        [Fact(Skip = "Integration")]
+        [Trait("Category", "Integration")]
         public async Task PushEvent_EventDataIsCorrect_SaveEventInPendingTableAndExchedulerTheScanning()
         {
             using var scope = _appFactory.Services.CreateScope();
@@ -48,22 +53,31 @@ namespace SoftUnlimit.Cloud.Partner.WebApi.Tests
             var pendingQueryRepository = scope.ServiceProvider.GetService<ICloudQueryRepository<SaleforcePending>>();
             var completeQueryRepository = scope.ServiceProvider.GetService<ICloudQueryRepository<SaleforceComplete>>();
 
+            var configuration = scope.ServiceProvider.GetService<IConfiguration>();
+            var eventNameResolver = scope.ServiceProvider.GetService<IEventNameResolver>();
+            var busEndpoint = configuration.GetConnectionString("Endpoint");
+
+            var bus = new EventBus.Azure.AzureEventBus<QueueIdentifier>(
+                busEndpoint,
+                new QueueAlias[] { new QueueAlias { Active = true, Alias = QueueIdentifier.Partner, Queue = QueueIdentifier.Partner.ToPrettyString() } }, 
+                eventNameResolver
+            );
+            await bus.StartAsync(TimeSpan.FromSeconds(1));
+
 
             // Act
             var body = new { Test = "asdsa" };
-            var listener = _appFactory.Services.GetService<ListenerFake>();
-
             var @event = ListenerFake.CreateEvent<CreateGenericCloudEvent>(metadata, body);
             @event.Name = "TestEvent";
             @event.PartnerId = PartnerValues.JnReward;
-            var (eventResponse, exc) = await listener.SimulateReceiveAsync(@event);
+            await bus.PublishAsync(@event);
 
+            await Task.Delay(TimeSpan.FromSeconds(5));
 
             // Assert
             var pending = await pendingQueryRepository.FindAll().FirstAsync();
             var complete = await completeQueryRepository.FindAll().FirstOrDefaultAsync();
 
-            exc.Should().BeNull();
             complete.Should().BeNull();
 
             pending.Body.Should().Be(JsonUtility.Serialize(body));

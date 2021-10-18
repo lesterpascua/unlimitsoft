@@ -6,10 +6,8 @@ using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.Event.Json;
-using SoftUnlimit.Data;
 using SoftUnlimit.Security;
 using System;
 
@@ -41,10 +39,9 @@ namespace SoftUnlimit.Web.AspNet.Testing
             services.RemoveAll<IEventListener>();
             services.AddSingleton(provider =>
             {
-                var metadata = provider.GetService<IServiceMetadata>();
                 var resolver = provider.GetService<IEventNameResolver>();
                 var eventDispatcher = provider.GetService<IEventDispatcher>();
-                return new ListenerFake(metadata, eventDispatcher, resolver);
+                return new ListenerFake(eventDispatcher, resolver);
             });
             services.AddSingleton<IEventListener>(p => p.GetService<ListenerFake>());
 

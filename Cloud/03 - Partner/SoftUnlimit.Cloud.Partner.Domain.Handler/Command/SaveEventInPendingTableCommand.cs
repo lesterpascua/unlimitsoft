@@ -5,10 +5,10 @@ using SoftUnlimit.Cloud.Partner.Data;
 using SoftUnlimit.Cloud.Partner.Data.Model;
 using SoftUnlimit.Cloud.Partner.Domain.Handler.Configuration;
 using SoftUnlimit.Cloud.Partner.Domain.Handler.Events;
+using SoftUnlimit.Cloud.Partner.Domain.Handler.Utility;
 using SoftUnlimit.Cloud.Security;
 using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Message;
-using SoftUnlimit.Json;
 using System;
 using System.Linq;
 using System.Threading;
@@ -59,38 +59,17 @@ namespace SoftUnlimit.Cloud.Partner.Domain.Handler.Command
                 if (settings.Events.Contains("*") || settings.Events.Contains(@event.Name))
                 {
                     updated = true;
-                    var task = partnerId switch
-                    {
-                        PartnerValues.Saleforce => _saleforcePendingRepository.AddAsync(FromEvent(@event, new SaleforcePending()), ct),
-                        PartnerValues.JnReward => _jnRewardPendingRepository.AddAsync(FromEvent(@event, new JnRewardPending()), ct),
-                        _ => throw new NotSupportedException($"Parner {partnerId} not suported")
-                    };
-                    await task;
+                    await TypeHelper.AddFromEventAsync(partnerId, @event, _jnRewardPendingRepository, _saleforcePendingRepository, ct);
+
+                    _logger.LogDebug("Save in {Partner} {@Event}", partnerId, @event);
                 }
+                else
+                    _logger.LogDebug("Skip to {Partner} {@Event}", partnerId, @event);
             }
             if (updated)
                 await _unitOfWork.SaveChangesAsync(ct);
 
             return command.OkResponse();
-        }
-
-        private static T FromEvent<T>(CreateGenericCloudEvent @event, T pending) where T : Pending
-        {
-            pending.EventId = @event.Id;
-            pending.SourceId = @event.SourceId.ToString();
-            pending.Version = @event.Version;
-            pending.ServiceId = @event.ServiceId;
-            pending.WorkerId = @event.WorkerId;
-            pending.CorrelationId = @event.CorrelationId;
-            pending.Created = DateTime.UtcNow;
-            pending.Name = @event.Name;
-            pending.Body = JsonUtility.Serialize(@event.Body);
-            pending.IdentityId = @event.IdentityId;
-            pending.PartnerId = @event.PartnerId;
-            pending.Retry = 0;
-            pending.Scheduler = pending.Created;
-
-            return pending;
         }
     }
 }

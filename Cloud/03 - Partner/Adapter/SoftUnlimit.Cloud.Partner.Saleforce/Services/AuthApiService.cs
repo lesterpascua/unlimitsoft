@@ -51,26 +51,21 @@ namespace SoftUnlimit.Cloud.Partner.Saleforce.Sender.Services
         #region Private Methods
         private async Task<string> ThreadSafeGetToken(CancellationToken ct)
         {
+            if (_accessToken != null && DateTime.UtcNow < _expirationDate)
+                return _accessToken.Token;
+
             await _semaphore.WaitAsync(ct);
             try
             {
-                if (_accessToken == null || _expirationDate < DateTime.UtcNow)
-                {
-                    HttpStatusCode code;
-                    (_accessToken, code) = await ApiClient.SendAsync<AccessTokenModel>(
-                        HttpMethod.Post,
-                        "services/oauth2/token", a =>
-                        {
-                            a.Content = _httpContent;
-                            //a.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/x-www-form-urlencoded"));
-                        },
-                        ct: ct
-                    );
-
-                    // TODO: review the real expiration time in saleforce.
-                    _expirationDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(_accessToken.IssuedAt).AddMinutes(55);
+                if (_accessToken != null && DateTime.UtcNow < _expirationDate)
                     return _accessToken.Token;
-                }
+
+                HttpStatusCode code;
+                (_accessToken, code) = await ApiClient
+                    .SendAsync<AccessTokenModel>(HttpMethod.Post, "services/oauth2/token", message => message.Content = _httpContent, ct: ct);
+
+                // TODO: review the real expiration time in saleforce.
+                _expirationDate = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddMilliseconds(_accessToken.IssuedAt).AddMinutes(55);
                 return _accessToken.Token;
             }
             finally

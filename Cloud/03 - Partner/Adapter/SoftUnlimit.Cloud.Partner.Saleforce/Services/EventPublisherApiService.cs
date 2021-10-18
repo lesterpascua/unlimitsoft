@@ -32,17 +32,17 @@ namespace SoftUnlimit.Cloud.Partner.Saleforce.Sender.Services
         }
 
         /// <inheritdoc />
-        public async Task<(PublishStatus, HttpStatusCode)> PublishAsync(EventSignature e, CancellationToken ct)
+        public async Task<(PublishStatus, HttpStatusCode)> PublishAsync(EventSignature es, CancellationToken ct)
         {
             string token = await _authService.GetTokenAsync(ct);
             void setup(HttpRequestMessage message) => message.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-            var body = JsonUtility.Cast<SfRecord>(e.Body);
+            var body = JsonUtility.Cast<SfRecord>(es.Body);     // extract SfRecordId from the body
             var model = new Internal
             {
-                Body = JsonConvert.SerializeObject(e.Body),
-                Name = e.Name,
-                ExternalId = e.SourceId.ToString(),
+                Body = es.Body,
+                Name = es.Name,
+                ExternalId = es.SourceId.ToString(),
                 SfRecordId = body.SfRecordId
             };
             return await ApiClient.SendAsync<PublishStatus>(HttpMethod.Post, _url, setup, model, ct);

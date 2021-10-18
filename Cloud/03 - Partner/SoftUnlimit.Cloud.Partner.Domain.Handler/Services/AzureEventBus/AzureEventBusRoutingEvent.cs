@@ -13,7 +13,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.Cloud.Partner.Domain.Handler.Services
+namespace SoftUnlimit.Cloud.Partner.Domain.Handler.Services.AzureEventBus
 {
     /// <summary>
     /// 
@@ -43,6 +43,8 @@ namespace SoftUnlimit.Cloud.Partner.Domain.Handler.Services
         public async Task<bool> RouteAsync(PartnerValues partnerId, Pending pending, CancellationToken ct = default)
         {
             var eventBus = await CreateOrGetAsync(partnerId, ct);
+
+            var body = JsonUtility.Deserialize<object>(pending.Body);
             var @event = new CreateGenericCloudEvent(
                 pending.EventId,
                 Guid.Parse(pending.SourceId),
@@ -54,7 +56,7 @@ namespace SoftUnlimit.Cloud.Partner.Domain.Handler.Services
                 null,
                 null,
                 false,
-                pending.Body);
+                body);
             await eventBus.PublishAsync(@event, ct);
             return true;
         }

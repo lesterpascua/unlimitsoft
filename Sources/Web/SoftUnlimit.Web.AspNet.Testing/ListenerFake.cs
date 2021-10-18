@@ -15,7 +15,6 @@ namespace SoftUnlimit.Web.AspNet.Testing
     /// </summary>
     public class ListenerFake : IEventListener
     {
-        private readonly IServiceMetadata _metadata;
         private readonly IEventDispatcher _eventDispatcher;
         private readonly IEventNameResolver _nameResolver;
 
@@ -25,9 +24,8 @@ namespace SoftUnlimit.Web.AspNet.Testing
         /// <param name="userId"></param>
         /// <param name="eventDispatcher"></param>
         /// <param name="nameResolver"></param>
-        public ListenerFake(IServiceMetadata metadata, IEventDispatcher eventDispatcher, IEventNameResolver nameResolver)
+        public ListenerFake(IEventDispatcher eventDispatcher, IEventNameResolver nameResolver)
         {
-            _metadata = metadata;
             _eventDispatcher = eventDispatcher;
             _nameResolver = nameResolver;
         }
@@ -39,18 +37,19 @@ namespace SoftUnlimit.Web.AspNet.Testing
         /// Create event with some body.
         /// </summary>
         /// <typeparam name="TEvent"></typeparam>
+        /// <param name="serviceMetadata"></param>
         /// <param name="body"></param>
         /// <returns></returns>
-        public TEvent CreateEvent<TEvent>(object body)
+        public static TEvent CreateEvent<TEvent>(IServiceMetadata serviceMetadata, object body)
             where TEvent : class, IVersionedEvent
         {
             const long version = 0;
             var @event = (TEvent)Activator.CreateInstance(typeof(TEvent),
                 Guid.NewGuid(), 
                 Guid.NewGuid(), 
-                version, 
-                _metadata.ServiceId, 
-                _metadata.WorkerId, 
+                version,
+                serviceMetadata.ServiceId,
+                serviceMetadata.WorkerId, 
                 Guid.NewGuid().ToString(), 
                 null, 
                 null, 

@@ -14,9 +14,9 @@ namespace SoftUnlimit.Cloud.Partner.Saleforce.Sender
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="e"></param>
+        /// <param name="es"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task<(PublishStatus, HttpStatusCode)> PublishAsync(EventSignature e, CancellationToken ct = default);
+        Task<(PublishStatus, HttpStatusCode)> PublishAsync(EventSignature es, CancellationToken ct = default);
     }
 }

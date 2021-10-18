@@ -79,7 +79,7 @@ namespace SoftUnlimit.Json
         }
 
         /// <summary>
-        /// Verify if the object is of type T or <see cref="JObject"/> and try to deserialize using correct method.
+        /// Verify if the object is of type T, <see cref="JObject"/>, <see cref="JsonElement"/>, <see cref="JsonProperty"/> or string and try to deserialize using correct method.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="data"></param>
@@ -87,7 +87,10 @@ namespace SoftUnlimit.Json
         public static T Cast<T>(object data) => data switch
         {
             T body => body,
+            string body => Deserialize<T>(body),
             JObject body => body.ToObject<T>(),
+            JsonElement body => Deserialize<T>(body.GetRawText()),
+            JsonProperty body => Deserialize<T>(body.Value.GetRawText()),
             _ => throw new NotSupportedException()
         };
     }

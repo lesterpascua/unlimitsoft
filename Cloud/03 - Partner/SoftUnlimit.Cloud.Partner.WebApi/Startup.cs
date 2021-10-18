@@ -1,4 +1,3 @@
-using Hangfire;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -10,24 +9,19 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SoftUnlimit.AutoMapper.DependencyInjection;
 using SoftUnlimit.Bus.Hangfire;
-using SoftUnlimit.Bus.Hangfire.DependencyInjection;
-using SoftUnlimit.Cloud.Antivirus;
 using SoftUnlimit.Cloud.Bus;
-using SoftUnlimit.Cloud.Command;
 using SoftUnlimit.Cloud.DependencyInjection;
-using SoftUnlimit.Cloud.Event;
 using SoftUnlimit.Cloud.Partner.Data;
 using SoftUnlimit.Cloud.Partner.Data.Configuration;
 using SoftUnlimit.Cloud.Partner.Domain.Handler;
 using SoftUnlimit.Cloud.Partner.Domain.Handler.Configuration;
 using SoftUnlimit.Cloud.Partner.Domain.Handler.Events;
 using SoftUnlimit.Cloud.Partner.Domain.Handler.Services;
+using SoftUnlimit.Cloud.Partner.Domain.Handler.Services.AzureEventBus;
+using SoftUnlimit.Cloud.Partner.Domain.Handler.Services.Saleforce;
 using SoftUnlimit.Cloud.Partner.WebApi.Background;
 using SoftUnlimit.Cloud.Security;
-using SoftUnlimit.Cloud.Security.Cryptography;
-using SoftUnlimit.Cloud.Storage;
 using SoftUnlimit.Cloud.VirusScan.Domain.Handler.Events;
-using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.DependencyInjection;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.Event.Json;
@@ -205,14 +199,14 @@ namespace SoftUnlimit.Cloud.Partner.WebApi
             services.AddHealthChecks();
 
             #region Api Services
-            var partnersOptions = _configuration.GetSection("Partners").Get<PartnerOptions>();
-            services.AddApiServices(
-                assembly =>
-                {
-                    return partnersOptions[PartnerValues.Saleforce].Notification.Endpoint;
-                },
-                extraAssemblies: new Assembly[] { typeof(Saleforce.Sender.IAuthApiService).Assembly }
-            );
+            //var partnersOptions = _configuration.GetSection("Partners").Get<PartnerOptions>();
+            //services.AddApiServices(
+            //    assembly =>
+            //    {
+            //        return partnersOptions[PartnerValues.Saleforce].Notification.Endpoint;
+            //    },
+            //    extraAssemblies: new Assembly[] { typeof(Saleforce.Sender.IAuthApiService).Assembly }
+            //);
             #endregion
 
             services.AddSwagger(
@@ -223,6 +217,8 @@ namespace SoftUnlimit.Cloud.Partner.WebApi
             );
 
             services.AddSingleton<IRoutingEvent, SaleforceRoutingEvent>();
+            services.AddSingleton<IEventPublisherApiServiceFactory, EventPublisherApiServiceFactory>();
+
             services.AddSingleton<IRoutingEvent, AzureEventBusRoutingEvent>();
 
             services.AddHostedService<SaleforceBackground>();

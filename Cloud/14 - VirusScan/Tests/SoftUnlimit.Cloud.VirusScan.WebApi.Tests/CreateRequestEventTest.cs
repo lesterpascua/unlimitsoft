@@ -9,6 +9,7 @@ using SoftUnlimit.Cloud.VirusScan.Client;
 using SoftUnlimit.Cloud.VirusScan.Data;
 using SoftUnlimit.Cloud.VirusScan.Data.Model;
 using SoftUnlimit.Cloud.VirusScan.Domain;
+using SoftUnlimit.Security;
 using SoftUnlimit.Web.AspNet.Testing;
 using System;
 using System.Threading.Tasks;
@@ -49,6 +50,7 @@ namespace SoftUnlimit.Cloud.VirusScan.WebApi.Tests
 
             // Arrange
             var startOn = DateTime.UtcNow;
+            var metadata = scope.ServiceProvider.GetService<IServiceMetadata>();
             var unitOfWork = scope.ServiceProvider.GetService<ICloudUnitOfWork>();
             var pendingQueryRepository = scope.ServiceProvider.GetService<ICloudQueryRepository<Pending>>();
             var completeQueryRepository = scope.ServiceProvider.GetService<ICloudQueryRepository<Complete>>();
@@ -60,7 +62,7 @@ namespace SoftUnlimit.Cloud.VirusScan.WebApi.Tests
             });
             var listener = _appFactory.Services.GetService<ListenerFake>();
 
-            var @event = listener.CreateEvent<RequestCreateEvent>(body);
+            var @event = ListenerFake.CreateEvent<RequestCreateEvent>(metadata, body);
             var (eventResponse, exc) = await listener.SimulateReceiveAsync(@event);
 
 

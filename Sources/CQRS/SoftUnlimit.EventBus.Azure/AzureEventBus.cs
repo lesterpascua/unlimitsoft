@@ -62,7 +62,7 @@ namespace SoftUnlimit.EventBus.Azure
         /// <inheritdoc/>
         public ValueTask DisposeAsync() => _client.DisposeAsync();
         /// <inheritdoc />
-        public ValueTask StartAsync(TimeSpan waitRetry, CancellationToken ct)
+        public ValueTask StartAsync(TimeSpan waitRetry, CancellationToken ct = default)
         {
             _logger?.LogDebug("AzureEventBus start");
 
@@ -79,9 +79,9 @@ namespace SoftUnlimit.EventBus.Azure
         }
 
         /// <inheritdoc/>
-        public Task PublishAsync(IEvent @event, CancellationToken ct) => SendMessageAsync(@event, @event.Id, @event.Name, @event.CorrelationId, MessageType.Event, ct);
+        public Task PublishAsync(IEvent @event, CancellationToken ct = default) => SendMessageAsync(@event, @event.Id, @event.Name, @event.CorrelationId, MessageType.Event, ct);
         /// <inheritdoc/>
-        public async Task PublishPayloadAsync<T>(EventPayload<T> eventPayload, MessageType type, CancellationToken ct)
+        public async Task PublishPayloadAsync<T>(EventPayload<T> eventPayload, MessageType type, CancellationToken ct = default)
         {
             switch (type)
             {
@@ -115,7 +115,7 @@ namespace SoftUnlimit.EventBus.Azure
         /// <param name="correlationId"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, CancellationToken ct) => SendMessageAsync(graph, id, eventName, correlationId, MessageType.Event, ct);
+        public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, CancellationToken ct = default) => SendMessageAsync(graph, id, eventName, correlationId, MessageType.Event, ct);
 
         #region Private Method
         private async Task SendMessageAsync(object graph, Guid id, string eventName, string correlationId, MessageType type, CancellationToken ct)

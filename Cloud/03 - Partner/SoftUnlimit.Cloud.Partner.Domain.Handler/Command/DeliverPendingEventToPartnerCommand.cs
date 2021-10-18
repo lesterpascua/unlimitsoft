@@ -7,6 +7,7 @@ using SoftUnlimit.Cloud.Partner.Data;
 using SoftUnlimit.Cloud.Partner.Data.Model;
 using SoftUnlimit.Cloud.Partner.Domain.Handler.Configuration;
 using SoftUnlimit.Cloud.Partner.Domain.Handler.Services;
+using SoftUnlimit.Cloud.Partner.Domain.Handler.Utility;
 using SoftUnlimit.Cloud.Security;
 using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Message;
@@ -55,14 +56,15 @@ namespace SoftUnlimit.Cloud.Partner.Domain.Handler
         private readonly ICloudRepository<SaleforceComplete> _saleforceCompleteRepository;
         private readonly ILogger<DeliverPendingEventToPartnerCommandHandler> _logger;
         private readonly PartnerOptions _options;
-        //private readonly ICommandBus _commandBus;
         private readonly IEnumerable<IRoutingEvent> _routings;
 
-        private const int BatchSize = 10;
+        /// <summary>
+        /// Amout of element
+        /// </summary>
+        public const int BatchSize = 10;
 
 
         public DeliverPendingEventToPartnerCommandHandler(
-            //ICommandBus commandBus,
             IOptions<PartnerOptions> options,
             IEnumerable<IRoutingEvent> routings,
             ICloudUnitOfWork unitOfWork,
@@ -74,7 +76,6 @@ namespace SoftUnlimit.Cloud.Partner.Domain.Handler
         )
         {
             _options = options.Value;
-            //_commandBus = commandBus;
             _routings = routings;
             _unitOfWork = unitOfWork;
             _jnRewardPendingRepository = jnRewardPendingRepository;
@@ -86,21 +87,21 @@ namespace SoftUnlimit.Cloud.Partner.Domain.Handler
 
         public async Task<ICommandResponse> HandleAsync(DeliverPendingEventToPartnerCommand command, CancellationToken ct = default)
         {
-            var repository = command.PartnerId switch
-            {
-                PartnerValues.Saleforce => _saleforcePendingRepository.FindAll().Cast<Pending>(),
-                PartnerValues.JnReward => _jnRewardPendingRepository.FindAll().Cast<Pending>(),
-                _ => throw new NotSupportedException($"Parner: {command.PartnerId}")
-            };
+            var repository = TypeHelper.GetPendingQueryable(
+                command.PartnerId, 
+                _jnRewardPendingRepository, 
+                _saleforcePendingRepository
+            );
 
-            Pending[] events = null;
+            bool hasErr = false;
+            Pending[] pendings = null;
             do
             {
-                events = await repository
+                pendings = await repository
                     .OrderBy(e => e.Id)
                     .Take(BatchSize)
                     .ToArrayAsync(ct);
-                var first = events.FirstOrDefault();
+                var first = pendings.FirstOrDefault();
                 if (first == null || DateTime.UtcNow < first.Scheduler)
                     return command.OkResponse(false);
 
@@ -109,68 +110,47 @@ namespace SoftUnlimit.Cloud.Partner.Domain.Handler
                 if (routing == null)
                     return command.OkResponse(false);
 
-                _logger.LogDebug("Events to notify: {Count}", events.Length);
+                _logger.LogDebug("Events to notify: {Count}", pendings.Length);
 
-                Pending currEvent = null;
+                Pending currPending = null;
                 try
                 {
-                    foreach (var @event in events)
+                    foreach (var pending in pendings)
                     {
-                        currEvent = @event;
-                        bool success = await routing.RouteAsync(command.PartnerId, @event, ct);
+                        currPending = pending;
+                        bool success = await routing.RouteAsync(command.PartnerId, pending, ct);
                         if (!success)
                             throw new InvalidOperationException("Not able to publich the event in to the partner.");
 
-                        switch (command.PartnerId)
-                        {
-                            case PartnerValues.Saleforce:
-                                _saleforcePendingRepository.Remove((SaleforcePending)@event);
-                                await _saleforceCompleteRepository.AddAsync(FromPending(@event, new SaleforceComplete()), ct);
-                                break;
-                            case PartnerValues.JnReward:
-                                _jnRewardPendingRepository.Remove((JnRewardPending)@event);
-                                await _jnRewardCompleteRepository.AddAsync(FromPending(@event, new JnRewardComplete()), ct);
-                                break;
-                        }
-                        _logger.LogInformation("{Parner} processed {@Event}", command.PartnerId, @event);
+                        await TypeHelper.MoveAsync(
+                            command.PartnerId,
+                            pending,
+                            _saleforcePendingRepository,
+                            _saleforceCompleteRepository,
+                            _jnRewardPendingRepository,
+                            _jnRewardCompleteRepository,
+                            ct
+                        );
+                        _logger.LogInformation("{Parner} processed {@Pending}", command.PartnerId, pending);
                     }
                 }
                 catch (Exception ex)
                 {
-                    if (currEvent is not null)
+                    hasErr = true;
+                    if (currPending is not null)
                     {
-                        currEvent.Retry += 1;
-                        currEvent.Scheduler = DateTime.UtcNow.AddSeconds(Math.Min(10 * currEvent.Retry, 5 * 60));
-                        _logger.LogError(ex, "Error trying to publish in {Partner}, {@Event}.", currEvent, command.PartnerId);
+                        currPending.Retry += 1;
+                        currPending.Scheduler = DateTime.UtcNow.AddSeconds(Math.Min(10 * currPending.Retry, 5 * 60));
+                        _logger.LogError(ex, "Error trying to publish in {Partner}, {@Pending}.", currPending, command.PartnerId);
                     }
                     else
                         _logger.LogError(ex, "Error trying to publish in {Partner}", command.PartnerId);
                 }
 
                 await _unitOfWork.SaveChangesAsync(ct);
-            } while (events?.Any() == true);
-            //await _commandBus.SendAsync(command, ct);                       // reenqueue the command to check again
+            } while (!hasErr && pendings.Length == BatchSize);
 
-            return command.OkResponse(events.Any());
-        }
-
-        private static T FromPending<T>(Pending pending, T complete) where T : Complete
-        {
-            complete.Body = pending.Body;
-            complete.Completed = DateTime.UtcNow;
-            complete.CorrelationId = pending.CorrelationId;
-            complete.Created = pending.Created;
-            complete.EventId = pending.EventId;
-            complete.IdentityId = pending.IdentityId;
-            complete.Name = pending.Name;
-            complete.PartnerId = pending.PartnerId;
-            complete.Retry = pending.Retry;
-            complete.ServiceId = pending.ServiceId;
-            complete.SourceId = pending.SourceId;
-            complete.Version = pending.Version;
-            complete.WorkerId = pending.WorkerId;
-
-            return complete;
+            return command.OkResponse(pendings?.Any() == true);
         }
     }
 }
