@@ -10,6 +10,10 @@ namespace SoftUnlimit.Cloud.Partner.Domain.Handler.Configuration
         public sealed class Options
         {
             /// <summary>
+            /// Enable partner 
+            /// </summary>
+            public bool Enable { get; set; }
+            /// <summary>
             /// Array of events processed for this partner.
             /// </summary>
             public string[] Events { get; set; }

@@ -1,6 +1,7 @@
 ﻿using SoftUnlimit.Cloud.Bus;
 using SoftUnlimit.Cloud.Event;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace SoftUnlimit.Cloud.VirusScan.Domain.Handler.Events
@@ -10,9 +11,24 @@ namespace SoftUnlimit.Cloud.VirusScan.Domain.Handler.Events
     /// </summary>
     public static class TransformEventToDomain
     {
-        private static readonly string[] DocumentTypes = new string[] {
-            //typeof(Event).FullName
-            ""
+        private static readonly Dictionary<string, QueueIdentifier[]> _inputEvents = new()
+        {
+            { "JNGroup.OneJN.CreditInfo.Domain.Events.GetApplicationIdEvent", new QueueIdentifier[] { QueueIdentifier.CreditInfo } },
+            { "JNGroup.OneJN.CreditInfo.Domain.Events.CreditCardPreAssessmentEvent", new QueueIdentifier[] { QueueIdentifier.CreditInfo } },
+            { "JNGroup.OneJN.CreditInfo.Domain.Events.UnsecuredLoanPreAssessmentEvent", new QueueIdentifier[] { QueueIdentifier.CreditInfo } },
+            { "JNGroup.OneJN.CreditInfo.Domain.Events.CreditCardFinalAssessmentEvent", new QueueIdentifier[] { QueueIdentifier.CreditInfo } },
+            { "JNGroup.OneJN.CreditInfo.Domain.Events.UnsecuredLoanFinalAssessmentEvent", new QueueIdentifier[] { QueueIdentifier.CreditInfo } },
+            { "JNGroup.OneJN.CreditInfo.Domain.Events.CreditCardManualDecisionEvent", new QueueIdentifier[] { QueueIdentifier.CreditInfo } },
+            { "JNGroup.OneJN.CreditInfo.Domain.Events.UnsecuredLoanManualDecisionEvent", new QueueIdentifier[] { QueueIdentifier.CreditInfo } },
+            { "JNGroup.OneJN.CreditInfo.Domain.Events.CreateCreditCardEvent", new QueueIdentifier[] { QueueIdentifier.CreditInfo } },
+            { "JNGroup.OneJN.CreditInfo.Domain.Events.CreateLoanAccountEvent", new QueueIdentifier[] { QueueIdentifier.CreditInfo } },
+            { "JNGroup.OneJN.CreditInfo.Domain.Events.CreateSuppCardEvent", new QueueIdentifier[] { QueueIdentifier.CreditInfo } },
+
+            { "JNGroup.OneJN.Document.Domain.Events.DocumentUpdateStatusEvent", new QueueIdentifier[] { QueueIdentifier.Document } },
+            //{ "JNGroup.OneJN.PhoenixSync.Domain.Events.SalesforceSyncProcessed.SalesforceEmploymentInfoProcessedEvent", new QueueIdentifier[] { QueueIdentifier.PHOENIXSYNC } },
+            //{ "JNGroup.OneJN.PhoenixSync.Domain.Events.SalesforceSyncProcessed.SalesforcePersonalInfoProcessedEvent", new QueueIdentifier[] { QueueIdentifier.PHOENIXSYNC } },
+            //{ "JNGroup.OneJN.PhoenixSync.Domain.Events.SalesforceSyncProcessed.SalesforceLoanInfoProcessedEvent", new QueueIdentifier[] { QueueIdentifier.PHOENIXSYNC } },
+            //{ "JNGroup.OneJN.PhoenixSync.Domain.Events.SalesforceSyncProcessed.SalesforceSavingsInfoProcessedEvent", new QueueIdentifier[] { QueueIdentifier.PHOENIXSYNC } },
         };
 
         /// <summary>
@@ -23,11 +39,15 @@ namespace SoftUnlimit.Cloud.VirusScan.Domain.Handler.Events
         /// <param name="eventName"></param>
         /// <param name="_2">@event</param>
         /// <returns></returns>
-        public static bool Filter(IServiceProvider _1, QueueIdentifier queueIdentifier, string eventName, object _2) => queueIdentifier switch
+        public static bool Filter(IServiceProvider _1, QueueIdentifier queueIdentifier, string eventName, object _2)
         {
-            QueueIdentifier.Document => DocumentTypes.Contains(eventName),
-            _ => false
-        };
+            if (_inputEvents.TryGetValue(eventName, out var queues))
+            {
+                return false;
+                return queues.Contains(queueIdentifier);
+            }
+            return false;
+        }
         /// <summary>
         /// 
         /// </summary>

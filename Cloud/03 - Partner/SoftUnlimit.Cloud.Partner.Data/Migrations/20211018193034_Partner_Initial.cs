@@ -114,6 +114,21 @@ namespace SoftUnlimit.Cloud.Partner.Data.Migrations
                     table.PrimaryKey("PK_SaleforcePending", x => x.Id);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "SalesforceReplay",
+                schema: "partner",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    EventName = table.Column<string>(type: "nvarchar(64)", maxLength: 64, nullable: true, comment: "Event name in salesforce (is the channel name)"),
+                    ReplayId = table.Column<long>(type: "bigint", nullable: false, comment: "Max ReplayId receive using this EventName (is the channel name)")
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_SalesforceReplay", x => x.Id);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_JnRewardComplete_CorrelationId",
                 schema: "partner",
@@ -233,6 +248,14 @@ namespace SoftUnlimit.Cloud.Partner.Data.Migrations
                 schema: "partner",
                 table: "SaleforcePending",
                 column: "SourceId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_SalesforceReplay_EventName",
+                schema: "partner",
+                table: "SalesforceReplay",
+                column: "EventName",
+                unique: true,
+                filter: "[EventName] IS NOT NULL");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
@@ -251,6 +274,10 @@ namespace SoftUnlimit.Cloud.Partner.Data.Migrations
 
             migrationBuilder.DropTable(
                 name: "SaleforcePending",
+                schema: "partner");
+
+            migrationBuilder.DropTable(
+                name: "SalesforceReplay",
                 schema: "partner");
         }
     }

@@ -22,7 +22,7 @@ namespace SoftUnlimit.Cloud.Partner.WebApi.Background
             ICloudIdGenerator gen,
             IOptions<AuthorizeOptions> authorizeOptions,
             ICommandDispatcher dispatcher,
-            ILogger<PartnerDeliverPendingEventBackground> logger
+            ILogger<JnRewardBackground> logger
         )
             : base(PartnerValues.JnReward, gen, authorizeOptions, dispatcher, logger)
         {

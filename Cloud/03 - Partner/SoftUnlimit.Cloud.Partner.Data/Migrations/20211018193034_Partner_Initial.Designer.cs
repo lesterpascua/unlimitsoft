@@ -10,7 +10,7 @@ using SoftUnlimit.Cloud.Partner.Data;
 namespace SoftUnlimit.Cloud.Partner.Data.Migrations
 {
     [DbContext(typeof(DbContextWrite))]
-    [Migration("20211017164048_Partner_Initial")]
+    [Migration("20211018193034_Partner_Initial")]
     partial class Partner_Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -332,6 +332,31 @@ namespace SoftUnlimit.Cloud.Partner.Data.Migrations
                     b.HasIndex("SourceId");
 
                     b.ToTable("SaleforcePending");
+                });
+
+            modelBuilder.Entity("SoftUnlimit.Cloud.Partner.Data.Model.SalesforceReplay", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<string>("EventName")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)")
+                        .HasComment("Event name in salesforce (is the channel name)");
+
+                    b.Property<long>("ReplayId")
+                        .HasColumnType("bigint")
+                        .HasComment("Max ReplayId receive using this EventName (is the channel name)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EventName")
+                        .IsUnique()
+                        .HasFilter("[EventName] IS NOT NULL");
+
+                    b.ToTable("SalesforceReplay");
                 });
 #pragma warning restore 612, 618
         }

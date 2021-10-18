@@ -10,5 +10,7 @@ namespace SoftUnlimit.Cloud.Bus
         Document = 13,
         [PrettyName("filescanning-lester")]
         VirusScan = 14,
+        [PrettyName("creditinfo-lester")]
+        CreditInfo = 16
     }
 }

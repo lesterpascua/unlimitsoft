@@ -20,7 +20,7 @@ namespace SoftUnlimit.Cloud.Partner.WebApi.Background
         private readonly PartnerValues _partnerId;
         private readonly ICloudIdGenerator _gen;
         private readonly ICommandDispatcher _dispatcher;
-        private readonly ILogger<PartnerDeliverPendingEventBackground> _logger;
+        private readonly ILogger _logger;
 
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace SoftUnlimit.Cloud.Partner.WebApi.Background
             ICloudIdGenerator gen,
             IOptions<AuthorizeOptions> authorizeOptions,
             ICommandDispatcher dispatcher,
-            ILogger<PartnerDeliverPendingEventBackground> logger)
+            ILogger logger)
         {
             _identity = authorizeOptions.Value.User;
             _partnerId = partnerId;

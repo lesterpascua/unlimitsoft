@@ -13,15 +13,22 @@ using SoftUnlimit.Cloud.Bus;
 using SoftUnlimit.Cloud.DependencyInjection;
 using SoftUnlimit.Cloud.Partner.Data;
 using SoftUnlimit.Cloud.Partner.Data.Configuration;
+using SoftUnlimit.Cloud.Partner.Data.Model;
 using SoftUnlimit.Cloud.Partner.Domain.Handler;
 using SoftUnlimit.Cloud.Partner.Domain.Handler.Configuration;
 using SoftUnlimit.Cloud.Partner.Domain.Handler.Events;
 using SoftUnlimit.Cloud.Partner.Domain.Handler.Services;
 using SoftUnlimit.Cloud.Partner.Domain.Handler.Services.AzureEventBus;
 using SoftUnlimit.Cloud.Partner.Domain.Handler.Services.Saleforce;
+using SoftUnlimit.Cloud.Partner.Saleforce.EventBus;
+using SoftUnlimit.Cloud.Partner.Saleforce.EventBus.Configuration;
+using SoftUnlimit.Cloud.Partner.Saleforce.EventBus.DependencyInjection;
 using SoftUnlimit.Cloud.Partner.WebApi.Background;
+using SoftUnlimit.Cloud.Partner.WebApi.DependencyInjection;
 using SoftUnlimit.Cloud.Security;
+using SoftUnlimit.Cloud.Security.Cryptography;
 using SoftUnlimit.Cloud.VirusScan.Domain.Handler.Events;
+using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.DependencyInjection;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.Event.Json;
@@ -33,6 +40,7 @@ using SoftUnlimit.Json;
 using SoftUnlimit.Logger;
 using SoftUnlimit.Web;
 using SoftUnlimit.Web.AspNet.Filter;
+using System;
 using System.Linq;
 using System.Reflection;
 
@@ -94,6 +102,7 @@ namespace SoftUnlimit.Cloud.Partner.WebApi
                     Alias = QueueIdentifier.Partner, Queue = QueueIdentifier.Partner.ToPrettyString()
                 }
             };
+            eventBusOptions.ActivateQueues(true, QueueIdentifier.VirusScan);
 
             services.Configure<AzureEventBusOptions>(setup =>
             {
@@ -102,10 +111,13 @@ namespace SoftUnlimit.Cloud.Partner.WebApi
                 setup.ListenQueues = eventBusOptions.ListenQueues;
             });
 
-            services.Configure<PartnerOptions>(_configuration.GetSection("Partners"));
-            services.Configure<HangfireOptions>(_configuration.GetSection("Hangfire"));
+            var partnerSection = _configuration.GetSection("Partners:Out");
+            var partnerOptions = partnerSection.Get<PartnerOptions>();
+            services.Configure<PartnerOptions>(partnerSection);
 
-            var hangFireOptions = _configuration.GetSection("Hangfire").Get<HangfireOptions>();
+            var partnerInSalesforceSection = _configuration.GetSection("Partners:In:Saleforce");
+            var partnerInSalesforceOptions = partnerInSalesforceSection.Get<SalesforceInOptions>();
+            services.Configure<SalesforceInOptions>(partnerInSalesforceSection);
             #endregion
 
             #region CQRS
@@ -166,18 +178,6 @@ namespace SoftUnlimit.Cloud.Partner.WebApi
             );
             #endregion
 
-            #region Hangfire
-            //services.AddScoped<ICommandCompletionService, MyCommandCompletionService>();
-            //services.AddHangfireCommandBus(
-            //    hangFireOptions,
-            //    preeProcessCommand: (command, meta) =>
-            //    {
-            //        if (command is CloudCommand cmd)
-            //            cmd.Props.JobId = meta.Id;
-            //    }
-            //);
-            #endregion
-
             #region AutoMapper
             services.AddMapper(new Assembly[] { typeof(Startup).Assembly });
             #endregion
@@ -209,20 +209,11 @@ namespace SoftUnlimit.Cloud.Partner.WebApi
             //);
             #endregion
 
-            services.AddSwagger(
-                new string[] { "SoftUnlimit.Cloud.Partner.xml" },
-                "SoftUnlimit.Cloud.Partner",
-                "Partner API", 
-                inlineDefinitionsForEnums: false
-            );
+            services.AddRoutingEvent(partnerOptions);
+            if (partnerInSalesforceOptions.Enable)
+                services.AddSalesforceEventListener(partnerInSalesforceOptions.CometDUri);
 
-            services.AddSingleton<IRoutingEvent, SaleforceRoutingEvent>();
-            services.AddSingleton<IEventPublisherApiServiceFactory, EventPublisherApiServiceFactory>();
-
-            services.AddSingleton<IRoutingEvent, AzureEventBusRoutingEvent>();
-
-            services.AddHostedService<SaleforceBackground>();
-            services.AddHostedService<JnRewardBackground>();
+            services.AddSwagger(new string[] { "SoftUnlimit.Cloud.Partner.xml" }, "SoftUnlimit.Cloud.Partner", "Partner API", inlineDefinitionsForEnums: false);
         }
 
         /// <summary>
@@ -232,13 +223,13 @@ namespace SoftUnlimit.Cloud.Partner.WebApi
         /// <param name="factory"></param>
         /// <param name="eventBusOption"></param>
         /// <param name="transformOptions"></param>
-        /// <param name="hangfireOptions"></param>
+        /// <param name="salesforceInOptions"></param>
         /// <param name="logger"></param>
         public void Configure(IApplicationBuilder app,
             IServiceScopeFactory factory,
             IOptions<AzureEventBusOptions> eventBusOption,
             IOptions<TransformResponseAttributeOptions> transformOptions,
-            IOptions<HangfireOptions> hangfireOptions,
+            IOptions<SalesforceInOptions> salesforceInOptions,
             ILogger<Startup> logger)
         {
             var eventBus = eventBusOption.Value.PublishQueues.Any(p => p.Active ?? false);
@@ -246,8 +237,26 @@ namespace SoftUnlimit.Cloud.Partner.WebApi
                 factory,
                 eventBus: eventBus,
                 eventListener: eventBusOption.Value.ListenQueues?.Any(p => p.Active == true) ?? false,
-                publishWorker: eventBus,
-                logger: logger
+                publishWorker: false, // eventBus,
+                logger: logger,
+                setup: async provider => {
+                    var listener = provider.GetService<ISalesforceEventListener>();
+                    if (listener is not null)
+                    {
+                        await listener.ListenAsync(TimeSpan.FromSeconds(5));
+
+                        var gen = provider.GetService<ICloudIdGenerator>();
+                        var dispatcher = provider.GetService<ICommandDispatcher>();
+                        var authOptions = provider.GetService<IOptions<AuthorizeOptions>>();
+                        var logger = provider.GetService<ILogger<SalesforceMessageListener>>();
+
+                        var eventName = salesforceInOptions.Value.CustomEvent;
+                        var queryRepository = provider.GetService<ICloudQueryRepository<SalesforceReplay>>();
+                        var entry = await queryRepository.FindAll().FirstOrDefaultAsync(p => p.EventName == eventName);
+
+                        listener.Subscribe(eventName, new SalesforceMessageListener(entry?.ReplayId ?? -2, eventName, authOptions, gen, dispatcher, logger));
+                    }
+                }
             ).Wait();
 
             app.UseWrapperDevelopment(_environment.IsDevelopment() || transformOptions.Value.ShowExceptionDetails);
@@ -278,6 +287,7 @@ namespace SoftUnlimit.Cloud.Partner.WebApi
 //                if (useHangFire && (_environment.IsDevelopment() || showHangfireDashboard))
 //                    o.MapHangfireDashboard("/hangfire", new DashboardOptions());
             });
+
         }
     }
 }

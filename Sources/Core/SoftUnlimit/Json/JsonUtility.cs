@@ -57,7 +57,7 @@ namespace SoftUnlimit.Json
         /// <returns></returns>
         public static T Deserialize<T>(string payload)
         {
-            if (payload == null)
+            if (string.IsNullOrWhiteSpace(payload))
                 return default;
 
             if (UseNewtonsoftSerializer)
@@ -77,6 +77,20 @@ namespace SoftUnlimit.Json
 
             return System.Text.Json.JsonSerializer.Deserialize(payload, eventType, TestJsonSettings);
         }
+        /// <summary>
+        /// Add extra value to a <see cref="JObject"/> if use Newtonsoft, or to <see cref="JsonElement"/> if use System.Text.Json
+        /// </summary>
+        /// <param name="body"></param>
+        /// <param name="name"></param>
+        /// <param name="value"></param>
+        public static void AddNode(object body, string name, object value)
+        {
+            if (UseNewtonsoftSerializer)
+            {
+                ((JObject)body).Add(name, JToken.FromObject(value));
+            } else
+                throw new NotImplementedException("System.Text.Json");
+        }
 
         /// <summary>
         /// Verify if the object is of type T, <see cref="JObject"/>, <see cref="JsonElement"/>, <see cref="JsonProperty"/> or string and try to deserialize using correct method.
@@ -86,11 +100,11 @@ namespace SoftUnlimit.Json
         /// <returns></returns>
         public static T Cast<T>(object data) => data switch
         {
-            T body => body,
             string body => Deserialize<T>(body),
             JObject body => body.ToObject<T>(),
             JsonElement body => Deserialize<T>(body.GetRawText()),
             JsonProperty body => Deserialize<T>(body.Value.GetRawText()),
+            T body => body,
             _ => throw new NotSupportedException()
         };
     }
