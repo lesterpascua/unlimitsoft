@@ -17,7 +17,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "SoftUnlimit.Cloud.VirusScan.WebApi": {
+    "SoftUnlimit.Cloud.Partner.WebApi": {
       "commandName": "Project",
       "launchBrowser": true,
       "launchUrl": "swagger/index.html?apikey=MTIz",

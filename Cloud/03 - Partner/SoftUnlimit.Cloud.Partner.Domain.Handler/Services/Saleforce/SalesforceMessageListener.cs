@@ -3,17 +3,21 @@ using CometD.NetCore.Bayeux.Client;
 using CometD.NetCore.Salesforce.Messaging;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Polly;
+using Polly.Retry;
 using SoftUnlimit.Cloud.Partner.Domain.Handler.Command;
 using SoftUnlimit.Cloud.Partner.Domain.Handler.Services.Saleforce;
 using SoftUnlimit.Cloud.Security;
 using SoftUnlimit.Cloud.Security.Cryptography;
 using SoftUnlimit.CQRS.Command;
+using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.Json;
 using System;
+using System.Threading;
 
 namespace SoftUnlimit.Cloud.Partner.Saleforce.EventBus
 {
-    public class SalesforceMessageListener : IMessageListener
+    public class SalesforceMessageListener : IMessageListener, IDisposable
     {
         private readonly IdentityInfo _identity;
         private readonly long _lastReceiveReplayId;
@@ -21,6 +25,8 @@ namespace SoftUnlimit.Cloud.Partner.Saleforce.EventBus
         private readonly ICloudIdGenerator _gen;
         private readonly ICommandDispatcher _dispatcher;
         private readonly ILogger<SalesforceMessageListener> _logger;
+        private readonly CancellationTokenSource _cts;
+        private readonly AsyncRetryPolicy _retryPolicy;
 
 
         /// <summary>
@@ -48,7 +54,30 @@ namespace SoftUnlimit.Cloud.Partner.Saleforce.EventBus
             _dispatcher = dispatcher;
             _logger = logger;
 
+            _cts = new CancellationTokenSource();
+            _retryPolicy = Policy
+                .Handle<Exception>()
+                .WaitAndRetryAsync(int.MaxValue, attempt => TimeSpan.FromSeconds(Math.Min(30 * attempt, 5 * 60)));
+
             _logger.LogWarning("Ignore all event with replayId less or equal {ReplayId}", lastReceiveReplayId);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public void Dispose()
+        {
+            Disposing(true);
+            GC.SuppressFinalize(this);
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected void Disposing(bool disposing)
+        {
+            if (disposing)
+                _cts.Cancel();
         }
 
         /// <inheritdoc />
@@ -66,7 +95,7 @@ namespace SoftUnlimit.Cloud.Partner.Saleforce.EventBus
                     EventName = _eventName,
                     Payload = payload.Data.Payload
                 };
-                var result = _dispatcher.DispatchAsync(cmd).GetAwaiter().GetResult();
+                var result = _retryPolicy.ExecuteAsync(ct => _dispatcher.DispatchAsync(cmd, ct), _cts.Token).GetAwaiter().GetResult();
 
                 var text = "Saleforce event: {Event} arrive. Process response: {@Body}";
                 if (!result.IsSuccess)

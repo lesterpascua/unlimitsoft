@@ -48,7 +48,11 @@ namespace SoftUnlimit.Cloud.Partner.Saleforce.EventBus.Services
         protected void Disposing(bool disposing)
         {
             if (disposing)
+            {
                 _forceClient?.Dispose();
+                foreach (var entry in _subscriptions.ToArray())
+                    Unsubscribe(entry.Key.EventName, entry.Value.Listener);
+            }
         }
 
         /// <inheritdoc />
@@ -73,6 +77,8 @@ namespace SoftUnlimit.Cloud.Partner.Saleforce.EventBus.Services
 
             var value = _subscriptions[key];
             _forceClient.UnsubscribeTopic(topicName, value.Listener, value.ReplayId);
+            if (listener is IDisposable disposable)
+                disposable.Dispose();
 
             return true;
         }
