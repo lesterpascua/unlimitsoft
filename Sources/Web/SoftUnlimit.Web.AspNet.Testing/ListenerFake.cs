@@ -21,7 +21,6 @@ namespace SoftUnlimit.Web.AspNet.Testing
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="userId"></param>
         /// <param name="eventDispatcher"></param>
         /// <param name="nameResolver"></param>
         public ListenerFake(IEventDispatcher eventDispatcher, IEventNameResolver nameResolver)
@@ -64,7 +63,6 @@ namespace SoftUnlimit.Web.AspNet.Testing
         /// </summary>
         /// <typeparam name="TEvent"></typeparam>
         /// <param name="event"></param>
-        /// <param name="config"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
         public async Task<(IEventResponse, Exception)> SimulateReceiveAsync<TEvent>(TEvent @event, CancellationToken ct = default)

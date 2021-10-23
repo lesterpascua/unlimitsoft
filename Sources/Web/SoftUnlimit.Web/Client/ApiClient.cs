@@ -22,6 +22,14 @@ namespace SoftUnlimit.Web.Client
         /// 
         /// </summary>
         /// <typeparam name="TModel"></typeparam>
+        /// <param name="request"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        Task<(TModel, HttpStatusCode)> SendAsync<TModel>(Func<CancellationToken, Task<HttpResponseMessage>> request, CancellationToken ct = default);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <typeparam name="TModel"></typeparam>
         /// <param name="method"></param>
         /// <param name="uri"></param>
         /// <param name="setup">Allow configuration of current execution context before perform the request.</param>

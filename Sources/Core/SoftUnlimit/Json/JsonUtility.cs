@@ -1,6 +1,10 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using SoftUnlimit.Web.Json;
 using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Linq;
 using System.Text.Json;
 
 namespace SoftUnlimit.Json
@@ -10,10 +14,18 @@ namespace SoftUnlimit.Json
     /// </summary>
     public static class JsonUtility
     {
+        static JsonUtility()
+        {
+            JsonShorcut.Serialize = Serialize;
+            JsonShorcut.Deserialize = Deserialize;
+            JsonShorcut.ToKeyValue = ToKeyValue;
+        }
+
         /// <summary>
         /// Indicate if for serializer use Newtonsoft or Native serializer in the internal SoftUnlimit library operation. By default use Newtonsoft.
         /// </summary>
         public static bool UseNewtonsoftSerializer { get; set; } = true;
+
         /// <summary>
         /// Serialized option for Newtonsoft.
         /// </summary>
@@ -107,5 +119,42 @@ namespace SoftUnlimit.Json
             T body => body,
             _ => throw new NotSupportedException()
         };
+
+
+
+        /// <summary>
+        /// Convert objeto to a dictionary key value folow the asp.net binding method.
+        /// </summary>
+        /// <param name="metaToken"></param>
+        /// <returns></returns>
+        public static IDictionary<string, string> ToKeyValue(object metaToken)
+        {
+            if (metaToken == null)
+                return null;
+            if (metaToken is not JToken token)
+                return ToKeyValue(JObject.FromObject(metaToken));
+
+            if (token.HasValues)
+            {
+                var contentData = new Dictionary<string, string>();
+                foreach (var child in token.Children())
+                {
+                    var childContent = ToKeyValue(child);
+                    if (childContent != null)
+                        contentData = contentData.Concat(childContent).ToDictionary(k => k.Key, v => v.Value);
+                }
+
+                return contentData;
+            }
+
+            var jValue = token as JValue;
+            if (jValue?.Value == null)
+                return null;
+
+            var value = jValue?.Type == JTokenType.Date ? jValue?.ToString("o", CultureInfo.InvariantCulture) : jValue?.ToString(CultureInfo.InvariantCulture);
+            return new Dictionary<string, string> {
+                { token.Path, value }
+            };
+        }
     }
 }

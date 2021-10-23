@@ -8,11 +8,13 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.Event.Json;
-using SoftUnlimit.Security;
 using System;
 
 namespace SoftUnlimit.Web.AspNet.Testing
 {
+    /// <summary>
+    /// 
+    /// </summary>
     public static class TestFactory
     {
         /// <summary>
@@ -52,6 +54,7 @@ namespace SoftUnlimit.Web.AspNet.Testing
         /// Replace event listener for fake listener
         /// </summary>
         /// <param name="services"></param>
+        /// <param name="factory"></param>
         /// <returns></returns>
         public static IServiceCollection ReplaceEventPublishWorker(this IServiceCollection services, Func<IServiceProvider, IEventPublishWorker> factory)
         {

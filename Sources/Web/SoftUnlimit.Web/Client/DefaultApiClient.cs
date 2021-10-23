@@ -1,11 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿using SoftUnlimit.Web.Json;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Net;
 using System.Net.Http;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -42,6 +41,18 @@ namespace SoftUnlimit.Web.Client
 
         /// <inheritdoc />
         public void Dispose() => HttpClient.Dispose();
+
+        /// <inheritdoc/>
+        public async Task<(TModel, HttpStatusCode)> SendAsync<TModel>(Func<CancellationToken, Task<HttpResponseMessage>> request, CancellationToken ct = default)
+        {
+            using var response = await request(ct);
+
+            response.EnsureSuccessStatusCode();
+            string body = await response.Content.ReadAsStringAsync();
+
+            var result = (TModel)JsonShorcut.Deserialize(typeof(TModel), body);
+            return (result, response.StatusCode);
+        }
         /// <inheritdoc/>
         public async Task<(TModel, HttpStatusCode)> SendAsync<TModel>(HttpMethod method, string uri, Action<HttpRequestMessage> setup = null, object model = null, CancellationToken ct = default)
         {
@@ -55,7 +66,7 @@ namespace SoftUnlimit.Web.Client
                     string qs = await ObjectUtils.ToQueryString(model);
                     completeUri = $"{completeUri}?{qs}";
                 } else
-                    jsonContent = JsonConvert.SerializeObject(model);
+                    jsonContent = JsonShorcut.Serialize(model);
             }
             HttpContent httpContent = null;
             try
@@ -63,7 +74,6 @@ namespace SoftUnlimit.Web.Client
                 if (jsonContent != null)
                     httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-                await BeforeSendRequestAsync(httpContent, method, completeUri, ct);
                 return await SendWithContentAsync<TModel>(_httpClient, method, completeUri, httpContent, setup);
             }
             finally
@@ -86,22 +96,10 @@ namespace SoftUnlimit.Web.Client
             if (qs != null)
                 completeUri += string.Concat('?', await ObjectUtils.ToQueryString(qs));
 
-            await BeforeSendRequestAsync(content, method, uri);
             return await SendWithContentAsync<TModel>(_httpClient, method, completeUri, content, setup);
         }
 
-        /// <summary>
-        /// Performs operations before request.
-        /// </summary>
-        /// <param name="content"></param>
-        /// <param name="method"></param>
-        /// <param name="uri"></param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        protected virtual Task BeforeSendRequestAsync(HttpContent content, HttpMethod method, string uri, CancellationToken ct = default) => Task.CompletedTask;
-
         #region Private Methods
-
         private static async Task<(TModel, HttpStatusCode)> SendWithContentAsync<TModel>(HttpClient httpClient, HttpMethod method, string completeUri, HttpContent content, Action<HttpRequestMessage> setup, CancellationToken ct = default)
         {
             using var message = new HttpRequestMessage(method, completeUri);
@@ -115,7 +113,8 @@ namespace SoftUnlimit.Web.Client
             if (!response.IsSuccessStatusCode)
                 throw new HttpException(response.StatusCode, response.ToString(), body);
 
-            return (JsonConvert.DeserializeObject<TModel>(body), response.StatusCode);
+            var result = (TModel)JsonShorcut.Deserialize(typeof(TModel), body);
+            return (result, response.StatusCode);
         }
 
         #endregion
