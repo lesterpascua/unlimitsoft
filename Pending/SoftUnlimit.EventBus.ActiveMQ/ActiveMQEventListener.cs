@@ -74,6 +74,7 @@ namespace SoftUnlimit.EventBus.ActiveMQ
                 _connection?.Stop();
                 Release();
             }
+            GC.SuppressFinalize(this);
         }
         /// <summary>
         /// Publish event in all queues.
