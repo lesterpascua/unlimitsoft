@@ -15,3 +15,22 @@ Test Cases
 		2. Go to the step 4.
 	- Customer upload file over other service
 		1. Same as step 1. Just verify the customer virus attemp has not grather than the allowed
+		
+		
+		
+Endpoint: 
+	- to access endpoint need apikey coding in base64
+	(https://onejn-develop.azure-api.net/savingaccount/swagger/index.html?apikey=MTIz)
+	
+	- /api/savingaccoun/customer/profile/check
+Events
+	- consumer and generate
+	
+security
+	- 
+	
+steps to run locally
+	-
+	
+dependencies
+	-
