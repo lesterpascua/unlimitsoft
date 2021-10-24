@@ -30,8 +30,9 @@ namespace SoftUnlimit.Logger.DependencyInjection
             var loggerConfig = new LoggerConfiguration();
 
             loggerConfig.MinimumLevel.Is((Serilog.Events.LogEventLevel)config.Default);
-            foreach (var entry in config.Override)
-                loggerConfig.MinimumLevel.Override(entry.Key, (Serilog.Events.LogEventLevel)entry.Value);
+            if (config.Override is not null)
+                foreach (var entry in config.Override)
+                    loggerConfig.MinimumLevel.Override(entry.Key, (Serilog.Events.LogEventLevel)entry.Value);
 
             loggerConfig.Destructure.UsingAttributes();
             loggerConfig.Enrich.FromLogContext();
