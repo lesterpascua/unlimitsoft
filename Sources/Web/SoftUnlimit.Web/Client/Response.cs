@@ -61,16 +61,16 @@ namespace SoftUnlimit.Web.Client
         }
 
         /// <inheritdoc />
-        public int Code { get; protected set; }
+        public int Code { get; set; }
         /// <inheritdoc />
-        public string UIText { get; protected set; }
+        public string UIText { get; set; }
         /// <summary>
         /// Body payload
         /// </summary>
-        public T Body { get; protected set; }
+        public T Body { get; set; }
 
         /// <inheritdoc />
-        public string TraceIdentifier { get; protected set; }
+        public string TraceIdentifier { get; set; }
         /// <inheritdoc />
         public bool IsSuccess => 200 <= Code && Code <= 299;
 

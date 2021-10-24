@@ -42,10 +42,8 @@ namespace SoftUnlimit.Json
         public static JsonSerializerOptions TestJsonSettings { get; set; } = new JsonSerializerOptions
         {
             WriteIndented = false,
-            //ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler,
-            // ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
-            // ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-            IgnoreNullValues = true
+            IgnoreNullValues = true,
+            PropertyNameCaseInsensitive = true,
         };
 
         /// <summary>
