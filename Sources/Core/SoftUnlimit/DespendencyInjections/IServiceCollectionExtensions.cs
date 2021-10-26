@@ -21,7 +21,7 @@ namespace SoftUnlimit.DespendencyInjections
         /// <param name="scanPreloadAssemblies">
         /// Scan also the preload assemblies <see cref="AppDomain.GetAssemblies"/>. Some assemblies can load later so recomend pass the assembly explicity
         /// </param>
-        /// <param name="assemblyFilter">Function to get the baseUrl according with some assembly. If the base url is null or empty skip the result.</param>
+        /// <param name="assemblyFilter">Function to get the baseUrl according with some assembly. If the base url is null.</param>
         /// <param name="serviceFactory"></param>
         /// <param name="resolver"></param>
         /// <param name="httpClientBuilder"></param>
@@ -48,13 +48,14 @@ namespace SoftUnlimit.DespendencyInjections
             foreach (var assembly in loadedAssemblies)
             {
                 var baseUrl = assemblyFilter(assembly);
-                if (string.IsNullOrEmpty(baseUrl))
+                if (baseUrl is null)
                     continue;
 
                 var key = assembly.GetName().Name;
                 var builder = services.AddHttpClient(key, c =>
                 {
-                    c.BaseAddress = new Uri(baseUrl);
+                    if (baseUrl != string.Empty)
+                        c.BaseAddress = new Uri(baseUrl);
 
                     c.DefaultRequestHeaders.Add("Accept", "application/json");
                     c.DefaultRequestHeaders.Add("User-Agent", "HttpClientFactory");
