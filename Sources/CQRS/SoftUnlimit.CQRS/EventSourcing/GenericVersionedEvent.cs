@@ -1,4 +1,6 @@
-﻿namespace SoftUnlimit.CQRS.EventSourcing
+﻿using SoftUnlimit.Web.Event;
+
+namespace SoftUnlimit.CQRS.EventSourcing
 {
     /// <summary>
     /// Generic versioned event use to deserialize any kind of event.

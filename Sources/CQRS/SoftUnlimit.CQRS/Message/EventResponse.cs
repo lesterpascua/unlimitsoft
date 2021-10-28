@@ -1,5 +1,5 @@
-﻿using SoftUnlimit.CQRS.Event;
-using SoftUnlimit.Web.Client;
+﻿using SoftUnlimit.Web.Client;
+using SoftUnlimit.Web.Event;
 
 namespace SoftUnlimit.CQRS.Message
 {

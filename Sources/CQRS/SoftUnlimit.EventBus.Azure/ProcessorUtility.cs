@@ -2,8 +2,8 @@
 using Microsoft.Extensions.Logging;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.Event.Json;
-using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.CQRS.Message;
+using SoftUnlimit.Web.Event;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

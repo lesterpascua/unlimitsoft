@@ -1,9 +1,6 @@
-﻿using SoftUnlimit.CQRS.Event;
-using SoftUnlimit.Data;
-using System;
+﻿using SoftUnlimit.Data;
+using SoftUnlimit.Web.Event;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Text;
 
 namespace SoftUnlimit.CQRS.Data
 {

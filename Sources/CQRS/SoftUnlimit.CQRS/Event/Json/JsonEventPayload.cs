@@ -1,5 +1,6 @@
 ﻿using SoftUnlimit.CQRS.EventSourcing.Json;
 using SoftUnlimit.Json;
+using SoftUnlimit.Web.Event;
 
 namespace SoftUnlimit.CQRS.Event.Json
 {

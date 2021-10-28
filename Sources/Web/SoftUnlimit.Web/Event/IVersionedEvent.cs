@@ -1,10 +1,6 @@
-﻿using SoftUnlimit.CQRS.Command;
-using SoftUnlimit.CQRS.Event;
-using SoftUnlimit.Map;
-using SoftUnlimit.Web.Model;
-using System;
+﻿using System;
 
-namespace SoftUnlimit.CQRS.EventSourcing
+namespace SoftUnlimit.Web.Event
 {
     /// <summary>
     /// Represents an event message that belongs to an ordered event stream.
@@ -46,7 +42,6 @@ namespace SoftUnlimit.CQRS.EventSourcing
             : base(id, sourceId, serviceId, workerId, correlationId, command, prevState, currState, isDomainEvent, body)
         {
             Version = version;
-            Created = DateTime.UtcNow;
         }
 
         /// <inheritdoc />

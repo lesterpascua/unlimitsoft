@@ -6,6 +6,7 @@ using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.EventBus.Azure.Configuration;
 using SoftUnlimit.Json;
+using SoftUnlimit.Web.Event;
 using System;
 using System.Collections.Generic;
 using System.Linq;

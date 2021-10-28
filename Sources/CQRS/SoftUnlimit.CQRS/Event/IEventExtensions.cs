@@ -1,7 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
-using SoftUnlimit.CQRS.Message;
+﻿using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.Json;
-using System;
+using SoftUnlimit.Web.Event;
 
 namespace SoftUnlimit.CQRS.Event
 {

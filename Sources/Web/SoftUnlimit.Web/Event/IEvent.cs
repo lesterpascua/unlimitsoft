@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SoftUnlimit.CQRS.Event
+namespace SoftUnlimit.Web.Event
 {
     /// <summary>
     /// 
@@ -95,6 +95,8 @@ namespace SoftUnlimit.CQRS.Event
 
             IsDomainEvent = isDomain;
             Body = body;
+
+            Created = DateTime.UtcNow;
         }
 
         /// <inheritdoc />

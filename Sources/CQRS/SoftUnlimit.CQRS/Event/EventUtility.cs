@@ -2,6 +2,7 @@
 using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.Json;
+using SoftUnlimit.Web.Event;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
