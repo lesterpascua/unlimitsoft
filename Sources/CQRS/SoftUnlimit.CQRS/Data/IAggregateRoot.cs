@@ -1,5 +1,5 @@
 ﻿using SoftUnlimit.Data;
-using SoftUnlimit.Web.Event;
+using SoftUnlimit.Event;
 using System.Collections.Generic;
 
 namespace SoftUnlimit.CQRS.Data

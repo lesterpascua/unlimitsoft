@@ -1,7 +1,7 @@
 ﻿using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.Data;
 using SoftUnlimit.Web.Client;
-using SoftUnlimit.Web.Event;
+using SoftUnlimit.Event;
 using System;
 using System.Collections.Generic;
 using System.Threading;

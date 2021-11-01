@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SoftUnlimit.Web.Event
+namespace SoftUnlimit.Event
 {
     /// <summary>
     /// Represents an event message that belongs to an ordered event stream.

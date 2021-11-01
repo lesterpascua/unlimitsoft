@@ -1,5 +1,7 @@
 ﻿using FluentValidation;
 using SoftUnlimit.CQRS.Command.Validation;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SoftUnlimit.CQRS.Command
 {
@@ -10,9 +12,11 @@ namespace SoftUnlimit.CQRS.Command
         where TCommand : ICommand
     {
         /// <summary>
-        /// Build fluen validation rules.
+        /// Build fluent validation rules.
         /// </summary>
+        /// <param name="command"></param>
         /// <param name="validator"></param>
-        IValidator BuildValidator(CommandValidator<TCommand> validator);
+        /// <param name="ct"></param>
+        ValueTask<IValidator> ValidatorAsync(TCommand command, CommandValidator<TCommand> validator, CancellationToken ct = default);
     }
 }

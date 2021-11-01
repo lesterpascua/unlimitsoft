@@ -3,6 +3,7 @@ using SoftUnlimit.CQRS;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.CQRS.EventSourcing.Json;
+using SoftUnlimit.Event;
 using SoftUnlimit.Json;
 using SoftUnlimit.WebApi.Sources.CQRS.Event;
 using SoftUnlimit.WebApi.Sources.Security.Cryptography;

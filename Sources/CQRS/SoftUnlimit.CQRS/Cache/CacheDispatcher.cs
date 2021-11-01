@@ -2,7 +2,7 @@
 using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.CQRS.Query;
-using SoftUnlimit.Web.Event;
+using SoftUnlimit.Event;
 using System;
 using System.Collections.Generic;
 using System.Threading;

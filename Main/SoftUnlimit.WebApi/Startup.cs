@@ -157,6 +157,7 @@ namespace SoftUnlimit.WebApi
             #endregion
 
             #region EventBus
+            services.AddSoftUnlimitEventNameResolver(new Assembly[] { typeof(Startup).Assembly });
             services.AddAzureEventBus<IMyUnitOfWork, TestEvent>(
                 eventBusOptions,
                 filter: TransformEventToDomain.Filter,

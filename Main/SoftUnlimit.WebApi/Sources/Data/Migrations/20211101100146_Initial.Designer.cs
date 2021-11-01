@@ -10,8 +10,8 @@ using SoftUnlimit.WebApi.Sources.Data;
 namespace SoftUnlimit.WebApi.Sources.Data.Migrations
 {
     [DbContext(typeof(DbContextWrite))]
-    [Migration("20211009175007_AddLockTableId")]
-    partial class AddLockTableId
+    [Migration("20211101100146_Initial")]
+    partial class Initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -19,7 +19,7 @@ namespace SoftUnlimit.WebApi.Sources.Data.Migrations
             modelBuilder
                 .HasDefaultSchema("dbo")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("ProductVersion", "5.0.10")
+                .HasAnnotation("ProductVersion", "5.0.11")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("SoftUnlimit.CQRS.EventSourcing.Json.JsonVersionedEventPayload", b =>
@@ -55,7 +55,7 @@ namespace SoftUnlimit.WebApi.Sources.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("VersionedEventPayload");
+                    b.ToTable("VersionedEvent");
                 });
 
             modelBuilder.Entity("SoftUnlimit.WebApi.Sources.Data.Model.Customer", b =>

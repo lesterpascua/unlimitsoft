@@ -1,4 +1,4 @@
-﻿using SoftUnlimit.CQRS.EventSourcing;
+﻿using SoftUnlimit.Event;
 using System;
 
 namespace SoftUnlimit.WebApi.Sources.CQRS.Event

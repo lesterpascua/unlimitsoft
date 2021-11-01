@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Storage;
 using SoftUnlimit.CQRS.Data;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.EventSourcing;
-using SoftUnlimit.Web.Event;
+using SoftUnlimit.Event;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;

@@ -1,4 +1,5 @@
 ﻿using SoftUnlimit.CQRS.Event;
+using SoftUnlimit.Event;
 
 namespace SoftUnlimit.WebApi.Sources.CQRS.Event
 {

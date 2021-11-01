@@ -1,5 +1,5 @@
 ﻿using SoftUnlimit.CQRS.Event;
-using SoftUnlimit.Web.Event;
+using SoftUnlimit.Event;
 using System;
 using System.Threading;
 using System.Threading.Tasks;

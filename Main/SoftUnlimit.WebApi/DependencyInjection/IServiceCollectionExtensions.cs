@@ -15,6 +15,7 @@ using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.Data;
 using SoftUnlimit.Data.EntityFramework.Configuration;
 using SoftUnlimit.Data.EntityFramework.DependencyInjection;
+using SoftUnlimit.Event;
 using SoftUnlimit.EventBus.Azure;
 using SoftUnlimit.EventBus.Azure.Configuration;
 using SoftUnlimit.Logger;

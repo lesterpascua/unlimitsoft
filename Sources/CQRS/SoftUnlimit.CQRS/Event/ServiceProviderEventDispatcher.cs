@@ -2,7 +2,7 @@
 using Microsoft.Extensions.Logging;
 using SoftUnlimit.CQRS.Cache;
 using SoftUnlimit.CQRS.Message;
-using SoftUnlimit.Web.Event;
+using SoftUnlimit.Event;
 using System;
 using System.Collections.Generic;
 using System.Threading;

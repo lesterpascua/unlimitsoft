@@ -1,4 +1,4 @@
-﻿using SoftUnlimit.Web.Event;
+﻿using SoftUnlimit.Event;
 using System;
 
 namespace SoftUnlimit.CQRS.Event

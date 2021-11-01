@@ -17,7 +17,7 @@ namespace SoftUnlimit.WebApi.Sources.Data.Migrations
             modelBuilder
                 .HasDefaultSchema("dbo")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("ProductVersion", "5.0.10")
+                .HasAnnotation("ProductVersion", "5.0.11")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
             modelBuilder.Entity("SoftUnlimit.CQRS.EventSourcing.Json.JsonVersionedEventPayload", b =>
@@ -53,7 +53,7 @@ namespace SoftUnlimit.WebApi.Sources.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("VersionedEventPayload");
+                    b.ToTable("VersionedEvent");
                 });
 
             modelBuilder.Entity("SoftUnlimit.WebApi.Sources.Data.Model.Customer", b =>

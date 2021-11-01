@@ -3,7 +3,7 @@ using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.Security;
-using SoftUnlimit.Web.Event;
+using SoftUnlimit.Event;
 using System;
 using System.Text.Json;
 using System.Threading;

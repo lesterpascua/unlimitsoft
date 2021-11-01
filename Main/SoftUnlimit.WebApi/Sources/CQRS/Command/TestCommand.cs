@@ -36,9 +36,9 @@ namespace SoftUnlimit.WebApi.Sources.CQRS.Command
             _customerRepository = customerRepository;
         }
 
-        public IValidator BuildValidator(CommandValidator<TestCommand> validator)
+        public ValueTask<IValidator> ValidatorAsync(TestCommand command, CommandValidator<TestCommand> validator, CancellationToken ct = default)
         {
-            return validator;
+            return ValueTask.FromResult((IValidator)validator);
         }
 
         public async Task<ICommandResponse> HandleAsync(TestCommand command, CancellationToken ct = default)

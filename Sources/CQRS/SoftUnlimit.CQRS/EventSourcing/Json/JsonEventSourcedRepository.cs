@@ -1,7 +1,7 @@
 ﻿using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.Data;
 using SoftUnlimit.Json;
-using SoftUnlimit.Web.Event;
+using SoftUnlimit.Event;
 using System;
 using System.Linq;
 using System.Threading;

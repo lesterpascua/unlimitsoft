@@ -1,4 +1,5 @@
 ﻿using SoftUnlimit.CQRS.EventSourcing;
+using SoftUnlimit.Event;
 using SoftUnlimit.WebApi.Sources.Security.Cryptography;
 using System;
 

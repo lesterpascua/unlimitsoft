@@ -5,9 +5,11 @@ using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.CQRS.Query;
+using SoftUnlimit.Event;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace SoftUnlimit.CQRS.DependencyInjection
 {
@@ -27,14 +29,44 @@ namespace SoftUnlimit.CQRS.DependencyInjection
             services.RegisterCommandHandler(settings);
             services.RegisterEventHandler(settings);
         }
+        /// <summary>
+        /// Scan assemblies and register all events.
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="typeResolverCache"></param>
+        /// <param name="transform">Allow create custom name to the event.</param>
+        /// <returns></returns>
+        public static IServiceCollection AddSoftUnlimitEventNameResolver(this IServiceCollection services, Assembly[] typeResolverCache, Func<Type, string> transform = null)
+        {
+            static IEnumerable<Type> GetTypesFromInterface<T>(params Assembly[] assemblies) where T : class
+            {
+                if (!typeof(T).IsInterface)
+                    throw new InvalidOperationException($"Type {typeof(T)} must be an interface.");
 
-        #region Private Methods
+                var result = new List<Type>();
+                foreach (var assambly in assemblies)
+                {
+                    var types = assambly
+                        .GetTypes()
+                        .Where(mytype => mytype.GetInterfaces().Contains(typeof(T)));
+
+                    result.AddRange(types);
+                }
+                return result;
+            }
+            var types = GetTypesFromInterface<IEvent>(typeResolverCache)
+                .Select(t => new KeyValuePair<string, Type>(transform?.Invoke(t) ?? t.FullName, t));
+
+            var register = new Dictionary<string, Type>(types);
+            return services.AddSingleton<IEventNameResolver>(new DefaultEventCommandResolver(register));
+        }
+
         /// <summary>
         /// Scan assemblies and register all QueryHandler implement the interfaces set in <see cref="CQRSSettings.IQueryHandler"/>
         /// </summary>
         /// <param name="services"></param>
         /// <param name="settings"></param>
-        private static void RegisterQueryHandler(this IServiceCollection services, CQRSSettings settings)
+        public static void RegisterQueryHandler(this IServiceCollection services, CQRSSettings settings)
         {
             if (settings.IQueryHandler != null)
             {
@@ -70,7 +102,7 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         /// </summary>
         /// <param name="services"></param>
         /// <param name="settings"></param>
-        private static void RegisterCommandHandler(this IServiceCollection services, CQRSSettings settings)
+        public static void RegisterCommandHandler(this IServiceCollection services, CQRSSettings settings)
         {
             if (settings.MediatorDispatchEventSourced != null)
                 services.AddScoped(typeof(IMediatorDispatchEventSourced), settings.MediatorDispatchEventSourced);
@@ -118,7 +150,7 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         /// <param name="services"></param>
         /// <param name="settings"></param>
         /// <returns></returns>
-        private static IServiceCollection RegisterEventHandler(this IServiceCollection services, CQRSSettings settings)
+        public static IServiceCollection RegisterEventHandler(this IServiceCollection services, CQRSSettings settings)
         {
             if (settings.IEventHandler != null)
             {
@@ -130,7 +162,6 @@ namespace SoftUnlimit.CQRS.DependencyInjection
                     .SelectMany(s => s.GetTypes())
                     .Where(p => p.IsClass && !p.IsAbstract && p.GetInterfaces().Contains(typeof(IEventHandler)));
 
-                var register = new Dictionary<string, Type>();
                 foreach (var handlerImplementation in existHandler)
                 {
                     var eventHandlerImplementedInterfaces = handlerImplementation
@@ -143,20 +174,14 @@ namespace SoftUnlimit.CQRS.DependencyInjection
                         var handlerInterface = typeof(IEventHandler<>).MakeGenericType(argsTypes);
                         var currHandlerInterface = settings.IEventHandler.MakeGenericType(argsTypes);
 
-                        if (!register.ContainsKey(argsTypes.FullName))
-                            register.Add(argsTypes.FullName, argsTypes);
-
                         services.AddScoped(handlerInterface, handlerImplementation);
                         if (currHandlerInterface != handlerInterface)
                             services.AddScoped(currHandlerInterface, provider => provider.GetService(handlerInterface));
                     }
                 }
                 #endregion
-
-                services.AddSingleton<IEventNameResolver>(new DefaultEventCommandResolver(register));
             }
             return services;
         }
-        #endregion
     }
 }

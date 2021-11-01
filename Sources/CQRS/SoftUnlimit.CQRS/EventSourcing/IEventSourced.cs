@@ -1,6 +1,6 @@
 ﻿using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Data;
-using SoftUnlimit.Web.Event;
+using SoftUnlimit.Event;
 using System;
 using System.Collections.Generic;
 using System.Threading;

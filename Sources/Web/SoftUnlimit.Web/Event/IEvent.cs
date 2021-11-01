@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SoftUnlimit.Web.Event
+namespace SoftUnlimit.Event
 {
     /// <summary>
     /// 

@@ -25,7 +25,20 @@ namespace SoftUnlimit.WebApi.Sources.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "VersionedEventPayload",
+                name: "Lock",
+                schema: "dbo",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false),
+                    DateTime = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Lock", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "VersionedEvent",
                 schema: "dbo",
                 columns: table => new
                 {
@@ -40,7 +53,7 @@ namespace SoftUnlimit.WebApi.Sources.Data.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_VersionedEventPayload", x => x.Id);
+                    table.PrimaryKey("PK_VersionedEvent", x => x.Id);
                 });
         }
 
@@ -51,7 +64,11 @@ namespace SoftUnlimit.WebApi.Sources.Data.Migrations
                 schema: "dbo");
 
             migrationBuilder.DropTable(
-                name: "VersionedEventPayload",
+                name: "Lock",
+                schema: "dbo");
+
+            migrationBuilder.DropTable(
+                name: "VersionedEvent",
                 schema: "dbo");
         }
     }
