@@ -57,6 +57,10 @@ namespace SoftUnlimit.Event
         /// Gets the identifier of the source originating the event.
         /// </summary>
         object GetSourceId();
+        /// <summary>
+        /// Gets the identifier of the source originating the event.
+        /// </summary>
+        void SetSourceId(object value);
     }
     /// <summary>
     /// Represents an event message.
@@ -135,7 +139,10 @@ namespace SoftUnlimit.Event
         /// <inheritdoc />
         public object GetBody() => Body;
         /// <inheritdoc />
-        public object GetSourceId() => Id;
+        public object GetSourceId() => SourceId;
+        /// <inheritdoc />
+        public void SetSourceId(object value) => SourceId = (TKey)value;
+
         /// <inheritdoc />
         public override string ToString() => Name;
     }
