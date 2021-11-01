@@ -16,7 +16,7 @@ namespace SoftUnlimit.Event
     /// <summary>
     /// 
     /// </summary>
-    public abstract class VersionedEvent<TKey> : Event<TKey>, IVersionedEvent
+    public abstract class VersionedEvent<TKey, TBody> : Event<TKey, TBody>, IVersionedEvent
     {
         /// <summary>
         /// 
@@ -38,7 +38,7 @@ namespace SoftUnlimit.Event
         /// <param name="prevState"></param>
         /// <param name="currState"></param>
         /// <param name="body"></param>
-        protected VersionedEvent(Guid id, TKey sourceId, long version, ushort serviceId, string workerId, string correlationId, object command, object prevState, object currState, bool isDomainEvent, object body = null)
+        protected VersionedEvent(Guid id, TKey sourceId, long version, ushort serviceId, string workerId, string correlationId, object command, object prevState, object currState, bool isDomainEvent, TBody body)
             : base(id, sourceId, serviceId, workerId, correlationId, command, prevState, currState, isDomainEvent, body)
         {
             Version = version;

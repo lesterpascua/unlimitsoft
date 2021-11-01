@@ -18,48 +18,50 @@ namespace SoftUnlimit.Event
         /// <summary>
         /// Identifier of service where event is created
         /// </summary>
-        ushort ServiceId { get; }
+        ushort ServiceId { get; set; }
         /// <summary>
         /// Identifier of the worker were the event is create.
         /// </summary>
-        string WorkerId { get; }
+        string WorkerId { get; set; }
         /// <summary>
         /// Operation correlation identifier.
         /// </summary>
-        string CorrelationId { get; }
+        string CorrelationId { get; set; }
         /// <summary>
         /// Event creation date
         /// </summary>
-        DateTime Created { get; }
+        DateTime Created { get; set; }
         /// <summary>
         /// Event name general is the type fullname
         /// </summary>
-        string Name { get; }
+        string Name { get; set; }
         /// <summary>
         /// Command where event is originate (fullname).
         /// </summary>
-        object Command { get; }
+        object Command { get; set; }
         /// <summary>
         /// Previous snapshot in json representation.
         /// </summary>
-        object PrevState { get; }
+        object PrevState { get; set; }
         /// <summary>
         /// Currenct snapshot in json representation
         /// </summary>
-        object CurrState { get; }
+        object CurrState { get; set; }
         /// <summary>
         /// Specify if an event belown to domain. This have optimization propouse.
         /// </summary>
-        bool IsDomainEvent { get; }
+        bool IsDomainEvent { get; set; }
+
         /// <summary>
-        /// Event extra information
+        /// Get event body.
         /// </summary>
-        object Body { get; }
+        /// <returns></returns>
+        object GetBody();
     }
     /// <summary>
     /// Represents an event message.
     /// </summary>
-    public abstract class Event<TKey> : IEvent
+    public abstract class Event<TKey, TBody> : IEvent
     {
         /// <summary>
         /// 
@@ -80,7 +82,7 @@ namespace SoftUnlimit.Event
         /// <param name="currState"></param>
         /// <param name="isDomain"></param>
         /// <param name="body"></param>
-        protected Event(Guid id, TKey sourceId, ushort serviceId, string workerId, string correlationId, object command, object prevState, object currState, bool isDomain, object body)
+        protected Event(Guid id, TKey sourceId, ushort serviceId, string workerId, string correlationId, object command, object prevState, object currState, bool isDomain, TBody body)
         {
             Id = id;
             SourceId = sourceId;
@@ -126,12 +128,15 @@ namespace SoftUnlimit.Event
         /// <inheritdoc />
         public bool IsDomainEvent { get; set; }
         /// <inheritdoc />
-        public object Body { get; set; }
+        public TBody Body { get; set; }
         /// <inheritdoc />
         public string CorrelationId { get; set; }
 
         /// <inheritdoc />
+        public object GetBody() => Body;
+        /// <inheritdoc />
         public override string ToString() => Name;
+
 
         #region Explicit Interface Implementation
 
