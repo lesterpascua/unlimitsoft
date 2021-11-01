@@ -11,7 +11,7 @@ namespace SoftUnlimit.Event
         /// Gets the version or order of the event in the stream. Este valor lo asigna la entidad que lo genero y 
         /// es el que ella poseia en el instante en que fue generado el evento. 
         /// </summary>
-        long Version { get; }
+        long Version { get; set; }
     }
     /// <summary>
     /// 

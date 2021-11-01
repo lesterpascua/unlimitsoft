@@ -12,10 +12,6 @@ namespace SoftUnlimit.Event
         /// </summary>
         Guid Id { get; set; }
         /// <summary>
-        /// Gets the identifier of the source originating the event.
-        /// </summary>
-        object SourceId { get; set; }
-        /// <summary>
         /// Identifier of service where event is created
         /// </summary>
         ushort ServiceId { get; set; }
@@ -57,6 +53,10 @@ namespace SoftUnlimit.Event
         /// </summary>
         /// <returns></returns>
         object GetBody();
+        /// <summary>
+        /// Gets the identifier of the source originating the event.
+        /// </summary>
+        object GetSourceId();
     }
     /// <summary>
     /// Represents an event message.
@@ -135,13 +135,8 @@ namespace SoftUnlimit.Event
         /// <inheritdoc />
         public object GetBody() => Body;
         /// <inheritdoc />
+        public object GetSourceId() => Id;
+        /// <inheritdoc />
         public override string ToString() => Name;
-
-
-        #region Explicit Interface Implementation
-
-        object IEvent.SourceId { get => SourceId; set => SourceId = (TKey)value; }
-
-        #endregion
     }
 }

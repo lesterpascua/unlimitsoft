@@ -19,7 +19,7 @@ namespace SoftUnlimit.CQRS.Event
         protected EventPayload(IEvent @event)
         {
             Id = @event.Id;
-            SourceId = @event.SourceId.ToString();
+            SourceId = @event.GetSourceId().ToString();
             CorrelationId = @event.CorrelationId;
             EventName = @event.Name;
             Created = @event.Created;
