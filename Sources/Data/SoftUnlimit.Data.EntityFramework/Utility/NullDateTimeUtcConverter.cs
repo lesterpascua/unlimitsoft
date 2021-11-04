@@ -7,11 +7,11 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
     /// <summary>
     /// Set value kind UTC to DateTime
     /// </summary>
-    public class DateTimeUtcConverter : ValueConverter<DateTime, DateTime>
+    public class NullDateTimeUtcConverter : ValueConverter<DateTime?, DateTime?>
     {
-        private DateTimeUtcConverter(
-            Expression<Func<DateTime, DateTime>> convertToProviderExpression,
-            Expression<Func<DateTime, DateTime>> convertFromProviderExpression,
+        private NullDateTimeUtcConverter(
+            Expression<Func<DateTime?, DateTime?>> convertToProviderExpression,
+            Expression<Func<DateTime?, DateTime?>> convertFromProviderExpression,
             ConverterMappingHints mappingHints = null) : base(convertToProviderExpression, convertFromProviderExpression, mappingHints)
         {
         }
@@ -19,15 +19,15 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
         /// <summary>
         /// 
         /// </summary>
-        static DateTimeUtcConverter()
+        static NullDateTimeUtcConverter()
         {
-            Expression<Func<DateTime, DateTime>> exp = date => date.ToSafeUtc();
-            Instance = new DateTimeUtcConverter(exp, exp);
+            Expression<Func<DateTime?, DateTime?>> exp = date => date.ToSafeUtc();
+            Instance = new NullDateTimeUtcConverter(exp, exp);
         }
 
         /// <summary>
         /// 
         /// </summary>
-        public static DateTimeUtcConverter Instance { get; }
+        public static NullDateTimeUtcConverter Instance { get; }
     }
 }
