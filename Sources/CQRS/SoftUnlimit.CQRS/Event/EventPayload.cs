@@ -24,6 +24,8 @@ namespace SoftUnlimit.CQRS.Event
             EventName = @event.Name;
             Created = @event.Created;
             IsPubliched = false;
+            if (@event is IDelayEvent delayEvent)
+                Scheduled = delayEvent.Scheduled;
         }
 
         /// <summary>
@@ -47,6 +49,10 @@ namespace SoftUnlimit.CQRS.Event
         /// </summary>
         public DateTime Created { get; set; }
         /// <summary>
+        /// If the proviced 
+        /// </summary>
+        public DateTime? Scheduled { get; set; }
+        /// <summary>
         /// 
         /// </summary>
         public bool IsPubliched { get; set; }
@@ -55,6 +61,11 @@ namespace SoftUnlimit.CQRS.Event
         /// 
         /// </summary>
         public void MarkEventAsPublished() => IsPubliched = true;
+
+        /// <inheritdoc />
+        public override int GetHashCode() => Id.GetHashCode();
+        /// <inheritdoc />
+        public override bool Equals(object obj) => (obj is EventPayload payload) && Id == payload.Id;
     }
     /// <summary>
     /// 

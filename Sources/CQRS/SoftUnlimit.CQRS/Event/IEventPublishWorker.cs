@@ -14,9 +14,13 @@ namespace SoftUnlimit.CQRS.Event
         /// <summary>
         /// Initialize worker
         /// </summary>
+        /// <param name="loadEvent">
+        /// If service has multiples instance and there is pending event when start will be a problem because the event will load multiples times. Only
+        /// set true to one service to avoid send duplicate event.
+        /// </param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task StartAsync(CancellationToken ct = default);
+        Task StartAsync(bool loadEvent, CancellationToken ct = default);
         /// <summary>
         /// Retry send some event already publish.
         /// </summary>

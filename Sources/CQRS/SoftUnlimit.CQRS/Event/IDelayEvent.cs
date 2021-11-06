@@ -10,13 +10,8 @@ namespace SoftUnlimit.CQRS.Event
     public interface IDelayEvent : IEvent
     {
         /// <summary>
-        /// Get Delay time of the event.
+        /// Time when the event has to be trigger.
         /// </summary>
-        TimeSpan? GetDelay();
-        /// <summary>
-        /// Set Delay time of the event.
-        /// </summary>
-        /// <param name="delay"></param>
-        void SetDelay(TimeSpan delay);
+        DateTime? Scheduled { get; set; }
     }
 }

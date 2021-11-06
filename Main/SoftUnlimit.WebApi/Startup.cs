@@ -225,12 +225,13 @@ namespace SoftUnlimit.WebApi
         public void Configure(IApplicationBuilder app, IWebHostEnvironment env, IServiceScopeFactory factory,
             IOptions<AzureEventBusOptions<QueueIdentifier>> eventBusOption, ILogger<Startup> logger)
         {
-            var eventBus = eventBusOption.Value.PublishQueues.Any(p => p.Active ?? false);
+            var hasEventBus = eventBusOption.Value.PublishQueues.Any(p => p.Active ?? false);
             InitHelper.InitAsync<IMyUnitOfWork>(
                 factory,
-                eventBus: eventBus,
+                eventBus: hasEventBus,
                 eventListener: eventBusOption.Value.ListenQueues?.Any(p => p.Active == true) ?? false,
-                publishWorker: eventBus,
+                publishWorker: hasEventBus,
+                loadEvent: hasEventBus,
                 logger: logger
             ).Wait();
             app.UseWrapperDevelopment(env.IsDevelopment());

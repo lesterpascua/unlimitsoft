@@ -23,13 +23,14 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
         /// <param name="seedAssemblies"></param>
         /// <param name="eventListener"></param>
         /// <param name="publishWorker"></param>
+        /// <param name="loadEvent"></param>
         /// <param name="waitRetry"></param>
         /// <param name="logger"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
         public static async Task InitAsync<TUnitOfWork>(
             IServiceScopeFactory factory, Func<IServiceProvider, Task> setup = null, bool eventBus = false, Assembly[] seedAssemblies = null,
-            bool eventListener = false, bool publishWorker = false, TimeSpan? waitRetry = null, ILogger logger = null, CancellationToken ct = default)
+            bool eventListener = false, bool publishWorker = false, bool loadEvent = false, TimeSpan? waitRetry = null, ILogger logger = null, CancellationToken ct = default)
         {
             using var scope = factory.CreateScope();
 
@@ -48,7 +49,7 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
             {
                 await provider.GetService<IEventBus>().StartAsync(waitRetry.Value, ct);
                 if (publishWorker)
-                    await provider.GetService<IEventPublishWorker>().StartAsync(ct);
+                    await provider.GetService<IEventPublishWorker>().StartAsync(loadEvent, ct);
             }
             if (eventListener)
                 await provider.GetService<IEventListener>().ListenAsync(waitRetry.Value, ct);

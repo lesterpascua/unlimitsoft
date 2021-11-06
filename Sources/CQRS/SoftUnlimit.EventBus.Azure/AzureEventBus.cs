@@ -157,12 +157,8 @@ namespace SoftUnlimit.EventBus.Azure
             message.MessageId = id.ToString();
             message.ContentType = "application/json";
 
-            if (graph is IDelayEvent delayEvent)
-            {
-                var delay = delayEvent.GetDelay();
-                if (delay.HasValue && delay != TimeSpan.Zero)
-                    message.ScheduledEnqueueTime = DateTime.UtcNow.Add(delay.Value);
-            }
+            if (graph is IDelayEvent delayEvent && delayEvent.Scheduled.HasValue)
+                message.ScheduledEnqueueTime = delayEvent.Scheduled.Value;
 
             message.ApplicationProperties[BusProperty.EventName] = eventName;
             message.ApplicationProperties[BusProperty.MessageType] = transformed.GetType().AssemblyQualifiedName;

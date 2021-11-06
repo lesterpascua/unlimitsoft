@@ -13,10 +13,10 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <summary>
         /// 
         /// </summary>
-        /// <param name="sourceID"></param>
+        /// <param name="sourceId"></param>
         /// <param name="version"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task<TEntity> FindByIdAsync(string sourceID, long? version = null, CancellationToken ct = default);
+        Task<TEntity> FindByIdAsync(string sourceId, long? version = null, CancellationToken ct = default);
     }
 }

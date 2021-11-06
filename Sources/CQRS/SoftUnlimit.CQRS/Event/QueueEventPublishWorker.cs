@@ -22,32 +22,39 @@ namespace SoftUnlimit.CQRS.Event
     /// <typeparam name="TEventRepository"></typeparam>
     /// <typeparam name="TEventPayload"></typeparam>
     /// <typeparam name="TPayload"></typeparam>
-    public class QueueEventPublishWorker<TUnitOfWork, TEventRepository, TEventPayload, TPayload> : IEventPublishWorker, IAsyncDisposable
+    public class QueueEventPublishWorker<TUnitOfWork, TEventRepository, TEventPayload, TPayload> : IEventPublishWorker, IDisposable
         where TUnitOfWork : IUnitOfWork
         where TEventPayload : EventPayload<TPayload>
         where TEventRepository : IRepository<TEventPayload>
     {
         private readonly int _bachSize;
+        private readonly bool _enableScheduled;
         private readonly IServiceScopeFactory _factory;
         private readonly IEventBus _eventBus;
         private readonly MessageType _type;
         private readonly TimeSpan _startDelay, _errorDelay;
         private readonly ILogger _logger;
         private readonly CancellationTokenSource _cts;
-        private readonly ConcurrentQueue<Guid> _queue;
+        private readonly ConcurrentDictionary<Guid, Bucket> _pending;
         private bool _disposed;
         private Task _backgoundWorker;
 
 
         /// <summary>
-        /// 
+        /// Initialize instance.
         /// </summary>
-        /// <param name="factory"></param>
+        /// <param name="factory">
+        /// <list>
+        ///     <item>- Resolve TUnitOfWork </item>
+        ///     <item>- Resolve <see cref="IRepository{TEventPayload}"/> </item>
+        /// </list>
+        /// </param>
         /// <param name="eventBus"></param>
         /// <param name="type"></param>
         /// <param name="startDelay">Wait time before start the listener.</param>
         /// <param name="errorDelay">Wait time if some error happened in the bus, 20 second default time.</param>
         /// <param name="bachSize">Amount of pulling event for every iteration. 10 event by default.</param>
+        /// <param name="enableScheduled">Enable scheduler feature by software. If false no scheduler feature will added and all will be handler by the queue provider.</param>
         /// <param name="logger"></param>
         public QueueEventPublishWorker(
             IServiceScopeFactory factory,
@@ -56,6 +63,7 @@ namespace SoftUnlimit.CQRS.Event
             TimeSpan? startDelay = null,
             TimeSpan? errorDelay = null,
             int bachSize = 10,
+            bool enableScheduled = false,
             ILogger logger = null)
         {
             _disposed = false;
@@ -67,47 +75,60 @@ namespace SoftUnlimit.CQRS.Event
             _errorDelay = errorDelay ?? TimeSpan.FromSeconds(20);
             _logger = logger;
             _bachSize = bachSize;
+            _enableScheduled = enableScheduled;
             _backgoundWorker = null;
-            _queue = new ConcurrentQueue<Guid>();
-            _cts = new CancellationTokenSource();
+            _pending = new();
+            _cts = new();
         }
 
         /// <summary>
-        /// Queue of pending event identifier.
+        /// Collection with pending to publish event.
         /// </summary>
-        protected ConcurrentQueue<Guid> Queue => _queue;
+        protected ConcurrentDictionary<Guid, Bucket> Pending => _pending;
 
         /// <inheritdoc />
-        public async ValueTask DisposeAsync()
+        public void Dispose()
         {
             _cts.Cancel();
             if (_backgoundWorker != null)
-                await _backgoundWorker;
+            {
+                try
+                {
+                    _backgoundWorker.Wait();
+                }
+                catch (TaskCanceledException) { }
+                catch (AggregateException e) when (e.InnerException is TaskCanceledException) { }
+            }
             _disposed = true;
+            GC.SuppressFinalize(this);
         }
 
         /// <inheritdoc />
-        public async Task StartAsync(CancellationToken ct)
+        public async Task StartAsync(bool loadEvent, CancellationToken ct = default)
         {
             if (_disposed)
                 throw new ObjectDisposedException(GetType().FullName);
             if (_backgoundWorker != null)
                 throw new InvalidProgramException("Already initialized");
 
-            using var scope = _factory.CreateScope();
-            var eventPayloadRepository = scope.ServiceProvider.GetService<TEventRepository>();
-            var nonPublishEvents = await Task.Run(
-                () => eventPayloadRepository
-                        .FindAll()
-                        .Where(p => !p.IsPubliched)
-                        .OrderBy(k => k.Created)
-                        .Select(s => s.Id)
-                        .ToArray(),
-                ct
-            );
+            // Know issue if all services start at the same time this will be a problem because the event will load multiples times.
+            if (loadEvent)
+            {
+                using var scope = _factory.CreateScope();
+                var eventPayloadRepository = scope.ServiceProvider.GetService<TEventRepository>();
+                var nonPublishEvents = await Task.Run(
+                    () => eventPayloadRepository
+                            .FindAll()
+                            .Where(p => !p.IsPubliched)
+                            .OrderBy(p => p.Scheduled).ThenBy(p => p.Created)
+                            .Select(s => new { s.Id, s.Scheduled, s.Created })
+                            .ToArray(),
+                    ct
+                );
 
-            foreach (var eventId in nonPublishEvents)
-                _queue.Enqueue(eventId);
+                foreach (var @event in nonPublishEvents)
+                    _pending.TryAdd(@event.Id, new Bucket(@event.Scheduled, @event.Created));
+            }
 
 #pragma warning disable CA2016 // Forward the 'CancellationToken' parameter to methods that take one
             // Create an independance task to publish all event in the event bus.
@@ -120,7 +141,7 @@ namespace SoftUnlimit.CQRS.Event
             if (_disposed)
                 throw new ObjectDisposedException(GetType().FullName);
 
-            _queue.Enqueue(id);
+            _pending.TryAdd(id, new Bucket(null, DateTime.UtcNow));
             return ValueTask.CompletedTask;
         }
         /// <inheritdoc />
@@ -130,7 +151,13 @@ namespace SoftUnlimit.CQRS.Event
                 throw new ObjectDisposedException(GetType().FullName);
 
             foreach (var @event in events)
-                _queue.Enqueue(@event.Id);
+            {
+                DateTime? scheduled = null;
+                if (@event is IDelayEvent delayEvent)
+                    scheduled = delayEvent.Scheduled;
+
+                _pending.TryAdd(@event.Id, new Bucket(scheduled, @event.Created));
+            }
             return ValueTask.CompletedTask;
         }
 
@@ -143,14 +170,26 @@ namespace SoftUnlimit.CQRS.Event
             await Task.Delay(_startDelay, _cts.Token);
             while (!_cts.Token.IsCancellationRequested)
             {
-                SpinWait.SpinUntil(() => !_queue.IsEmpty || _cts.Token.IsCancellationRequested);
+                SpinWait.SpinUntil(ExistNewEvent);
                 if (_cts.Token.IsCancellationRequested)
                     break;
                 _logger?.LogDebug("Start to publish events {Time}", DateTime.UtcNow);
 
                 TEventPayload lastEvent = null;
-                int count = Math.Min(_queue.Count, _bachSize);
-                var buffer = _queue.Take(count).ToArray();
+                int count = Math.Min(_pending.Count, _bachSize);
+
+                IOrderedEnumerable<KeyValuePair<Guid, Bucket>> orderedPending;
+                if (_enableScheduled)
+                {
+                    var now = DateTime.UtcNow;
+                    orderedPending = _pending
+                        .Where(p => p.Value.Scheduled is null || p.Value.Scheduled.Value <= now)
+                        .OrderBy(k => k.Value);
+                }
+                else
+                    orderedPending = _pending.OrderBy(k => k.Value.Created);
+
+                var buffer = orderedPending.Select(s => s.Key).Take(count).ToArray();
                 try
                 {
                     using var scope = _factory.CreateScope();
@@ -158,32 +197,96 @@ namespace SoftUnlimit.CQRS.Event
                     var eventPayloadRepository = scope.ServiceProvider.GetService<TEventRepository>();
 
                     var eventsPayload = await Task.Run(
-                        () => eventPayloadRepository
+                        () =>
+                        {
+                            var query = eventPayloadRepository
                                 .FindAll()
-                                .Where(p => buffer.Contains(p.Id) && !p.IsPubliched)
-                                .OrderBy(k => k.Created)
-                                .ToArray(), 
+                                .Where(p => buffer.Contains(p.Id));
+                            query = _enableScheduled ? query.OrderBy(p => p.Scheduled).ThenBy(p => p.Created) : query.OrderBy(p => p.Created);
+                            return query.ToArray();
+                        },
                         _cts.Token
                     );
                     foreach (var ePayload in eventsPayload)
                     {
-                        lastEvent = ePayload;
-                        await _eventBus.PublishPayloadAsync(lastEvent, _type, _cts.Token);
+                        if (!ePayload.IsPubliched)
+                        {
+                            lastEvent = ePayload;
+                            await _eventBus.PublishPayloadAsync(lastEvent, _type, _cts.Token);
 
-                        lastEvent.MarkEventAsPublished();
-                        await unitOfWork.SaveChangesAsync(_cts.Token);
+                            lastEvent.MarkEventAsPublished();
+                            await unitOfWork.SaveChangesAsync(_cts.Token);
+                        }
+
+                        _pending.TryRemove(ePayload.Id, out var _);
                     }
-                    //
-                    // dequeue all publish events.
-                    for (var i = 0; i < count; i++)
-                        _queue.TryDequeue(out Guid eventId);
                 }
-                catch (Exception ex)
+                catch (Exception ex) when (ex is not TaskCanceledException)
                 {
-                    _logger.LogError(ex, "Error publish on {Time} the event: {@Event}.", DateTime.UtcNow, lastEvent);
-                    await Task.Delay(_errorDelay, _cts.Token);
+                    _logger?.LogError(ex, "Error publish on {Time} the event: {@Event}.", DateTime.UtcNow, lastEvent);
+                    if (!_cts.Token.IsCancellationRequested)
+                        await Task.Delay(_errorDelay, _cts.Token);
                 }
             }
         }
+
+        private bool ExistNewEvent()
+        {
+            if (_cts.Token.IsCancellationRequested)
+                return true;
+            if (!_pending.IsEmpty)
+            {
+                if (!_enableScheduled)
+                    return true;
+                //
+                // only if scheduled feature is enable by software
+                var now = DateTime.UtcNow;
+                return _pending.Any(p => p.Value.Scheduled is null || p.Value.Scheduled.Value <= now);
+            }
+
+            return false;
+        }
+
+        #region Nested Classes
+        /// <summary>
+        /// 
+        /// </summary>
+        protected class Bucket : IComparable<Bucket>
+        {
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="scheduled"></param>
+            /// <param name="created"></param>
+            public Bucket(DateTime? scheduled, DateTime created)
+            {
+                Scheduled = scheduled;
+                Created = created;
+            }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            public DateTime? Scheduled { get; set; } 
+            /// <summary>
+            /// 
+            /// </summary>
+            public DateTime Created { get; set; }
+
+            /// <summary>
+            /// 
+            /// </summary>
+            /// <param name="other"></param>
+            /// <returns></returns>
+            public int CompareTo(Bucket other)
+            {
+                if (Scheduled is not null && other.Scheduled is not null)
+                    return Created.CompareTo(other.Created);
+                if (Scheduled is null)
+                    return -1;
+                return 1;
+            }
+        }
+        #endregion
     }
 }
