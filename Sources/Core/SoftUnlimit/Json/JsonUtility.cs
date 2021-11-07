@@ -93,13 +93,23 @@ namespace SoftUnlimit.Json
         /// <param name="body"></param>
         /// <param name="name"></param>
         /// <param name="value"></param>
-        public static void AddNode(object body, string name, object value)
+        public static object AddNode(object body, string name, object value)
         {
             if (UseNewtonsoftSerializer)
             {
                 ((JObject)body).Add(name, JToken.FromObject(value));
-            } else
-                throw new NotImplementedException("System.Text.Json");
+            }
+            else
+            {
+                var json = ((JsonElement)body).GetRawText();
+                var dictionary = System.Text.Json.JsonSerializer.Deserialize<IDictionary<string, object>>(json, TestJsonSettings);
+
+                dictionary.Add(name, value);
+                var jsonWithProperty = System.Text.Json.JsonSerializer.Serialize(dictionary, TestJsonSettings);
+
+                body = System.Text.Json.JsonSerializer.Deserialize<object>(jsonWithProperty);
+            }
+            return body;
         }
 
         /// <summary>
