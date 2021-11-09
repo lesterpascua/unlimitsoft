@@ -62,7 +62,7 @@ namespace SoftUnlimit.WebApi.Controllers
 
 
             // TransactionCreateAsync
-            await using var transaction = await unitOfWork.TransactionCreateAsync(IsolationLevel.Unspecified, ct);
+            using var transaction = await unitOfWork.TransactionCreateAsync(IsolationLevel.Unspecified, ct);
 
             _logger.LogInformation($"{name}: TransactionCreateAsync");
 

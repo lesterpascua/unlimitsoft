@@ -64,6 +64,8 @@ namespace SoftUnlimit.CQRS.Query
             var handler = GetQueryHandler(_provider, entityType, queryType);
             var handlerType = handler.GetType();
 
+            dynamic dynamicHandler = handler;
+            dynamic dynamicQuery = query;
             if (_validate)
             {
                 var interfaces = handlerType.GetInterfaces();
@@ -76,7 +78,7 @@ namespace SoftUnlimit.CQRS.Query
 
                     var validatorType = typeof(QueryValidator<>).MakeGenericType(queryType);
                     IValidator validator = (IValidator)Activator.CreateInstance(validatorType);
-                    validator = ((dynamic)handler).BuildValidator((dynamic)validator);
+                    validator = dynamicHandler.BuildValidator((dynamic)validator);
 
                     var valContext = new ValidationContext<IQuery>(query);
                     var errors = await validator.ValidateAsync(valContext, ct);
@@ -99,7 +101,7 @@ namespace SoftUnlimit.CQRS.Query
                 {
                     _logger?.LogDebug("Query handler implement internal compliance");
 
-                    var response = await (Task<IQueryResponse>)((dynamic)handler).HandleComplianceAsync((dynamic)query, ct);
+                    var response = await (Task<IQueryResponse>)dynamicHandler.HandleComplianceAsync(dynamicQuery, ct);
                     if (!response.IsSuccess)
                         return response;
                 }
@@ -107,7 +109,7 @@ namespace SoftUnlimit.CQRS.Query
                     _logger?.LogDebug("Query not handler implement internal compliance");
                 #endregion
             }
-            var result = await ExecuteHandlerForQueryAsync<TResult>(handler, query, queryType, UseCache, ct);
+            TResult result = await ExecuteHandlerForQueryAsync<TResult>(handler, dynamicHandler, query, dynamicQuery, queryType, UseCache, ct);
 
             return query.OkResponse(result);
         }
@@ -123,7 +125,7 @@ namespace SoftUnlimit.CQRS.Query
 
             return queryHandler;
         }
-        private static async Task<TEntity> ExecuteHandlerForQueryAsync<TEntity>(IQueryHandler handler, IQuery query, Type queryType, bool useCache, CancellationToken ct)
+        private static async Task<TEntity> ExecuteHandlerForQueryAsync<TEntity>(IQueryHandler handler, dynamic dynamicHandler, IQuery query, dynamic dynamicQuery, Type queryType, bool useCache, CancellationToken ct)
         {
             Task<TEntity> result;
             if (useCache)
@@ -131,7 +133,7 @@ namespace SoftUnlimit.CQRS.Query
                 var method = GetQueryHandlerFromCache<TEntity>(queryType, handler);
                 result = (Task<TEntity>)method(handler, query, ct);
             } else
-                result = (Task<TEntity>)((dynamic)handler).HandleAsync((dynamic)query, ct);
+                result = (Task<TEntity>)dynamicHandler.HandleAsync(dynamicQuery, ct);
 
             return await result;
         }

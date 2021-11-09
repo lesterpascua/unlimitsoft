@@ -54,10 +54,8 @@ namespace SoftUnlimit.CQRS.DependencyInjection
                 }
                 return result;
             }
-            var types = GetTypesFromInterface<IEvent>(typeResolverCache)
-                .Select(t => new KeyValuePair<string, Type>(transform?.Invoke(t) ?? t.FullName, t));
 
-            var register = new Dictionary<string, Type>(types);
+            var register = GetTypesFromInterface<IEvent>(typeResolverCache).ToDictionary(k => transform?.Invoke(k) ?? k.FullName);
             return services.AddSingleton<IEventNameResolver>(new DefaultEventCommandResolver(register));
         }
 

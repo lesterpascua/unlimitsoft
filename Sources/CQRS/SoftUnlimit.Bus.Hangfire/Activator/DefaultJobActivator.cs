@@ -1,7 +1,7 @@
 ﻿using Hangfire;
+using Hangfire.Annotations;
 using Microsoft.Extensions.DependencyInjection;
 using System;
-using System.Diagnostics.CodeAnalysis;
 
 namespace SoftUnlimit.Bus.Hangfire.Activator
 {

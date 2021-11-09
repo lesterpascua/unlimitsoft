@@ -1,8 +1,4 @@
-﻿using SoftUnlimit.Web.Json;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
+﻿using SoftUnlimit.Json;
 using System.Net.Http;
 using System.Threading.Tasks;
 
@@ -20,7 +16,7 @@ namespace SoftUnlimit.Web.Client
         /// <returns></returns>
         public static async Task<string> ToQueryString(object obj)
         {
-            var keyValueContent = JsonShorcut.ToKeyValue(obj);
+            var keyValueContent = JsonUtility.ToKeyValue(obj);
             using var formUrlEncodedContent = new FormUrlEncodedContent(keyValueContent);
             return await formUrlEncodedContent.ReadAsStringAsync();
         }

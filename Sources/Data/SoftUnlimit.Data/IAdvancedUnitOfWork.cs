@@ -28,6 +28,6 @@ namespace SoftUnlimit.Data
         /// <param name="level"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task<IAsyncDisposable> TransactionCreateAsync(IsolationLevel level = IsolationLevel.ReadCommitted, CancellationToken ct = default);
+        Task<IDisposable> TransactionCreateAsync(IsolationLevel level = IsolationLevel.ReadCommitted, CancellationToken ct = default);
     }
 }

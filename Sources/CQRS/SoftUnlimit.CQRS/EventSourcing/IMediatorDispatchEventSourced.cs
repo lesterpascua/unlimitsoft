@@ -116,12 +116,11 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="events"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public virtual ValueTask EventsDispatchedAsync(IEnumerable<IVersionedEvent> events, CancellationToken ct)
+        public virtual async ValueTask EventsDispatchedAsync(IEnumerable<IVersionedEvent> events, CancellationToken ct)
         {
             var publish = EventPublishWorker;
             if (publish != null)
-                return publish.PublishAsync(events, ct);
-            return ValueTask.CompletedTask;
+                await publish.PublishAsync(events, ct);
         }
     }
 }

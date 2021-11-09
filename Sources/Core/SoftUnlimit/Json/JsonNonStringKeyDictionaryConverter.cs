@@ -35,8 +35,8 @@ namespace SoftUnlimit.Json
 
             var keyType = typeof(TKey);
             MethodInfo parser = !keyType.IsEnum ?
-                keyType.GetMethod(nameof(Enum.Parse), 0, BindingFlags.Public | BindingFlags.Static, null, CallingConventions.Any, new Type[] { typeof(string) }, null) :
-                typeof(Enum).GetMethod(nameof(Enum.Parse), 0, BindingFlags.Public | BindingFlags.Static, null, CallingConventions.Any, new Type[] { typeof(Type), typeof(string) }, null);
+                keyType.GetMethod(nameof(Enum.Parse), BindingFlags.Public | BindingFlags.Static, null, CallingConventions.Any, new Type[] { typeof(string) }, null) :
+                typeof(Enum).GetMethod(nameof(Enum.Parse), BindingFlags.Public | BindingFlags.Static, null, CallingConventions.Any, new Type[] { typeof(Type), typeof(string) }, null);
 
             if (parser == null)
                 throw new NotSupportedException($"Type {keyType} not suport Parse method");

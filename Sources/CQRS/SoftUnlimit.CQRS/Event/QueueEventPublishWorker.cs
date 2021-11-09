@@ -130,10 +130,8 @@ namespace SoftUnlimit.CQRS.Event
                     _pending.TryAdd(@event.Id, new Bucket(@event.Scheduled, @event.Created));
             }
 
-#pragma warning disable CA2016 // Forward the 'CancellationToken' parameter to methods that take one
             // Create an independance task to publish all event in the event bus.
             _backgoundWorker = Task.Run(PublishBackground);
-#pragma warning restore CA2016 // Forward the 'CancellationToken' parameter to methods that take one
         }
         /// <inheritdoc />
         public ValueTask RetryPublishAsync(Guid id, CancellationToken ct)
@@ -142,7 +140,7 @@ namespace SoftUnlimit.CQRS.Event
                 throw new ObjectDisposedException(GetType().FullName);
 
             _pending.TryAdd(id, new Bucket(null, DateTime.UtcNow));
-            return ValueTask.CompletedTask;
+            return ValueTaskExtensions.CompletedTask;
         }
         /// <inheritdoc />
         public ValueTask PublishAsync(IEnumerable<IEvent> events, CancellationToken ct)
@@ -158,7 +156,7 @@ namespace SoftUnlimit.CQRS.Event
 
                 _pending.TryAdd(@event.Id, new Bucket(scheduled, @event.Created));
             }
-            return ValueTask.CompletedTask;
+            return ValueTaskExtensions.CompletedTask;
         }
 
         /// <summary>

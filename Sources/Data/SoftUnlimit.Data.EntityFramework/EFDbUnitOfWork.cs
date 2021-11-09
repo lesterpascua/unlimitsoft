@@ -57,7 +57,7 @@ namespace SoftUnlimit.Data.EntityFramework
         /// <inheritdoc />
         public async Task TransactionRollbackAsync(CancellationToken ct) => await DbContext.Database.CurrentTransaction.RollbackAsync(ct);
         /// <inheritdoc />
-        public async Task<IAsyncDisposable> TransactionCreateAsync(IsolationLevel level, CancellationToken ct) => await DbContext.Database.BeginTransactionAsync(level, ct);
+        public async Task<IDisposable> TransactionCreateAsync(IsolationLevel level, CancellationToken ct) => await DbContext.Database.BeginTransactionAsync(level, ct);
 
         /// <summary>
         /// 

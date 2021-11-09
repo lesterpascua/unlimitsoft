@@ -1,4 +1,4 @@
-﻿using SoftUnlimit.Web.Json;
+﻿using SoftUnlimit.Json;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -50,7 +50,7 @@ namespace SoftUnlimit.Web.Client
             response.EnsureSuccessStatusCode();
             string body = await response.Content.ReadAsStringAsync();
 
-            var result = (TModel)JsonShorcut.Deserialize(typeof(TModel), body);
+            var result = (TModel)JsonUtility.Deserialize(typeof(TModel), body);
             return (result, response.StatusCode);
         }
         /// <inheritdoc/>
@@ -66,7 +66,7 @@ namespace SoftUnlimit.Web.Client
                     string qs = await ObjectUtils.ToQueryString(model);
                     completeUri = $"{completeUri}?{qs}";
                 } else
-                    jsonContent = JsonShorcut.Serialize(model);
+                    jsonContent = JsonUtility.Serialize(model);
             }
             HttpContent httpContent = null;
             try
@@ -113,7 +113,7 @@ namespace SoftUnlimit.Web.Client
             if (!response.IsSuccessStatusCode)
                 throw new HttpException(response.StatusCode, response.ToString(), body);
 
-            var result = (TModel)JsonShorcut.Deserialize(typeof(TModel), body);
+            var result = (TModel)JsonUtility.Deserialize(typeof(TModel), body);
             return (result, response.StatusCode);
         }
 

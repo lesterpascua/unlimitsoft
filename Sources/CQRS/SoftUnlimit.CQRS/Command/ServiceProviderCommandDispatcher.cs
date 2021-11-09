@@ -8,7 +8,6 @@ using SoftUnlimit.CQRS.Message;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -83,6 +82,8 @@ namespace SoftUnlimit.CQRS.Command
 
             var handler = GetCommandHandler(provider, command.GetType());
 
+            dynamic dynamicCommand = command;
+            dynamic dynamicHandler = handler;
             if (_validate)
             {
                 var interfaces = handler.GetType().GetInterfaces();
@@ -95,7 +96,8 @@ namespace SoftUnlimit.CQRS.Command
 
                     var validatorType = typeof(CommandValidator<>).MakeGenericType(commandType);
                     IValidator validator = (IValidator)Activator.CreateInstance(validatorType);
-                    validator = await (ValueTask<IValidator>)((dynamic)handler).ValidatorAsync((dynamic)command, (dynamic)validator, ct);
+
+                    validator = await (ValueTask<IValidator>)dynamicHandler.ValidatorAsync(dynamicCommand, (dynamic)validator, ct);
 
                     var valContext = new ValidationContext<ICommand>(command);
                     var errors = await validator.ValidateAsync(valContext, ct);
@@ -118,7 +120,7 @@ namespace SoftUnlimit.CQRS.Command
                 {
                     _logger?.LogDebug("Command handler implement internal compliance");
 
-                    var response = await (Task<ICommandResponse>)((dynamic)handler).HandleComplianceAsync((dynamic)command, ct);
+                    var response = await (Task<ICommandResponse>)dynamicHandler.HandleComplianceAsync(dynamicCommand, ct);
                     if (!response.IsSuccess)
                         return response;
                 }
@@ -126,7 +128,7 @@ namespace SoftUnlimit.CQRS.Command
                     _logger?.LogDebug("Command not handler implement internal compliance");
                 #endregion
             }
-            return await ExecuteHandlerForCommandAsync(handler, command, commandType, UseCache, ct);
+            return await ExecuteHandlerForCommandAsync(handler, dynamicHandler, command, dynamicCommand, commandType, UseCache, ct);
         }
 
         #endregion
@@ -147,7 +149,7 @@ namespace SoftUnlimit.CQRS.Command
 
             return commandHandler;
         }
-        private static async Task<ICommandResponse> ExecuteHandlerForCommandAsync(ICommandHandler handler, ICommand command, Type commandType, bool useCache, CancellationToken ct)
+        private static async Task<ICommandResponse> ExecuteHandlerForCommandAsync(ICommandHandler handler, dynamic dynamicHandler, ICommand command, dynamic dynamicCommand, Type commandType, bool useCache, CancellationToken ct)
         {
             Task<ICommandResponse> result;
             if (useCache)
@@ -156,7 +158,7 @@ namespace SoftUnlimit.CQRS.Command
                 result = method(handler, command, ct);
             }
             else
-                result = (Task<ICommandResponse>)((dynamic)handler).HandleAsync((dynamic)command, ct);
+                result = (Task<ICommandResponse>)dynamicHandler.HandleAsync(dynamicCommand, ct);
 
             return await result;
         }

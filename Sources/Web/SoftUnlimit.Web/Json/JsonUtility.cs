@@ -1,11 +1,11 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using SoftUnlimit.Web.Json;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace SoftUnlimit.Json
 {
@@ -14,13 +14,6 @@ namespace SoftUnlimit.Json
     /// </summary>
     public static class JsonUtility
     {
-        static JsonUtility()
-        {
-            JsonShorcut.Serialize = Serialize;
-            JsonShorcut.Deserialize = Deserialize;
-            JsonShorcut.ToKeyValue = ToKeyValue;
-        }
-
         /// <summary>
         /// Indicate if for serializer use Newtonsoft or Native serializer in the internal SoftUnlimit library operation. By default use Newtonsoft.
         /// </summary>
@@ -42,8 +35,8 @@ namespace SoftUnlimit.Json
         public static JsonSerializerOptions TestJsonSettings { get; set; } = new JsonSerializerOptions
         {
             WriteIndented = false,
-            IgnoreNullValues = true,
             PropertyNameCaseInsensitive = true,
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
         };
 
         /// <summary>

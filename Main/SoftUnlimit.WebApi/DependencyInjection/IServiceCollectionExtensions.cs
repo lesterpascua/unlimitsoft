@@ -35,6 +35,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -259,7 +260,6 @@ namespace SoftUnlimit.WebApi.DependencyInjection
         /// <param name="corsOrigin">Defined Cors domains allowd. </param>
         /// <param name="useRequestLoggerAttribute">Logger all request.</param>
         /// <param name="corsPolicy">Name used in cors policy. </param>
-        /// <param name="authorizeRequire">Require autorization for all endpoints.</param>
         /// <param name="addViewToController"></param>
         /// <param name="useNewtonsoft"></param>
         /// <param name="mvcBuilderOption">Extra configuration for standard.</param>
@@ -304,7 +304,7 @@ namespace SoftUnlimit.WebApi.DependencyInjection
                 mvcBuilder.AddJsonOptions(setup =>
                 {
                     setup.JsonSerializerOptions.WriteIndented = false;
-                    setup.JsonSerializerOptions.IgnoreNullValues = true;
+                    setup.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault;
                 });
             }
 
