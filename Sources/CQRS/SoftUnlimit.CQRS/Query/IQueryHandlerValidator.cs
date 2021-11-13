@@ -1,5 +1,7 @@
 ﻿using FluentValidation;
 using SoftUnlimit.CQRS.Query.Validation;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SoftUnlimit.CQRS.Query
 {
@@ -12,7 +14,9 @@ namespace SoftUnlimit.CQRS.Query
         /// <summary>
         /// Build fluen validation rules.
         /// </summary>
+        /// <param name="query"></param>
         /// <param name="validator"></param>
-        IValidator BuildValidator(QueryValidator<TQuery> validator);
+        /// <param name="ct"></param>
+        ValueTask<IValidator> ValidatorAsync(TQuery query, QueryValidator<TQuery> validator, CancellationToken ct = default);
     }
 }

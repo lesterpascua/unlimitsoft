@@ -78,7 +78,8 @@ namespace SoftUnlimit.CQRS.Query
 
                     var validatorType = typeof(QueryValidator<>).MakeGenericType(queryType);
                     IValidator validator = (IValidator)Activator.CreateInstance(validatorType);
-                    validator = dynamicHandler.BuildValidator((dynamic)validator);
+
+                    validator = await (ValueTask<IValidator>)dynamicHandler.ValidatorAsync(dynamicQuery, (dynamic)validator, ct);
 
                     var valContext = new ValidationContext<IQuery>(query);
                     var errors = await validator.ValidateAsync(valContext, ct);
