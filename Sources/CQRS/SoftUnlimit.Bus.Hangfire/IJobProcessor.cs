@@ -13,11 +13,11 @@ namespace SoftUnlimit.Bus.Hangfire
         /// <summary>
         /// Job identifier for this processor.
         /// </summary>
-        BackgroundJob Metadata { get; internal set; }
+        BackgroundJob Metadata { get; set; }
         /// <summary>
         /// Cancelation token for this processor
         /// </summary>
-        CancellationToken CancellationToken { get; internal set; }
+        CancellationToken CancellationToken { get; set; }
 
         /// <summary>
         /// Process the logic asociate to some job.
