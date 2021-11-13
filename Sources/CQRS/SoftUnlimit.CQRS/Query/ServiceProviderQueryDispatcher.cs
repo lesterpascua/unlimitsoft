@@ -97,7 +97,7 @@ namespace SoftUnlimit.CQRS.Query
                 #endregion
 
                 #region Verify if Query implement internal compliance
-                var complianceHandlerType = typeof(IQueryHandlerValidator<>).MakeGenericType(queryType);
+                var complianceHandlerType = typeof(IQueryHandlerCompliance<>).MakeGenericType(queryType);
                 if (interfaces.Any(type => type == complianceHandlerType))
                 {
                     _logger?.LogDebug("Query handler implement internal compliance");
