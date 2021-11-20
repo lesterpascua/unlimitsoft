@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -21,6 +22,29 @@ namespace SoftUnlimit.Data.EntityFramework
         {
         }
 
+
+        /// <inheritdoc />
+        public void DetachAll()
+        {
+            var entries = DbContext.ChangeTracker.Entries<TEntity>();
+            foreach (var entry in entries)
+                entry.State = EntityState.Detached;
+        }
+        /// <inheritdoc />
+        public void DetachEntity(TEntity entity)
+        {
+            if (entity is not null)
+            {
+                var tracker = DbContext
+                    .ChangeTracker
+                    .Entries<TEntity>()
+                    .FirstOrDefault(p => entity.Equals(p.Entity));
+
+                if (tracker is not null)
+                    tracker.State = EntityState.Detached;
+            }
+        }
+
         /// <summary>
         /// 
         /// </summary>
@@ -32,64 +56,39 @@ namespace SoftUnlimit.Data.EntityFramework
             return entity;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public TEntity Update(TEntity entity)
         {
             DbContext.Set<TEntity>().Update(entity);
             return entity;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="entities"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public TEntity[] UpdateRange(params TEntity[] entities)
         {
             DbContext.Set<TEntity>().UpdateRange(entities);
             return entities;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public TEntity Add(TEntity entity)
         {
             DbContext.Set<TEntity>().Add(entity);
             return entity;
         }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="entities"></param>
+        /// <inheritdoc />
         public TEntity[] AddRange(params TEntity[] entities)
         {
             DbContext.Set<TEntity>().AddRange(entities);
             return entities;
         }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="entity"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public async ValueTask<TEntity> AddAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             await DbContext.Set<TEntity>().AddAsync(entity, cancellationToken);
             return entity;
         }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="entities"></param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public async Task<IEnumerable<TEntity>> AddRangeAsync(IEnumerable<TEntity> entities, CancellationToken ct = default)
         {
             await DbContext.Set<TEntity>().AddRangeAsync(entities, ct);

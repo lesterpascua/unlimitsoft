@@ -46,12 +46,12 @@ namespace SoftUnlimit.Data.EntityFramework.Seed
                 var dbContext = dbContextWrapper.GetDbContext();
                 foreach (var entry in EnumerationHelper.GetAll(typeof(TEntity)).Cast<IDbEnumeration>())
                 {
-                    TEntity dbEntity = await dbContext.FindAsync<TEntity>(keyValues: new object[] { entry.Id }, cancellationToken: ct);
+                    TEntity dbEntity = await dbContext.FindAsync<TEntity>(keyValues: new [] { entry.GetId() }, cancellationToken: ct);
                     if (dbEntity != null)
                     {
                         //entity.Name = entry.Name;
                     } else
-                        await dbContext.AddAsync(entry as TEntity);
+                        await dbContext.AddAsync(entry as TEntity, ct);
                 }
             }
         }

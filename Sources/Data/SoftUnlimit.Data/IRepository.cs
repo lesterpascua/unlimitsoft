@@ -11,6 +11,16 @@ namespace SoftUnlimit.Data
     public interface IRepository<TEntity> : IQueryRepository<TEntity> where TEntity : class
     {
         /// <summary>
+        /// Remove all entities from the repository cache.
+        /// </summary>
+        void DetachAll();
+        /// <summary>
+        /// Remove specific entity from the repository cache.
+        /// </summary>
+        /// <param name="entity"></param>
+        void DetachEntity(TEntity entity);
+
+        /// <summary>
         /// Remove entity from repository.
         /// </summary>
         /// <param name="entity"></param>

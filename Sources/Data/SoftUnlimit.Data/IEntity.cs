@@ -1,4 +1,6 @@
-﻿namespace SoftUnlimit.Data
+﻿using System;
+
+namespace SoftUnlimit.Data
 {
     /// <summary>
     /// 
@@ -6,10 +8,10 @@
     public interface IEntity
     {
         /// <summary>
-        /// Entity identifier.
+        /// Get identifier of the entity.
         /// </summary>
-        object Id { get; }
-
+        /// <returns></returns>
+        object GetId();
         /// <summary>
         /// Indicate is not initialized yet.
         /// </summary>

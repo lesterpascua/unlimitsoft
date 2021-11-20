@@ -22,6 +22,8 @@ namespace SoftUnlimit.Data
             return false;
         }
         /// <inheritdoc />
+        public object GetId() => Id;
+        /// <inheritdoc />
         public override int GetHashCode()
         {
             if (!IsTransient())
@@ -45,11 +47,5 @@ namespace SoftUnlimit.Data
             var item = (Entity<Key>)obj;
             return !item.IsTransient() && !IsTransient() && item.Id.Equals(Id);
         }
-
-        #region Explicit Interface Implementation
-
-        object IEntity.Id => Id;
-
-        #endregion
     }
 }
