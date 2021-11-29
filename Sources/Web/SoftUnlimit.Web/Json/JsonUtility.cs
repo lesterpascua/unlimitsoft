@@ -19,25 +19,35 @@ namespace SoftUnlimit.Json
         /// </summary>
         public static bool UseNewtonsoftSerializer { get; set; } = true;
 
+        static JsonUtility()
+        {
+            // TestJson
+            TestJsonSettings = new JsonSerializerOptions
+            {
+                WriteIndented = false,
+                PropertyNameCaseInsensitive = true,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+            };
+            TestJsonSettings.Converters.Add(new JsonStringEnumConverter());
+
+            // Newtonsoft
+            NewtonsoftSettings = new JsonSerializerSettings
+            {
+                Formatting = Formatting.None,
+                ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                NullValueHandling = NullValueHandling.Ignore,
+            };
+        }
+
         /// <summary>
         /// Serialized option for Newtonsoft.
         /// </summary>
-        public static JsonSerializerSettings NewtonsoftSettings { get; set; } = new JsonSerializerSettings
-        {
-            Formatting = Formatting.None,
-            ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
-            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-            NullValueHandling = NullValueHandling.Ignore,
-        };
+        public static JsonSerializerSettings NewtonsoftSettings { get; set; }
         /// <summary>
         /// Serialized option for Text.Json.
         /// </summary>
-        public static JsonSerializerOptions TestJsonSettings { get; set; } = new JsonSerializerOptions
-        {
-            WriteIndented = false,
-            PropertyNameCaseInsensitive = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
-        };
+        public static JsonSerializerOptions TestJsonSettings { get; set; }
 
         /// <summary>
         /// Serialize the object depending of the library activate for the system.
