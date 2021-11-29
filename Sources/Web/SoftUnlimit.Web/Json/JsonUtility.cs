@@ -21,14 +21,23 @@ namespace SoftUnlimit.Json
 
         static JsonUtility()
         {
-            // TestJson
-            TestJsonSettings = new JsonSerializerOptions
+            // TextJson Deserializer
+            TextJsonDeserializerSettings = new JsonSerializerOptions
             {
                 WriteIndented = false,
                 PropertyNameCaseInsensitive = true,
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
             };
-            TestJsonSettings.Converters.Add(new JsonStringEnumConverter());
+            TextJsonDeserializerSettings.Converters.Add(new JsonStringEnumConverter());
+
+            // TextJson Serializer
+            TextJsonSerializerSettings = new JsonSerializerOptions
+            {
+                WriteIndented = false,
+                PropertyNameCaseInsensitive = true,
+                DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+            };
+
 
             // Newtonsoft
             NewtonsoftSettings = new JsonSerializerSettings
@@ -47,7 +56,18 @@ namespace SoftUnlimit.Json
         /// <summary>
         /// Serialized option for Text.Json.
         /// </summary>
+        [Obsolete("Use TestJsonSerializerSettings or TestJsonDeserializerSettings")]
         public static JsonSerializerOptions TestJsonSettings { get; set; }
+
+
+        /// <summary>
+        /// Serialized option for Text.Json.
+        /// </summary>
+        public static JsonSerializerOptions TextJsonSerializerSettings { get; set; }
+        /// <summary>
+        /// Serialized option for Text.Json.
+        /// </summary>
+        public static JsonSerializerOptions TextJsonDeserializerSettings { get; set; }
 
         /// <summary>
         /// Serialize the object depending of the library activate for the system.
@@ -61,7 +81,7 @@ namespace SoftUnlimit.Json
 
             if (UseNewtonsoftSerializer)
                 return JsonConvert.SerializeObject(data, NewtonsoftSettings);
-            return System.Text.Json.JsonSerializer.Serialize(data, TestJsonSettings);
+            return System.Text.Json.JsonSerializer.Serialize(data, TextJsonSerializerSettings);
         }
         /// <summary>
         /// 
@@ -75,7 +95,7 @@ namespace SoftUnlimit.Json
 
             if (UseNewtonsoftSerializer)
                 return JsonConvert.DeserializeObject<T>(payload, NewtonsoftSettings);
-            return System.Text.Json.JsonSerializer.Deserialize<T>(payload, TestJsonSettings);
+            return System.Text.Json.JsonSerializer.Deserialize<T>(payload, TextJsonDeserializerSettings);
         }
         /// <summary>
         /// 
@@ -88,7 +108,7 @@ namespace SoftUnlimit.Json
             if (UseNewtonsoftSerializer)
                 return JsonConvert.DeserializeObject(payload, eventType, NewtonsoftSettings);
 
-            return System.Text.Json.JsonSerializer.Deserialize(payload, eventType, TestJsonSettings);
+            return System.Text.Json.JsonSerializer.Deserialize(payload, eventType, TextJsonDeserializerSettings);
         }
         /// <summary>
         /// Add extra value to a <see cref="JObject"/> if use Newtonsoft, or to <see cref="JsonElement"/> if use System.Text.Json
@@ -105,10 +125,10 @@ namespace SoftUnlimit.Json
             else
             {
                 var json = ((JsonElement)body).GetRawText();
-                var dictionary = System.Text.Json.JsonSerializer.Deserialize<IDictionary<string, object>>(json, TestJsonSettings);
+                var dictionary = System.Text.Json.JsonSerializer.Deserialize<IDictionary<string, object>>(json, TextJsonDeserializerSettings);
 
                 dictionary.Add(name, value);
-                var jsonWithProperty = System.Text.Json.JsonSerializer.Serialize(dictionary, TestJsonSettings);
+                var jsonWithProperty = System.Text.Json.JsonSerializer.Serialize(dictionary, TextJsonSerializerSettings);
 
                 body = System.Text.Json.JsonSerializer.Deserialize<object>(jsonWithProperty);
             }
