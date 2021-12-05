@@ -40,7 +40,15 @@ namespace SoftUnlimit.Json
 
 
             // Newtonsoft
-            NewtonsoftSettings = new JsonSerializerSettings
+            NewtonsoftSerializerSettings = new JsonSerializerSettings
+            {
+                Formatting = Formatting.None,
+                ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
+                ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+                NullValueHandling = NullValueHandling.Ignore,
+            };
+            // Newtonsoft
+            NewtonsoftDeserializerSettings = new JsonSerializerSettings
             {
                 Formatting = Formatting.None,
                 ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
@@ -52,12 +60,11 @@ namespace SoftUnlimit.Json
         /// <summary>
         /// Serialized option for Newtonsoft.
         /// </summary>
-        public static JsonSerializerSettings NewtonsoftSettings { get; set; }
+        public static JsonSerializerSettings NewtonsoftSerializerSettings { get; set; }
         /// <summary>
-        /// Serialized option for Text.Json.
+        /// Serialized option for Newtonsoft.
         /// </summary>
-        [Obsolete("Use TestJsonSerializerSettings or TestJsonDeserializerSettings")]
-        public static JsonSerializerOptions TestJsonSettings { get; set; }
+        public static JsonSerializerSettings NewtonsoftDeserializerSettings { get; set; }
 
 
         /// <summary>
@@ -73,42 +80,86 @@ namespace SoftUnlimit.Json
         /// Serialize the object depending of the library activate for the system.
         /// </summary>
         /// <param name="data"></param>
+        /// <param name="settings"></param>
         /// <returns></returns>
-        public static string Serialize(object data)
+        public static string Serialize(object data, object settings = null)
         {
-            if (data == null)
+            if (data is null)
                 return null;
 
             if (UseNewtonsoftSerializer)
-                return JsonConvert.SerializeObject(data, NewtonsoftSettings);
-            return System.Text.Json.JsonSerializer.Serialize(data, TextJsonSerializerSettings);
+                return JsonConvert.SerializeObject(data, (settings as JsonSerializerSettings) ?? NewtonsoftSerializerSettings);
+
+            return System.Text.Json.JsonSerializer.Serialize(data, (settings as JsonSerializerOptions) ?? TextJsonSerializerSettings);
         }
         /// <summary>
         /// 
         /// </summary>
         /// <param name="payload"></param>
+        /// <param name="settings"></param>
         /// <returns></returns>
-        public static T Deserialize<T>(string payload)
+        public static T Deserialize<T>(string payload, object settings = null)
         {
             if (string.IsNullOrWhiteSpace(payload))
                 return default;
 
             if (UseNewtonsoftSerializer)
-                return JsonConvert.DeserializeObject<T>(payload, NewtonsoftSettings);
-            return System.Text.Json.JsonSerializer.Deserialize<T>(payload, TextJsonDeserializerSettings);
+                return JsonConvert.DeserializeObject<T>(payload, (settings as JsonSerializerSettings) ?? NewtonsoftDeserializerSettings);
+            return System.Text.Json.JsonSerializer.Deserialize<T>(payload, (settings as JsonSerializerOptions) ?? TextJsonDeserializerSettings);
         }
         /// <summary>
         /// 
         /// </summary>
         /// <param name="eventType"></param>
         /// <param name="payload"></param>
+        /// <param name="settings"></param>
         /// <returns></returns>
-        public static object Deserialize(Type eventType, string payload)
+        public static object Deserialize(Type eventType, string payload, object settings = null)
         {
             if (UseNewtonsoftSerializer)
-                return JsonConvert.DeserializeObject(payload, eventType, NewtonsoftSettings);
+                return JsonConvert.DeserializeObject(payload, eventType, (settings as JsonSerializerSettings) ?? NewtonsoftDeserializerSettings);
 
-            return System.Text.Json.JsonSerializer.Deserialize(payload, eventType, TextJsonDeserializerSettings);
+            return System.Text.Json.JsonSerializer.Deserialize(payload, eventType, (settings as JsonSerializerOptions) ?? TextJsonDeserializerSettings);
+        }
+
+        /// <summary>
+        /// Verify if the object is of type T, <see cref="JObject"/>, <see cref="JsonElement"/>, <see cref="JsonProperty"/> or string and try to deserialize using correct method.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="data"></param>
+        /// <param name="settings"></param>
+        /// <returns></returns>
+        public static T Cast<T>(object data, object settings = null) => data switch
+        {
+            string body => Deserialize<T>(body, settings),
+            JObject body => body.ToObject<T>(),
+            JsonElement body => Deserialize<T>(body.GetRawText(), settings),
+            JsonProperty body => Deserialize<T>(body.Value.GetRawText(), settings),
+            T body => body,
+            _ => throw new NotSupportedException()
+        };
+
+        /// <summary>
+        /// Get json token follow the specific path.
+        /// </summary>
+        /// <param name="body"></param>
+        /// <param name="path"></param>
+        public static object GetToken(object body, params string[] path)
+        {
+            if (UseNewtonsoftSerializer)
+            {
+                var jObject = (JToken)body;
+                for (int i = 0; i < path.Length; i++)
+                    jObject = jObject[path[i]];
+                return jObject;
+            }
+            else
+            {
+                var jElement = (JsonElement)body;
+                for (int i = 0; i < path.Length; i++)
+                    jElement = jElement.GetProperty(path[i]);
+                return jElement;
+            }
         }
         /// <summary>
         /// Add extra value to a <see cref="JObject"/> if use Newtonsoft, or to <see cref="JsonElement"/> if use System.Text.Json
@@ -116,7 +167,8 @@ namespace SoftUnlimit.Json
         /// <param name="body"></param>
         /// <param name="name"></param>
         /// <param name="value"></param>
-        public static object AddNode(object body, string name, object value)
+        /// <param name="settings"></param>
+        public static object AddNode(object body, string name, object value, object settings = null)
         {
             if (UseNewtonsoftSerializer)
             {
@@ -125,32 +177,15 @@ namespace SoftUnlimit.Json
             else
             {
                 var json = ((JsonElement)body).GetRawText();
-                var dictionary = System.Text.Json.JsonSerializer.Deserialize<IDictionary<string, object>>(json, TextJsonDeserializerSettings);
+                var dictionary = System.Text.Json.JsonSerializer.Deserialize<IDictionary<string, object>>(json, (settings as JsonSerializerOptions) ?? TextJsonSerializerSettings);
 
                 dictionary.Add(name, value);
-                var jsonWithProperty = System.Text.Json.JsonSerializer.Serialize(dictionary, TextJsonSerializerSettings);
+                var jsonWithProperty = System.Text.Json.JsonSerializer.Serialize(dictionary, (settings as JsonSerializerOptions) ?? TextJsonSerializerSettings);
 
-                body = System.Text.Json.JsonSerializer.Deserialize<object>(jsonWithProperty);
+                body = System.Text.Json.JsonSerializer.Deserialize<object>(jsonWithProperty, (settings as JsonSerializerOptions) ?? TextJsonSerializerSettings);
             }
             return body;
         }
-
-        /// <summary>
-        /// Verify if the object is of type T, <see cref="JObject"/>, <see cref="JsonElement"/>, <see cref="JsonProperty"/> or string and try to deserialize using correct method.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="data"></param>
-        /// <returns></returns>
-        public static T Cast<T>(object data) => data switch
-        {
-            string body => Deserialize<T>(body),
-            JObject body => body.ToObject<T>(),
-            JsonElement body => Deserialize<T>(body.GetRawText()),
-            JsonProperty body => Deserialize<T>(body.Value.GetRawText()),
-            T body => body,
-            _ => throw new NotSupportedException()
-        };
-
 
 
         /// <summary>
