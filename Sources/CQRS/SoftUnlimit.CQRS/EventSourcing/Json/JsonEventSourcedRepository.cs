@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Collections.Generic;
 
 namespace SoftUnlimit.CQRS.EventSourcing.Json
 {
@@ -30,20 +31,14 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
             _resolver = resolver ?? throw new ArgumentNullException(nameof(resolver));
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="sourceId"></param>
-        /// <param name="version">if null get the last version.</param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
+        /// <inheritdoc />
         public async Task<TEntity> FindByIdAsync(string sourceId, long? version = null, CancellationToken ct = default)
         {
-            IQueryable<JsonVersionedEventPayload> query = version.HasValue ?
+            var query = version.HasValue ?
                 _queryRepository.Find(p => p.SourceId == sourceId && p.Version == version) :
                 _queryRepository.Find(p => p.SourceId == sourceId).OrderByDescending(k => k.Version);
 
-            JsonVersionedEventPayload eventPayload = await Task.Run(() => query.FirstOrDefault(), ct);
+            var eventPayload = await Task.Run(() => query.FirstOrDefault(), ct);
             if (eventPayload == null)
                 return null;
 
@@ -51,6 +46,38 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
             var @event = (IVersionedEvent)JsonUtility.Deserialize(eventType, eventPayload.Payload);
 
             return (TEntity)@event.CurrState;
+        }
+
+        /// <inheritdoc />
+        public async Task<string[]> GetAllSourceIdAsync(CancellationToken ct = default)
+        {
+            var query = _queryRepository
+                .FindAll()
+                .OrderBy(k => k.Created)
+                .Select(s => s.SourceId);
+
+            var sourceIds = await Task.Run(() => query.ToArray(), ct);
+            return sourceIds;
+        }
+        /// <inheritdoc />
+        public async Task<JsonVersionedEventPayload[]> GetHistoryAsync<TPayload>(string sourceId, long version, CancellationToken ct = default)
+        {
+            var query = _queryRepository
+                .Find(p => p.SourceId == sourceId && p.Version <= version)
+                .OrderBy(k => k.Version);
+
+            var eventPayload = await Task.Run(() => query.ToArray(), ct);
+            return eventPayload;
+        }
+        /// <inheritdoc />
+        public async Task<JsonVersionedEventPayload[]> GetHistoryAsync<TPayload>(string sourceId, DateTime dateTime, CancellationToken ct = default)
+        {
+            var query = _queryRepository
+                .Find(p => p.SourceId == sourceId && p.Created <= dateTime)
+                .OrderBy(k => k.Version);
+
+            var eventPayload = await Task.Run(() => query.ToArray(), ct);
+            return eventPayload;
         }
     }
 }

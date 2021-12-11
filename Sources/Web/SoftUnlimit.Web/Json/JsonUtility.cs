@@ -157,7 +157,12 @@ namespace SoftUnlimit.Json
             {
                 var jElement = (JsonElement)body;
                 for (int i = 0; i < path.Length; i++)
-                    jElement = jElement.GetProperty(path[i]);
+                {
+                    if (jElement.TryGetProperty(path[i], out var property) == false)
+                        return null;
+
+                    jElement = property;
+                }
                 return jElement;
             }
         }
