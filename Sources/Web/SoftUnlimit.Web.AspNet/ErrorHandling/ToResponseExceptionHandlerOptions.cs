@@ -61,7 +61,6 @@ namespace SoftUnlimit.Web.AspNet.ErrorHandling
         public async Task ExceptionHandlerInternal(HttpContext context)
         {
             var feature = context.Features.Get<IExceptionHandlerFeature>();
-            var jsonHelper = context.RequestServices.GetService<IJsonHelper>();
 
             _logger?.LogError(feature.Error, $"User: {context.User.Identity.Name}, logged in from: {context.GetIpAddress()}");
             if (_handlers != null)
@@ -81,7 +80,7 @@ namespace SoftUnlimit.Web.AspNet.ErrorHandling
 
             context.Response.StatusCode = response.Code;
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(JsonUtility.Serialize(response));
+            await context.Response.WriteAsync(Newtonsoft.Json.JsonConvert.SerializeObject(response));
         }
     }
 }
