@@ -38,11 +38,9 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
             var unitOfWorkType = typeof(TUnitOfWork);
             var unitOfWork = (IUnitOfWork)provider.GetService(unitOfWorkType);
 
-            await EntityBuilderUtility.ExecuteSeedAndMigrationAsync(provider,
-                unitOfWorkType: unitOfWorkType,
-                assemblies: seedAssemblies,
-                logger: logger,
-                ct: ct);
+            await EntityBuilderUtility.ExecuteSeedAndMigrationAsync(provider, unitOfWorkType: unitOfWorkType, assemblies: seedAssemblies, logger: logger, ct: ct);
+            if (setup is not null)
+                await setup.Invoke(provider);
 
             waitRetry ??= TimeSpan.FromSeconds(5);
             if (eventBus)
@@ -53,9 +51,6 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
             }
             if (eventListener)
                 await provider.GetService<IEventListener>().ListenAsync(waitRetry.Value, ct);
-
-            if (setup != null)
-                await setup.Invoke(provider);
         }
     }
 }

@@ -134,8 +134,8 @@ namespace SoftUnlimit.WebApi.DependencyInjection
         /// <see cref="CQRS.Command.ICommandDispatcher"/>,
         /// <see cref="CQRS.Query.IQueryHandler"/>,
         /// <see cref="CQRS.Query.IQueryDispatcher"/>,
-        /// <see cref="CQRS.Event.IEventHandler"/>,
-        /// <see cref="CQRS.Event.IEventDispatcher"/>
+        /// <see cref="IEventHandler"/>,
+        /// <see cref="IEventDispatcher"/>
         /// </summary>
         /// <param name="services"></param>
         /// <param name="serviceId"></param>
@@ -215,8 +215,8 @@ namespace SoftUnlimit.WebApi.DependencyInjection
                 services.AddSingleton<IEventPublishWorker>(provider =>
                 {
                     var eventBus = provider.GetService<IEventBus>();
-                    var logger = provider.GetService<ILogger<MyQueueEventPublishWorker<TUnitOfWork>>>();
-                    return new MyQueueEventPublishWorker<TUnitOfWork>(provider.GetService<IServiceScopeFactory>(), eventBus, MessageType.Event, logger: logger);
+                    var logger = provider.GetService<ILogger<MyQueueEventPublishWorker>>();
+                    return new MyQueueEventPublishWorker(provider.GetService<IServiceScopeFactory>(), eventBus, MessageType.Event, logger: logger);
                 });
             }
             #endregion

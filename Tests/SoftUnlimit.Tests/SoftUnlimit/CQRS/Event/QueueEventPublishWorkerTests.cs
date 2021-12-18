@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
 using SoftUnlimit.CQRS.Event;
+using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.CQRS.EventSourcing.Json;
 using SoftUnlimit.Data;
 using System;
@@ -24,7 +25,7 @@ namespace SoftUnlimit.Tests.SoftUnlimit.CQRS.Event
         {
             _publish = new List<JsonVersionedEventPayload>();
             _data = new JsonVersionedEventPayload[] {
-                new JsonVersionedEventPayload{ Id = Guid.NewGuid(), Created = new DateTime(1, 12, 31), Scheduled = new DateTime(9999, 12, 31) },
+                new JsonVersionedEventPayload{ Id = Guid.NewGuid(), Created = new DateTime(1, 12, 31), IsPubliched = true, Scheduled = new DateTime(9999, 12, 31) },
                 new JsonVersionedEventPayload{ Id = Guid.NewGuid(), Created = new DateTime(2021, 10, 10), Scheduled = new DateTime(2021, 10, 12) },
                 new JsonVersionedEventPayload{ Id = Guid.NewGuid(), Created = new DateTime(2021, 10, 11), Scheduled = null },
             };
@@ -38,8 +39,23 @@ namespace SoftUnlimit.Tests.SoftUnlimit.CQRS.Event
                     return Task.CompletedTask;
                 });
 
-            var repository = Substitute.For<IRepository<JsonVersionedEventPayload>>();
-            repository.FindAll().Returns(_data.AsQueryable());
+            var repository = Substitute.For<IEventSourcedRepository<JsonVersionedEventPayload, string>>();
+            repository.GetNonPublishedEventsAsync(Arg.Any<CancellationToken>())
+                .Returns(x => {
+                    return _data
+                        .AsQueryable()
+                        .Where(p => p.IsPubliched == false)
+                        .Select(s => new NonPublishVersionedEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
+                        .ToArray();
+                });
+            repository.GetEventsAsync(Arg.Any<Guid[]>(), Arg.Any<CancellationToken>())
+                .Returns(x => {
+                    var ids = x.ArgAt<Guid[]>(0);
+                    return _data
+                        .AsQueryable()
+                        .Where(p => ids.Contains(p.Id))
+                        .ToArray();
+                });
 
             var provider = Substitute.For<IServiceProvider>();
             provider
@@ -48,7 +64,7 @@ namespace SoftUnlimit.Tests.SoftUnlimit.CQRS.Event
                 {
                     if (info.ArgAt<Type>(0) == typeof(IUnitOfWork))
                         return Substitute.For<IUnitOfWork>();
-                    if (info.ArgAt<Type>(0) == typeof(IRepository<JsonVersionedEventPayload>))
+                    if (info.ArgAt<Type>(0) == typeof(IEventSourcedRepository<JsonVersionedEventPayload, string>))
                         return repository;
 
                     throw new NotSupportedException();
@@ -65,7 +81,7 @@ namespace SoftUnlimit.Tests.SoftUnlimit.CQRS.Event
         public async Task StartLoadingPendingEvent_Load3EventOnly2SchedulerInTime_ShouldPublish2EventInEventBus()
         {
             // Arrange
-            using var publishWorker = new QueueEventPublishWorker<IUnitOfWork, IRepository<JsonVersionedEventPayload>, JsonVersionedEventPayload, string>(_factory, _eventBus, MessageType.Event, TimeSpan.Zero, TimeSpan.Zero, 10, true, null);
+            using var publishWorker = new QueueEventPublishWorker<IEventSourcedRepository<JsonVersionedEventPayload, string>, JsonVersionedEventPayload, string>(_factory, _eventBus, MessageType.Event, TimeSpan.Zero, TimeSpan.Zero, 10, true, null);
 
 
             // Act

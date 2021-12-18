@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.Data;
 using SoftUnlimit.Event;
 using System;
@@ -18,14 +19,12 @@ namespace SoftUnlimit.CQRS.Event
     /// The implementation asume the event is store in the <see cref="IUnitOfWork"/> instance. Only store the unique event id and when need to 
     /// publish the background process will read from the <see cref="IRepository{TEntity}"/> and publish in the event bus.
     /// </remarks>
-    /// <typeparam name="TUnitOfWork">Register Unit of Work interface. Late used by <see cref="IServiceProvider"/> to update event state in database.</typeparam>
-    /// <typeparam name="TEventRepository"></typeparam>
-    /// <typeparam name="TEventPayload"></typeparam>
+    /// <typeparam name="TEventSourcedRepository"></typeparam>
+    /// <typeparam name="TVersionedEventPayload"></typeparam>
     /// <typeparam name="TPayload"></typeparam>
-    public class QueueEventPublishWorker<TUnitOfWork, TEventRepository, TEventPayload, TPayload> : IEventPublishWorker, IDisposable
-        where TUnitOfWork : IUnitOfWork
-        where TEventPayload : EventPayload<TPayload>
-        where TEventRepository : IRepository<TEventPayload>
+    public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPayload, TPayload> : IEventPublishWorker, IDisposable
+        where TVersionedEventPayload : VersionedEventPayload<TPayload>
+        where TEventSourcedRepository : IEventSourcedRepository<TVersionedEventPayload, TPayload>
     {
         private readonly int _bachSize;
         private readonly bool _enableScheduled;
@@ -115,17 +114,9 @@ namespace SoftUnlimit.CQRS.Event
             if (loadEvent)
             {
                 using var scope = _factory.CreateScope();
-                var eventPayloadRepository = scope.ServiceProvider.GetService<TEventRepository>();
-                var nonPublishEvents = await Task.Run(
-                    () => eventPayloadRepository
-                            .FindAll()
-                            .Where(p => !p.IsPubliched)
-                            .OrderBy(p => p.Scheduled).ThenBy(p => p.Created)
-                            .Select(s => new { s.Id, s.Scheduled, s.Created })
-                            .ToArray(),
-                    ct
-                );
+                var eventSourcedRepository = scope.ServiceProvider.GetService<TEventSourcedRepository>();
 
+                var nonPublishEvents = await eventSourcedRepository.GetNonPublishedEventsAsync(ct);
                 foreach (var @event in nonPublishEvents)
                     _pending.TryAdd(@event.Id, new Bucket(@event.Scheduled, @event.Created));
             }
@@ -173,7 +164,7 @@ namespace SoftUnlimit.CQRS.Event
                     break;
                 _logger?.LogDebug("Start to publish events {Time}", DateTime.UtcNow);
 
-                TEventPayload lastEvent = null;
+                TVersionedEventPayload lastEvent = null;
                 int count = Math.Min(_pending.Count, _bachSize);
 
                 IOrderedEnumerable<KeyValuePair<Guid, Bucket>> orderedPending;
@@ -191,29 +182,16 @@ namespace SoftUnlimit.CQRS.Event
                 try
                 {
                     using var scope = _factory.CreateScope();
-                    var unitOfWork = scope.ServiceProvider.GetService<TUnitOfWork>();
-                    var eventPayloadRepository = scope.ServiceProvider.GetService<TEventRepository>();
+                    var eventSourcedRepository = scope.ServiceProvider.GetService<TEventSourcedRepository>();
 
-                    var eventsPayload = await Task.Run(
-                        () =>
-                        {
-                            var query = eventPayloadRepository
-                                .FindAll()
-                                .Where(p => buffer.Contains(p.Id));
-                            query = _enableScheduled ? query.OrderBy(p => p.Scheduled).ThenBy(p => p.Created) : query.OrderBy(p => p.Created);
-                            return query.ToArray();
-                        },
-                        _cts.Token
-                    );
+                    var eventsPayload = await eventSourcedRepository.GetEventsAsync(buffer, _cts.Token);
                     foreach (var ePayload in eventsPayload)
                     {
                         if (!ePayload.IsPubliched)
                         {
                             lastEvent = ePayload;
                             await _eventBus.PublishPayloadAsync(lastEvent, _type, _cts.Token);
-
-                            lastEvent.MarkEventAsPublished();
-                            await unitOfWork.SaveChangesAsync(_cts.Token);
+                            await eventSourcedRepository.MarkEventsAsPublishedAsync(lastEvent, _cts.Token);
                         }
 
                         _pending.TryRemove(ePayload.Id, out var _);

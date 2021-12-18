@@ -13,13 +13,14 @@ using SoftUnlimit.Bus.Hangfire;
 using SoftUnlimit.Bus.Hangfire.DependencyInjection;
 using SoftUnlimit.CQRS.DependencyInjection;
 using SoftUnlimit.CQRS.Event;
+using SoftUnlimit.CQRS.Event.Json;
+using SoftUnlimit.CQRS.Memento;
 using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.Data.EntityFramework.Configuration;
 using SoftUnlimit.Data.EntityFramework.DependencyInjection;
 using SoftUnlimit.Data.EntityFramework.Utility;
 using SoftUnlimit.DespendencyInjections;
 using SoftUnlimit.EventBus.Azure.Configuration;
-using SoftUnlimit.Json;
 using SoftUnlimit.Logger;
 using SoftUnlimit.Web;
 using SoftUnlimit.Web.AspNet.Filter;
@@ -31,6 +32,7 @@ using SoftUnlimit.WebApi.Sources.CQRS.Event;
 using SoftUnlimit.WebApi.Sources.CQRS.Query;
 using SoftUnlimit.WebApi.Sources.Data;
 using SoftUnlimit.WebApi.Sources.Data.Configuration;
+using SoftUnlimit.WebApi.Sources.Data.Model;
 using SoftUnlimit.WebApi.Sources.Security;
 using System;
 using System.Linq;
@@ -94,7 +96,6 @@ namespace SoftUnlimit.WebApi
             #endregion
 
             #region CQRS
-            JsonUtility.UseNewtonsoftSerializer = true;
             var inMemoryDatabaseRoot = new InMemoryDatabaseRoot();
             services.AddCQRS(
                 serviceId,
@@ -118,8 +119,6 @@ namespace SoftUnlimit.WebApi
                         DbContextWrite = typeof(DbContextWrite),
                         PoolSizeForWrite = 128,
                         ReadConnString = new string[] { connString },
-                        IVersionedEventRepository = typeof(IMyVersionedEventRepository),
-                        VersionedEventRepository = typeof(MyVersionedEventRepository<DbContextWrite>),
                         WriteConnString = connString,
                         ReadBuilder = (settings, options, connString) =>
                         {
@@ -143,17 +142,26 @@ namespace SoftUnlimit.WebApi
                 new CQRSSettings
                 {
                     Assemblies = new Assembly[] { typeof(Startup).Assembly },
+                    IEventSourcedRepository = typeof(IMyEventSourcedRepository),
+                    EventSourcedRepository = typeof(MyEventSourcedRepository),
                     ICommandHandler = typeof(IMyCommandHandler<>),
                     IEventHandler = typeof(IMyEventHandler<>),
                     IQueryHandler = typeof(IMyQueryHandler<,>),
-                    MediatorDispatchEventSourced = typeof(MyMediatorDispatchEventSourced<IMyUnitOfWork>),
+                    MediatorDispatchEventSourced = typeof(MyMediatorDispatchEventSourced),
                     EventDispatcher = provider => new ServiceProviderEventDispatcher(
                         provider,
-                        preeDispatch: (provider, e) => Logger.LoggerUtility.SafeUpdateCorrelationContext(provider.GetService<ICorrelationContextAccessor>(), provider.GetService<ICorrelationContext>(), e.CorrelationId),
+                        preeDispatch: (provider, e) => LoggerUtility.SafeUpdateCorrelationContext(provider.GetService<ICorrelationContextAccessor>(), provider.GetService<ICorrelationContext>(), e.CorrelationId),
                         logger: provider.GetService<ILogger<ServiceProviderEventDispatcher>>()
                     )
                 }
             );
+            services.AddScoped<IMemento<Customer>>(provider =>
+            {
+                var nameResolver = provider.GetRequiredService<IEventNameResolver>();
+                var eventSourcedRepository = provider.GetRequiredService<IMyEventSourcedRepository>();
+
+                return new MyMemento<Customer>(nameResolver, eventSourcedRepository, false);
+            });
             #endregion
 
             #region EventBus
@@ -232,7 +240,23 @@ namespace SoftUnlimit.WebApi
                 eventListener: eventBusOption.Value.ListenQueues?.Any(p => p.Active == true) ?? false,
                 publishWorker: hasEventBus,
                 loadEvent: hasEventBus,
-                logger: logger
+                logger: logger,
+                setup: async provider => {
+                    var memento = provider.GetService<IMemento<Customer>>();
+                    var repository = provider.GetService<IMyEventSourcedRepository>();
+
+                    var versionedEntity = await repository.GetAllSourceIdAsync();
+                    var history1 = await repository.GetHistoryAsync(versionedEntity[0].Id, 10);
+                    var history2 = await repository.GetHistoryAsync(versionedEntity[0].Id, DateTime.UtcNow);
+
+                    var nonPublishes = await repository.GetNonPublishedEventsAsync();
+                    var events = await repository.GetEventsAsync(nonPublishes.Select(s => s.Id).ToArray());
+                    await repository.MarkEventsAsPublishedAsync(events);
+
+                    var entity = await memento.FindByVersionAsync(versionedEntity[0].Id);
+
+                    Console.WriteLine(entity);
+                }
             ).Wait();
             app.UseWrapperDevelopment(env.IsDevelopment());
 

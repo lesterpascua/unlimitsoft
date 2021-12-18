@@ -1,4 +1,5 @@
-﻿using SoftUnlimit.WebApi.Sources.CQRS.Bus;
+﻿using SoftUnlimit.Event;
+using SoftUnlimit.WebApi.Sources.CQRS.Bus;
 using SoftUnlimit.WebApi.Sources.CQRS.Event;
 using System;
 using System.Linq;
@@ -37,7 +38,7 @@ namespace SoftUnlimit.WebApi.Sources.CQRS
         /// <returns></returns>
         public static object Transform(IServiceProvider _1, QueueIdentifier _2, string _3, object @event)
         {
-            if (@event is MyEvent e)
+            if (@event is IEvent e)
                 e.Command = null;
 
             return @event;

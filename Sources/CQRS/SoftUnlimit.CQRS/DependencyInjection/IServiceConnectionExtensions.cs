@@ -25,6 +25,21 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         /// <param name="settings"></param>
         public static void AddSoftUnlimitDefaultCQRS(this IServiceCollection services, CQRSSettings settings)
         {
+
+            #region Versioned Repository
+            if (settings.IEventSourcedRepository is not null && settings.EventSourcedRepository is not null)
+            {
+                var constraints = settings.IEventSourcedRepository
+                    .GetInterfaces()
+                    .Any(i => i.GetGenericTypeDefinition() == typeof(IEventSourcedRepository<,>));
+                if (!constraints)
+                    throw new InvalidOperationException("IVersionedEventRepository don't implement IEventSourcedRepository<TVersionedEventPayload, TPayload>");
+                
+                services.AddScoped(settings.IEventSourcedRepository, settings.EventSourcedRepository);
+            }
+            #endregion
+
+
             services.RegisterQueryHandler(settings);
             services.RegisterCommandHandler(settings);
             services.RegisterEventHandler(settings);
@@ -102,10 +117,10 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         /// <param name="settings"></param>
         public static void RegisterCommandHandler(this IServiceCollection services, CQRSSettings settings)
         {
-            if (settings.MediatorDispatchEventSourced != null)
+            if (settings.MediatorDispatchEventSourced is not null)
                 services.AddScoped(typeof(IMediatorDispatchEventSourced), settings.MediatorDispatchEventSourced);
            
-            if (settings.ICommandHandler != null)
+            if (settings.ICommandHandler is not null)
             {
                 services.AddSingleton<ICommandDispatcher>((provider) => {
                     var logger = provider.GetService<ILogger<ServiceProviderCommandDispatcher>>();
@@ -150,9 +165,9 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         /// <returns></returns>
         public static IServiceCollection RegisterEventHandler(this IServiceCollection services, CQRSSettings settings)
         {
-            if (settings.IEventHandler != null)
+            if (settings.IEventHandler is not null)
             {
-                if (settings.EventDispatcher != null)
+                if (settings.EventDispatcher is not null)
                     services.AddSingleton(settings.EventDispatcher);
 
                 #region Assembly Scan

@@ -144,7 +144,7 @@ namespace SoftUnlimit.Data.EntityFramework
                     tasks[1] = eventSourcedMediator.DispatchEventsAsync(versionedEvents, false, ct);
             }
 
-            await Task.WhenAll(tasks);
+            Task.WaitAll(tasks, ct);
             int saved = await DbContext.SaveChangesAsync(ct);
 
             return (saved, events, versionedEvents);

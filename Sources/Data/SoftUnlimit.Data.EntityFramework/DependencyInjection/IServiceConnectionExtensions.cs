@@ -107,11 +107,7 @@ namespace SoftUnlimit.Data.EntityFramework.DependencyInjection
             }
             #endregion
 
-            #region Versioned Repository
             services.AddScoped(settings.IUnitOfWork, settings.UnitOfWork);
-            if (settings.IVersionedEventRepository != null && settings.VersionedEventRepository != null)
-                services.AddScoped(settings.IVersionedEventRepository, settings.VersionedEventRepository);
-            #endregion
 
             #region Register Repositories
             var collection = settings.EntityTypeBuilder.Assembly.FindAllRepositories(

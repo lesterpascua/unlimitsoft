@@ -1,6 +1,8 @@
 ﻿using SoftUnlimit.CQRS.Event;
+using SoftUnlimit.CQRS.Memento;
 using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.CQRS.Query;
+using SoftUnlimit.WebApi.Sources.Data.Model;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -11,12 +13,21 @@ namespace SoftUnlimit.WebApi.Sources.CQRS.Event
     {
         public string Test { get; set; }
     }
-    public class TestEvent : MyEvent
+    public class TestEvent : MyEvent<TestEventBody>, IMementoEvent<Customer>
     {
-        public TestEvent(Guid id, Guid sourceId, long version, ushort serviceId, string workerId, string correlationId, object command, object prevState, object currState, bool isDomainEvent, TestEventBody body = null)
+        public TestEvent(Guid id, Guid sourceId, long version, ushort serviceId, string workerId, string correlationId, object command, object prevState, object currState, bool isDomainEvent, TestEventBody body)
             : base(id, sourceId, version, serviceId, workerId, correlationId, command, prevState, currState, isDomainEvent, body)
         {
         }
+
+        public void Apply(Customer entity)
+        {
+            entity.Name = "Lester";
+            entity.Version = Version;
+            entity.Id = SourceId;
+        }
+        public void Rollback(Customer entity) => throw new NotSupportedException();
+        public Customer GetEntity() => new() { Version = Version, Name = "Lester", Id = SourceId };
     }
     public class TestEventHandler :
         IMyEventHandler<TestEvent>

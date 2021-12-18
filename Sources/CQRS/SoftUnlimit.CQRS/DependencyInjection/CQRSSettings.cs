@@ -16,6 +16,15 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         /// Assemblies used to scan for CommandHandler, QueryHandler and EventHandler
         /// </summary>
         public IEnumerable<Assembly> Assemblies { get; set; }
+
+        /// <summary>
+        /// Interface type for versioned event repository
+        /// </summary>
+        public Type IEventSourcedRepository { get; set; }
+        /// <summary>
+        /// Materialized type for versioned event repository
+        /// </summary>
+        public Type EventSourcedRepository { get; set; }
         /// <summary>
         /// typeof(IQueryAsyncHandler&lt;,&gt;)
         /// </summary>

@@ -19,11 +19,11 @@ namespace SoftUnlimit.Web.AspNet.Security.Authentication
         /// <summary>
         /// Sheme name
         /// </summary>
-        public string Scheme => DefaultAuthenticationScheme;
+        public virtual string Scheme => DefaultAuthenticationScheme;
         /// <summary>
         /// Authentication type.
         /// </summary>
-        public string AuthenticationType => DefaultAuthenticationScheme;
+        public virtual string AuthenticationType => DefaultAuthenticationScheme;
 
         /// <summary>
         /// Api key used to compare.

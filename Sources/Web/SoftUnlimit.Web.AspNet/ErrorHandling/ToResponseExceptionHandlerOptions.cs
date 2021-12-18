@@ -25,6 +25,7 @@ namespace SoftUnlimit.Web.AspNet.ErrorHandling
         private readonly Dictionary<string, string[]> _defaultErrorBody;
         private readonly ILogger<ToResponseExceptionHandlerOptions> _logger;
         private readonly Func<HttpContext, Dictionary<string, string[]>> _errorBody;
+        private readonly bool _useNewtonSoft;
 
 
         /// <summary>
@@ -35,6 +36,7 @@ namespace SoftUnlimit.Web.AspNet.ErrorHandling
         /// <param name="fatalErrorCode"></param>
         /// <param name="errText"></param>
         /// <param name="errorBody"></param>
+        /// <param name="useNewtonSoft"></param>
         /// <param name="logger"></param>
         public ToResponseExceptionHandlerOptions(
             bool showExceptionInfo = true,
@@ -42,6 +44,7 @@ namespace SoftUnlimit.Web.AspNet.ErrorHandling
             int fatalErrorCode = -1,
             string errText = null,
             Func<HttpContext, Dictionary<string, string[]>> errorBody = null,
+            bool useNewtonSoft = true,
             ILogger<ToResponseExceptionHandlerOptions> logger = null)
         {
             _showExceptionInfo = showExceptionInfo;
@@ -50,6 +53,7 @@ namespace SoftUnlimit.Web.AspNet.ErrorHandling
             _errText = errText;
             _defaultErrorBody = new Dictionary<string, string[]> { { string.Empty, new string[] { fatalErrorCode.ToString() } } };
             _errorBody = errorBody;
+            _useNewtonSoft = useNewtonSoft;
             ExceptionHandler = (context) => ExceptionHandlerInternal(context);
         }
 
@@ -80,7 +84,11 @@ namespace SoftUnlimit.Web.AspNet.ErrorHandling
 
             context.Response.StatusCode = response.Code;
             context.Response.ContentType = "application/json";
-            await context.Response.WriteAsync(Newtonsoft.Json.JsonConvert.SerializeObject(response));
+
+            var json = _useNewtonSoft ? 
+                Newtonsoft.Json.JsonConvert.SerializeObject(response, JsonUtility.NewtonsoftSerializerSettings) : 
+                System.Text.Json.JsonSerializer.Serialize(response, JsonUtility.TextJsonSerializerSettings);
+            await context.Response.WriteAsync(json);
         }
     }
 }

@@ -65,8 +65,6 @@ namespace SoftUnlimit.Benchmark.SoftUnlimit.CQRS
                         DbContextWrite = typeof(DbContextWrite),
                         PoolSizeForWrite = 128,
                         ReadConnString = new string[] { connString },
-                        IVersionedEventRepository = typeof(IMyVersionedEventRepository),
-                        VersionedEventRepository = typeof(MyVersionedEventRepository<DbContextWrite>),
                         WriteConnString = connString,
                         ReadBuilder = (settings, options, connString) =>
                         {
@@ -90,10 +88,12 @@ namespace SoftUnlimit.Benchmark.SoftUnlimit.CQRS
                 new CQRSSettings
                 {
                     Assemblies = new Assembly[] { typeof(Startup).Assembly },
+                    IEventSourcedRepository = typeof(IMyEventSourcedRepository),      // typeof(IMyVersionedEventRepository),
+                    EventSourcedRepository = typeof(MyEventSourcedRepository),        // typeof(MyVersionedEventRepository<DbContextWrite>),
                     ICommandHandler = typeof(IMyCommandHandler<>),
                     IEventHandler = typeof(IMyEventHandler<>),
                     IQueryHandler = typeof(IMyQueryHandler<,>),
-                    MediatorDispatchEventSourced = typeof(MyMediatorDispatchEventSourced<IMyUnitOfWork>),
+                    MediatorDispatchEventSourced = typeof(MyMediatorDispatchEventSourced),
                     EventDispatcher = provider => new ServiceProviderEventDispatcher(
                         provider,
                         preeDispatch: (provider, e) => LoggerUtility.SafeUpdateCorrelationContext(provider.GetService<ICorrelationContextAccessor>(), provider.GetService<ICorrelationContext>(), e.CorrelationId),

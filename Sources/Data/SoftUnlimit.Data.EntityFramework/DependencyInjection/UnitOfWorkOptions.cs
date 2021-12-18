@@ -49,15 +49,6 @@ namespace SoftUnlimit.Data.EntityFramework.DependencyInjection
         public ushort PoolSizeForWrite { get; set; }
 
         /// <summary>
-        /// Interface type for versioned event repository
-        /// </summary>
-        public Type IVersionedEventRepository { get; set; }
-        /// <summary>
-        /// Materialized type for versioned event repository
-        /// </summary>
-        public Type VersionedEventRepository { get; set; }
-
-        /// <summary>
         /// Type of base entity builder class
         /// </summary>
         public Type EntityTypeBuilder { get; set; }

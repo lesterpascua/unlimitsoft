@@ -33,21 +33,17 @@ namespace SoftUnlimit.CQRS.EventSourcing
     /// <summary>
     /// 
     /// </summary>
-    public abstract class MediatorDispatchEventSourced<TPayload> : IMediatorDispatchEventSourced
-        where TPayload : class
+    public abstract class MediatorDispatchEventSourced<TVersionedEventPayload, TPayload> : IMediatorDispatchEventSourced
+        where TVersionedEventPayload : VersionedEventPayload<TPayload>
     {
-        private readonly Type _unitOfWorkType;
-
         /// <summary>
         /// 
         /// </summary>
         /// <param name="provider"></param>
-        /// <param name="unitOfWorkType"></param>
         /// <param name="directlyDispatchNotDomainEvents">If true try to dispatch not domain event directly to find if exist any procesor for it.</param>
-        public MediatorDispatchEventSourced(IServiceProvider provider, Type unitOfWorkType, bool directlyDispatchNotDomainEvents = true)
+        public MediatorDispatchEventSourced(IServiceProvider provider, bool directlyDispatchNotDomainEvents = true)
         {
             Provider = provider;
-            _unitOfWorkType = unitOfWorkType;
             DirectlyDispatchNotDomainEvents = directlyDispatchNotDomainEvents;
         }
 
@@ -71,11 +67,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <summary>
         /// 
         /// </summary>
-        protected abstract IRepository<TPayload> VersionedEventRepository { get; }
-        /// <summary>
-        /// Get transactional unit of work.
-        /// </summary>
-        protected virtual IUnitOfWork UnitOfWork => Provider.GetService(_unitOfWorkType) as IUnitOfWork;
+        protected abstract IEventSourcedRepository<TVersionedEventPayload, TPayload> EventSourcedRepository { get; }
 
 
         /// <summary>
@@ -83,32 +75,28 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// </summary>
         /// <param name="event"></param>
         /// <returns></returns>
-        protected abstract TPayload Create(IVersionedEvent @event);
+        protected abstract TVersionedEventPayload Create(IVersionedEvent @event);
 
         /// <inheritdoc />
         public virtual async Task DispatchEventsAsync(IEnumerable<IVersionedEvent> events, bool forceSave, CancellationToken ct)
         {
-            var remoteEvents = new List<TPayload>();
+            var eventsPayload = new List<TVersionedEventPayload>();
             foreach (var @event in events)
             {
                 var payload = Create(@event);
-                remoteEvents.Add(payload);
+                eventsPayload.Add(payload);
 
                 var dispatcher = EventDispatcher;
-                if (dispatcher != null && (@event.IsDomainEvent || DirectlyDispatchNotDomainEvents))
+                if (dispatcher is not null && (@event.IsDomainEvent || DirectlyDispatchNotDomainEvents))
                 {
                     var response = await dispatcher.DispatchAsync(Provider, @event, ct);
                     if (response?.IsSuccess == false)
                         throw new AggregateException("Error when executed events", response.GetBody<Exception>());
                 }
             }
-            var versionedEventRepository = VersionedEventRepository;
-            if (versionedEventRepository != null)
-            {
-                await versionedEventRepository.AddRangeAsync(remoteEvents, ct);
-                if (forceSave)
-                    await UnitOfWork.SaveChangesAsync(ct);
-            }
+            var eventSourcedRepository = EventSourcedRepository;
+            if (eventSourcedRepository is not null)
+                await eventSourcedRepository.CreateAsync(eventsPayload, forceSave, ct);
         }
         /// <summary>
         /// Indicated all event already dispatchers.
@@ -118,8 +106,12 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <returns></returns>
         public virtual async ValueTask EventsDispatchedAsync(IEnumerable<IVersionedEvent> events, CancellationToken ct)
         {
+            var eventSourcedRepository = EventSourcedRepository;
+            if (eventSourcedRepository is not null)
+                await eventSourcedRepository.SavePendingCangesAsync(ct);
+
             var publish = EventPublishWorker;
-            if (publish != null)
+            if (publish is not null)
                 await publish.PublishAsync(events, ct);
         }
     }

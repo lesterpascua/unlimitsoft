@@ -17,7 +17,7 @@ namespace SoftUnlimit.Json
         /// <summary>
         /// Indicate if for serializer use Newtonsoft or Native serializer in the internal SoftUnlimit library operation. By default use Newtonsoft.
         /// </summary>
-        public static bool UseNewtonsoftSerializer { get; set; } = true;
+        public static bool UseNewtonsoftSerializer { get; set; } = false;
 
         static JsonUtility()
         {

@@ -6,16 +6,15 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
     /// <summary>
     /// 
     /// </summary>
-    public abstract class JsonMediatorDispatchEventSourced : MediatorDispatchEventSourced<JsonVersionedEventPayload>
+    public abstract class JsonMediatorDispatchEventSourced : MediatorDispatchEventSourced<JsonVersionedEventPayload, string>
     {
         /// <summary>
         /// 
         /// </summary>
         /// <param name="provider"></param>
-        /// <param name="unitOfWorkType"></param>
         /// <param name="directlyDispatchNotDomainEvents">If true not dispath domain event as optimized mechanims.</param>
-        public JsonMediatorDispatchEventSourced(IServiceProvider provider, Type unitOfWorkType, bool directlyDispatchNotDomainEvents = false)
-            : base(provider, unitOfWorkType, directlyDispatchNotDomainEvents)
+        public JsonMediatorDispatchEventSourced(IServiceProvider provider, bool directlyDispatchNotDomainEvents = false)
+            : base(provider, directlyDispatchNotDomainEvents)
         {
         }
 

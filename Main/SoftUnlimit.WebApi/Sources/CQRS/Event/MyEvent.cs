@@ -3,9 +3,9 @@ using System;
 
 namespace SoftUnlimit.WebApi.Sources.CQRS.Event
 {
-    public class MyEvent : VersionedEvent<Guid, object>
+    public abstract class MyEvent<T> : VersionedEvent<Guid, T>
     {
-        public MyEvent(Guid id, Guid sourceId, long version, ushort serviceId, string workerId, string correlationId, object command, object prevState, object currState, bool isDomainEvent, object body = null) 
+        protected MyEvent(Guid id, Guid sourceId, long version, ushort serviceId, string workerId, string correlationId, object command, object prevState, object currState, bool isDomainEvent, T body) 
             : base(id, sourceId, version, serviceId, workerId, correlationId, command, prevState, currState, isDomainEvent, body)
         {
         }
