@@ -1,5 +1,4 @@
-﻿using Newtonsoft.Json;
-using SoftUnlimit.Json;
+﻿using SoftUnlimit.Json;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -7,7 +6,6 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -70,7 +68,7 @@ namespace SoftUnlimit.Web.Client
             );
         }
         /// <inheritdoc />
-        public Task<(TModel, HttpStatusCode)> SendAsync<TModel>(HttpMethod method, string uri, JsonSerializerOptions serializer, JsonSerializerOptions deserializer, Action<HttpRequestMessage> setup = null, object model = null, CancellationToken ct = default)
+        public Task<(TModel, HttpStatusCode)> SendAsync<TModel>(HttpMethod method, string uri, System.Text.Json.JsonSerializerOptions serializer, System.Text.Json.JsonSerializerOptions deserializer, Action<HttpRequestMessage> setup = null, object model = null, CancellationToken ct = default)
         {
             if (serializer is null)
                 throw new ArgumentNullException(nameof(serializer));
@@ -80,15 +78,15 @@ namespace SoftUnlimit.Web.Client
             return InternalSendAsync(
                 method,
                 uri,
-                obj => JsonUtility.Serialize(obj, serializer),
-                json => JsonUtility.Deserialize<TModel>(json, deserializer),
+                obj => System.Text.Json.JsonSerializer.Serialize(obj, serializer),
+                json => System.Text.Json.JsonSerializer.Deserialize<TModel>(json, deserializer),
                 setup,
                 model,
                 ct
             );
         }
         /// <inheritdoc />
-        public Task<(TModel, HttpStatusCode)> SendAsync<TModel>(HttpMethod method, string uri, JsonSerializerSettings serializer, JsonSerializerSettings deserializer, Action<HttpRequestMessage> setup = null, object model = null, CancellationToken ct = default)
+        public Task<(TModel, HttpStatusCode)> SendAsync<TModel>(HttpMethod method, string uri, Newtonsoft.Json.JsonSerializerSettings serializer, Newtonsoft.Json.JsonSerializerSettings deserializer, Action<HttpRequestMessage> setup = null, object model = null, CancellationToken ct = default)
         {
             if (serializer is null)
                 throw new ArgumentNullException(nameof(serializer));
@@ -98,8 +96,8 @@ namespace SoftUnlimit.Web.Client
             return InternalSendAsync(
                 method, 
                 uri, 
-                obj => JsonUtility.Serialize(obj, serializer),
-                json => JsonUtility.Deserialize<TModel>(json, deserializer), 
+                obj => Newtonsoft.Json.JsonConvert.SerializeObject(obj, serializer),
+                json => Newtonsoft.Json.JsonConvert.DeserializeObject<TModel>(json, deserializer), 
                 setup, 
                 model,
                 ct

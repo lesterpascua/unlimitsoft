@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using SoftUnlimit.CQRS.Query;
 using SoftUnlimit.Data;
 using SoftUnlimit.Web.Model;
@@ -15,6 +16,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
     /// </summary>
     public class DbContextJsonEventSourcedRepository : IEventSourcedRepository<JsonVersionedEventPayload, string>
     {
+        private readonly ILogger _logger;
         private readonly DbContext _dbContext;
         private readonly DbSet<JsonVersionedEventPayload> _repository;
 
@@ -22,11 +24,12 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         /// 
         /// </summary>
         /// <param name="dbContext"></param>
+        /// <param name="logger"></param>
         /// <exception cref="ArgumentNullException"></exception>
-        public DbContextJsonEventSourcedRepository(DbContext dbContext)
+        public DbContextJsonEventSourcedRepository(DbContext dbContext, ILogger logger)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _repository = _dbContext.Set<JsonVersionedEventPayload>();
         }
 
@@ -45,14 +48,18 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         public virtual async Task MarkEventsAsPublishedAsync(JsonVersionedEventPayload @event, CancellationToken ct = default)
         {
             @event.MarkEventAsPublished();
-            await _dbContext.SaveChangesAsync(ct);
+            int amount = await _dbContext.SaveChangesAsync(ct);
+
+            _logger.LogDebug("MarkEventsAsPublishedAsync {Amount} passed {@Event}", amount, @event);
         }
         /// <inheritdoc />
         public virtual async Task MarkEventsAsPublishedAsync(IEnumerable<JsonVersionedEventPayload> events, CancellationToken ct = default)
         {
             foreach (var @event in events)
                 @event.MarkEventAsPublished();
-            await _dbContext.SaveChangesAsync(ct);
+            int amount = await _dbContext.SaveChangesAsync(ct);
+
+            _logger.LogDebug("MarkEventsAsPublishedAsync {Amount} passed {@Events}", amount, events);
         }
 
         /// <inheritdoc />
@@ -111,7 +118,21 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         }
 
         /// <inheritdoc />
-        public virtual Task SavePendingCangesAsync(CancellationToken ct = default) => Task.CompletedTask;
+        public virtual async Task SavePendingCangesAsync(CancellationToken ct = default)
+        {
+            int amount = await _dbContext.SaveChangesAsync(ct);
+            _logger.LogDebug("SavePendingCangesAsync {Amount} JsonVersionedEventPayload", amount);
+        }
+        /// <inheritdoc />
+        public virtual async Task<JsonVersionedEventPayload> CreateAsync(JsonVersionedEventPayload eventPayload, bool forceSave = false, CancellationToken ct = default)
+        {
+            await _repository.AddAsync(eventPayload, ct);
+            if (forceSave)
+                await _dbContext.SaveChangesAsync(ct);
+
+            _logger.LogDebug("With {Force} CreateAsync {@EventPayload} JsonVersionedEventPayload", forceSave, eventPayload);
+            return eventPayload;
+        }
         /// <inheritdoc />
         public virtual async Task<IEnumerable<JsonVersionedEventPayload>> CreateAsync(IEnumerable<JsonVersionedEventPayload> eventPayloads, bool forceSave = false, CancellationToken ct = default)
         {
@@ -119,6 +140,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
             if (forceSave)
                 await _dbContext.SaveChangesAsync(ct);
 
+            _logger.LogDebug("With {Force} CreateAsync {@EventPayload} JsonVersionedEventPayload", forceSave, eventPayloads);
             return eventPayloads;
         }
     }

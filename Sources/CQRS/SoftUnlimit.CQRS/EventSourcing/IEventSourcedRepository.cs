@@ -92,16 +92,24 @@ namespace SoftUnlimit.CQRS.EventSourcing
         Task<TVersionedEventPayload[]> GetHistoryAsync(string sourceId, DateTime dateTime, CancellationToken ct = default);
 
         /// <summary>
-        /// 
+        /// Save all pending versiones events.
         /// </summary>
         /// <param name="ct"></param>
         /// <returns></returns>
         Task SavePendingCangesAsync(CancellationToken ct = default);
         /// <summary>
-        /// 
+        /// Create single versioned event in the storage
+        /// </summary>
+        /// <param name="eventPayload"></param>
+        /// <param name="forceSave">Indicate the save should happend in this moment.</param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        Task<JsonVersionedEventPayload> CreateAsync(JsonVersionedEventPayload eventPayload, bool forceSave = false, CancellationToken ct = default);
+        /// <summary>
+        /// Create multiples versioned event to the storage
         /// </summary>
         /// <param name="eventPayloads"></param>
-        /// <param name="forceSave"></param>
+        /// <param name="forceSave">Indicate the save should happend in this moment.</param>
         /// <param name="ct"></param>
         /// <returns></returns>
         Task<IEnumerable<TVersionedEventPayload>> CreateAsync(IEnumerable<TVersionedEventPayload> eventPayloads, bool forceSave = false, CancellationToken ct = default);

@@ -27,6 +27,7 @@ namespace SoftUnlimit.Json
                 WriteIndented = false,
                 PropertyNameCaseInsensitive = true,
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
+                NumberHandling = JsonNumberHandling.AllowReadingFromString
             };
             TextJsonDeserializerSettings.Converters.Add(new JsonStringEnumConverter());
 
