@@ -3,6 +3,7 @@ using Microsoft.Extensions.Logging;
 using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.Data;
 using SoftUnlimit.Event;
+using SoftUnlimit.Web.Model;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -116,9 +117,15 @@ namespace SoftUnlimit.CQRS.Event
                 using var scope = _factory.CreateScope();
                 var eventSourcedRepository = scope.ServiceProvider.GetService<TEventSourcedRepository>();
 
-                var nonPublishEvents = await eventSourcedRepository.GetNonPublishedEventsAsync(ct);
-                foreach (var @event in nonPublishEvents)
-                    _pending.TryAdd(@event.Id, new Bucket(@event.Scheduled, @event.Created));
+                int page = 0;
+                NonPublishVersionedEventPayload[] nonPublishEvents = null;
+                do
+                {
+                    var paging = new Paging { Page = page++, PageSize = 10 };
+                    nonPublishEvents = await eventSourcedRepository.GetNonPublishedEventsAsync(paging, ct);
+                    foreach (var @event in nonPublishEvents)
+                        _pending.TryAdd(@event.Id, new Bucket(@event.Scheduled, @event.Created));
+                } while (nonPublishEvents?.Any() == true);
             }
 
             // Create an independance task to publish all event in the event bus.

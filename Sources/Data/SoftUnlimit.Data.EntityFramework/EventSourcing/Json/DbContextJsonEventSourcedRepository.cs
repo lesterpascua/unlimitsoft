@@ -43,6 +43,16 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
                 .Select(s => new NonPublishVersionedEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
                 .ToArrayAsync(ct);
         }
+        /// <inheritdoc />
+        public virtual async Task<NonPublishVersionedEventPayload[]> GetNonPublishedEventsAsync(Paging paging, CancellationToken ct = default)
+        {
+            return await _repository
+                .Where(p => !p.IsPubliched)
+                .OrderBy(p => p.Scheduled).ThenBy(p => p.Created)
+                .ApplyPagging(paging.Page, paging.PageSize)
+                .Select(s => new NonPublishVersionedEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
+                .ToArrayAsync(ct);
+        }
 
         /// <inheritdoc />
         public virtual async Task MarkEventsAsPublishedAsync(JsonVersionedEventPayload @event, CancellationToken ct = default)

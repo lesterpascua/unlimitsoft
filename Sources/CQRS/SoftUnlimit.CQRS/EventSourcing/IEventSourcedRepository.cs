@@ -14,11 +14,18 @@ namespace SoftUnlimit.CQRS.EventSourcing
         where TVersionedEventPayload : VersionedEventPayload<TPayload>
     {
         /// <summary>
-        /// 
+        /// Get all events non publish
         /// </summary>
         /// <param name="ct"></param>
         /// <returns></returns>
         Task<NonPublishVersionedEventPayload[]> GetNonPublishedEventsAsync(CancellationToken ct = default);
+        /// <summary>
+        /// Get all event non publish and allow paging
+        /// </summary>
+        /// <param name="paging"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        Task<NonPublishVersionedEventPayload[]> GetNonPublishedEventsAsync(Paging paging, CancellationToken ct = default);
         /// <summary>
         /// 
         /// </summary>
