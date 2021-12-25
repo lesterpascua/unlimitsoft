@@ -87,7 +87,7 @@ namespace SoftUnlimit.CQRS.Event
         protected ConcurrentDictionary<Guid, Bucket> Pending => _pending;
 
         /// <inheritdoc />
-        public void Dispose()
+        public virtual void Dispose()
         {
             _cts.Cancel();
             if (_backgoundWorker != null)
@@ -104,7 +104,7 @@ namespace SoftUnlimit.CQRS.Event
         }
 
         /// <inheritdoc />
-        public async Task StartAsync(bool loadEvent, CancellationToken ct = default)
+        public async virtual Task StartAsync(bool loadEvent, CancellationToken ct = default)
         {
             if (_disposed)
                 throw new ObjectDisposedException(GetType().FullName);
@@ -118,21 +118,39 @@ namespace SoftUnlimit.CQRS.Event
                 var eventSourcedRepository = scope.ServiceProvider.GetService<TEventSourcedRepository>();
 
                 int page = 0;
+                var pending = new List<NonPublishVersionedEventPayload>();
                 NonPublishVersionedEventPayload[] nonPublishEvents = null;
                 do
                 {
-                    var paging = new Paging { Page = page++, PageSize = 10 };
-                    nonPublishEvents = await eventSourcedRepository.GetNonPublishedEventsAsync(paging, ct);
-                    foreach (var @event in nonPublishEvents)
-                        _pending.TryAdd(@event.Id, new Bucket(@event.Scheduled, @event.Created));
+                    var paging = new Paging { Page = page++, PageSize = 1000 };
+                    pending.AddRange(await eventSourcedRepository.GetNonPublishedEventsAsync(paging, ct));
                 } while (nonPublishEvents?.Any() == true);
+
+                pending.Sort((x, y) =>
+                {
+                    int compare = 0;
+                    if (x.Scheduled is null)
+                    {
+                        if (y.Scheduled is not null)
+                            compare = DateTime.UtcNow.CompareTo(y.Scheduled.Value);
+                    }
+                    else if (y.Scheduled is not null)
+                        compare = x.Scheduled.Value.CompareTo(DateTime.UtcNow);
+
+                    if (compare != 0)
+                        return compare;
+                    return x.Created.CompareTo(y.Created);
+                });
+
+                foreach (var @event in pending)
+                    _pending.TryAdd(@event.Id, new Bucket(@event.Scheduled, @event.Created));
             }
 
             // Create an independance task to publish all event in the event bus.
             _backgoundWorker = Task.Run(PublishBackground);
         }
         /// <inheritdoc />
-        public ValueTask RetryPublishAsync(Guid id, CancellationToken ct)
+        public virtual ValueTask RetryPublishAsync(Guid id, CancellationToken ct)
         {
             if (_disposed)
                 throw new ObjectDisposedException(GetType().FullName);
@@ -141,7 +159,7 @@ namespace SoftUnlimit.CQRS.Event
             return ValueTaskExtensions.CompletedTask;
         }
         /// <inheritdoc />
-        public ValueTask PublishAsync(IEnumerable<IEvent> events, CancellationToken ct)
+        public virtual ValueTask PublishAsync(IEnumerable<IEvent> events, CancellationToken ct)
         {
             if (_disposed)
                 throw new ObjectDisposedException(GetType().FullName);
@@ -157,6 +175,26 @@ namespace SoftUnlimit.CQRS.Event
             return ValueTaskExtensions.CompletedTask;
         }
 
+        /// <summary>
+        /// Verified if exist any new event to publish
+        /// </summary>
+        /// <returns></returns>
+        protected bool ExistNewEvent()
+        {
+            if (_cts.Token.IsCancellationRequested)
+                return true;
+            if (!_pending.IsEmpty)
+            {
+                if (!_enableScheduled)
+                    return true;
+                //
+                // only if scheduled feature is enable by software
+                var now = DateTime.UtcNow;
+                return _pending.Any(p => p.Value.Scheduled is null || p.Value.Scheduled.Value <= now);
+            }
+
+            return false;
+        }
         /// <summary>
         /// Backgound process event to the queue.
         /// </summary>
@@ -212,23 +250,7 @@ namespace SoftUnlimit.CQRS.Event
                 }
             }
         }
-
-        private bool ExistNewEvent()
-        {
-            if (_cts.Token.IsCancellationRequested)
-                return true;
-            if (!_pending.IsEmpty)
-            {
-                if (!_enableScheduled)
-                    return true;
-                //
-                // only if scheduled feature is enable by software
-                var now = DateTime.UtcNow;
-                return _pending.Any(p => p.Value.Scheduled is null || p.Value.Scheduled.Value <= now);
-            }
-
-            return false;
-        }
+        
 
         #region Nested Classes
         /// <summary>

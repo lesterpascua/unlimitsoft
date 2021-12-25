@@ -39,7 +39,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         {
             return await _repository
                 .Where(p => !p.IsPubliched)
-                .OrderBy(p => p.Scheduled).ThenBy(p => p.Created)
+                .OrderBy(p => p.Id)
                 .Select(s => new NonPublishVersionedEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
                 .ToArrayAsync(ct);
         }
@@ -48,7 +48,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         {
             return await _repository
                 .Where(p => !p.IsPubliched)
-                .OrderBy(p => p.Scheduled).ThenBy(p => p.Created)
+                .OrderBy(p => p.Id)
                 .ApplyPagging(paging.Page, paging.PageSize)
                 .Select(s => new NonPublishVersionedEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
                 .ToArrayAsync(ct);
