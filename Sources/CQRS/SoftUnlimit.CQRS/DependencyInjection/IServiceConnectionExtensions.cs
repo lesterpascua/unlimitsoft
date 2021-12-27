@@ -25,7 +25,6 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         /// <param name="settings"></param>
         public static void AddSoftUnlimitDefaultCQRS(this IServiceCollection services, CQRSSettings settings)
         {
-
             #region Versioned Repository
             if (settings.IEventSourcedRepository is not null && settings.EventSourcedRepository is not null)
             {
@@ -83,7 +82,7 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         {
             if (settings.IQueryHandler != null)
             {
-                services.AddScoped<IQueryDispatcher>(provider => new ServiceProviderQueryDispatcher(provider));
+                services.AddScoped<IQueryDispatcher>(provider => new ServiceProviderQueryDispatcher(provider, preeDispatch: settings.PreeDispatchQuery));
 
                 #region Assembly Scan
                 var existHandler = settings.Assemblies

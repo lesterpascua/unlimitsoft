@@ -62,49 +62,61 @@ namespace SoftUnlimit.Data.EntityFramework.DependencyInjection
 
 
             #region Read Context
-            if (settings.PoolSizeForRead == 0)
+            if (settings.ReadCustomRegister is null)
             {
+                if (settings.PoolSizeForRead == 0)
+                {
 
-                addDbContextMethod
-                    .MakeGenericMethod(settings.DbContextRead)
-                    .Invoke(null, new object[] {
+                    addDbContextMethod
+                        .MakeGenericMethod(settings.DbContextRead)
+                        .Invoke(null, new object[] {
                         services,
                         (Action<DbContextOptionsBuilder>)(options => ReadOptionAction(settings, options))
-                    });
-            } else
-            {
-                addDbContextPoolMethod
-                    .MakeGenericMethod(settings.DbContextRead)
-                    .Invoke(null, new object[] {
+                        });
+                }
+                else
+                {
+                    addDbContextPoolMethod
+                        .MakeGenericMethod(settings.DbContextRead)
+                        .Invoke(null, new object[] {
                         services,
                         (Action<DbContextOptionsBuilder>)(options => ReadOptionAction(settings, options)),
                         settings.PoolSizeForRead
-                    });
-            }
-            #endregion
-
-            #region Write Context
-            if (settings.DbContextWrite != null)
-            {
-                if (settings.PoolSizeForWrite == 0)
-                {
-                    addDbContextMethod
-                        .MakeGenericMethod(settings.DbContextWrite)
-                        .Invoke(null, new object[] {
-                        services,
-                        (Action<DbContextOptionsBuilder>)(options => WriteOptionAction(settings, options))
-                        });
-                } else
-                {
-                    addDbContextPoolMethod
-                        .MakeGenericMethod(settings.DbContextWrite)
-                        .Invoke(null, new object[] {
-                        services,
-                        (Action<DbContextOptionsBuilder>)(options => WriteOptionAction(settings, options)),
-                        settings.PoolSizeForWrite
                         });
                 }
             }
+            else
+                settings.ReadCustomRegister(services, settings);
+            #endregion
+
+            #region Write Context
+            if (settings.WriteCustomRegister is null)
+            {
+                if (settings.DbContextWrite is not null)
+                {
+                    if (settings.PoolSizeForWrite == 0)
+                    {
+                        addDbContextMethod
+                            .MakeGenericMethod(settings.DbContextWrite)
+                            .Invoke(null, new object[] {
+                            services,
+                            (Action<DbContextOptionsBuilder>)(options => WriteOptionAction(settings, options))
+                            });
+                    }
+                    else
+                    {
+                        addDbContextPoolMethod
+                            .MakeGenericMethod(settings.DbContextWrite)
+                            .Invoke(null, new object[] {
+                            services,
+                            (Action<DbContextOptionsBuilder>)(options => WriteOptionAction(settings, options)),
+                            settings.PoolSizeForWrite
+                            });
+                    }
+                }
+            }
+            else
+                settings.WriteCustomRegister(services, settings);
             #endregion
 
             services.AddScoped(settings.IUnitOfWork, settings.UnitOfWork);

@@ -13,9 +13,9 @@
         /// <param name="correlationId"></param>
         public static void SafeUpdateCorrelationContext(ICorrelationContextAccessor accessor, ICorrelationContext context, string correlationId)
         {
-            if (context.CorrelationId == null)
+            if (context.CorrelationId is null)
                 context.SetCorrelationId(correlationId);
-            if (accessor.Context == null)
+            if (accessor.Context is null)
                 accessor.Context = context;
         }
     }

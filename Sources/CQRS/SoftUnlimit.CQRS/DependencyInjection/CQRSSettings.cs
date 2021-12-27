@@ -1,6 +1,7 @@
 ﻿using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.EventSourcing;
+using SoftUnlimit.CQRS.Query;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -52,5 +53,9 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         /// Trigger some action before dispatch command
         /// </summary>
         public Action<IServiceProvider, ICommand> PreeDispatchAction { get; set; }
+        /// <summary>
+        /// Trigger some action before dispatch command
+        /// </summary>
+        public Action<IServiceProvider, IQuery> PreeDispatchQuery { get; set; }
     }
 }

@@ -1,11 +1,9 @@
 ﻿using Hangfire;
 using Hangfire.SqlServer;
-using SoftUnlimit.Bus.Hangfire.Activator;
-using SoftUnlimit.Bus.Hangfire.Filter;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
+using SoftUnlimit.Bus.Hangfire.Activator;
+using SoftUnlimit.Bus.Hangfire.Filter;
 using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Message;
 using System;
@@ -37,7 +35,8 @@ namespace SoftUnlimit.Bus.Hangfire.DependencyInjection
             Action<ICommand, BackgroundJob> preeProcessCommand = null,
             Func<IServiceProvider, Exception, Task> onError = null,
             bool addLoggerFilter = false,
-            Action<IGlobalConfiguration> setup = null)
+            Action<IGlobalConfiguration> setup = null
+        )
         {
             services
                 .AddHangfire((provider, config) =>
@@ -49,9 +48,8 @@ namespace SoftUnlimit.Bus.Hangfire.DependencyInjection
                     if (addLoggerFilter)
                         config.UseFilter(new LogEverythingAttribute(provider.GetService<ILogger<LogEverythingAttribute>>()));
                     config.UseActivator(new DefaultJobActivator(ActivatorUtilities.GetServiceOrCreateInstance<IServiceScopeFactory>(provider)));
-                    config.UseColouredConsoleLogProvider(options.Logger);
 
-                    if (setup == null)
+                    if (setup is null)
                     {
                         config.UseSqlServerStorage(options.ConnectionString, new SqlServerStorageOptions
                         {
@@ -69,18 +67,18 @@ namespace SoftUnlimit.Bus.Hangfire.DependencyInjection
                 .AddScoped<IJobProcessor>(provider =>
                 {
                     Func<Exception, Task> interOnError = null;
-                    if (onError != null)
+                    if (onError is not null)
                         interOnError = exc => onError(provider, exc);
 
-                    var dispatcher = provider.GetService<ICommandDispatcher>();
-                    var logger = provider.GetService<ILogger<DefaultJobProcessor>>();
-                    var completionService = provider.GetService<ICommandCompletionService>();
+                    var dispatcher = provider.GetRequiredService<ICommandDispatcher>();
+                    var logger = provider.GetRequiredService<ILogger<DefaultJobProcessor>>();
+                    var commandCompletionService = provider.GetService<ICommandCompletionService>();
 
                     return new DefaultJobProcessor(
                         provider,
                         dispatcher, 
                         errorCode: errorCode,
-                        completionService: completionService,
+                        completionService: commandCompletionService,
                         onError: interOnError, 
                         preeDispatch: preeProcessCommand,
                         logger: logger

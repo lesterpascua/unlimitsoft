@@ -21,6 +21,7 @@ namespace SoftUnlimit.CQRS.Query
         private readonly IServiceProvider _provider;
         private readonly bool _validate;
         private readonly string _invalidArgumendText;
+        private readonly Action<IServiceProvider, IQuery> _preeDispatch;
         private readonly ILogger<ServiceProviderQueryDispatcher> _logger;
         private readonly Func<IList<ValidationFailure>, IDictionary<string, IEnumerable<string>>> _errorTransforms;
 
@@ -33,10 +34,11 @@ namespace SoftUnlimit.CQRS.Query
         /// <param name="useCache"></param>
         /// <param name="errorTransforms"></param>
         /// <param name="invalidArgumendText"></param>
+        /// <param name="preeDispatch"></param>
         /// <param name="logger"></param>
         public ServiceProviderQueryDispatcher(IServiceProvider provider, bool validate = true, bool useCache = true,
-            Func<IList<ValidationFailure>, IDictionary<string, IEnumerable<string>>> errorTransforms = null, string invalidArgumendText = null, 
-            ILogger<ServiceProviderQueryDispatcher> logger = null
+            Func<IList<ValidationFailure>, IDictionary<string, IEnumerable<string>>> errorTransforms = null, string invalidArgumendText = null,
+            Action<IServiceProvider, IQuery> preeDispatch = null, ILogger<ServiceProviderQueryDispatcher> logger = null
         )
             : base(useCache)
         {
@@ -44,6 +46,7 @@ namespace SoftUnlimit.CQRS.Query
             _validate = validate;
             _errorTransforms = errorTransforms ?? ServiceProviderCommandDispatcher.DefaultErrorTransforms;
             _invalidArgumendText = invalidArgumendText;
+            _preeDispatch = preeDispatch;
             _logger = logger;
         }
 
@@ -60,6 +63,7 @@ namespace SoftUnlimit.CQRS.Query
             var entityType = typeof(TResult);
 
             _logger?.LogDebug("Execute Query type: {Type}", queryType);
+            _preeDispatch?.Invoke(_provider, query);
 
             var handler = GetQueryHandler(_provider, entityType, queryType);
             var handlerType = handler.GetType();

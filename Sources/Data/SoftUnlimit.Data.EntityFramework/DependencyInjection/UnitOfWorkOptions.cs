@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using SoftUnlimit.Data.EntityFramework.Configuration;
 using System;
 
@@ -84,5 +85,14 @@ namespace SoftUnlimit.Data.EntityFramework.DependencyInjection
         /// options.UseNpgsql(connString);
         /// </example>
         public Action<UnitOfWorkOptions, DbContextOptionsBuilder, string> WriteBuilder { get; set; }
+
+        /// <summary>
+        /// Custom register read DbContext
+        /// </summary>
+        public Action<IServiceCollection, UnitOfWorkOptions> ReadCustomRegister { get; set; }
+        /// <summary>
+        /// Custom register write DbContext
+        /// </summary>
+        public Action<IServiceCollection, UnitOfWorkOptions> WriteCustomRegister { get; set; }
     }
 }

@@ -29,8 +29,8 @@ namespace SoftUnlimit.Logger.DependencyInjection
 
             var loggerConfig = new LoggerConfiguration();
 
-            loggerConfig.MinimumLevel.Is((Serilog.Events.LogEventLevel)config.Default);
-            if (config.Override is not null)
+            loggerConfig.MinimumLevel.Is((Serilog.Events.LogEventLevel)(config?.Default ?? Microsoft.Extensions.Logging.LogLevel.Warning));
+            if (config?.Override is not null)
                 foreach (var entry in config.Override)
                     loggerConfig.MinimumLevel.Override(entry.Key, (Serilog.Events.LogEventLevel)entry.Value);
 
