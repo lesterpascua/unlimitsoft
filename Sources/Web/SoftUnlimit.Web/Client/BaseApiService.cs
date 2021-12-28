@@ -13,10 +13,18 @@ namespace SoftUnlimit.Web.Client
         /// 
         /// </summary>
         /// <param name="apiClient"></param>
+        protected BaseApiService(IApiClient apiClient)
+        {
+            ApiClient = apiClient;
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="apiClient"></param>
         /// <param name="cache"></param>
         /// <param name="slidingExpiration"></param>
         /// <param name="ignorePrevCache"></param>
-        protected BaseApiService(IApiClient apiClient, ObjectCache cache = null, TimeSpan? slidingExpiration = null, bool ignorePrevCache = false)
+        protected BaseApiService(IApiClient apiClient, ObjectCache cache, TimeSpan? slidingExpiration, bool ignorePrevCache = false)
         {
             ApiClient = apiClient;
             Cache = cache;
@@ -30,7 +38,7 @@ namespace SoftUnlimit.Web.Client
         /// <param name="cache"></param>
         /// <param name="cacheItemPolicy"></param>
         /// <param name="ignorePrevCache"></param>
-        protected BaseApiService(IApiClient apiClient, ObjectCache cache = null, CacheItemPolicy cacheItemPolicy = null, bool ignorePrevCache = false)
+        protected BaseApiService(IApiClient apiClient, ObjectCache cache, CacheItemPolicy cacheItemPolicy, bool ignorePrevCache = false)
         {
             ApiClient = apiClient;
             Cache = cache;
