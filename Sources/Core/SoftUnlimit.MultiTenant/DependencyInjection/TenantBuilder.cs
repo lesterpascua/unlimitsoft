@@ -50,23 +50,21 @@ public class TenantBuilder
     /// Register the tenant store implementation
     /// </summary>
     /// <remarks>
-    /// Register: <see cref="ITenantStore{V}"/>
     /// </remarks>
     /// <typeparam name="V">Store type to register.</typeparam>
     /// <returns></returns>
-    public TenantBuilder WithStore<V>() where V : class, ITenantStore<Tenant>
+    public TenantBuilder WithStore<V>() where V : class, ITenantStore
     {
-        _services.AddSingleton<ITenantStore<Tenant>, V>();
+        _services.AddSingleton<ITenantStore, V>();
         return this;
     }
     /// <summary>
-    /// Register the tenant <see cref="InMemoryTenantStore{T}"/>.
     /// </summary>
     /// <param name="tenants"></param>
     /// <returns></returns>
     public TenantBuilder WithMemoryStore(IEnumerable<Tenant> tenants)
     {
-        _services.AddSingleton<ITenantStore<Tenant>>(_ => new InMemoryTenantStore<Tenant>(tenants));
+        _services.AddSingleton<ITenantStore>(_ => new InMemoryTenantStore(tenants));
         return this;
     }
     /// <summary>

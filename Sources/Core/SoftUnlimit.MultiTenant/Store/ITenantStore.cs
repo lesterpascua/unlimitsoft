@@ -6,12 +6,12 @@ namespace SoftUnlimit.MultiTenant.Store;
 /// Provide a way to access to a tenant store.
 /// </summary>
 /// <typeparam name="T"></typeparam>
-public interface ITenantStore<T> where T : Tenant
+public interface ITenantStore
 {
     /// <summary>
     /// Get tenant asociate with some identifier.
     /// </summary>
     /// <param name="identifier"></param>
     /// <returns></returns>
-    ValueTask<T> GetTenantAsync(string identifier);
+    ValueTask<Tenant> GetTenantAsync(string identifier);
 }

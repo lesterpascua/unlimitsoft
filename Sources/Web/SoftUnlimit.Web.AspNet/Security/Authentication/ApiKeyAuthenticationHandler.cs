@@ -19,6 +19,8 @@ namespace SoftUnlimit.Web.AspNet.Security.Authentication
     public class ApiKeyAuthenticationHandler<TOption> : AuthenticationHandler<TOption>
         where TOption : ApiKeyAuthenticationOptions, new()
     {
+        private readonly IServiceProvider _provider;
+
         /// <summary>
         /// Header were the API Key supplied.
         /// </summary>
@@ -29,13 +31,15 @@ namespace SoftUnlimit.Web.AspNet.Security.Authentication
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="provider"></param>
         /// <param name="options"></param>
         /// <param name="logger"></param>
         /// <param name="encoder"></param>
         /// <param name="clock"></param>
-        public ApiKeyAuthenticationHandler(IOptionsMonitor<TOption> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock)
+        public ApiKeyAuthenticationHandler(IServiceProvider provider, IOptionsMonitor<TOption> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock)
             : base(options, logger, encoder, clock)
         {
+            _provider = provider;
         }
 
 
@@ -43,34 +47,34 @@ namespace SoftUnlimit.Web.AspNet.Security.Authentication
         /// 
         /// </summary>
         /// <returns></returns>
-        protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+        protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             if (!Request.Headers.TryGetValue(HeaderName, out var headerValues))
-                return Task.FromResult(AuthenticateResult.NoResult());
+                return AuthenticateResult.NoResult();
 
             var apiKey = headerValues.FirstOrDefault();
             if (string.IsNullOrWhiteSpace(apiKey))
-                return Task.FromResult(AuthenticateResult.NoResult());
-            if (apiKey != Options.ApiKey)
-                return Task.FromResult(AuthenticateResult.Fail(Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidAPIKey) ?? "Invalid API Key"));
+                return AuthenticateResult.NoResult();
+            if (Options.ApiKey is not null && apiKey != Options.ApiKey)
+                return AuthenticateResult.Fail(Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidAPIKey) ?? "Invalid API Key");
 
             try
             {
-                var claims = Options.CreateClaims(Request);
-                if (claims == null)
-                    return Task.FromResult(AuthenticateResult.Fail(Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidUserInfo) ?? "Invalid User Info"));
+                var claims = await Options.CreateClaims(_provider, Request, apiKey);
+                if (claims is null)
+                    return AuthenticateResult.Fail(Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidUserInfo) ?? "Invalid User Info");
 
                 var identity = new ClaimsIdentity(claims, Options.AuthenticationType);
                 var principal = new ClaimsPrincipal(identity);
                 var ticket = new AuthenticationTicket(principal, Options.Scheme);
 
-                return Task.FromResult(AuthenticateResult.Success(ticket));
+                return AuthenticateResult.Success(ticket);
             }
             catch (Exception exc)
             {
                 Logger.LogError(exc, "Invalid auth format.");
             }
-            return Task.FromResult(AuthenticateResult.Fail(Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidUserInfo) ?? "Invalid User Info"));
+            return AuthenticateResult.Fail(Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidUserInfo) ?? "Invalid User Info");
         }
 
         /// <summary>

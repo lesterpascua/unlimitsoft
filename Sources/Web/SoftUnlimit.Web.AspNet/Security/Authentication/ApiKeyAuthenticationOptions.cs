@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace SoftUnlimit.Web.AspNet.Security.Authentication
 {
@@ -37,8 +38,10 @@ namespace SoftUnlimit.Web.AspNet.Security.Authentication
         /// <summary>
         /// Return claims associate to principal identity. The result could be null. 
         /// </summary>
+        /// <param name="provider"></param>
         /// <param name="httpRequest"></param>
+        /// <param name="apiKey"></param>
         /// <returns></returns>
-        protected internal abstract IEnumerable<Claim> CreateClaims(HttpRequest httpRequest);
+        protected internal abstract ValueTask<IEnumerable<Claim>> CreateClaims(IServiceProvider provider, HttpRequest httpRequest, string apiKey);
     }
 }

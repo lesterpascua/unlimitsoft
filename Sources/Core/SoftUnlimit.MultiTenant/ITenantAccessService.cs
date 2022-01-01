@@ -20,7 +20,7 @@ public interface ITenantAccessService
 /// </summary>
 public class TenantAccessService : ITenantAccessService
 {
-    private readonly ITenantStore<Tenant> _store;
+    private readonly ITenantStore _store;
     private readonly ITenantResolutionStrategy _resolutionStrategy;
 
     /// <summary>
@@ -28,7 +28,7 @@ public class TenantAccessService : ITenantAccessService
     /// </summary>
     /// <param name="resolutionStrategy"></param>
     /// <param name="store"></param>
-    public TenantAccessService(ITenantResolutionStrategy resolutionStrategy, ITenantStore<Tenant> store)
+    public TenantAccessService(ITenantResolutionStrategy resolutionStrategy, ITenantStore store)
     {
         _store = store ?? throw new ArgumentNullException(nameof(store));
         _resolutionStrategy = resolutionStrategy ?? throw new ArgumentNullException(nameof(resolutionStrategy));
