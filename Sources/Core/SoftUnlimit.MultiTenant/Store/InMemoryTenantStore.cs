@@ -18,7 +18,11 @@ public class InMemoryTenantStore<T> : ITenantStore<T> where T : Tenant
     /// <param name="tenants"></param>
     public InMemoryTenantStore(IEnumerable<T> tenants)
     {
-        _tenants = tenants.ToDictionary(k => k.Key);
+#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
+        _tenants = tenants
+            .Where(p => p.Key is not null)
+            .ToDictionary(k => k.Key);
+#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
     }
 
     /// <summary>

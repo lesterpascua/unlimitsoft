@@ -7,13 +7,11 @@ namespace SoftUnlimit.MultiTenant.Options;
 /// Tenant aware options cache
 /// </summary>
 /// <typeparam name="TOptions"></typeparam>
-/// <typeparam name="TTenant"></typeparam>
-public class TenantOptionsCache<TOptions, TTenant> : IOptionsMonitorCache<TOptions>
+public class TenantOptionsCache<TOptions> : IOptionsMonitorCache<TOptions>
     where TOptions : class
-    where TTenant : Tenant
 {
     private readonly TimeSpan _timeLive;
-    private readonly ITenantAccessService<TTenant> _tenantAccessor;
+    private readonly ITenantAccessService _tenantAccessor;
     private readonly TenantOptionsCacheDictionary<TOptions> _tenantSpecificOptionsCache;
 
     /// <summary>
@@ -21,7 +19,7 @@ public class TenantOptionsCache<TOptions, TTenant> : IOptionsMonitorCache<TOptio
     /// </summary>
     /// <param name="tenantAccessor"></param>
     /// <param name="timeLive"></param>
-    public TenantOptionsCache(ITenantAccessService<TTenant> tenantAccessor, TimeSpan timeLive)
+    public TenantOptionsCache(ITenantAccessService tenantAccessor, TimeSpan timeLive)
     {
         _timeLive = timeLive;
         _tenantAccessor = tenantAccessor;
@@ -53,5 +51,5 @@ public class TenantOptionsCache<TOptions, TTenant> : IOptionsMonitorCache<TOptio
         return _tenantSpecificOptionsCache.Get(tenant.Id).TryRemove(name);
     }
 
-    private TTenant GetTenant() => _tenantAccessor.GetTenant() ?? throw new InvalidProgramException("Invalid tenant");
+    private Tenant GetTenant() => _tenantAccessor.GetTenant() ?? throw new InvalidProgramException("Invalid tenant");
 }

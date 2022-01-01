@@ -10,12 +10,12 @@
         /// </summary>
         void Reset();
     }
-    internal class TenantProviderReset<T> : ITenantProviderReset where T : Tenant
+    internal class TenantProviderReset : ITenantProviderReset
     {
-        private readonly T _tenant;
-        private readonly TenantServiceProvider<T> _root;
+        private readonly Tenant _tenant;
+        private readonly TenantServiceProvider _root;
 
-        public TenantProviderReset(T tenant, TenantServiceProvider<T> root)
+        public TenantProviderReset(Tenant tenant, TenantServiceProvider root)
         {
             _root = root;
             _tenant = tenant;

@@ -78,6 +78,7 @@ namespace SoftUnlimit.Bus.Hangfire
             try
             {
                 _logger.LogDebug("Start process command: {@Command}", command);
+                _logger.LogInformation("Start process {Job} command: {Id}", processor.Metadata.Id, props.Id);
 
                 _preeDispatch?.Invoke(command, processor.Metadata);
                 response = await _dispatcher.DispatchAsync(_provider, command, processor.CancellationToken);
@@ -99,6 +100,7 @@ namespace SoftUnlimit.Bus.Hangfire
 JobId: {JobId}
 command: {@Command}
 Response: {@Response}", processor.Metadata.Id, command, response);
+            _logger.LogInformation("End process {Job}", processor.Metadata.Id);
         }
 
         /// <summary>

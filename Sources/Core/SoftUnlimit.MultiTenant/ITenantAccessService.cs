@@ -7,22 +7,20 @@ namespace SoftUnlimit.MultiTenant;
 /// <summary>
 /// Allow access to the current tenant.
 /// </summary>
-/// <typeparam name="T"></typeparam>
-public interface ITenantAccessService<T> where T : Tenant
+public interface ITenantAccessService
 {
     /// <summary>
     /// 
     /// </summary>
     /// <returns></returns>
-    T? GetTenant();
+    Tenant? GetTenant();
 }
 /// <summary>
 /// Tenant access service
 /// </summary>
-/// <typeparam name="T"></typeparam>
-public class TenantAccessService<T> : ITenantAccessService<T> where T : Tenant
+public class TenantAccessService : ITenantAccessService
 {
-    private readonly ITenantStore<T> _store;
+    private readonly ITenantStore<Tenant> _store;
     private readonly ITenantResolutionStrategy _resolutionStrategy;
 
     /// <summary>
@@ -30,7 +28,7 @@ public class TenantAccessService<T> : ITenantAccessService<T> where T : Tenant
     /// </summary>
     /// <param name="resolutionStrategy"></param>
     /// <param name="store"></param>
-    public TenantAccessService(ITenantResolutionStrategy resolutionStrategy, ITenantStore<T> store)
+    public TenantAccessService(ITenantResolutionStrategy resolutionStrategy, ITenantStore<Tenant> store)
     {
         _store = store ?? throw new ArgumentNullException(nameof(store));
         _resolutionStrategy = resolutionStrategy ?? throw new ArgumentNullException(nameof(resolutionStrategy));
@@ -40,12 +38,15 @@ public class TenantAccessService<T> : ITenantAccessService<T> where T : Tenant
     /// Get the current tenant
     /// </summary>
     /// <returns></returns>
-    public T? GetTenant()
+    public Tenant? GetTenant()
     {
-        var tenantIdentifier = _resolutionStrategy.GetIdentifier();
-        if (tenantIdentifier is null)
+        var key = _resolutionStrategy.GetKey(out var tenant);
+
+        if (tenant is not null)
+            return tenant;
+        if (key is null)
             return null;
 
-        return _store.GetTenantAsync(tenantIdentifier).GetAwaiter().GetResult();
+        return _store.GetTenantAsync(key).GetAwaiter().GetResult();
     }
 }

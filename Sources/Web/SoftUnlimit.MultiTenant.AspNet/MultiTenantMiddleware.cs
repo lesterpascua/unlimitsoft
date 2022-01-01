@@ -33,7 +33,7 @@ public class MultiTenantMiddleware<T> where T : Tenant
     /// <param name="multiTenantContainerAccessor"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    public async Task Invoke(HttpContext context, Func<TenantServiceProvider<T>> multiTenantContainerAccessor)
+    public async Task Invoke(HttpContext context, Func<TenantServiceProvider> multiTenantContainerAccessor)
     {
         var tenant = PopulateAccessor(context);
         await NextUsingTenantScope(context, multiTenantContainerAccessor, tenant);
@@ -49,20 +49,23 @@ public class MultiTenantMiddleware<T> where T : Tenant
     #region Private Methods
     private Tenant? PopulateAccessor(HttpContext context)
     {
-        if (!context.Items.TryGetValue(Constants.HttpContextTenantKey, out var tenant))
-        {
-            var tenantAccessor = (TenantContextAccessor)context.RequestServices.GetRequiredService<ITenantContextAccessor>();
-            var metadata = BuildTenantMetadata(context);
-            tenantAccessor.SetContext(metadata);
+        if (context.Items.TryGetValue(Constants.HttpContextTenantKey, out var value))
+            return (Tenant)value;
 
-            var tenantService = context.RequestServices.GetRequiredService<ITenantAccessService<T>>();
-            tenant = tenantService.GetTenant();
+        var tenantAccessor = (TenantContextAccessor)context.RequestServices.GetRequiredService<ITenantContextAccessor>();
+        var metadata = BuildTenantMetadata(context);
+        tenantAccessor.SetContext(metadata);
 
-            context.Items.Add(Constants.HttpContextTenantKey, tenant);
-        }
-        return tenant as Tenant;
+        var tenantService = context.RequestServices.GetRequiredService<ITenantAccessService>();
+        var tenant = tenantService.GetTenant();
+
+        if (tenant is not null)
+            tenantAccessor.SetContext(new TenantCloneContext(tenant));
+
+        context.Items.Add(Constants.HttpContextTenantKey, tenant);
+        return tenant;
     }
-    private async Task NextUsingTenantScope(HttpContext context, Func<TenantServiceProvider<T>> multiTenantContainerAccessor, Tenant? tenant)
+    private async Task NextUsingTenantScope(HttpContext context, Func<TenantServiceProvider> multiTenantContainerAccessor, Tenant? tenant)
     {
         if (tenant is null)
         {

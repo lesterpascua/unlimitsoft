@@ -8,24 +8,12 @@ namespace SoftUnlimit.MultiTenant.DependencyInjection;
 public static class IServiceCollectionExtensions
 {
     /// <summary>
-    /// Add the services (application specific tenant class)
-    /// </summary>
-    /// <typeparam name="T">Tenant used in the process.</typeparam>
-    /// <typeparam name="TService">The type of the implementation to use for <see cref="ITenantConfigureServices{T}"/></typeparam>
-    /// <param name="services"></param>
-    /// <returns></returns>
-    public static TenantBuilder<T> AddMultiTenancy<T, TService>(this IServiceCollection services) where T : Tenant where TService : class, ITenantConfigureServices<T>
-    {
-        services.AddSingleton<ITenantConfigureServices<T>, TService>();
-        return new(services);
-    }
-    /// <summary>
     /// Add the services (default tenant class)
     /// </summary>
     /// <typeparam name="TService">The type of the implementation to use.</typeparam>
     /// <param name="services"></param>
     /// <returns></returns>
-    public static TenantBuilder<Tenant> AddMultiTenancy<TService>(this IServiceCollection services) where TService : class, ITenantConfigureServices<Tenant>
+    public static TenantBuilder AddMultiTenancy<TService>(this IServiceCollection services) where TService : class, ITenantConfigureServices<Tenant>
     {
         services.AddSingleton<ITenantConfigureServices<Tenant>, TService>();
         return new(services);

@@ -9,23 +9,21 @@ namespace SoftUnlimit.MultiTenant.Options;
 /// Create a new options instance with configuration applied
 /// </summary>
 /// <typeparam name="TOptions"></typeparam>
-/// <typeparam name="T"></typeparam>
-internal class TenantOptionsFactory<TOptions, T> : IOptionsFactory<TOptions>
+internal class TenantOptionsFactory<TOptions> : IOptionsFactory<TOptions>
     where TOptions : class, new()
-    where T : Tenant
 {
-    private readonly Action<TOptions, T> _setup;
-    private readonly ITenantAccessService<T> _tenantService;
+    private readonly Action<TOptions, Tenant> _setup;
+    private readonly ITenantAccessService _tenantService;
     private readonly IEnumerable<IConfigureOptions<TOptions>> _setups;
     private readonly IEnumerable<IPostConfigureOptions<TOptions>> _postConfigures;
-    private readonly ILogger<TenantOptionsFactory<TOptions, T>> _logger;
+    private readonly ILogger<TenantOptionsFactory<TOptions>> _logger;
 
     public TenantOptionsFactory(
-        Action<TOptions, T> setup,
-        ITenantAccessService<T> tenantService,
+        Action<TOptions, Tenant> setup,
+        ITenantAccessService tenantService,
         IEnumerable<IConfigureOptions<TOptions>> setups,
         IEnumerable<IPostConfigureOptions<TOptions>> postConfigures,
-        ILogger<TenantOptionsFactory<TOptions, T>> logger
+        ILogger<TenantOptionsFactory<TOptions>> logger
     )
     {
         _setups = setups;

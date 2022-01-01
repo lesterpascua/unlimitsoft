@@ -12,7 +12,7 @@ namespace SoftUnlimit.MultiTenant.DependencyInjection;
 /// <summary>
 /// Configure tenant services
 /// </summary>
-public class TenantBuilder<T> where T : Tenant
+public class TenantBuilder
 {
     private readonly IServiceCollection _services;
 
@@ -35,14 +35,14 @@ public class TenantBuilder<T> where T : Tenant
     /// Register the tenant resolver implementation
     /// </summary>
     /// <remarks>
-    /// Register: <see cref="ITenantResolutionStrategy"/> and <see cref="ITenantAccessService{T}"/>
+    /// Register: <see cref="ITenantResolutionStrategy"/> and <see cref="ITenantAccessService"/>
     /// </remarks>
     /// <typeparam name="V"></typeparam>
     /// <returns></returns>
-    public TenantBuilder<T> WithResolutionStrategy<V>() where V : class, ITenantResolutionStrategy
+    public TenantBuilder WithResolutionStrategy<V>() where V : class, ITenantResolutionStrategy
     {
         _services.AddSingleton<ITenantResolutionStrategy, V>();
-        _services.AddSingleton<ITenantAccessService<T>, TenantAccessService<T>>();
+        _services.AddSingleton<ITenantAccessService, TenantAccessService>();
 
         return this;
     }
@@ -54,9 +54,9 @@ public class TenantBuilder<T> where T : Tenant
     /// </remarks>
     /// <typeparam name="V">Store type to register.</typeparam>
     /// <returns></returns>
-    public TenantBuilder<T> WithStore<V>() where V : class, ITenantStore<T>
+    public TenantBuilder WithStore<V>() where V : class, ITenantStore<Tenant>
     {
-        _services.AddSingleton<ITenantStore<T>, V>();
+        _services.AddSingleton<ITenantStore<Tenant>, V>();
         return this;
     }
     /// <summary>
@@ -64,9 +64,9 @@ public class TenantBuilder<T> where T : Tenant
     /// </summary>
     /// <param name="tenants"></param>
     /// <returns></returns>
-    public TenantBuilder<T> WithMemoryStore(IEnumerable<T> tenants)
+    public TenantBuilder WithMemoryStore(IEnumerable<Tenant> tenants)
     {
-        _services.AddSingleton<ITenantStore<T>>(_ => new InMemoryTenantStore<T>(tenants));
+        _services.AddSingleton<ITenantStore<Tenant>>(_ => new InMemoryTenantStore<Tenant>(tenants));
         return this;
     }
     /// <summary>
@@ -77,13 +77,13 @@ public class TenantBuilder<T> where T : Tenant
     /// <param name="timeLive">Tenant config cache</param>
     /// <param name="setup">Action to configure options for a tenant</param>
     /// <returns></returns>
-    public TenantBuilder<T> WithTenantConfigure<TOptions>(TimeSpan timeLive, Action<IServiceProvider, TOptions, T> setup) where TOptions : class, new()
+    public TenantBuilder WithTenantConfigure<TOptions>(TimeSpan timeLive, Action<IServiceProvider, TOptions, Tenant> setup) where TOptions : class, new()
     {
-        _services.AddSingleton<IOptionsMonitorCache<TOptions>>(p => ActivatorUtilities.CreateInstance<TenantOptionsCache<TOptions, T>>(p, timeLive));
+        _services.AddSingleton<IOptionsMonitorCache<TOptions>>(p => ActivatorUtilities.CreateInstance<TenantOptionsCache<TOptions>>(p, timeLive));
         _services.AddTransient<IOptionsFactory<TOptions>>(provider =>
         {
-            Action<TOptions, T> inner = (o, t) => setup(provider, o, t);
-            return ActivatorUtilities.CreateInstance<TenantOptionsFactory<TOptions, T>>(provider, inner);
+            Action<TOptions, Tenant> inner = (o, t) => setup(provider, o, t);
+            return ActivatorUtilities.CreateInstance<TenantOptionsFactory<TOptions>>(provider, inner);
         });
 
         _services.AddScoped<IOptionsSnapshot<TOptions>>(p => ActivatorUtilities.CreateInstance<TenantOptions<TOptions>>(p));

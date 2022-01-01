@@ -1,4 +1,5 @@
 ﻿using SoftUnlimit.MultiTenant.AspNet;
+using System;
 
 namespace SoftUnlimit.MultiTenant.ResolutionStrategy;
 
@@ -21,9 +22,11 @@ public class HostResolutionStrategy : ITenantResolutionStrategy
     /// <summary>
     /// Get the tenant identifier
     /// </summary>
+    /// <param name="tenant"></param>
     /// <returns></returns>
-    public string? GetIdentifier()
+    public string? GetKey(out Tenant? tenant)
     {
+        tenant = null;
         var context = _accessor.GetContext() as TenantHttpContext;
         return context?.Context?.Request.Host.Host;
     }

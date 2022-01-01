@@ -6,8 +6,7 @@ namespace SoftUnlimit.MultiTenant.DependencyInjection;
 /// <summary>
 /// Build a provider using multitenance.
 /// </summary>
-/// <typeparam name="T"></typeparam>
-public class TenantServiceProviderFactory<T> : IServiceProviderFactory<IServiceCollection> where T : Tenant
+public class TenantServiceProviderFactory : IServiceProviderFactory<IServiceCollection>
 {
     private readonly ServiceProviderOptions _options;
 
@@ -33,12 +32,12 @@ public class TenantServiceProviderFactory<T> : IServiceProviderFactory<IServiceC
     /// <inheritdoc />
     public IServiceProvider CreateServiceProvider(IServiceCollection containerBuilder)
     {
-        TenantServiceProvider<T>? provider = null;
+        TenantServiceProvider? provider = null;
 
         var providerAccessor = () => provider;
         containerBuilder.AddSingleton(providerAccessor);
 
-        provider = new TenantServiceProvider<T>(containerBuilder, _options);
+        provider = new TenantServiceProvider(containerBuilder, _options);
         return provider;
     }
 }

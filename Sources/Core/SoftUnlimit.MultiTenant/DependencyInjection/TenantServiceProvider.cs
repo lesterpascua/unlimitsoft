@@ -9,8 +9,7 @@ namespace SoftUnlimit.MultiTenant.DependencyInjection;
 /// <summary>
 /// Provider root used to create an specific provider per tenant.
 /// </summary>
-/// <typeparam name="T"></typeparam>
-public class TenantServiceProvider<T> : IServiceProvider, IDisposable where T : Tenant
+public class TenantServiceProvider : IServiceProvider, IDisposable
 {
     private readonly object _lock;
     private readonly IServiceProvider _root;                                            // root provider.
@@ -45,7 +44,7 @@ public class TenantServiceProvider<T> : IServiceProvider, IDisposable where T : 
     /// Remove the provider for a tenant so the next time the system will recreate
     /// </summary>
     /// <param name="tenant"></param>
-    public void Clean(T tenant)
+    public void Clean(Tenant tenant)
     {
         IServiceProvider? tenantProvider = null;
         if (_tenantProviders.ContainsKey(tenant.Id))
@@ -63,9 +62,9 @@ public class TenantServiceProvider<T> : IServiceProvider, IDisposable where T : 
     /// Get the current teanant from the application container
     /// </summary>
     /// <returns></returns>
-    private T? GetCurrentTenant()
+    private Tenant? GetCurrentTenant()
     {
-        var service = _root.GetRequiredService<ITenantAccessService<T>>();
+        var service = _root.GetRequiredService<ITenantAccessService>();
 
         // We have registered our TenantAccessService in Part 1, the service is
         // available in the application container which allows us to access the current Tenant
@@ -93,7 +92,7 @@ public class TenantServiceProvider<T> : IServiceProvider, IDisposable where T : 
             if (_tenantProviders.TryGetValue(tenantId, out provider))
                 return provider;
             var tenantProvider = BuildTenantProvider(tenant);
-            var tenantInit = tenantProvider.GetService<ITenantInit<T>>();
+            var tenantInit = tenantProvider.GetService<ITenantInit<Tenant>>();
             if (tenantInit is not null)
                 tenantInit.Init(tenant);
 
@@ -108,14 +107,14 @@ public class TenantServiceProvider<T> : IServiceProvider, IDisposable where T : 
     /// </summary>
     /// <returns></returns>
     /// <exception cref="NotSupportedException"></exception>
-    private IServiceProvider BuildTenantProvider(T tenant)
+    private IServiceProvider BuildTenantProvider(Tenant tenant)
     {
         var services = new ServiceCollection();
         for (var i = 0; i < _descriptors.Length; i++)
             services.Add(CreateDescriptor(_descriptors[i]));
-        services.AddSingleton<ITenantProviderReset>(p => new TenantProviderReset<T>(tenant, this));
+        services.AddSingleton<ITenantProviderReset>(p => new TenantProviderReset(tenant, this));
 
-        var setup = _root.GetService<ITenantConfigureServices<T>>();
+        var setup = _root.GetService<ITenantConfigureServices<Tenant>>();
         if (setup is not null)
             setup.ConfigureTenantServices(tenant, services);
 

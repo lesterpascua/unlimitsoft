@@ -12,28 +12,14 @@ namespace SoftUnlimit.MultiTenant.AspNet
         /// <summary>
         /// Overrride the provide to use tenant provider.
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="builder"></param>
+        /// <param name="validateOnBuild"></param>
         /// <param name="validateScopes"></param>
         /// <returns></returns>
         public static IHostBuilder UseTenantServiceProviderFactory(this IHostBuilder builder, bool validateOnBuild = true, bool validateScopes = true)
         {
             return builder.UseServiceProviderFactory(context =>
-                new TenantServiceProviderFactory<Tenant>(new ServiceProviderOptions { ValidateOnBuild = validateOnBuild, ValidateScopes = validateScopes })
-            );
-        }
-        /// <summary>
-        /// Overrride the provide to use tenant provider.
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="builder"></param>
-        /// <param name="validateOnBuild"></param>
-        /// <param name="validateScopes"></param>
-        /// <returns></returns>
-        public static IHostBuilder UseTenantServiceProviderFactory<T>(this IHostBuilder builder, bool validateOnBuild = true, bool validateScopes = true) where T : Tenant
-        {
-            return builder.UseServiceProviderFactory(
-                context => new TenantServiceProviderFactory<T>(new ServiceProviderOptions { ValidateOnBuild = validateOnBuild, ValidateScopes = validateScopes })
+                new TenantServiceProviderFactory(new ServiceProviderOptions { ValidateOnBuild = validateOnBuild, ValidateScopes = validateScopes })
             );
         }
     }
