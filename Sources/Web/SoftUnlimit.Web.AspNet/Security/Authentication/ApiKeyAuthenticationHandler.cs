@@ -21,10 +21,6 @@ namespace SoftUnlimit.Web.AspNet.Security.Authentication
     {
         private readonly IServiceProvider _provider;
 
-        /// <summary>
-        /// Header were the API Key supplied.
-        /// </summary>
-        public const string HeaderName = "X-API-KEY";
         private const string ContentType = "application/json";
 
 
@@ -49,7 +45,7 @@ namespace SoftUnlimit.Web.AspNet.Security.Authentication
         /// <returns></returns>
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
-            if (!Request.Headers.TryGetValue(HeaderName, out var headerValues))
+            if (!Request.Headers.TryGetValue(ApiKeyAuthenticationOptions.HeaderName, out var headerValues))
                 return AuthenticateResult.NoResult();
 
             var apiKey = headerValues.FirstOrDefault();
