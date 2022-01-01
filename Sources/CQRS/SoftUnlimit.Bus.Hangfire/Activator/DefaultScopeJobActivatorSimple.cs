@@ -19,8 +19,8 @@ namespace SoftUnlimit.Bus.Hangfire.Activator
         /// <param name="context"></param>
         public DefaultScopeJobActivatorSimple(IServiceScope scope, JobActivatorContext context)
         {
-            _context = context;
             _scope = scope ?? throw new ArgumentNullException(nameof(scope));
+            _context = context ?? throw new ArgumentNullException(nameof(context));
         }
 
         /// <inheritdoc />

@@ -26,6 +26,8 @@ namespace SoftUnlimit.Bus.Hangfire.DependencyInjection
         /// <param name="preeProcessCommand">Before sent the command to the dispatcher execute this function to custome add more information to the command.</param>
         /// <param name="onError"></param>
         /// <param name="addLoggerFilter"></param>
+        /// <param name="providerFactory"></param>
+        /// <param name="activatorFactory">Custom activator creator.</param>
         /// <param name="setup"></param>
         /// <returns></returns>
         public static IServiceCollection AddHangfireCommandBus(this IServiceCollection services,
@@ -35,19 +37,26 @@ namespace SoftUnlimit.Bus.Hangfire.DependencyInjection
             Action<ICommand, BackgroundJob> preeProcessCommand = null,
             Func<IServiceProvider, Exception, Task> onError = null,
             bool addLoggerFilter = false,
+            Func<IServiceProvider, JobActivator> activatorFactory = null,
+            Func<IServiceProvider, IServiceProvider> providerFactory = null,
             Action<IGlobalConfiguration> setup = null
         )
         {
             services
                 .AddHangfire((provider, config) =>
                 {
+                    if (providerFactory is not null)
+                        provider = providerFactory(provider);
+
                     config.SetDataCompatibilityLevel(CompatibilityLevel.Version_170);
                     config.UseSimpleAssemblyNameTypeSerializer();
                     config.UseRecommendedSerializerSettings();
 
                     if (addLoggerFilter)
                         config.UseFilter(new LogEverythingAttribute(provider.GetService<ILogger<LogEverythingAttribute>>()));
-                    config.UseActivator(new DefaultJobActivator(ActivatorUtilities.GetServiceOrCreateInstance<IServiceScopeFactory>(provider)));
+
+                    var activator = activatorFactory?.Invoke(provider);
+                    config.UseActivator(activator ?? new DefaultJobActivator(ActivatorUtilities.GetServiceOrCreateInstance<IServiceScopeFactory>(provider)));
 
                     if (setup is null)
                     {
@@ -90,7 +99,7 @@ namespace SoftUnlimit.Bus.Hangfire.DependencyInjection
                     var logger = provider.GetService<ILogger<HangfireCommandBus>>();
 
                     Func<ICommand, Task> innerPreeSendCommand = null;
-                    if (preeSendCommand != null)
+                    if (preeSendCommand is not null)
                         innerPreeSendCommand = command => preeSendCommand(provider, command);
 
                     return new HangfireCommandBus(client, innerPreeSendCommand, logger);

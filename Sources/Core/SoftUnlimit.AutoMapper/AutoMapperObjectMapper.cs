@@ -17,7 +17,7 @@ namespace SoftUnlimit.AutoMapper
         /// <param name="mapper"></param>
         public AutoMapperObjectMapper(IMapper mapper)
         {
-            this._mapper = mapper;
+            _mapper = mapper;
         }
 
         /// <summary>
