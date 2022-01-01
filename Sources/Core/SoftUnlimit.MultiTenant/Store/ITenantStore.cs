@@ -5,7 +5,6 @@ namespace SoftUnlimit.MultiTenant.Store;
 /// <summary>
 /// Provide a way to access to a tenant store.
 /// </summary>
-/// <typeparam name="T"></typeparam>
 public interface ITenantStore
 {
     /// <summary>
