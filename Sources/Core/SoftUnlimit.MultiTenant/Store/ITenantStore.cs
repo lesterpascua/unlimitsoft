@@ -12,5 +12,5 @@ public interface ITenantStore
     /// </summary>
     /// <param name="identifier"></param>
     /// <returns></returns>
-    ValueTask<Tenant> GetTenantAsync(string identifier);
+    Tenant GetTenant(string identifier);
 }

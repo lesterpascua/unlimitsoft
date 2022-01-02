@@ -47,6 +47,6 @@ public class TenantAccessService : ITenantAccessService
         if (key is null)
             return null;
 
-        return _store.GetTenantAsync(key).GetAwaiter().GetResult();
+        return _store.GetTenant(key);
     }
 }

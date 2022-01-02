@@ -3,12 +3,12 @@
     /// <summary>
     /// 
     /// </summary>
-    public interface ITenantInit<T>
+    public interface ITenantConfigure
     {
         /// <summary>
         /// Initilization tenant operations.
         /// </summary>
         /// <param name="tenant"></param>
-        void Init(T tenant);
+        void Configure(Tenant tenant);
     }
 }

@@ -30,11 +30,11 @@ public class InMemoryTenantStore : ITenantStore
     /// </summary>
     /// <param name="identifier"></param>
     /// <returns></returns>
-    public ValueTask<Tenant> GetTenantAsync(string identifier)
+    public Tenant GetTenant(string identifier)
     {
         if (!_tenants.TryGetValue(identifier, out var tenant) && !_tenants.TryGetValue(string.Empty, out tenant))
             throw new KeyNotFoundException($"Key {identifier} not found");
 
-        return new ValueTask<Tenant>(tenant);
+        return tenant;
     }
 }

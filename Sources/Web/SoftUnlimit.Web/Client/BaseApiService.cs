@@ -85,10 +85,10 @@ namespace SoftUnlimit.Web.Client
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
         /// <returns></returns>
-        protected TResult GetDataFromCache<TResult>(string cacheKey) where TResult : class
+        protected static TResult GetDataFromCache<TResult>(ObjectCache cache, string cacheKey) where TResult : class
         {
-            if (Cache?.Contains(cacheKey) == true)
-                return Cache.Get(cacheKey) as TResult;
+            if (cache?.Contains(cacheKey) == true)
+                return cache.Get(cacheKey) as TResult;
 
             return null;
         }
@@ -96,14 +96,15 @@ namespace SoftUnlimit.Web.Client
         /// 
         /// </summary>
         /// <typeparam name="TResult"></typeparam>
+        /// <param name="cache"></param>
         /// <param name="cacheKey"></param>
         /// <param name="data"></param>
         /// <returns></returns>
-        protected TResult AddDataToCache<TResult>(string cacheKey, TResult data) where TResult : class
+        protected TResult AddDataToCache<TResult>(ObjectCache cache, string cacheKey, TResult data) where TResult : class
         {
-            if (Cache?.Contains(cacheKey) == false)
-                lock (Cache)
-                    if (!Cache.Contains(cacheKey))
+            if (cache?.Contains(cacheKey) == false)
+                lock (cache)
+                    if (!cache.Contains(cacheKey))
                     {
                         CacheItemPolicy policy;
                         if (SlidingExpiration.HasValue || CacheItemPolicy is not null)
@@ -122,7 +123,7 @@ namespace SoftUnlimit.Web.Client
                             };
                         }
 
-                        Cache.Add(cacheKey, data, policy);
+                        cache.Add(cacheKey, data, policy);
                     }
             return data;
         }
@@ -134,20 +135,21 @@ namespace SoftUnlimit.Web.Client
         /// If the endpoint is not available and the cache was load in some time alwais return the old cache data.
         /// </remarks>
         /// <typeparam name="TResult"></typeparam>
+        /// <param name="cache"></param>
         /// <param name="func"></param>
         /// <returns></returns>
-        protected async Task<TResult> TryCacheFirst<TResult>(Func<Task<TResult>> func) where TResult : class
+        protected async ValueTask<TResult> TryCacheFirst<TResult>(ObjectCache cache, Func<Task<TResult>> func) where TResult : class
         {
             var cacheKey = typeof(TResult).FullName;
 
-            var data = GetDataFromCache<TResult>(cacheKey);
+            var data = GetDataFromCache<TResult>(cache, cacheKey);
             if (data != null)
                 return data;
 
             try
             {
                 var result = await func();
-                return AddDataToCache(cacheKey, result);
+                return AddDataToCache(cache, cacheKey, result);
             }
             catch
             {
