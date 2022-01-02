@@ -92,11 +92,11 @@ public class TenantServiceProvider : IServiceProvider, IDisposable
             if (_tenantProviders.TryGetValue(tenantId, out provider))
                 return provider;
             var tenantProvider = BuildTenantProvider(tenant);
-            var tenantInit = tenantProvider.GetService<ITenantConfigure>();
-            if (tenantInit is not null)
-                tenantInit.Configure(tenant);
+            var tenantConfigure = tenantProvider.GetService<ITenantConfigure>();
+            if (tenantConfigure is not null)
+                tenantConfigure.Configure(tenant);
 
-            // This is a new tenant, configure a new lifetimescope for it using our tenant sensitive configuration method
+            // This is a new tenant, configure a new LifeTimeScope for it using our tenant sensitive configuration method
             _tenantProviders.Add(tenantId, tenantProvider);
 
             return tenantProvider;
