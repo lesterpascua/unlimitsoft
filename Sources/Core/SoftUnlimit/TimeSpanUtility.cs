@@ -25,7 +25,7 @@ namespace SoftUnlimit
         public static TimeSpan DuplicateRetryTime(TimeSpan? curr, TimeSpan? max = null)
         {
             var maxTime = max ?? MaxRetryTime;
-            var currTime = (curr == null) ? InitialRetryTime : (curr.Value + curr.Value);
+            var currTime = (curr is null) ? InitialRetryTime : (curr.Value + curr.Value);
 
             return (currTime < maxTime) ? currTime : maxTime;
         }

@@ -1,7 +1,7 @@
 ﻿using SoftUnlimit.CQRS.Command;
 using System;
 
-namespace SoftUnlimit.Bus.Hangfire
+namespace SoftUnlimit.CQRS.Command
 {
     /// <summary>
     /// 
