@@ -77,7 +77,7 @@ namespace SoftUnlimit.WebApi
 
     public class Program
     {
-        public static void Main(string[] args)
+        public static void Main()
         {
             const string name = "Test";
             const string connString = "Persist Security Info=False;Initial Catalog=SoftUnlimitCloud;Connection Timeout=120;Data Source=.; uid=sa; pwd=no";

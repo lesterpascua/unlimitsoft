@@ -22,7 +22,7 @@ namespace SoftUnlimit.WebApi.Sources.CQRS.Query
 
         public SearchCustomer.FilterVM Filter { get; set; }
 
-        public Paging Pagging { get; set; }
+        public Paging Paging { get; set; }
         public IReadOnlyList<ColumnName> Order { get; set; }
     }
 
@@ -46,7 +46,7 @@ namespace SoftUnlimit.WebApi.Sources.CQRS.Query
                 query = query.Where(p => p.Name.Contains(args.Filter.Name));
 
             var (total, result) = await query
-                .ToSearchAsync(_customerQueryRepository, args.Pagging, args.Order, ct);
+                .ToSearchAsync(_customerQueryRepository, args.Paging, args.Order, ct);
             return new SearchModel<Customer>(total, result);
         }
     }

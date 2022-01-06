@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace SoftUnlimit.WebApi.Sources.Security
 {
@@ -19,10 +20,10 @@ namespace SoftUnlimit.WebApi.Sources.Security
         public const string AuthorizationHeader = "Authorization";
 
 
-        protected override IEnumerable<Claim> CreateClaims(HttpRequest httpRequest)
+        protected override ValueTask<IEnumerable<Claim>> CreateClaims(IServiceProvider provider, HttpRequest httpRequest, string apiKey)
         {
             if (!httpRequest.Headers.TryGetValue(AuthorizationHeader, out StringValues value))
-                return null;
+                return ValueTask.FromResult<IEnumerable<Claim>>(null);
 
             var json = value.FirstOrDefault();
             if (json.StartsWith("ApiKey "))
@@ -51,7 +52,7 @@ namespace SoftUnlimit.WebApi.Sources.Security
                     claims.Add(new Claim(ClaimExtension.Role, role));
                 }
 
-            return claims;
+            return ValueTask.FromResult<IEnumerable<Claim>>(claims);
         }
     }
 }

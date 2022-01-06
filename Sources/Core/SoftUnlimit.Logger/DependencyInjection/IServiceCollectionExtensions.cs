@@ -22,7 +22,7 @@ namespace SoftUnlimit.Logger.DependencyInjection
         /// <param name="compilation"></param>
         /// <param name="setup"></param>
         /// <returns></returns>
-        public static IServiceCollection AddSofUnlimitLogger(this IServiceCollection services, LoggerOption config, string environment = null, string compilation = null, Action<LoggerConfiguration> setup = null)
+        public static IServiceCollection AddSofUnlimitLogger(this IServiceCollection services, LoggerOption config, string? environment = null, string? compilation = null, Action<LoggerConfiguration>? setup = null)
         {
             if (Log.Logger != null)
                 Log.CloseAndFlush();

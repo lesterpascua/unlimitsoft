@@ -10,7 +10,7 @@ namespace SoftUnlimit.Logger
         /// <summary>
         /// 
         /// </summary>
-        ICorrelationContext Context { get; set; }
+        ICorrelationContext? Context { get; set; }
     }
     /// <summary>
     /// 
@@ -20,12 +20,12 @@ namespace SoftUnlimit.Logger
         /// <summary>
         /// 
         /// </summary>
-        private static readonly AsyncLocal<ContextHolder> _current = new();
+        private static readonly AsyncLocal<ContextHolder?> _current = new();
 
         /// <summary>
         /// Assing trace in current context.
         /// </summary>
-        public ICorrelationContext Context
+        public ICorrelationContext? Context
         {
             get => _current.Value?.Context;
             set
@@ -44,7 +44,7 @@ namespace SoftUnlimit.Logger
         #region Nested Classes
         private class ContextHolder
         {
-            public ICorrelationContext Context;
+            public ICorrelationContext? Context;
         }
         #endregion
     }

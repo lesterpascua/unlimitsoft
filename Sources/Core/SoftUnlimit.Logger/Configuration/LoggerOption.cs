@@ -15,6 +15,6 @@ namespace SoftUnlimit.Logger.Configuration
         /// <summary>
         /// 
         /// </summary>
-        public IDictionary<string, LogLevel> Override { get; set; }
+        public IDictionary<string, LogLevel>? Override { get; set; }
     }
 }

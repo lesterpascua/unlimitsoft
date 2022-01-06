@@ -11,7 +11,7 @@ namespace SoftUnlimit.Logger
         /// Correlation identifier. In contract with trace id correlation is the id of the entire flow, so in you want keep the same 
         /// correlation for a flow use x-correlarion-id header in all request.
         /// </summary>
-        string CorrelationId { get; }
+        string? CorrelationId { get; }
         /// <summary>
         /// Set correlation data. If is already assign throw exception.
         /// </summary>
@@ -24,7 +24,7 @@ namespace SoftUnlimit.Logger
     public sealed class DefaultCorrelationContext : ICorrelationContext
     {
         /// <inheritdoc />
-        public string CorrelationId { get; private set; }
+        public string? CorrelationId { get; private set; }
 
         /// <inheritdoc />
         public void SetCorrelationId(string correlationId)
