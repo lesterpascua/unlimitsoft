@@ -41,7 +41,7 @@ namespace SoftUnlimit.Web.AspNet.Security.Authentication
         protected internal Func<ApiKeyError, string> ErrorBuilder { get; }
 
         /// <summary>
-        /// Return claims associate to principal identity. The result could be null. 
+        /// Return claims associate to principal identity. If the result is null not autorize will be return. 
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="httpRequest"></param>

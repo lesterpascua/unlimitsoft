@@ -13,9 +13,9 @@ public static class IServiceCollectionExtensions
     /// <typeparam name="TService">The type of the implementation to use.</typeparam>
     /// <param name="services"></param>
     /// <returns></returns>
-    public static TenantBuilder AddMultiTenancy<TService>(this IServiceCollection services) where TService : class, ITenantConfigureServices<Tenant>
+    public static TenantBuilder AddMultiTenancy<TService>(this IServiceCollection services) where TService : class, ITenantConfigureServices
     {
-        services.AddSingleton<ITenantConfigureServices<Tenant>, TService>();
+        services.AddSingleton<ITenantConfigureServices, TService>();
         return new(services);
     }
 }

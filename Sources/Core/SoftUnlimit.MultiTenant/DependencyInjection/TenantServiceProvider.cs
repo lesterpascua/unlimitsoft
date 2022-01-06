@@ -114,7 +114,7 @@ public class TenantServiceProvider : IServiceProvider, IDisposable
             services.Add(CreateDescriptor(_descriptors[i]));
         services.AddSingleton<ITenantProviderReset>(p => new TenantProviderReset(tenant, this));
 
-        var setup = _root.GetService<ITenantConfigureServices<Tenant>>();
+        var setup = _root.GetService<ITenantConfigureServices>();
         if (setup is not null)
             setup.ConfigureTenantServices(tenant, services);
 

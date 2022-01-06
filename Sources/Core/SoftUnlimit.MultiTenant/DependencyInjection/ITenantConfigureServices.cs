@@ -6,13 +6,13 @@ namespace SoftUnlimit.MultiTenant.DependencyInjection
     /// Define a tenant configuration
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public interface ITenantConfigureServices<T> where T : Tenant
+    public interface ITenantConfigureServices
     {
         /// <summary>
         /// COnfigure service for some specific tenant.
         /// </summary>
         /// <param name="tenant"></param>
         /// <param name="services"></param>
-        void ConfigureTenantServices(T tenant, IServiceCollection services);
+        void ConfigureTenantServices(Tenant tenant, IServiceCollection services);
     }
 }
