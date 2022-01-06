@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using SoftUnlimit.Reflection;
 using SoftUnlimit.Web.Client;
 using System;
@@ -83,7 +84,7 @@ namespace SoftUnlimit.DespendencyInjections
                         var factory = provider.GetService<IHttpClientFactory>();
 
                         var httpClient = factory.CreateClient(key);
-                        var apiClient = apiClientFactory?.Invoke(serviceType, httpClient) ?? new DefaultApiClient(httpClient);
+                        var apiClient = apiClientFactory?.Invoke(serviceType, httpClient) ?? new DefaultApiClient(httpClient, logger: provider.GetService<ILogger<DefaultApiClient>>());
                         var policy = expirationPolicyFactory?.Invoke(serviceType) ?? new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(10) };
 
                         object service = serviceFactory?.Invoke(serviceType, apiClient, MemoryCache.Default, policy, provider);

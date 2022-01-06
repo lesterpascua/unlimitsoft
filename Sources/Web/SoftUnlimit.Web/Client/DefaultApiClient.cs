@@ -1,4 +1,5 @@
-﻿using SoftUnlimit.Json;
+﻿using Microsoft.Extensions.Logging;
+using SoftUnlimit.Json;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -17,15 +18,18 @@ namespace SoftUnlimit.Web.Client
     public class DefaultApiClient : IApiClient
     {
         private readonly HttpClient _httpClient;
+        private readonly ILogger<DefaultApiClient> _logger;
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="httpClient"></param>
         /// <param name="baseUrl"></param>
-        public DefaultApiClient(HttpClient httpClient, string baseUrl = null)
+        /// <param name="logger"></param>
+        public DefaultApiClient(HttpClient httpClient, string baseUrl = null, ILogger<DefaultApiClient> logger = null)
         {
             _httpClient = httpClient;
+            _logger = logger;
             if (!string.IsNullOrEmpty(baseUrl))
             {
                 if (baseUrl[baseUrl.Length - 1] != '/')
@@ -160,10 +164,13 @@ namespace SoftUnlimit.Web.Client
             HttpContent httpContent = null;
             try
             {
+                _logger?.LogInformation("HttpRequest for {Url}, Body = {Json}", completeUri, jsonContent);
                 if (jsonContent is not null)
                     httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
                 var (json, code) = await SendWithContentAsync(method, completeUri, httpContent, setup, ct);
+
+                _logger?.LogInformation("HttpResponse for {Url}, Result = {Code}, Body = {Json}", completeUri, code, json);
                 var result = deserializer(json);
 
                 return (result, code);
