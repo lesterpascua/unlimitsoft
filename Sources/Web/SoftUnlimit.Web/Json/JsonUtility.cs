@@ -130,15 +130,21 @@ namespace SoftUnlimit.Json
         /// <param name="data"></param>
         /// <param name="settings"></param>
         /// <returns></returns>
-        public static T Cast<T>(object data, object settings = null) => data switch
+        public static T Cast<T>(object data, object settings = null)
         {
-            string body => Deserialize<T>(body, settings),
-            JObject body => body.ToObject<T>(),
-            JsonElement body => Deserialize<T>(body.GetRawText(), settings),
-            JsonProperty body => Deserialize<T>(body.Value.GetRawText(), settings),
-            T body => body,
-            _ => throw new NotSupportedException()
-        };
+            if (data is null)
+                return default;
+
+            return data switch
+            {
+                string body => Deserialize<T>(body, settings),
+                JObject body => body.ToObject<T>(),
+                JsonElement body => Deserialize<T>(body.GetRawText(), settings),
+                JsonProperty body => Deserialize<T>(body.Value.GetRawText(), settings),
+                T body => body,
+                _ => throw new NotSupportedException()
+            };
+        }
 
         /// <summary>
         /// Get json token follow the specific path.
