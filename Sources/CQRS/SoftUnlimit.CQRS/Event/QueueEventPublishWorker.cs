@@ -118,12 +118,13 @@ namespace SoftUnlimit.CQRS.Event
                 var eventSourcedRepository = scope.ServiceProvider.GetService<TEventSourcedRepository>();
 
                 int page = 0;
+                NonPublishVersionedEventPayload[] nonPublishEvents;
                 var pending = new List<NonPublishVersionedEventPayload>();
-                NonPublishVersionedEventPayload[] nonPublishEvents = null;
                 do
                 {
                     var paging = new Paging { Page = page++, PageSize = 1000 };
-                    pending.AddRange(await eventSourcedRepository.GetNonPublishedEventsAsync(paging, ct));
+                    nonPublishEvents = await eventSourcedRepository.GetNonPublishedEventsAsync(paging, ct);
+                    pending.AddRange(nonPublishEvents);
                 } while (nonPublishEvents?.Any() == true);
 
                 pending.Sort((x, y) =>
