@@ -5,6 +5,7 @@ using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.CQRS.EventSourcing.Json;
 using SoftUnlimit.Data;
+using SoftUnlimit.Web.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -40,16 +41,21 @@ namespace SoftUnlimit.Tests.SoftUnlimit.CQRS.Event
                 });
 
             var repository = Substitute.For<IEventSourcedRepository<JsonVersionedEventPayload, string>>();
-            repository.GetNonPublishedEventsAsync(Arg.Any<CancellationToken>())
-                .Returns(x => {
+            repository.GetNonPublishedEventsAsync(Arg.Any<Paging>(), Arg.Any<CancellationToken>())
+                .Returns(x =>
+                {
+                    var paging = x.ArgAt<Paging>(0);
                     return _data
                         .AsQueryable()
                         .Where(p => p.IsPubliched == false)
+                        .Skip(paging.Page * paging.PageSize)
+                        .Take(paging.PageSize)
                         .Select(s => new NonPublishVersionedEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
                         .ToArray();
                 });
             repository.GetEventsAsync(Arg.Any<Guid[]>(), Arg.Any<CancellationToken>())
-                .Returns(x => {
+                .Returns(x =>
+                {
                     var ids = x.ArgAt<Guid[]>(0);
                     return _data
                         .AsQueryable()

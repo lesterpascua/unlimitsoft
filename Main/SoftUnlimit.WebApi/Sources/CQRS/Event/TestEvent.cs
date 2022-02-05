@@ -2,6 +2,7 @@
 using SoftUnlimit.CQRS.Memento;
 using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.CQRS.Query;
+using SoftUnlimit.Event;
 using SoftUnlimit.WebApi.Sources.Data.Model;
 using System;
 using System.Threading;

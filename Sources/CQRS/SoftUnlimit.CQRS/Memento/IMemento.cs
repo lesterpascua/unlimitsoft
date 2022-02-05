@@ -115,8 +115,9 @@ namespace SoftUnlimit.CQRS.Memento
         private TEntity LoadEntityFromHistory(TVersionedEventPayload[] eventsPayload)
         {
             var entity = new TEntity();
-            foreach (var eventPayload in eventsPayload)
+            for (var i = 0; i < eventsPayload.Length; i++)
             {
+                var eventPayload = eventsPayload[i];
                 var eventType = _nameResolver.Resolver(eventPayload.EventName);
                 var @event = FromEvent(eventType, eventPayload.Payload);
 

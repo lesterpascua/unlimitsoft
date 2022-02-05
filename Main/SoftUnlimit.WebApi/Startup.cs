@@ -137,17 +137,18 @@ namespace SoftUnlimit.WebApi
                             } else
                                 options.UseSqlServer(connString);
                         },
+                        
+                        IEventSourcedRepository = typeof(IMyEventSourcedRepository),
+                        EventSourcedRepository = typeof(MyEventSourcedRepository),
+                        MediatorDispatchEventSourced = typeof(MyMediatorDispatchEventSourced),
                     }
                 },
                 new CQRSSettings
                 {
                     Assemblies = new Assembly[] { typeof(Startup).Assembly },
-                    IEventSourcedRepository = typeof(IMyEventSourcedRepository),
-                    EventSourcedRepository = typeof(MyEventSourcedRepository),
                     ICommandHandler = typeof(IMyCommandHandler<>),
                     IEventHandler = typeof(IMyEventHandler<>),
                     IQueryHandler = typeof(IMyQueryHandler<,>),
-                    MediatorDispatchEventSourced = typeof(MyMediatorDispatchEventSourced),
                     EventDispatcher = provider => new ServiceProviderEventDispatcher(
                         provider,
                         preeDispatch: (provider, e) => LoggerUtility.SafeUpdateCorrelationContext(provider.GetService<ICorrelationContextAccessor>(), provider.GetService<ICorrelationContext>(), e.CorrelationId),
