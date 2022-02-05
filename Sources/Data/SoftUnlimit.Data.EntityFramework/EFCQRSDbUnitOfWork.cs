@@ -55,16 +55,19 @@ namespace SoftUnlimit.Data.EntityFramework
         /// <returns></returns>
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
         {
+            if (EventMediator is null && EventSourcedMediator is null)
+                return await DbContext.SaveChangesAsync(cancellationToken);
+
             IDbContextTransaction transaction = DbContext.Database.CurrentTransaction;
             bool allowTransaction = DbContext.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory";
-            if (allowTransaction && transaction == null)
+            if (allowTransaction && transaction is null)
             {
                 return await DbContext.Database
                     .CreateExecutionStrategy()
                     .ExecuteAsync(() => InnerTransactionSaveChangesAsync(transaction, allowTransaction, cancellationToken));
             }
-            else
-                return await InnerTransactionSaveChangesAsync(transaction, allowTransaction, cancellationToken);
+
+            return await InnerTransactionSaveChangesAsync(transaction, allowTransaction, cancellationToken);
         }
 
 
@@ -121,7 +124,7 @@ namespace SoftUnlimit.Data.EntityFramework
             Task[] tasks = new Task[2] { Task.CompletedTask, Task.CompletedTask };
 
             var eventMediator = EventMediator;
-            if (eventMediator != null)
+            if (eventMediator is not null)
             {
                 foreach (var entity in changedEntities.OfType<IAggregateRoot>())
                 {
@@ -133,7 +136,7 @@ namespace SoftUnlimit.Data.EntityFramework
             }
 
             var eventSourcedMediator = EventSourcedMediator;
-            if (eventSourcedMediator != null)
+            if (eventSourcedMediator is not null)
             {
                 foreach (var entity in changedEntities.OfType<IEventSourced>())
                 {

@@ -108,7 +108,7 @@ namespace SoftUnlimit.CQRS.Event
         {
             if (_disposed)
                 throw new ObjectDisposedException(GetType().FullName);
-            if (_backgoundWorker != null)
+            if (_backgoundWorker is not null)
                 throw new InvalidProgramException("Already initialized");
 
             // Know issue if all services start at the same time this will be a problem because the event will load multiples times.

@@ -1,5 +1,6 @@
 ﻿using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.CQRS.EventSourcing;
+using SoftUnlimit.Event;
 using System;
 using System.Linq;
 using System.Threading;
@@ -12,33 +13,33 @@ namespace SoftUnlimit.CQRS.Memento
     /// </summary>
     /// <typeparam name="TEntity"></typeparam>
     public interface IMemento<TEntity>
-        where TEntity : class, IEventSourced, new()
     {
         /// <summary>
         /// Build entity in the moment of the version supplied
         /// </summary>
-        /// <param name="sourceId"></param>
+        /// <param name="id"></param>
         /// <param name="version">Version of the entity.</param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task<TEntity> FindByVersionAsync(string sourceId, long? version = null, CancellationToken ct = default);
+        Task<TEntity> FindByVersionAsync(string id, long? version = null, CancellationToken ct = default);
         /// <summary>
         /// Build entity in the moment of the date supplied.
         /// </summary>
-        /// <param name="sourceId"></param>
+        /// <param name="id"></param>
         /// <param name="dateTime">Date where we need to check the entity.</param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task<TEntity> FindByCreateAsync(string sourceId, DateTime? dateTime = null, CancellationToken ct = default);
+        Task<TEntity> FindByCreateAsync(string id, DateTime? dateTime = null, CancellationToken ct = default);
     }
     /// <summary>
     /// Load the entity in some moment of the system history.
     /// </summary>
+    /// <typeparam name="TInterface"></typeparam>
     /// <typeparam name="TEntity"></typeparam>
     /// <typeparam name="TVersionedEventPayload"></typeparam>
     /// <typeparam name="TPayload"></typeparam>
-    public abstract class Memento<TEntity, TVersionedEventPayload, TPayload> : IMemento<TEntity>
-        where TEntity : class, IEventSourced, new()
+    public abstract class Memento<TInterface, TEntity, TVersionedEventPayload, TPayload> : IMemento<TInterface>
+        where TEntity : class, TInterface, IEventSourced, new()
         where TVersionedEventPayload : VersionedEventPayload<TPayload>
     {
         private readonly bool _snapshot;
@@ -59,30 +60,30 @@ namespace SoftUnlimit.CQRS.Memento
         }
 
         /// <inheritdoc />
-        public async Task<TEntity> FindByVersionAsync(string sourceId, long? version = null, CancellationToken ct = default)
+        public async Task<TInterface> FindByVersionAsync(string sourceId, long? version = null, CancellationToken ct = default)
         {
             if (_snapshot)
             {
                 var eventPayload = await _eventSourcedRepository.GetAsync(sourceId, version, ct);
                 if (eventPayload is null)
-                    return null;
+                    return default;
 
                 return LoadEntityFromSnapshot(eventPayload);
             }
 
             var eventsPayload = await _eventSourcedRepository.GetHistoryAsync(sourceId, version ?? long.MaxValue, ct);
             if (eventsPayload?.Any() != true)
-                return null;
+                return default;
             return LoadEntityFromHistory(eventsPayload);
         }
         /// <inheritdoc />
-        public async Task<TEntity> FindByCreateAsync(string sourceId, DateTime? dateTime = null, CancellationToken ct = default)
+        public async Task<TInterface> FindByCreateAsync(string sourceId, DateTime? dateTime = null, CancellationToken ct = default)
         {
             if (_snapshot)
             {
                 var eventPayload = await _eventSourcedRepository.GetAsync(sourceId, dateTime, ct);
                 if (eventPayload is null)
-                    return null;
+                    return default;
 
                 return LoadEntityFromSnapshot(eventPayload);
             }
@@ -90,7 +91,7 @@ namespace SoftUnlimit.CQRS.Memento
 
             var eventsPayload = await _eventSourcedRepository.GetHistoryAsync(sourceId, dateTime ?? DateTime.MaxValue, ct);
             if (eventsPayload?.Any() != true)
-                return null;
+                return default;
             return LoadEntityFromHistory(eventsPayload);
         }
 
@@ -100,11 +101,11 @@ namespace SoftUnlimit.CQRS.Memento
         /// <param name="type"></param>
         /// <param name="payload"></param>
         /// <returns></returns>
-        protected abstract IMementoEvent<TEntity> FromEvent(Type type, TPayload payload);
+        protected abstract IMementoEvent<TInterface> FromEvent(Type type, TPayload payload);
 
 
         #region Nested Classes
-        private TEntity LoadEntityFromSnapshot(TVersionedEventPayload eventPayload)
+        private TInterface LoadEntityFromSnapshot(TVersionedEventPayload eventPayload)
         {
             var eventType = _nameResolver.Resolver(eventPayload.EventName);
             var @event = FromEvent(eventType, eventPayload.Payload);

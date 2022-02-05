@@ -1,6 +1,4 @@
-﻿using SoftUnlimit.Event;
-
-namespace SoftUnlimit.CQRS.Memento
+﻿namespace SoftUnlimit.Event
 {
     /// <summary>
     /// 

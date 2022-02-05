@@ -138,6 +138,23 @@ namespace SoftUnlimit.Data.EntityFramework.DependencyInjection
             }
             #endregion
 
+
+            if (settings.MediatorDispatchEventSourced is not null && settings.IMediatorDispatchEventSourced is not null)
+                services.AddScoped(settings.IMediatorDispatchEventSourced, settings.MediatorDispatchEventSourced);
+
+            #region Versioned Repository
+            if (settings.IEventSourcedRepository is not null && settings.EventSourcedRepository is not null)
+            {
+                var constraints = settings.IEventSourcedRepository
+                    .GetInterfaces()
+                    .Any(i => i.GetGenericTypeDefinition() == typeof(IEventSourcedRepository<,>));
+                if (!constraints)
+                    throw new InvalidOperationException("IVersionedEventRepository don't implement IEventSourcedRepository<TVersionedEventPayload, TPayload>");
+
+                services.AddScoped(settings.IEventSourcedRepository, settings.EventSourcedRepository);
+            }
+            #endregion
+
             return services;
         }
 

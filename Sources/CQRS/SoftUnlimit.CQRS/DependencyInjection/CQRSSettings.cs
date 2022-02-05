@@ -19,14 +19,6 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         public IEnumerable<Assembly> Assemblies { get; set; }
 
         /// <summary>
-        /// Interface type for versioned event repository
-        /// </summary>
-        public Type IEventSourcedRepository { get; set; }
-        /// <summary>
-        /// Materialized type for versioned event repository
-        /// </summary>
-        public Type EventSourcedRepository { get; set; }
-        /// <summary>
         /// typeof(IQueryAsyncHandler&lt;,&gt;)
         /// </summary>
         public Type IQueryHandler { get; set; }
@@ -41,10 +33,6 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         /// </summary>
         public Type IEventHandler { get; set; }
 
-        /// <summary>
-        /// Materialized type derived of <see cref="IMediatorDispatchEventSourced"/> interface. 
-        /// </summary>
-        public Type MediatorDispatchEventSourced { get; set; }
         /// <summary>
         /// Event dispatcher used to handler events.
         /// </summary>

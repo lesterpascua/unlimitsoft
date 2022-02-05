@@ -94,7 +94,7 @@ namespace SoftUnlimit.EventBus.Azure
                         throw new NotSupportedException("Only allow json payload");
 
                     var eventType = _eventNameResolver.Resolver(eventPayload.EventName);
-                    if (eventType != null)
+                    if (eventType is not null)
                     {
                         var @event = JsonUtility.Deserialize(eventType, payload);
                         await SendMessageAsync(@event, eventPayload.Id, eventPayload.EventName, eventPayload.CorrelationId, type, ct);

@@ -33,7 +33,7 @@ namespace SoftUnlimit.Logger.Enricher
         /// <param name="propertyFactory"></param>
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
         {
-            if (_accesor.Context == null)
+            if (_accesor.Context is null)
                 return;
 
             var traceContext = _accesor.Context;

@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.Data.EntityFramework.Configuration;
 using System;
 
@@ -94,5 +95,23 @@ namespace SoftUnlimit.Data.EntityFramework.DependencyInjection
         /// Custom register write DbContext
         /// </summary>
         public Action<IServiceCollection, UnitOfWorkOptions> WriteCustomRegister { get; set; }
+
+        /// <summary>
+        /// Interface type for versioned event repository
+        /// </summary>
+        public Type IEventSourcedRepository { get; set; }
+        /// <summary>
+        /// Materialized type for versioned event repository
+        /// </summary>
+        public Type EventSourcedRepository { get; set; }
+
+        /// <summary>
+        /// Interface type derived of <see cref="CQRS.EventSourcing.IMediatorDispatchEventSourced"/> interface. 
+        /// </summary>
+        public Type IMediatorDispatchEventSourced { get; set; }
+        /// <summary>
+        /// Materialized type derived of <see cref="CQRS.EventSourcing.IMediatorDispatchEventSourced"/> interface. 
+        /// </summary>
+        public Type MediatorDispatchEventSourced { get; set; }
     }
 }

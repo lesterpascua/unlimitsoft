@@ -61,7 +61,11 @@ namespace SoftUnlimit.CQRS.Event
             Type eventType = @event.GetType();
 
             var handler = GetEventHandler(provider, eventType);
-            return await ExecuteHandlerForCommandAsync(handler, @event, eventType, UseCache, ct);
+            if (handler is not null)
+                return await ExecuteHandlerForCommandAsync(handler, @event, eventType, UseCache, ct);
+
+            _logger.LogWarning("There is no handler associated with this event");
+            return @event.OkResponse();
         }
         #region Static Methods
 
@@ -74,11 +78,7 @@ namespace SoftUnlimit.CQRS.Event
         private static IEventHandler GetEventHandler(IServiceProvider scopeProvider, Type eventType)
         {
             Type serviceType = typeof(IEventHandler<>).MakeGenericType(eventType);
-            var eventHandler = (IEventHandler)scopeProvider.GetService(serviceType);
-            if (eventHandler == null)
-                throw new KeyNotFoundException("There is no handler associated with this event");
-
-            return eventHandler;
+            return scopeProvider.GetService(serviceType) as IEventHandler;
         }
         private static async Task<IEventResponse> ExecuteHandlerForCommandAsync(IEventHandler handler, IEvent e, Type commandType, bool useCache, CancellationToken ct)
         {
