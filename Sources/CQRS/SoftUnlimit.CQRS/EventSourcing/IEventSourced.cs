@@ -3,6 +3,7 @@ using SoftUnlimit.CQRS.Data;
 using SoftUnlimit.Event;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 
 namespace SoftUnlimit.CQRS.EventSourcing
@@ -18,7 +19,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
         long Version { get; }
 
         /// <summary>
-        /// 
+        /// Remove all pending event asociate to the entity.
         /// </summary>
         void ClearVersionedEvents();
         /// <summary>
@@ -26,6 +27,12 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// </summary>
         /// <returns></returns>
         IReadOnlyCollection<IVersionedEvent> GetVersionedEvents();
+
+        /// <summary>
+        /// Gets the collection of old events used to build the entity.
+        /// </summary>
+        /// <returns></returns>
+        IReadOnlyCollection<IVersionedEvent> GetOldVersionedEvents();
     }
     /// <summary>
     /// Base class for event sourced entities that implements <see cref="IEventSourced"/>. 
@@ -38,6 +45,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
     {
         private long _version;
         private readonly List<IVersionedEvent> _versionedEvents;
+        private readonly IReadOnlyCollection<IVersionedEvent> _oldEvents;
 
 
         /// <summary>
@@ -48,6 +56,19 @@ namespace SoftUnlimit.CQRS.EventSourcing
             _version = -1;
             _versionedEvents = new List<IVersionedEvent>();
         }
+        /// <summary>
+        /// Create a Event Sourced initial amount of event
+        /// </summary>
+        /// <param name="oldEvents">List of event asociate to the entity at this moment.</param>
+        protected EventSourced(IReadOnlyCollection<IVersionedEvent> oldEvents) 
+            : this()
+        {
+            if (oldEvents?.Any() == true)
+            {
+                _oldEvents = oldEvents;
+                _version = oldEvents.Max(p => p.Version);
+            }
+        }
 
         #region Public Properties
 
@@ -56,15 +77,14 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// </summary>
         public long Version { get => _version; set => _version = value; }
 
-        /// <summary>
-        /// Remove all pending event asociate to the entity.
-        /// </summary>
+
+        /// <inheritdoc />
         public void ClearVersionedEvents() => _versionedEvents.Clear();
-        /// <summary>
-        /// Gets the collection of new events since the entity was loaded, as a consequence of command handling.
-        /// </summary>
-        /// <returns></returns>
+        /// <inheritdoc />
         public IReadOnlyCollection<IVersionedEvent> GetVersionedEvents() => _versionedEvents;
+
+        /// <inheritdoc />
+        public IReadOnlyCollection<IVersionedEvent> GetOldVersionedEvents() => _oldEvents;
 
         /// <summary>
         /// Attach the event to the entity

@@ -7,6 +7,14 @@ using System.Threading.Tasks;
 namespace SoftUnlimit.CQRS.Event
 {
     /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="Id"></param>
+    /// <param name="Created"></param>
+    /// <param name="Scheduled"></param>
+    public sealed record PublishEventInfo(Guid Id, DateTime Created, DateTime? Scheduled);
+
+    /// <summary>
     /// Create a backgound process to publish all dispatcher events.
     /// </summary>
     public interface IEventPublishWorker
@@ -35,5 +43,12 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="ct"></param>
         /// <returns></returns>
         ValueTask PublishAsync(IEnumerable<IEvent> events, CancellationToken ct = default);
+        /// <summary>
+        /// Add collection of events to worker. To publish in the bus.
+        /// </summary>
+        /// <param name="events"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        ValueTask PublishAsync(IEnumerable<PublishEventInfo> events, CancellationToken ct = default);
     }
 }

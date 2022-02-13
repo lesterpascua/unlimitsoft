@@ -175,6 +175,16 @@ namespace SoftUnlimit.CQRS.Event
             }
             return ValueTaskExtensions.CompletedTask;
         }
+        /// <inheritdoc />
+        public ValueTask PublishAsync(IEnumerable<PublishEventInfo> events, CancellationToken ct = default)
+        {
+            if (_disposed)
+                throw new ObjectDisposedException(GetType().FullName);
+
+            foreach (var @event in events)
+                _pending.TryAdd(@event.Id, new Bucket(@event.Scheduled, @event.Created));
+            return ValueTaskExtensions.CompletedTask;
+        }
 
         /// <summary>
         /// Verified if exist any new event to publish
@@ -251,7 +261,8 @@ namespace SoftUnlimit.CQRS.Event
                 }
             }
         }
-        
+
+
 
         #region Nested Classes
         /// <summary>

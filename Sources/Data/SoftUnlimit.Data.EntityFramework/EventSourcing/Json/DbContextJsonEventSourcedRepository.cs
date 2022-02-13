@@ -134,7 +134,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
             _logger.LogDebug("SavePendingCangesAsync {Amount} JsonVersionedEventPayload", amount);
         }
         /// <inheritdoc />
-        public virtual async Task<JsonVersionedEventPayload> CreateAsync(JsonVersionedEventPayload eventPayload, bool forceSave = false, CancellationToken ct = default)
+        public virtual async ValueTask<JsonVersionedEventPayload> CreateAsync(JsonVersionedEventPayload eventPayload, bool forceSave = false, CancellationToken ct = default)
         {
             await _repository.AddAsync(eventPayload, ct);
             if (forceSave)

@@ -111,7 +111,7 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <param name="forceSave">Indicate the save should happend in this moment.</param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task<JsonVersionedEventPayload> CreateAsync(JsonVersionedEventPayload eventPayload, bool forceSave = false, CancellationToken ct = default);
+        ValueTask<JsonVersionedEventPayload> CreateAsync(JsonVersionedEventPayload eventPayload, bool forceSave = false, CancellationToken ct = default);
         /// <summary>
         /// Create multiples versioned event to the storage
         /// </summary>
