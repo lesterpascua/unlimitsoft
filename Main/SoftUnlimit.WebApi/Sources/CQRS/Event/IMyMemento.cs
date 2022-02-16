@@ -12,7 +12,7 @@ namespace SoftUnlimit.WebApi.Sources.CQRS.Event
         where TEntity : class, IEventSourced, new()
     {
         public MyMemento(IEventNameResolver nameResolver, IEventSourcedRepository<JsonVersionedEventPayload, string> eventSourcedRepository, bool snapshot = false) : 
-            base(nameResolver, eventSourcedRepository, snapshot)
+            base(nameResolver, eventSourcedRepository, null, snapshot)
         {
         }
 

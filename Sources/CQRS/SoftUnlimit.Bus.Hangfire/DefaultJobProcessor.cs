@@ -77,10 +77,11 @@ namespace SoftUnlimit.Bus.Hangfire
             var props = command.GetProps<CommandProps>();
             try
             {
+                _preeDispatch?.Invoke(command, processor.Metadata);
+
                 _logger.LogDebug("Start process command: {@Command}", command);
                 _logger.LogInformation("Start process {Job} command: {Id}", processor.Metadata.Id, props.Id);
 
-                _preeDispatch?.Invoke(command, processor.Metadata);
                 response = await _dispatcher.DispatchAsync(_provider, command, processor.CancellationToken);
             }
             catch (Exception exc)
