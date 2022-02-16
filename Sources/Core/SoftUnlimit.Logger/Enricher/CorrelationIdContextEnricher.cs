@@ -1,5 +1,6 @@
 ﻿using Serilog.Core;
 using Serilog.Events;
+using System.IO;
 
 namespace SoftUnlimit.Logger.Enricher
 {
@@ -33,11 +34,12 @@ namespace SoftUnlimit.Logger.Enricher
         /// <param name="propertyFactory"></param>
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
         {
-            if (_accesor.Context is null)
+            if (!logEvent.Properties.TryGetValue("RequestId", out var requestId) && _accesor.Context is null)
                 return;
 
-            var traceContext = _accesor.Context;
-            var correlationId = traceContext.CorrelationId;
+            var correlationId = _accesor.Context?.CorrelationId;
+            if (correlationId is null)
+                correlationId = requestId.ToString().Replace("\"", string.Empty);
             var correlationIdProperty = new LogEventProperty(Name, new ScalarValue(correlationId));
             logEvent.AddOrUpdateProperty(correlationIdProperty);
         }
