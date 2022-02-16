@@ -20,7 +20,7 @@ namespace SoftUnlimit.Bus.Hangfire
         private readonly ICommandDispatcher _dispatcher;
         private readonly Func<Exception, Task> _onError;
         private readonly ICommandCompletionService _completionService;
-        private readonly Action<ICommand, BackgroundJob> _preeDispatch;
+        private readonly Action<IServiceProvider, ICommand, BackgroundJob> _preeDispatch;
         private readonly ILogger<DefaultJobProcessor> _logger;
 
         private static string _errorCode;
@@ -44,7 +44,7 @@ namespace SoftUnlimit.Bus.Hangfire
             string errorCode = null,
             Func<Exception, Task> onError = null,
             ICommandCompletionService completionService = null,
-            Action<ICommand, BackgroundJob> preeDispatch = null,
+            Action<IServiceProvider, ICommand, BackgroundJob> preeDispatch = null,
             ILogger<DefaultJobProcessor> logger = null
         )
         {
@@ -77,7 +77,7 @@ namespace SoftUnlimit.Bus.Hangfire
             var props = command.GetProps<CommandProps>();
             try
             {
-                _preeDispatch?.Invoke(command, processor.Metadata);
+                _preeDispatch?.Invoke(_provider, command, processor.Metadata);
 
                 _logger.LogDebug("Start process command: {@Command}", command);
                 _logger.LogInformation("Start process {Job} command: {Id}", processor.Metadata.Id, props.Id);
