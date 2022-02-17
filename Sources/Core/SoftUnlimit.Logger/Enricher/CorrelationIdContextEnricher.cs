@@ -10,7 +10,10 @@ namespace SoftUnlimit.Logger.Enricher
     /// </summary>
     public class CorrelationIdContextEnricher : ILogEventEnricher
     {
-        private const string Name = "CorrelationId";
+        /// <summary>
+        /// Correlation Property name
+        /// </summary>
+        public const string Name = "CorrelationId";
         private readonly ICorrelationContextAccessor _accesor;
 
 
