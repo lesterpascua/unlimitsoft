@@ -53,8 +53,8 @@ namespace SoftUnlimit.CQRS.Event
         /// <inheritdoc />
         public async Task<IEventResponse> DispatchAsync(IServiceProvider provider, IEvent @event, CancellationToken ct = default)
         {
-            _logger?.LogDebug("Process event: {@Event}", @event);
             _preeDispatch?.Invoke(provider, @event);
+            _logger?.LogDebug("Process event: {@Event}", @event);
 
             //
             // get handler and execute event.

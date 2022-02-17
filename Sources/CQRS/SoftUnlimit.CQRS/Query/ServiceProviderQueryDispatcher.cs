@@ -59,11 +59,12 @@ namespace SoftUnlimit.CQRS.Query
         /// <returns></returns>
         public async Task<IQueryResponse> DispatchAsync<TResult>(IQuery query, CancellationToken ct = default)
         {
+            _preeDispatch?.Invoke(_provider, query);
+
             var queryType = query.GetType();
             var entityType = typeof(TResult);
 
             _logger?.LogDebug("Execute Query type: {Type}", queryType);
-            _preeDispatch?.Invoke(_provider, query);
 
             var handler = GetQueryHandler(_provider, entityType, queryType);
             var handlerType = handler.GetType();

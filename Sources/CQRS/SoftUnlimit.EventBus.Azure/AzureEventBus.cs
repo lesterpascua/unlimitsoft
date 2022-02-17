@@ -61,7 +61,11 @@ namespace SoftUnlimit.EventBus.Azure
 
 
         /// <inheritdoc/>
-        public ValueTask DisposeAsync() => _client.DisposeAsync();
+        public async ValueTask DisposeAsync()
+        {
+            await _client.DisposeAsync();
+            GC.SuppressFinalize(this);
+        }
         /// <inheritdoc />
         public ValueTask StartAsync(TimeSpan waitRetry, CancellationToken ct = default)
         {

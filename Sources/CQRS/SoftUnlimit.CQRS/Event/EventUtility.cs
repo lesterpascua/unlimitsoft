@@ -21,16 +21,13 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="eventName"></param>
         /// <param name="envelop"></param>
         /// <param name="dispatcher"></param>
-        /// <param name="resolver"></param>
+        /// <param name="resolver">Contains the map between name of the event and event type</param>
         /// <param name="beforeProcess"></param>
         /// <param name="onError"></param>
         /// <param name="logger"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public static async Task<(IEventResponse, Exception)> ProcessAsync<TEvent>(
-            string eventName, MessageEnvelop envelop, IEventDispatcher dispatcher, IEventNameResolver resolver,
-            Action<TEvent> beforeProcess = null, Func<Exception, TEvent, MessageEnvelop, CancellationToken, Task> onError = null, ILogger logger = null, CancellationToken ct = default
-        )
+        public static async Task<(IEventResponse, Exception)> ProcessAsync<TEvent>(string eventName, MessageEnvelop envelop, IEventDispatcher dispatcher, IEventNameResolver resolver, Action<TEvent> beforeProcess = null, Func<Exception, TEvent, MessageEnvelop, CancellationToken, Task> onError = null, ILogger logger = null, CancellationToken ct = default)
             where TEvent : class, IEvent
         {
             TEvent curr = null;
@@ -66,7 +63,7 @@ namespace SoftUnlimit.CQRS.Event
             catch (Exception e)
             {
                 ex = e;
-                logger?.LogError(ex, "Error handling event {Type}, payload: {Event}, {@Response}", envelop.MessajeType, envelop.Messaje, responses);
+                logger?.LogError(ex, "Error handling event {Type}, {CorrelationId} payload: {Event}, {@Response}", envelop.MessajeType, curr?.CorrelationId, envelop.Messaje, responses);
 
                 if (onError != null)
                     await onError(ex, curr, envelop, ct);
@@ -77,10 +74,9 @@ namespace SoftUnlimit.CQRS.Event
         private static async Task<IEventResponse> DispatchEvent(IEventDispatcher eventDispatcher, ILogger logger, IEvent @event, CancellationToken ct)
         {
             var responses = await eventDispatcher.DispatchAsync(@event, ct);
-            logger?.LogInformation(
-@$"Procesed
-Event: {{@Event}}
-Response: {{@Response}}", @event, responses);
+            logger?.LogInformation(@"Procesed
+Event: {@Event} 
+Response: {@Response}", @event, responses);
 
             return responses;
         }

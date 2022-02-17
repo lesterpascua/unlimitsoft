@@ -20,7 +20,7 @@ namespace SoftUnlimit.Bus.Hangfire
         private readonly ICommandDispatcher _dispatcher;
         private readonly Func<Exception, Task> _onError;
         private readonly ICommandCompletionService _completionService;
-        private readonly Action<IServiceProvider, ICommand, BackgroundJob> _preeDispatch;
+        private readonly Action<IServiceProvider, ICommand, BackgroundJob> _preeProcess;
         private readonly ILogger<DefaultJobProcessor> _logger;
 
         private static string _errorCode;
@@ -34,7 +34,7 @@ namespace SoftUnlimit.Bus.Hangfire
         /// <param name="dispatcher"></param>
         /// <param name="errorCode"></param>
         /// <param name="onError"></param>
-        /// <param name="preeDispatch"></param>
+        /// <param name="preeProcess">Allow to invoke some action before the command processing.</param>
         /// <param name="completionService"> After finish some command processing will call the method <see cref="ICommandCompletionService.CompleteAsync(ICommand, ICommandResponse, Exception, CancellationToken)"/>
         /// </param>
         /// <param name="logger"></param>
@@ -44,7 +44,7 @@ namespace SoftUnlimit.Bus.Hangfire
             string errorCode = null,
             Func<Exception, Task> onError = null,
             ICommandCompletionService completionService = null,
-            Action<IServiceProvider, ICommand, BackgroundJob> preeDispatch = null,
+            Action<IServiceProvider, ICommand, BackgroundJob> preeProcess = null,
             ILogger<DefaultJobProcessor> logger = null
         )
         {
@@ -52,7 +52,7 @@ namespace SoftUnlimit.Bus.Hangfire
             _provider = provider;
             _dispatcher = dispatcher;
             _onError = onError;
-            _preeDispatch = preeDispatch;
+            _preeProcess = preeProcess;
             _completionService = completionService;
             ErrorCode = errorCode;
         }
@@ -77,7 +77,7 @@ namespace SoftUnlimit.Bus.Hangfire
             var props = command.GetProps<CommandProps>();
             try
             {
-                _preeDispatch?.Invoke(_provider, command, processor.Metadata);
+                _preeProcess?.Invoke(_provider, command, processor.Metadata);
 
                 _logger.LogDebug("Start process command: {@Command}", command);
                 _logger.LogInformation("Start process {Job} command: {Id}", processor.Metadata.Id, props.Id);
@@ -101,7 +101,7 @@ namespace SoftUnlimit.Bus.Hangfire
 JobId: {JobId}
 command: {@Command}
 Response: {@Response}", processor.Metadata.Id, command, response);
-            _logger.LogInformation("End process {Job}", processor.Metadata.Id);
+            _logger.LogInformation("End process {Job} with error {Error}", processor.Metadata.Id, err is not null || response?.IsSuccess == false);
         }
 
         /// <summary>

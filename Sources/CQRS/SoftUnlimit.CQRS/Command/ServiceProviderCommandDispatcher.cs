@@ -72,8 +72,8 @@ namespace SoftUnlimit.CQRS.Command
         /// <inheritdoc />
         public async Task<ICommandResponse> DispatchAsync(IServiceProvider provider, ICommand command, CancellationToken ct)
         {
-            _logger?.LogDebug("Invoke pree dispatch method.");
             _preeDispatch?.Invoke(provider, command);
+            _logger?.LogDebug("Process command: {@Command}", command);
 
             //
             // get handler and execute command.

@@ -89,7 +89,7 @@ namespace SoftUnlimit.Bus.Hangfire.DependencyInjection
                         errorCode: errorCode,
                         completionService: commandCompletionService,
                         onError: interOnError, 
-                        preeDispatch: preeProcessCommand,
+                        preeProcess: preeProcessCommand,
                         logger: logger
                     );
                 })
