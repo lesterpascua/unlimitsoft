@@ -39,7 +39,7 @@ namespace SoftUnlimit.Bus.Hangfire
         {
             var type = command.GetType();
             var json = JsonUtility.Serialize(command);
-            if (_preeSend != null)
+            if (_preeSend is not null)
                 await _preeSend(command);
 
             string jobId;

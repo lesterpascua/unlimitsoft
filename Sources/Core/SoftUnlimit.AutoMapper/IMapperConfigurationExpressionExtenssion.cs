@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using AutoMapper.Configuration;
+using AutoMapper.Internal;
 using System;
 using System.Collections;
 using System.Collections.Generic;

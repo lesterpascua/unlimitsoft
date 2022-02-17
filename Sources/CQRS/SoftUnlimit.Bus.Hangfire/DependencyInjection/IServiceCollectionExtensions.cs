@@ -34,7 +34,7 @@ namespace SoftUnlimit.Bus.Hangfire.DependencyInjection
             HangfireOptions options,
             string errorCode = null,
             Func<IServiceProvider, ICommand, Task> preeSendCommand = null,
-            Action<ICommand, BackgroundJob> preeProcessCommand = null,
+            Action<IServiceProvider, ICommand, BackgroundJob> preeProcessCommand = null,
             Func<IServiceProvider, Exception, Task> onError = null,
             bool addLoggerFilter = false,
             Func<IServiceProvider, JobActivator> activatorFactory = null,

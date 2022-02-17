@@ -186,7 +186,7 @@ namespace SoftUnlimit.WebApi
                     Scheme = "hf",
                     WorkerCount = 1
                 },
-                preeProcessCommand: (command, meta) =>
+                preeProcessCommand: (provider, command, meta) =>
                 {
                     if (command is MyCommand cmd)
                         cmd.Props.JobId = meta.Id;
