@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>
@@ -20,6 +20,12 @@
     <PackageLicenseFile>License.txt</PackageLicenseFile>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <Compile Include="..\SoftUnlimit.Web.AspNet.Testing\EventBusFake.cs" Link="EventBusFake.cs" />
+    <Compile Include="..\SoftUnlimit.Web.AspNet.Testing\ListenerFake.cs" Link="ListenerFake.cs" />
+    <Compile Include="..\SoftUnlimit.Web.AspNet.Testing\TestFactory.cs" Link="TestFactory.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Include="License.txt">
@@ -29,12 +35,12 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="6.0.2" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="6.0.2" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="5.0.14" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.14" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\Data\SoftUnlimit.Data.EntityFramework\SoftUnlimit.Data.EntityFramework.csproj" />
+    <ProjectReference Include="..\..\Data\SoftUnlimit.Data.EntityFramework5\SoftUnlimit.Data.EntityFramework5.csproj" />
   </ItemGroup>
 
 </Project>

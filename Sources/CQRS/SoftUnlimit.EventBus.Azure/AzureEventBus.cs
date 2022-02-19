@@ -80,7 +80,7 @@ namespace SoftUnlimit.EventBus.Azure
                 );
             _client = new ServiceBusClient(_endpoint);
 
-            return ValueTask.CompletedTask;
+            return ValueTaskExtensions.CompletedTask;
         }
 
         /// <inheritdoc/>

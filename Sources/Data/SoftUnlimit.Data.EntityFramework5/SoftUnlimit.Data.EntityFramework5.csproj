@@ -1,0 +1,68 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+		<Authors>Lester Pastrana</Authors>
+		<Company>Private</Company>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">0.0.0.1</Version>
+		<Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
+		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+		<Description>Data library with Repository and UnitOfWork desing pattern implement using entity framework</Description>
+		<PackageLicenseFile>License.txt</PackageLicenseFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Include="..\SoftUnlimit.Data.EntityFramework\Configuration\DatabaseOptions.cs" Link="Configuration\DatabaseOptions.cs" />
+	  <Compile Include="..\SoftUnlimit.Data.EntityFramework\DbContextExtensions.cs" Link="DbContextExtensions.cs" />
+	  <Compile Include="..\SoftUnlimit.Data.EntityFramework\DependencyInjection\IServiceConnectionExtensions.cs" Link="DependencyInjection\IServiceConnectionExtensions.cs" />
+	  <Compile Include="..\SoftUnlimit.Data.EntityFramework\DependencyInjection\UnitOfWorkOptions.cs" Link="DependencyInjection\UnitOfWorkOptions.cs" />
+	  <Compile Include="..\SoftUnlimit.Data.EntityFramework\EFCQRSDbUnitOfWork.cs" Link="EFCQRSDbUnitOfWork.cs" />
+	  <Compile Include="..\SoftUnlimit.Data.EntityFramework\EFCQRSRepository.cs" Link="EFCQRSRepository.cs" />
+	  <Compile Include="..\SoftUnlimit.Data.EntityFramework\EFDbUnitOfWork.cs" Link="EFDbUnitOfWork.cs" />
+	  <Compile Include="..\SoftUnlimit.Data.EntityFramework\EFEventSourceDbUnitOfWork.cs" Link="EFEventSourceDbUnitOfWork.cs" />
+	  <Compile Include="..\SoftUnlimit.Data.EntityFramework\EFQueryRepository.cs" Link="EFQueryRepository.cs" />
+	  <Compile Include="..\SoftUnlimit.Data.EntityFramework\EFRepository.cs" Link="EFRepository.cs" />
+	  <Compile Include="..\SoftUnlimit.Data.EntityFramework\EventSourcing\Json\DbContextJsonEventSourcedRepository.cs" Link="EventSourcing\Json\DbContextJsonEventSourcedRepository.cs" />
+	  <Compile Include="..\SoftUnlimit.Data.EntityFramework\IQueryableExtensions.cs" Link="IQueryableExtensions.cs" />
+	  <Compile Include="..\SoftUnlimit.Data.EntityFramework\IQueryRepositoryExtenssion.cs" Link="IQueryRepositoryExtenssion.cs" />
+	  <Compile Include="..\SoftUnlimit.Data.EntityFramework\Seed\BaseCustomSeed.cs" Link="Seed\BaseCustomSeed.cs" />
+	  <Compile Include="..\SoftUnlimit.Data.EntityFramework\Utility\DateTimeUtcConverter.cs" Link="Utility\DateTimeUtcConverter.cs" />
+	  <Compile Include="..\SoftUnlimit.Data.EntityFramework\Utility\EntityBuilderUtility.cs" Link="Utility\EntityBuilderUtility.cs" />
+	  <Compile Include="..\SoftUnlimit.Data.EntityFramework\Utility\InitHelper.cs" Link="Utility\InitHelper.cs" />
+	  <Compile Include="..\SoftUnlimit.Data.EntityFramework\Utility\NullDateTimeUtcConverter.cs" Link="Utility\NullDateTimeUtcConverter.cs" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="Microsoft.EntityFrameworkCore" Version="5.0.14" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Relational" Version="5.0.14" />
+		<PackageReference Include="Polly" Version="7.2.3" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="License.txt">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\CQRS\SoftUnlimit.CQRS\SoftUnlimit.CQRS.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="Configuration\" />
+	  <Folder Include="DependencyInjection\" />
+	  <Folder Include="EventSourcing\Json\" />
+	  <Folder Include="Seed\" />
+	  <Folder Include="Utility\" />
+	</ItemGroup>
+</Project>

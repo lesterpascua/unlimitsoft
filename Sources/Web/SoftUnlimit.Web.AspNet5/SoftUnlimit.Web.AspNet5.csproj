@@ -1,0 +1,61 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+		<Authors>Lester Pastrana</Authors>
+		<Company>Private</Company>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">0.0.0.1</Version>
+		<Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
+		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+		<Description>ASP.NET helpers</Description>
+		<PackageLicenseFile>License.txt</PackageLicenseFile>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Include="..\SoftUnlimit.Web.AspNet\ErrorHandling\IExceptionHandler.cs" Link="ErrorHandling\IExceptionHandler.cs" />
+	  <Compile Include="..\SoftUnlimit.Web.AspNet\ErrorHandling\ToResponseExceptionHandlerOptions.cs" Link="ErrorHandling\ToResponseExceptionHandlerOptions.cs" />
+	  <Compile Include="..\SoftUnlimit.Web.AspNet\Filter\RequestLoggerAttribute.cs" Link="Filter\RequestLoggerAttribute.cs" />
+	  <Compile Include="..\SoftUnlimit.Web.AspNet\Filter\SkipValidationModelAttribute.cs" Link="Filter\SkipValidationModelAttribute.cs" />
+	  <Compile Include="..\SoftUnlimit.Web.AspNet\Filter\TransformResponseAttribute.cs" Link="Filter\TransformResponseAttribute.cs" />
+	  <Compile Include="..\SoftUnlimit.Web.AspNet\Filter\ValidationModelAttribute.cs" Link="Filter\ValidationModelAttribute.cs" />
+	  <Compile Include="..\SoftUnlimit.Web.AspNet\HttpContextExtensions.cs" Link="HttpContextExtensions.cs" />
+	  <Compile Include="..\SoftUnlimit.Web.AspNet\Security\Authentication\ApiKeyAuthenticationHandler.cs" Link="Security\Authentication\ApiKeyAuthenticationHandler.cs" />
+	  <Compile Include="..\SoftUnlimit.Web.AspNet\Security\Authentication\ApiKeyAuthenticationOptions.cs" Link="Security\Authentication\ApiKeyAuthenticationOptions.cs" />
+	  <Compile Include="..\SoftUnlimit.Web.AspNet\Security\Authentication\ApiKeyError.cs" Link="Security\Authentication\ApiKeyError.cs" />
+	  <Compile Include="..\SoftUnlimit.Web.AspNet\Security\ScopeAuthorizationRequirement.cs" Link="Security\ScopeAuthorizationRequirement.cs" />
+	  <Compile Include="..\SoftUnlimit.Web.AspNet\Security\ScopeAuthorizeAttribute.cs" Link="Security\ScopeAuthorizeAttribute.cs" />
+	  <Compile Include="..\SoftUnlimit.Web.AspNet\Security\ScopePolicyProvider.cs" Link="Security\ScopePolicyProvider.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="License.txt">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.14" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Core\SoftUnlimit\SoftUnlimit.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Folder Include="ErrorHandling\" />
+	  <Folder Include="Filter\" />
+	  <Folder Include="Security\Authentication\" />
+	</ItemGroup>
+
+</Project>

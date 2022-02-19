@@ -12,7 +12,6 @@ namespace SoftUnlimit.Logger.Enricher
         /// <summary>
         /// Define a custom properties to log in every message
         /// </summary>
-        /// <typeparam name="T"></typeparam>
         /// <param name="enrichmentConfiguration"></param>
         /// <returns></returns>
         /// <exception cref="ArgumentNullException"></exception>

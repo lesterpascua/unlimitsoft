@@ -20,17 +20,11 @@ using SoftUnlimit.WebApi.Sources.CQRS.Query;
 using SoftUnlimit.WebApi.Sources.Data;
 using SoftUnlimit.WebApi.Sources.Data.Configuration;
 using SoftUnlimit.WebApi.Sources.Data.Model;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace SoftUnlimit.Benchmark.SoftUnlimit.CQRS
 {
-
-
     [MemoryDiagnoser]
     public class SearchTestQueryTest
     {
