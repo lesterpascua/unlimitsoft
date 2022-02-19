@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System.Collections.Generic;
 
 namespace SoftUnlimit.Web.Model
 {
@@ -15,16 +13,16 @@ namespace SoftUnlimit.Web.Model
         /// </summary>
         /// <param name="total"></param>
         /// <param name="data"></param>
-        public SearchModel(int total, IEnumerable<TModel> data)
+        public SearchModel(long total, IEnumerable<TModel> data)
         {
-            this.Data = data;
-            this.Total = total;
+            Data = data;
+            Total = total;
         }
 
         /// <summary>
         /// Total of elements.
         /// </summary>
-        public int Total { get; set; }
+        public long Total { get; set; }
         /// <summary>
         /// Data resulting of search.
         /// </summary>

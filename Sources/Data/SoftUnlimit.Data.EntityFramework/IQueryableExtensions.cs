@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using SoftUnlimit.CQRS.Query;
 using SoftUnlimit.Web.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -46,7 +47,7 @@ namespace SoftUnlimit.Data.EntityFramework
         /// <param name="ordered"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public static ValueTask<(int, TEntity[])> ToSearchAsync<TEntity>(this IQueryable<TEntity> @this, IDbConnectionFactory factory, Paging pagging, IEnumerable<ColumnName> ordered, CancellationToken ct = default)
+        public static ValueTask<(long, TEntity[])> ToSearchAsync<TEntity>(this IQueryable<TEntity> @this, IDbConnectionFactory factory, Paging pagging, IEnumerable<ColumnName> ordered, CancellationToken ct = default)
             where TEntity : class
         {
             var countCommandText = @this.GroupBy(p => 1).Select(s => s.Count()).ToQueryString();
@@ -60,8 +61,8 @@ namespace SoftUnlimit.Data.EntityFramework
                 if (connection.State == System.Data.ConnectionState.Closed)
                     connection.Open();
 
-                var result = (int)sqlCommand.ExecuteScalar();
-                return result;
+                var result = sqlCommand.ExecuteScalar();
+                return result is not null ? Convert.ToInt64(result) : 0;
             });
 
             var searchTask = @this.ApplySearch(pagging, ordered).ToArrayAsync(ct);
