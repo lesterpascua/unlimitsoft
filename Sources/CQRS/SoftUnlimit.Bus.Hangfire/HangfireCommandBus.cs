@@ -37,20 +37,23 @@ namespace SoftUnlimit.Bus.Hangfire
         /// <inheritdoc />
         public async Task<object> SendAsync(ICommand command, CancellationToken ct)
         {
+            string CreateJob(ICommand command, Type type, string json)
+            {
+                if (command is ISchedulerCommand schedulerCommand && schedulerCommand.Delay.HasValue && schedulerCommand.Delay != TimeSpan.Zero)
+                    return _client.Schedule<IJobProcessor>(processor => processor.ProcessAsync(json, type), schedulerCommand.Delay.Value);
+
+                return _client.Enqueue<IJobProcessor>(processor => processor.ProcessAsync(json, type));
+            }
+
+            // ==============================================================================================================================
             var type = command.GetType();
             var json = JsonUtility.Serialize(command);
             if (_preeSend is not null)
                 await _preeSend(command);
 
-            string jobId;
-            if (command is ISchedulerCommand schedulerCommand && schedulerCommand.Delay.HasValue && schedulerCommand.Delay != TimeSpan.Zero)
-            {
-                jobId = _client.Schedule<IJobProcessor>(processor => processor.ProcessAsync(json, type), schedulerCommand.Delay.Value);
-            }
-            else
-                jobId = _client.Enqueue<IJobProcessor>(processor => processor.ProcessAsync(json, type));
-
-            _logger?.LogDebug("Create background job with Id: {JobId}", jobId);
+            string jobId = CreateJob(command, type, json);
+            if (jobId is not null)
+                _logger?.LogDebug("Create background job with Id: {JobId}", jobId);
             return jobId;
         }
     }

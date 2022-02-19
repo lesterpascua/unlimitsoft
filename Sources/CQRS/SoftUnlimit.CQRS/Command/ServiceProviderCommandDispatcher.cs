@@ -97,7 +97,7 @@ namespace SoftUnlimit.CQRS.Command
                     var validatorType = typeof(CommandValidator<>).MakeGenericType(commandType);
                     IValidator validator = (IValidator)Activator.CreateInstance(validatorType);
 
-                    validator = await (ValueTask<IValidator>)dynamicHandler.ValidatorAsync(dynamicCommand, (dynamic)validator, ct);
+                    await (ValueTask)dynamicHandler.ValidatorAsync(dynamicCommand, (dynamic)validator, ct);
 
                     var valContext = new ValidationContext<ICommand>(command);
                     var errors = await validator.ValidateAsync(valContext, ct);

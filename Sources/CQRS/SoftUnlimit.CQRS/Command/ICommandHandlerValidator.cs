@@ -17,6 +17,6 @@ namespace SoftUnlimit.CQRS.Command
         /// <param name="command"></param>
         /// <param name="validator"></param>
         /// <param name="ct"></param>
-        ValueTask<IValidator> ValidatorAsync(TCommand command, CommandValidator<TCommand> validator, CancellationToken ct = default);
+        ValueTask ValidatorAsync(TCommand command, CommandValidator<TCommand> validator, CancellationToken ct = default);
     }
 }

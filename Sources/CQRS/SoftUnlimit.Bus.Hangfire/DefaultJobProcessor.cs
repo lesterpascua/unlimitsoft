@@ -1,6 +1,5 @@
 ﻿using Hangfire;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.Json;
@@ -67,7 +66,7 @@ namespace SoftUnlimit.Bus.Hangfire
         CancellationToken IJobProcessor.CancellationToken { get; set; }
 
         /// <inheritdoc />
-        public async Task ProcessAsync(string json, Type type)
+        public async Task<ICommandResponse> ProcessAsync(string json, Type type)
         {
             Exception err = null;
             ICommandResponse response;
@@ -102,6 +101,8 @@ JobId: {JobId}
 command: {@Command}
 Response: {@Response}", processor.Metadata.Id, command, response);
             _logger.LogInformation("End process {Job} with error {Error}", processor.Metadata.Id, err is not null || response?.IsSuccess == false);
+
+            return response;
         }
 
         /// <summary>

@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using SoftUnlimit.CQRS.Message;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
@@ -25,6 +26,6 @@ namespace SoftUnlimit.Bus.Hangfire
         /// <param name="json">Command serialize as json</param>
         /// <param name="type">Type of the command</param>
         /// <returns></returns>
-        Task ProcessAsync(string json, Type type);
+        Task<ICommandResponse> ProcessAsync(string json, Type type);
     }
 }
