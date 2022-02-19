@@ -103,7 +103,7 @@ namespace SoftUnlimit.WebApi.DependencyInjection
         {
             const string OutputTemplate = "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}";
 
-            services.AddSofUnlimitLogger(
+            services.AddUnlimitSofLogger(
                 new LoggerOption
                 {
                     Default = LogLevel.Debug,
@@ -159,7 +159,7 @@ namespace SoftUnlimit.WebApi.DependencyInjection
                 if (cqrsSettings.PreeDispatchAction == null)
                     cqrsSettings.PreeDispatchAction = (provider, command) => {
                         var identity = command.GetProps<MyCommandProps>().User;
-                        LoggerUtility.SafeUpdateCorrelationContext(provider.GetService<ICorrelationContextAccessor>(), provider.GetService<ICorrelationContext>(), identity.CorrelationId);
+                        LoggerUtility.SafeUpdateCorrelation(provider.GetService<ILoggerContextAccessor>(), identity.TraceId, identity.CorrelationId);
                     };
                 services.AddSoftUnlimitDefaultCQRS(cqrsSettings);
             }
@@ -281,7 +281,6 @@ namespace SoftUnlimit.WebApi.DependencyInjection
             // uncomment, if you want to add an MVC-based UI
             void defaultMvcOptions(MvcOptions options)
             {
-                options.Filters.Add(typeof(CorrelationContextAttribute));
                 if (useRequestLoggerAttribute)
                     options.Filters.Add(typeof(RequestLoggerAttribute));
 

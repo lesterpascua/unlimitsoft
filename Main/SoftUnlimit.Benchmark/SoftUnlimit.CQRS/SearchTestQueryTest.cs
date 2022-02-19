@@ -97,7 +97,7 @@ namespace SoftUnlimit.Benchmark.SoftUnlimit.CQRS
                     IQueryHandler = typeof(IMyQueryHandler<,>),
                     EventDispatcher = provider => new ServiceProviderEventDispatcher(
                         provider,
-                        preeDispatch: (provider, e) => LoggerUtility.SafeUpdateCorrelationContext(provider.GetService<ICorrelationContextAccessor>(), provider.GetService<ICorrelationContext>(), e.CorrelationId),
+                        preeDispatch: (provider, e) => LoggerUtility.SafeUpdateCorrelation(provider.GetService<ILoggerContextAccessor>(), null, e.CorrelationId),
                         logger: provider.GetService<ILogger<ServiceProviderEventDispatcher>>()
                     )
                 }

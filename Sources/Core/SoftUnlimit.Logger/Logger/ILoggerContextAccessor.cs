@@ -3,29 +3,27 @@
 namespace SoftUnlimit.Logger
 {
     /// <summary>
-    /// Define trace context.
+    /// Define a several variables in a context
     /// </summary>
-    public interface ICorrelationContextAccessor
+    public interface ILoggerContextAccessor
     {
         /// <summary>
         /// 
         /// </summary>
-        ICorrelationContext? Context { get; set; }
+        LoggerContext? Context { get; set; }
     }
     /// <summary>
     /// 
     /// </summary>
-    public class DefaultCorrelationContextAccessor : ICorrelationContextAccessor
+    public sealed class LoggerContextAccessor : ILoggerContextAccessor
     {
         /// <summary>
         /// 
         /// </summary>
         private static readonly AsyncLocal<ContextHolder?> _current = new();
 
-        /// <summary>
-        /// Assing trace in current context.
-        /// </summary>
-        public ICorrelationContext? Context
+        /// <inheritdoc />
+        public LoggerContext? Context
         {
             get => _current.Value?.Context;
             set
@@ -44,7 +42,7 @@ namespace SoftUnlimit.Logger
         #region Nested Classes
         private class ContextHolder
         {
-            public ICorrelationContext? Context;
+            public LoggerContext? Context;
         }
         #endregion
     }

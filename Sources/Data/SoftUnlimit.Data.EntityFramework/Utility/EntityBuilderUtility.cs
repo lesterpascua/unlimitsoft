@@ -20,12 +20,14 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
         /// <summary>
         /// Helper method to configure versioned event. Command CreatorId is the primary key
         /// </summary>
+        /// <remarks>
+        /// If the table groud to mush use index in IsPubliched, otherwise can affect the service restart process.
+        /// </remarks>
         /// <typeparam name="TPayload">Type of the payload used as body of the event. The body is where save the data.</typeparam>
         /// <typeparam name="TVersionedEvent"> Versioned event type. Example: <see cref="JsonVersionedEventPayload"/> or you can create your personalize.</typeparam>
         /// <param name="builder"></param>
         /// <param name="payloadBuilder">Extra properties applied over payload.</param>
-        public static void ConfigureVersionedEvent<TVersionedEvent, TPayload>(EntityTypeBuilder<TVersionedEvent> builder, Action<PropertyBuilder<TPayload>> payloadBuilder = null
-        )
+        public static void ConfigureVersionedEvent<TVersionedEvent, TPayload>(EntityTypeBuilder<TVersionedEvent> builder, Action<PropertyBuilder<TPayload>> payloadBuilder = null)
             where TVersionedEvent : VersionedEventPayload<TPayload>
         {
             builder.ToTable("VersionedEvent");

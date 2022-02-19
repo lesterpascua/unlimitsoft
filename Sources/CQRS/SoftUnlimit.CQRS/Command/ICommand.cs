@@ -36,7 +36,7 @@ namespace SoftUnlimit.CQRS.Command
                 .Cast<MasterEventAttribute>();
 
             return attr?.Select(s => s.EventType);
-        }
+        }        
 
         /// <summary>
         /// Generate a acepted response using command data.
@@ -46,6 +46,15 @@ namespace SoftUnlimit.CQRS.Command
         /// <param name="skipCommandInfo"></param>
         /// <returns></returns>
         public static ICommandResponse AceptedResponse(this ICommand command, string uiText = null, bool skipCommandInfo = true) => new CommandResponse<object>(skipCommandInfo ? null : command, 202, null, uiText ?? Resources.Response_OkResponse);
+        /// <summary>
+        /// Generate a acepted response using command data.
+        /// </summary>
+        /// <param name="command"></param>
+        /// <param name="body"></param>
+        /// <param name="uiText"></param>
+        /// <param name="skipCommandInfo"></param>
+        /// <returns></returns>
+        public static ICommandResponse AceptedResponse<T>(this ICommand command, T body, string uiText = null, bool skipCommandInfo = true) => new CommandResponse<object>(skipCommandInfo ? null : command, 202, body, uiText ?? Resources.Response_OkResponse);
 
         /// <summary>
         /// Generate a success response using command data.
@@ -76,6 +85,7 @@ namespace SoftUnlimit.CQRS.Command
         /// <param name="skipCommandInfo"></param>
         /// <returns></returns>
         public static ICommandResponse BadResponse<T>(this ICommand command, T body, string uiText = null, bool skipCommandInfo = true) => new CommandResponse<T>(skipCommandInfo ? null : command, 400, body, uiText ?? Resources.Response_BadResponse);
+        
         /// <summary>
         /// Generate a error response using command data.
         /// </summary>
@@ -86,6 +96,7 @@ namespace SoftUnlimit.CQRS.Command
         /// <param name="skipCommandInfo"></param>
         /// <returns></returns>
         public static ICommandResponse ErrorResponse<T>(this ICommand command, T body, string uiText = null, bool skipCommandInfo = true) => new CommandResponse<T>(skipCommandInfo ? null : command, 500, body, uiText ?? Resources.Response_ErrorResponse);
+        
         /// <summary>
         /// Generate a not found response using command data.
         /// </summary>
@@ -96,6 +107,7 @@ namespace SoftUnlimit.CQRS.Command
         /// <param name="skipCommandInfo"></param>
         /// <returns></returns>
         public static ICommandResponse NotFoundResponse<T>(this ICommand command, T body, string uiText = null, bool skipCommandInfo = true) => new CommandResponse<T>(skipCommandInfo ? null : command, 404, body, uiText ?? Resources.Response_NotFoundResponse);
+        
         /// <summary>
         /// Generate a response using command data.
         /// </summary>

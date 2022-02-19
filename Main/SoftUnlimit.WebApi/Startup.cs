@@ -22,6 +22,7 @@ using SoftUnlimit.Data.EntityFramework.Utility;
 using SoftUnlimit.DespendencyInjections;
 using SoftUnlimit.EventBus.Azure.Configuration;
 using SoftUnlimit.Logger;
+using SoftUnlimit.Logger.Web;
 using SoftUnlimit.Web;
 using SoftUnlimit.Web.AspNet.Filter;
 using SoftUnlimit.WebApi.DependencyInjection;
@@ -151,7 +152,7 @@ namespace SoftUnlimit.WebApi
                     IQueryHandler = typeof(IMyQueryHandler<,>),
                     EventDispatcher = provider => new ServiceProviderEventDispatcher(
                         provider,
-                        preeDispatch: (provider, e) => LoggerUtility.SafeUpdateCorrelationContext(provider.GetService<ICorrelationContextAccessor>(), provider.GetService<ICorrelationContext>(), e.CorrelationId),
+                        preeDispatch: (provider, e) => LoggerUtility.SafeUpdateCorrelation(provider.GetService<ILoggerContextAccessor>(), null, e.CorrelationId),
                         logger: provider.GetService<ILogger<ServiceProviderEventDispatcher>>()
                     )
                 }
@@ -259,6 +260,8 @@ namespace SoftUnlimit.WebApi
                     Console.WriteLine(entity);
                 }
             ).Wait();
+
+            app.UseMiddleware<LoggerMiddleware<LoggerContext>>();
             app.UseWrapperDevelopment(env.IsDevelopment());
 
             if (env.IsDevelopment())

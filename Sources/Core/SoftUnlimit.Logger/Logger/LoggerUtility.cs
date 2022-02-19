@@ -1,4 +1,6 @@
-﻿namespace SoftUnlimit.Logger
+﻿using System;
+
+namespace SoftUnlimit.Logger
 {
     /// <summary>
     /// 
@@ -6,17 +8,30 @@
     public static class LoggerUtility
     {
         /// <summary>
-        /// Update the current correlation context with the correlation in the parameter.
+        /// Update the current context with some in the parameter.
         /// </summary>
         /// <param name="accessor"></param>
-        /// <param name="context"></param>
+        /// <param name="traceId"></param>
         /// <param name="correlationId"></param>
-        public static void SafeUpdateCorrelationContext(ICorrelationContextAccessor accessor, ICorrelationContext context, string correlationId)
+        public static void SafeUpdateCorrelation(ILoggerContextAccessor accessor, string traceId, string correlationId)
         {
-            if (context.CorrelationId is null)
-                context.SetCorrelationId(correlationId);
-            if (accessor.Context is null)
-                accessor.Context = context;
+            var context = accessor.Context;
+            if (context is null)
+                context = new LoggerContext();
+
+            context.TraceId = traceId;
+            context.CorrelationId = correlationId;
+        }
+        /// <summary>
+        /// Update the current context with some in the parameter.
+        /// </summary>
+        /// <param name="accessor"></param>
+        /// <param name="action"></param>
+        public static void SafeUpdateContext<T>(ILoggerContextAccessor accessor, Action<T> action) where T : LoggerContext, new()
+        {
+            if (accessor.Context is not T aux)
+                accessor.Context = aux = new T();
+            action(aux);
         }
     }
 }

@@ -22,7 +22,7 @@ namespace SoftUnlimit.Logger.DependencyInjection
         /// <param name="compilation"></param>
         /// <param name="setup"></param>
         /// <returns></returns>
-        public static IServiceCollection AddSofUnlimitLogger(this IServiceCollection services, LoggerOption config, string? environment = null, string? compilation = null, Action<LoggerConfiguration>? setup = null)
+        public static IServiceCollection AddUnlimitSofLogger(this IServiceCollection services, LoggerOption config, string? environment = null, string? compilation = null, Action<LoggerConfiguration>? setup = null)
         {
             if (Log.Logger != null)
                 Log.CloseAndFlush();
@@ -38,7 +38,7 @@ namespace SoftUnlimit.Logger.DependencyInjection
             loggerConfig.Enrich.FromLogContext();
             loggerConfig.Enrich.WithMachineName();
             loggerConfig.Enrich.WithThreadId();
-            loggerConfig.Enrich.WithCorrelationIdContext();
+            loggerConfig.Enrich.WithLoggerContext();
 
             setup?.Invoke(loggerConfig);
             Log.Logger = loggerConfig.CreateLogger();
@@ -48,9 +48,7 @@ namespace SoftUnlimit.Logger.DependencyInjection
             if (!string.IsNullOrEmpty(environment) && !string.IsNullOrEmpty(compilation))
                 Log.Information($"Starting, ENV: {environment}, COMPILER: {compilation} ...");
 
-
-            services.AddScoped<ICorrelationContext, DefaultCorrelationContext>();
-            services.TryAddSingleton<ICorrelationContextAccessor, DefaultCorrelationContextAccessor>();
+            services.TryAddSingleton<ILoggerContextAccessor, LoggerContextAccessor>();
 
             return services;
         }

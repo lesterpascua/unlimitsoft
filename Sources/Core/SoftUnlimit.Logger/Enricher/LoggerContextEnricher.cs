@@ -1,32 +1,35 @@
 ﻿using Serilog.Core;
 using Serilog.Events;
-using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Threading;
 
 namespace SoftUnlimit.Logger.Enricher
 {
     /// <summary>
     /// 
     /// </summary>
-    public class CorrelationIdContextEnricher : ILogEventEnricher
+    public class LoggerContextEnricher : ILogEventEnricher
     {
+        private static PropertyInfo[]? _cache;
+        private readonly ILoggerContextAccessor _accesor;
+
         /// <summary>
         /// Correlation Property name
         /// </summary>
         public const string Name = "CorrelationId";
-        private readonly ICorrelationContextAccessor _accesor;
 
 
         /// <summary>
         /// 
         /// </summary>
-        public CorrelationIdContextEnricher()
-            : this(new DefaultCorrelationContextAccessor())
+        public LoggerContextEnricher()
+            : this(new LoggerContextAccessor())
         { }
         /// <summary>
         /// 
         /// </summary>
-        internal CorrelationIdContextEnricher(ICorrelationContextAccessor accesor)
+        internal LoggerContextEnricher(ILoggerContextAccessor accesor)
         {
             _accesor = accesor;
         }
@@ -38,19 +41,41 @@ namespace SoftUnlimit.Logger.Enricher
         /// <param name="propertyFactory"></param>
         public void Enrich(LogEvent logEvent, ILogEventPropertyFactory propertyFactory)
         {
-            var correlationId = GetCorrelationId(logEvent);
+            var context = _accesor.Context;
+            var correlationId = GetCorrelationId(logEvent, context);
             if (correlationId is not null)
             {
                 var correlationIdProperty = new LogEventProperty(Name, new ScalarValue(correlationId));
                 logEvent.AddOrUpdateProperty(correlationIdProperty);
             }
+            if (context is null)
+                return;
+
+            var type = context.GetType();
+            if (type == typeof(LoggerContext))
+                return;
+
+            if (_cache is null)
+            {
+                var properties = context.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
+                var tmp = properties.Where(p => p.Name != nameof(LoggerContext.TraceId) && p.Name != nameof(LoggerContext.CorrelationId)).ToArray();
+                Interlocked.CompareExchange(ref _cache, tmp, null);
+            }
+            foreach (var property in _cache)
+            {
+                var value = property.GetValue(context);
+                if (value is null)
+                    continue;
+                var logEventProperty = new LogEventProperty(property.Name, new ScalarValue(value));
+                logEvent.AddOrUpdateProperty(logEventProperty);
+            }
         }
 
         #region Private Methods
-        private string? GetCorrelationId(LogEvent logEvent)
+        private static string? GetCorrelationId(LogEvent logEvent, LoggerContext? context)
         {
-            if (_accesor.Context is not null)
-                return _accesor.Context.CorrelationId;
+            if (context is not null)
+                return context.CorrelationId;
             if (logEvent.Properties.TryGetValue("RequestId", out var requestId))
                 return requestId.ToString().Replace("\"", string.Empty);
             if (logEvent.Properties.TryGetValue("Event", out var @event) && @event is StructureValue structureValue)
