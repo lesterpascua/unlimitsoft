@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc.Testing;
+﻿using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore.Internal;
@@ -123,6 +124,38 @@ namespace SoftUnlimit.Web.AspNet.Testing
             var appFactory = new WebApplicationFactory<TStartup>()
                 .WithWebHostBuilder(builder =>
                 {
+                    builder.ConfigureServices(services =>
+                    {
+                        //services.ReplaceEventBus();
+                        //services.ReplaceEventListener();
+                        //services.ReplaceEventPublishWorker<TJnUnitOfWork>();
+                        //services.ReplaceDbContextForInMemory<TDbContextRead, TDbContextWrite>();
+
+                        if (removeHostedService)
+                            services.RemoveAll<IHostedService>();
+
+                        setup?.Invoke(services);
+                    });
+                });
+
+            return appFactory;
+        }
+
+        /// <summary>
+        /// Build in memory server.
+        /// </summary>
+        /// <typeparam name="TStartup"></typeparam>
+        /// <param name="setupBuilder"></param>
+        /// <param name="removeHostedService"></param>
+        /// <param name="setup"></param>
+        /// <returns></returns>
+        public static WebApplicationFactory<TStartup> Factory<TStartup>(Action<IWebHostBuilder> setupBuilder, bool removeHostedService = true, Action<IServiceCollection> setup = null)
+            where TStartup : class
+        {
+            var appFactory = new WebApplicationFactory<TStartup>()
+                .WithWebHostBuilder(builder =>
+                {
+                    setupBuilder(builder);
                     builder.ConfigureServices(services =>
                     {
                         //services.ReplaceEventBus();
