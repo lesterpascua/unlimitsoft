@@ -17,7 +17,7 @@
         "ASPNETCORE_ENVIRONMENT": "Development"
       }
     },
-    "SoftUnlimit.WebApi": {
+    "UnlimitSoft.WebApi": {
       "commandName": "Project",
       "dotnetRunMessages": "true",
       "launchBrowser": true,
