@@ -79,37 +79,7 @@ namespace SoftUnlimit.WebApi
     {
         public static void Main()
         {
-            const string name = "Test";
-            const string connString = "Persist Security Info=False;Initial Catalog=SoftUnlimitCloud;Connection Timeout=120;Data Source=.; uid=sa; pwd=no";
-
-            var tasks = new Task[5];
-            var random = new Random();
-            IOneJNLock oneJNLock = new SqlServerOneJNLock(connString); // e. g. if we are using SQL Server
-            for (int i = 0; i < 5; i++)
-            {
-                int index = i;
-                tasks[i] = Task.Run(async () =>
-                {
-                    Console.WriteLine($"Enter Lock: {index}");
-                    await Task.Delay(random.Next(2000, 4000));
-
-
-                    Console.WriteLine($"TryAcquireAsync: {index}");
-                    await using (var handler = await oneJNLock.TryAcquireAsync(name, TimeSpan.FromSeconds(60)))
-                    {
-                        Console.WriteLine($"Lock: {index}, Success: {handler is not null}");
-
-                        // we hold the lock here
-                        await Task.Delay(random.Next(3000, 5000));
-                        Console.WriteLine($"Process: {index}, Process Finish");
-                    }
-
-                    Console.WriteLine($"Process: {index} is UnLock");
-                });
-            }
-            Task.WaitAll(tasks);
-
-            //CreateHostBuilder(args).Build().Run();
+            CreateHostBuilder(args).Build().Run();
         }
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
