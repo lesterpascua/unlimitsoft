@@ -1,208 +1,361 @@
-﻿using Sigil;
+﻿using FluentValidation;
+using Sigil;
 using SoftUnlimit.CQRS.Command;
+using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.CQRS.Query;
 using SoftUnlimit.Event;
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 
 namespace SoftUnlimit.CQRS.Cache
 {
     /// <summary>
-    /// 
+    /// Store precompiler call for Query, Command and Events
     /// </summary>
-    public abstract class CacheDispatcher
+    internal static class CacheDispatcher
     {
-        private static object _querySync;
-        private static Dictionary<Type, Func<object, IQuery, CancellationToken, Task>> _queryCache;
+        private const string HandleAsync = nameof(ICommandHandler<ICommand>.HandleAsync);
+        private const string ValidatorAsync = nameof(ICommandHandlerValidator<ICommand>.ValidatorAsync);
+        private const string ComplianceAsync = nameof(ICommandHandlerCompliance<ICommand>.ComplianceAsync);
 
-        private static object _commandSync;
-        private static Dictionary<Type, Func<object, ICommand, CancellationToken, Task<ICommandResponse>>> _commandCache;
 
-        private static object _eventSync;
-        private static Dictionary<Type, Func<object, IEvent, CancellationToken, Task<IEventResponse>>> _eventCache;
+        #region Query
+        private static Dictionary<Type, QueryMethod> _queryCache;
 
-        private const string HandleAsync = nameof(HandleAsync);
-
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Dictionary<Type, QueryMethod> GetQueryMeta()
+        {
+            if (_queryCache is null)
+                Interlocked.CompareExchange(ref _queryCache, new(), null);
+            return _queryCache;
+        }
 
         /// <summary>
-        /// 
+        /// Get a function to execute the query handler without use a dynamic methods (faster)
         /// </summary>
-        /// <param name="useCache"></param>
-        protected CacheDispatcher(bool useCache = true)
-        {
-            UseCache = useCache;
-        }
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        protected bool UseCache { get; }
-
-
-        private static object QuerySync
-        {
-            get
-            {
-                if (_querySync == null)
-                    Interlocked.CompareExchange(ref _querySync, new object(), null);
-                return _querySync;
-            }
-        }
-        private static object CommandSync
-        {
-            get
-            {
-                if (_commandSync == null)
-                    Interlocked.CompareExchange(ref _commandSync, new object(), null);
-                return _commandSync;
-            }
-        }
-        private static object EventSync
-        {
-            get
-            {
-                if (_eventSync == null)
-                    Interlocked.CompareExchange(ref _eventSync, new object(), null);
-                return _eventSync;
-            }
-        }
-        private static Dictionary<Type, Func<object, IQuery, CancellationToken, Task>> QueryCache
-        {
-            get
-            {
-                if (_queryCache == null)
-                    Interlocked.CompareExchange(ref _queryCache, new Dictionary<Type, Func<object, IQuery, CancellationToken, Task>>(), null);
-                return _queryCache;
-            }
-        }
-        private static Dictionary<Type, Func<object, ICommand, CancellationToken, Task<ICommandResponse>>> CommandCache
-        {
-            get
-            {
-                if (_commandCache == null)
-                    Interlocked.CompareExchange(ref _commandCache, new Dictionary<Type, Func<object, ICommand, CancellationToken, Task<ICommandResponse>>>(), null);
-                return _commandCache;
-            }
-        }
-        private static Dictionary<Type, Func<object, IEvent, CancellationToken, Task<IEventResponse>>> EventCache
-        {
-            get
-            {
-                if (_eventCache == null)
-                    Interlocked.CompareExchange(ref _eventCache, new Dictionary<Type, Func<object, IEvent, CancellationToken, Task<IEventResponse>>>(), null);
-                return _eventCache;
-            }
-        }
-
-
-        /// <summary>
-        /// Check the method HandlerAsync asociate to the type specified. 
-        /// </summary>
-        /// <param name="type"></param>
+        /// <param name="queryType"></param>
         /// <param name="handler"></param>
         /// <returns></returns>
-        protected static Func<object, IQuery, CancellationToken, Task> GetQueryHandlerFromCache<TResult>(Type type, object handler)
+        /// <exception cref="KeyNotFoundException"></exception>
+        public static Func<IQueryHandler, IQuery, CancellationToken, Task> GetQueryHandler<TResult>(Type queryType, IQueryHandler handler)
         {
-            var cache = QueryCache;
-            if (!cache.TryGetValue(type, out Func<object, IQuery, CancellationToken, Task> @delegate))
+            var cache = GetQueryMeta();
+            if (cache.TryGetValue(queryType, out var metadata) && metadata.Handler is not null)
+                return metadata.Handler;
+
+            lock (cache)
             {
-                lock (QuerySync)
-                    if (!cache.TryGetValue(type, out @delegate))
-                    {
-                        var method = handler
-                            .GetType()
-                            .GetMethod(HandleAsync, new Type[] { type, typeof(CancellationToken) });
-                        if (method == null)
-                            throw new KeyNotFoundException($"Not found handler for {handler}");
+                if (!cache.TryGetValue(queryType, out metadata))
+                    cache.Add(queryType, metadata = new QueryMethod());
+                if (metadata.Handler is not null)
+                    return metadata.Handler;
 
-                        var handlerType = handler.GetType();
-                        @delegate = Emit<Func<object, IQuery, CancellationToken, Task<TResult>>>
-                            .NewDynamicMethod($"{HandleAsync}_{type.FullName}")
-                            .LoadArgument(0).CastClass(handlerType)
-                            .LoadArgument(1).CastClass(type)
-                            .LoadArgument(2)
-                            .Call(method)
-                            .Return()
-                            .CreateDelegate();
+                var method = handler
+                    .GetType()
+                    .GetMethod(HandleAsync, new Type[] { queryType, typeof(CancellationToken) });
+                if (method is null)
+                    throw new KeyNotFoundException($"Not found handler for {handler}");
 
-                        cache.Add(type, @delegate);
-                    }
+                var handlerType = handler.GetType();
+                metadata.Handler = Emit<Func<IQueryHandler, IQuery, CancellationToken, Task<TResult>>>
+                    .NewDynamicMethod($"{HandleAsync}_{queryType.FullName}")
+                    .LoadArgument(0).CastClass(handlerType)
+                    .LoadArgument(1).CastClass(queryType)
+                    .LoadArgument(2)
+                    .Call(method)
+                    .Return()
+                    .CreateDelegate();
+
+                return metadata.Handler;
             }
-            return @delegate;
         }
         /// <summary>
-        /// Check the method HandlerAsync asociate to the type specified. 
+        /// Get a function to execute the query handler compliance without use a dynamic methods (faster)
         /// </summary>
-        /// <param name="type"></param>
+        /// <param name="queryType"></param>
         /// <param name="handler"></param>
         /// <returns></returns>
-        protected static Func<object, ICommand, CancellationToken, Task<ICommandResponse>> GetCommandHandlerFromCache(Type type, object handler)
+        /// <exception cref="KeyNotFoundException"></exception>
+        public static Func<IQueryHandler, IQuery, CancellationToken, ValueTask<IQueryResponse>> GetQueryCompliance(Type queryType, IQueryHandler handler)
         {
-            var cache = CommandCache;
-            if (!cache.TryGetValue(type, out Func<object, ICommand, CancellationToken, Task<ICommandResponse>> @delegate))
+            var cache = GetQueryMeta();
+            if (cache.TryGetValue(queryType, out var metadata) && metadata.Compliance is not null)
+                return metadata.Compliance;
+
+            lock (cache)
             {
-                lock (CommandSync)
-                    if (!cache.TryGetValue(type, out @delegate))
-                    {
-                        var method = handler
-                            .GetType()
-                            .GetMethod(HandleAsync, new Type[] { type, typeof(CancellationToken) });
-                        if (method == null)
-                            throw new KeyNotFoundException($"Not found handler for {handler}");
+                if (!cache.TryGetValue(queryType, out metadata))
+                    cache.Add(queryType, metadata = new QueryMethod());
+                if (metadata.Compliance is not null)
+                    return metadata.Compliance;
 
-                        var handlerType = handler.GetType();
-                        @delegate = Emit<Func<object, ICommand, CancellationToken, Task<ICommandResponse>>>
-                            .NewDynamicMethod($"{HandleAsync}_{type.FullName}")
-                            .LoadArgument(0).CastClass(handlerType)
-                            .LoadArgument(1).CastClass(type)
-                            .LoadArgument(2)
-                            .Call(method)
-                            .Return()
-                            .CreateDelegate();
+                var method = handler
+                    .GetType()
+                    .GetMethod(ComplianceAsync, new Type[] { queryType, typeof(CancellationToken) });
+                if (method is null)
+                    throw new KeyNotFoundException($"Not found validator for {handler}");
 
-                        cache.Add(type, @delegate);
-                    }
+                var handlerType = handler.GetType();
+                metadata.Compliance = Emit<Func<IQueryHandler, IQuery, CancellationToken, ValueTask<IQueryResponse>>>
+                    .NewDynamicMethod($"{ComplianceAsync}_{queryType.FullName}")
+                    .LoadArgument(0).CastClass(handlerType)
+                    .LoadArgument(1).CastClass(queryType)
+                    .LoadArgument(2)
+                    .Call(method)
+                    .Return()
+                    .CreateDelegate();
+
+                return metadata.Compliance;
             }
-            return @delegate;
         }
         /// <summary>
-        /// Check the method HandlerAsync asociate to the type specified. 
+        /// Get a function to execute the query handler validator without use a dynamic methods (faster)
         /// </summary>
-        /// <param name="type"></param>
+        /// <param name="queryType"></param>
+        /// <param name="validatorType"></param>
         /// <param name="handler"></param>
         /// <returns></returns>
-        protected static Func<object, IEvent, CancellationToken, Task<IEventResponse>> GetEventHandlerFromCache(Type type, object handler)
+        /// <exception cref="KeyNotFoundException"></exception>
+        public static Func<IQueryHandler, IQuery, IValidator, CancellationToken, ValueTask> GetQueryValidator(Type queryType, Type validatorType, IQueryHandler handler)
         {
-            var cache = EventCache;
-            if (!cache.TryGetValue(type, out Func<object, IEvent, CancellationToken, Task<IEventResponse>> @delegate))
+            var cache = GetQueryMeta();
+            if (cache.TryGetValue(queryType, out var metadata) && metadata.Validator is not null)
+                return metadata.Validator;
+
+            lock (cache)
             {
-                lock (EventSync)
-                    if (!cache.TryGetValue(type, out @delegate))
-                    {
-                        var method = handler
-                            .GetType()
-                            .GetMethod(HandleAsync, new Type[] { type, typeof(CancellationToken) });
-                        if (method == null)
-                            throw new KeyNotFoundException($"Not found handler for {handler}");
+                if (!cache.TryGetValue(queryType, out metadata))
+                    cache.Add(queryType, metadata = new QueryMethod());
+                if (metadata.Validator is not null)
+                    return metadata.Validator;
 
-                        var handlerType = handler.GetType();
-                        @delegate = Emit<Func<object, IEvent, CancellationToken, Task<IEventResponse>>>
-                            .NewDynamicMethod($"{HandleAsync}_{type.FullName}")
-                            .LoadArgument(0).CastClass(handlerType)
-                            .LoadArgument(1).CastClass(type)
-                            .LoadArgument(2)
-                            .Call(method)
-                            .Return()
-                            .CreateDelegate();
+                var method = handler
+                    .GetType()
+                    .GetMethod(ValidatorAsync, new Type[] { queryType, validatorType, typeof(CancellationToken) });
+                if (method is null)
+                    throw new KeyNotFoundException($"Not found validator for {handler}");
 
-                        cache.Add(type, @delegate);
-                    }
+                var handlerType = handler.GetType();
+                metadata.Validator = Emit<Func<IQueryHandler, IQuery, IValidator, CancellationToken, ValueTask>>
+                    .NewDynamicMethod($"{ValidatorAsync}_{queryType.FullName}")
+                    .LoadArgument(0).CastClass(handlerType)
+                    .LoadArgument(1).CastClass(queryType)
+                    .LoadArgument(2).CastClass(validatorType)
+                    .LoadArgument(3)
+                    .Call(method)
+                    .Return()
+                    .CreateDelegate();
+
+                return metadata.Validator;
             }
-            return @delegate;
         }
+
+        /// <summary>
+        /// Bucket cache
+        /// </summary>
+        private sealed class QueryMethod
+        {
+            public Func<IQueryHandler, IQuery, CancellationToken, Task> Handler;
+            public Func<IQueryHandler, IQuery, IValidator, CancellationToken, ValueTask> Validator;
+            public Func<IQueryHandler, IQuery, CancellationToken, ValueTask<IQueryResponse>> Compliance;
+        }
+        #endregion
+
+        #region Commands
+        private static Dictionary<Type, CommandMethod> _commandCache;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Dictionary<Type, CommandMethod> GetCommandMeta()
+        {
+            if (_commandCache is null)
+                Interlocked.CompareExchange(ref _commandCache, new(), null);
+            return _commandCache;
+        }
+
+        /// <summary>
+        /// Get a function to execute the commmand handler without use a dynamic methods (faster)
+        /// </summary>
+        /// <param name="commandType"></param>
+        /// <param name="handler"></param>
+        /// <returns></returns>
+        /// <exception cref="KeyNotFoundException"></exception>
+        public static Func<ICommandHandler, ICommand, CancellationToken, Task<ICommandResponse>> GetCommandHandler(Type commandType, ICommandHandler handler)
+        {
+            var cache = GetCommandMeta();
+            if (cache.TryGetValue(commandType, out var metadata) && metadata.Handler is not null)
+                return metadata.Handler;
+
+            lock (cache)
+            {
+                if (!cache.TryGetValue(commandType, out metadata))
+                    cache.Add(commandType, metadata = new CommandMethod());
+                if (metadata.Handler is not null)
+                    return metadata.Handler;
+
+                var method = handler
+                    .GetType()
+                    .GetMethod(HandleAsync, new Type[] { commandType, typeof(CancellationToken) });
+                if (method is null)
+                    throw new KeyNotFoundException($"Not found handler for {handler}");
+
+                var handlerType = handler.GetType();
+                metadata.Handler = Emit<Func<ICommandHandler, ICommand, CancellationToken, Task<ICommandResponse>>>
+                    .NewDynamicMethod($"{HandleAsync}_{commandType.FullName}")
+                    .LoadArgument(0).CastClass(handlerType)
+                    .LoadArgument(1).CastClass(commandType)
+                    .LoadArgument(2)
+                    .Call(method)
+                    .Return()
+                    .CreateDelegate();
+
+                return metadata.Handler;
+            }
+        }
+        /// <summary>
+        /// Get a function to execute the commmand handler compliance without use a dynamic methods (faster)
+        /// </summary>
+        /// <param name="commandType"></param>
+        /// <param name="handler"></param>
+        /// <returns></returns>
+        /// <exception cref="KeyNotFoundException"></exception>
+        public static Func<ICommandHandler, ICommand, CancellationToken, ValueTask<ICommandResponse>> GetCommandCompliance(Type commandType, ICommandHandler handler)
+        {
+            var cache = GetCommandMeta();
+            if (cache.TryGetValue(commandType, out var metadata) && metadata.Compliance is not null)
+                return metadata.Compliance;
+
+            lock (cache)
+            {
+                if (!cache.TryGetValue(commandType, out metadata))
+                    cache.Add(commandType, metadata = new CommandMethod());
+                if (metadata.Compliance is not null)
+                    return metadata.Compliance;
+
+                var method = handler
+                    .GetType()
+                    .GetMethod(ComplianceAsync, new Type[] { commandType, typeof(CancellationToken) });
+                if (method is null)
+                    throw new KeyNotFoundException($"Not found validator for {handler}");
+
+                var handlerType = handler.GetType();
+                metadata.Compliance = Emit<Func<ICommandHandler, ICommand, CancellationToken, ValueTask<ICommandResponse>>>
+                    .NewDynamicMethod($"{ComplianceAsync}_{commandType.FullName}")
+                    .LoadArgument(0).CastClass(handlerType)
+                    .LoadArgument(1).CastClass(commandType)
+                    .LoadArgument(2)
+                    .Call(method)
+                    .Return()
+                    .CreateDelegate();
+
+                return metadata.Compliance;
+            }
+        }
+        /// <summary>
+        /// Get a function to execute the commmand handler validator without use a dynamic methods (faster)
+        /// </summary>
+        /// <param name="commandType"></param>
+        /// <param name="validatorType"></param>
+        /// <param name="handler"></param>
+        /// <returns></returns>
+        /// <exception cref="KeyNotFoundException"></exception>
+        public static Func<ICommandHandler, ICommand, IValidator, CancellationToken, ValueTask> GetCommandValidator(Type commandType, Type validatorType, ICommandHandler handler)
+        {
+            var cache = GetCommandMeta();
+            if (cache.TryGetValue(commandType, out var metadata) && metadata.Validator is not null)
+                return metadata.Validator;
+
+            lock (cache)
+            {
+                if (!cache.TryGetValue(commandType, out metadata))
+                    cache.Add(commandType, metadata = new CommandMethod());
+                if (metadata.Validator is not null)
+                    return metadata.Validator;
+
+                var method = handler
+                    .GetType()
+                    .GetMethod(ValidatorAsync, new Type[] { commandType, validatorType, typeof(CancellationToken) });
+                if (method is null)
+                    throw new KeyNotFoundException($"Not found validator for {handler}");
+
+                var handlerType = handler.GetType();
+                metadata.Validator = Emit<Func<ICommandHandler, ICommand, IValidator, CancellationToken, ValueTask>>
+                    .NewDynamicMethod($"{ValidatorAsync}_{commandType.FullName}")
+                    .LoadArgument(0).CastClass(handlerType)
+                    .LoadArgument(1).CastClass(commandType)
+                    .LoadArgument(2).CastClass(validatorType)
+                    .LoadArgument(3)
+                    .Call(method)
+                    .Return()
+                    .CreateDelegate();
+
+                return metadata.Validator;
+            }
+        }
+
+        /// <summary>
+        /// Bucket cache
+        /// </summary>
+        private sealed class CommandMethod
+        {
+            public Func<ICommandHandler, ICommand, CancellationToken, Task<ICommandResponse>> Handler;
+            public Func<ICommandHandler, ICommand, IValidator, CancellationToken, ValueTask> Validator;
+            public Func<ICommandHandler, ICommand, CancellationToken, ValueTask<ICommandResponse>> Compliance;
+        }
+        #endregion
+
+        #region Events
+        private static Dictionary<Type, Func<IEventHandler, IEvent, CancellationToken, Task<IEventResponse>>> _eventCache;
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static Dictionary<Type, Func<IEventHandler, IEvent, CancellationToken, Task<IEventResponse>>> GetEventMeta()
+        {
+            if (_eventCache is null)
+                Interlocked.CompareExchange(ref _eventCache, new(), null);
+            return _eventCache;
+        }
+
+        /// <summary>
+        /// Get a function to execute the commmand handler without use a dynamic methods (faster)
+        /// </summary>
+        /// <param name="eventType"></param>
+        /// <param name="handler"></param>
+        /// <returns></returns>
+        /// <exception cref="KeyNotFoundException"></exception>
+        public static Func<IEventHandler, IEvent, CancellationToken, Task<IEventResponse>> GetEventHandler(Type eventType, IEventHandler handler)
+        {
+            var cache = GetEventMeta();
+            if (cache.TryGetValue(eventType, out var metadata))
+                return metadata;
+
+            lock (cache)
+            {
+                if (cache.TryGetValue(eventType, out metadata))
+                    return metadata;
+
+                var method = handler
+                    .GetType()
+                    .GetMethod(HandleAsync, new Type[] { eventType, typeof(CancellationToken) });
+                if (method is null)
+                    throw new KeyNotFoundException($"Not found handler for {handler}");
+
+                var handlerType = handler.GetType();
+                var @delegate = Emit<Func<IEventHandler, IEvent, CancellationToken, Task<IEventResponse>>>
+                    .NewDynamicMethod($"{HandleAsync}_{eventType.FullName}")
+                    .LoadArgument(0).CastClass(handlerType)
+                    .LoadArgument(1).CastClass(eventType)
+                    .LoadArgument(2)
+                    .Call(method)
+                    .Return()
+                    .CreateDelegate();
+                cache.Add(eventType, @delegate);
+
+                return @delegate;
+            }
+        }
+        #endregion
     }
 }

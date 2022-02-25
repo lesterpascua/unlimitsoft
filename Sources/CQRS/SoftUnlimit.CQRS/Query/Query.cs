@@ -1,5 +1,4 @@
 ﻿using SoftUnlimit.CQRS.Message;
-using SoftUnlimit.Web.Client;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -16,22 +15,22 @@ namespace SoftUnlimit.CQRS.Query
         public TProps Props { get; set; }
 
         /// <summary>
-        /// Auto execute query.
-        /// </summary>
-        /// <param name="dispatcher"></param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        public async Task<(IQueryResponse, TResult)> ExecuteAsync(IQueryDispatcher dispatcher, CancellationToken ct = default)
-        {
-            var response = await dispatcher.DispatchAsync<TResult>(this, ct);
-            return (response, response.IsSuccess ? response.GetBody<TResult>() : default);
-        }
-        /// <summary>
         /// Return metadata props associate with the query.
         /// </summary>
         /// <typeparam name="TInnerProps"></typeparam>
         /// <returns></returns>
         TInnerProps IQuery.GetProps<TInnerProps>() => Props as TInnerProps;
+        /// <summary>
+        /// Auto execute query.
+        /// </summary>
+        /// <param name="dispatcher"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        public async Task<QueryResponse<TResult>> ExecuteAsync(IQueryDispatcher dispatcher, CancellationToken ct = default)
+        {
+            var response = await dispatcher.DispatchAsync<TResult>(this, ct);
+            return (QueryResponse<TResult>)response;
+        }
     }
     /// <summary>
     /// 

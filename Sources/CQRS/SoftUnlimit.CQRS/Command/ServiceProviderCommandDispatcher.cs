@@ -16,19 +16,23 @@ namespace SoftUnlimit.CQRS.Command
     /// <summary>
     /// Implement a command dispatcher resolving all handler by a ServiceProvider.
     /// </summary>
-    public class ServiceProviderCommandDispatcher : CacheDispatcher, ICommandDispatcher
+    public class ServiceProviderCommandDispatcher : ICommandDispatcher
     {
         private readonly IServiceProvider _provider;
-        private readonly bool _validate, _useCache, _useScope;
-        private readonly Func<IList<ValidationFailure>, IDictionary<string, IEnumerable<string>>> _errorTransforms;
-        private readonly string _invalidArgumendText;
+
+        private readonly bool _validate, _useScope;
         private readonly Action<IServiceProvider, ICommand> _preeDispatch;
+
+        private readonly string _invalidArgumendText;
+        private readonly Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>> _errorTransforms;
+
+        private readonly Dictionary<Type, CommandMetadata> _cache;
         private readonly ILogger<ServiceProviderCommandDispatcher> _logger;
 
         /// <summary>
         /// Default function used to convert error transform to standard ASP.NET format
         /// </summary>
-        public static readonly Func<IList<ValidationFailure>, IDictionary<string, IEnumerable<string>>> DefaultErrorTransforms = (failure) => failure.GroupBy(p => p.PropertyName).ToDictionary(k => k.Key, v => v.Select(s => s.ErrorMessage));
+        public static readonly Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>> DefaultErrorTransforms = (failure) => failure.GroupBy(p => p.PropertyName).ToDictionary(k => k.Key, v => v.Select(s => s.ErrorMessage).ToArray());
 
 
         /// <summary>
@@ -36,131 +40,190 @@ namespace SoftUnlimit.CQRS.Command
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="validate">Enable command validation after execute associate handler.</param>
-        /// <param name="useCache">Store reference method of command handler associate by command to better performance.</param>
         /// <param name="useScope">Create scope to resolve element in DPI.</param>
         /// <param name="errorTransforms">Conver error to a Dictionary where key is a propertyName with an error and value is all error description.</param>
         /// <param name="invalidArgumendText">Default text used to response in Inotify object when validation not success.</param>
         /// <param name="preeDispatch">Before dispatch command flow call this action.</param>
         /// <param name="logger"></param>
-        public ServiceProviderCommandDispatcher(IServiceProvider provider, bool validate = true, bool useCache = true,
-            bool useScope = true, Func<IList<ValidationFailure>, IDictionary<string, IEnumerable<string>>> errorTransforms = null, 
+        public ServiceProviderCommandDispatcher(IServiceProvider provider, bool validate = true,
+            bool useScope = true, Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>> errorTransforms = null,
             string invalidArgumendText = null, Action<IServiceProvider, ICommand> preeDispatch = null, ILogger<ServiceProviderCommandDispatcher> logger = null
         )
-            : base(useCache)
         {
             _provider = provider;
             _validate = validate;
-            _useCache = useCache;
             _useScope = useScope;
             _errorTransforms = errorTransforms;
             _invalidArgumendText = invalidArgumendText;
             _preeDispatch = preeDispatch;
             _logger = logger;
+            _cache = new Dictionary<Type, CommandMetadata>();
         }
 
         #region Public Methods
 
         /// <inheritdoc />
-        public async Task<ICommandResponse> DispatchAsync(ICommand command, CancellationToken ct)
+        public async Task<ICommandResponse> DispatchAsync(ICommand command, CancellationToken ct = default)
         {
             if (!_useScope)
                 return await DispatchAsync(_provider, command, ct);
 
-            using IServiceScope scope = _provider.CreateScope();
+            using var scope = _provider.CreateScope();
             return await DispatchAsync(scope.ServiceProvider, command, ct);
         }
         /// <inheritdoc />
-        public async Task<ICommandResponse> DispatchAsync(IServiceProvider provider, ICommand command, CancellationToken ct)
+        public async Task<ICommandResponse> DispatchAsync(IServiceProvider provider, ICommand command, CancellationToken ct = default)
         {
             _preeDispatch?.Invoke(provider, command);
             _logger?.LogDebug("Process command: {@Command}", command);
 
             //
-            // get handler and execute command.
-            Type commandType = command.GetType();
+            // Get handler and execute command.
+            var commandType = command.GetType();
             _logger?.LogDebug("Execute command type: {Type}", commandType);
 
-            var handler = GetCommandHandler(provider, command.GetType());
-
-            dynamic dynamicCommand = command;
-            dynamic dynamicHandler = handler;
+            var handler = GetCommandHandler(provider, command.GetType(), out var metadata);
             if (_validate)
             {
-                var interfaces = handler.GetType().GetInterfaces();
+                ICommandResponse response;
 
-                #region Verify if command implement internal validation
-                var validationHandlerType = typeof(ICommandHandlerValidator<>).MakeGenericType(commandType);
-                if (interfaces.Any(type => type == validationHandlerType))
-                {
-                    _logger?.LogDebug("Command handler implement internal validation");
+                response = await RunValidationAsync(handler, command, commandType, metadata, ct);
+                if (response is not null)
+                    return response;
 
-                    var validatorType = typeof(CommandValidator<>).MakeGenericType(commandType);
-                    IValidator validator = (IValidator)Activator.CreateInstance(validatorType);
-
-                    await (ValueTask)dynamicHandler.ValidatorAsync(dynamicCommand, (dynamic)validator, ct);
-
-                    var valContext = new ValidationContext<ICommand>(command);
-                    var errors = await validator.ValidateAsync(valContext, ct);
-
-                    _logger?.LogDebug("Evaluate validator process result: {@Errors}", errors);
-                    if (errors?.IsValid == false)
-                    {
-                        if (_errorTransforms == null)
-                            return command.BadResponse(errors.Errors, _invalidArgumendText);
-                        return command.BadResponse(_errorTransforms(errors.Errors), _invalidArgumendText);
-                    }
-                }
-                else
-                    _logger?.LogDebug("Command not handler implement internal validation");
-                #endregion
-
-                #region Verify if command implement internal compliance
-                var complianceHandlerType = typeof(ICommandHandlerCompliance<>).MakeGenericType(commandType);
-                if (interfaces.Any(type => type == complianceHandlerType))
-                {
-                    _logger?.LogDebug("Command handler implement internal compliance");
-
-                    var response = await (Task<ICommandResponse>)dynamicHandler.HandleComplianceAsync(dynamicCommand, ct);
-                    if (!response.IsSuccess)
-                        return response;
-                }
-                else
-                    _logger?.LogDebug("Command not handler implement internal compliance");
-                #endregion
+                response = await ComplianceAsync(handler, command, commandType, metadata, ct);
+                if (response is not null)
+                    return response;
             }
-            return await ExecuteHandlerForCommandAsync(handler, dynamicHandler, command, dynamicCommand, commandType, UseCache, ct);
+
+            return await HandlerAsync(handler, command, commandType, ct);
         }
 
         #endregion
 
         #region Static Methods
         /// <summary>
-        /// 
+        /// Get command handler and metadata asociate to a command.
         /// </summary>
-        /// <param name="scopeProvider"></param>
-        /// <param name="command"></param>
+        /// <param name="provider"></param>
+        /// <param name="commandType"></param>
+        /// <param name="metadata"></param>
         /// <returns></returns>
-        private static ICommandHandler GetCommandHandler(IServiceProvider scopeProvider, Type command)
+        private ICommandHandler GetCommandHandler(IServiceProvider provider, Type commandType, out CommandMetadata metadata)
         {
-            Type serviceType = typeof(ICommandHandler<>).MakeGenericType(command);
-            ICommandHandler commandHandler = (ICommandHandler)scopeProvider.GetService(serviceType);
-            if (commandHandler == null)
-                throw new KeyNotFoundException("There is no handler associated with this command");
+            if (_cache.TryGetValue(commandType, out metadata))
+                return (ICommandHandler)provider.GetRequiredService(metadata.CommandHandler);
 
-            return commandHandler;
+            lock (_cache)
+                if (!_cache.TryGetValue(commandType, out metadata))
+                {
+                    _cache.Add(commandType, metadata = new CommandMetadata());
+
+                    // Handler
+                    metadata.CommandHandler = typeof(ICommandHandler<>).MakeGenericType(commandType);
+                    var handler = (ICommandHandler)provider.GetRequiredService(metadata.CommandHandler);
+
+                    // Features implemented by this command
+                    var interfaces = handler.GetType().GetInterfaces();
+
+                    // Validator
+                    var validationHandlerType = typeof(ICommandHandlerValidator<>).MakeGenericType(commandType);
+                    if (interfaces.Any(type => type == validationHandlerType))
+                        metadata.ValidatorType = typeof(CommandValidator<>).MakeGenericType(commandType);
+
+                    // Compliance
+                    var complianceHandlerType = typeof(ICommandHandlerCompliance<>).MakeGenericType(commandType);
+                    if (interfaces.Any(type => type == complianceHandlerType))
+                        metadata.HasCompliance = true;
+
+                    return handler;
+                }
+
+            // Resolve service
+            return (ICommandHandler)provider.GetRequiredService(metadata.CommandHandler);
         }
-        private static async Task<ICommandResponse> ExecuteHandlerForCommandAsync(ICommandHandler handler, dynamic dynamicHandler, ICommand command, dynamic dynamicCommand, Type commandType, bool useCache, CancellationToken ct)
+        /// <summary>
+        /// Execute command handler
+        /// </summary>
+        /// <param name="handler"></param>
+        /// <param name="command"></param>
+        /// <param name="commandType"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        private Task<ICommandResponse> HandlerAsync(ICommandHandler handler, ICommand command, Type commandType, CancellationToken ct)
         {
-            Task<ICommandResponse> result;
-            if (useCache)
+            var method = CacheDispatcher.GetCommandHandler(commandType, handler);
+            return method(handler, command, ct);
+        }
+        /// <summary>
+        /// Execute command compliance
+        /// </summary>
+        /// <param name="handler"></param>
+        /// <param name="command"></param>
+        /// <param name="commandType"></param>
+        /// <param name="metadata"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        private async ValueTask<ICommandResponse> ComplianceAsync(ICommandHandler handler, ICommand command, Type commandType, CommandMetadata metadata, CancellationToken ct)
+        {
+            if (!metadata.HasCompliance)
             {
-                var method = GetCommandHandlerFromCache(commandType, handler);
-                result = method(handler, command, ct);
+                _logger?.LogDebug("Command not handler implement internal compliance");
+                return null;
             }
-            else
-                result = (Task<ICommandResponse>)dynamicHandler.HandleAsync(dynamicCommand, ct);
 
-            return await result;
+            _logger?.LogDebug("Command handler implement internal compliance");
+
+            var method = CacheDispatcher.GetCommandCompliance(commandType, handler);
+            var response = await method(handler, command, ct);
+            if (!response.IsSuccess)
+                return response;
+
+            return null;
+        }
+        /// <summary>
+        /// Execute validator
+        /// </summary>
+        /// <param name="handler"></param>
+        /// <param name="command"></param>
+        /// <param name="commandType"></param>
+        /// <param name="metadata"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        private async ValueTask<ICommandResponse> RunValidationAsync(ICommandHandler handler, ICommand command, Type commandType, CommandMetadata metadata, CancellationToken ct)
+        {
+            if (metadata.ValidatorType is null)
+            {
+                _logger?.LogDebug("Command not handler implement internal validation");
+                return null;
+            }
+
+            _logger?.LogDebug("Command handler implement internal validation");
+
+            var validator = (IValidator)Activator.CreateInstance(metadata.ValidatorType);
+            var method = CacheDispatcher.GetCommandValidator(commandType, metadata.ValidatorType, handler);
+
+            await method(handler, command, validator, ct);
+
+            var valContext = new ValidationContext<ICommand>(command);
+            var errors = await validator.ValidateAsync(valContext, ct);
+
+            _logger?.LogDebug("Evaluate validator process result: {@Errors}", errors);
+            if (errors?.IsValid != false)
+                return null;
+
+            if (_errorTransforms is null)
+                return command.BadResponse(errors.Errors, _invalidArgumendText);
+            return command.BadResponse(_errorTransforms(errors.Errors), _invalidArgumendText);
+        }
+        #endregion
+
+        #region Nested Classes
+        private sealed class CommandMetadata
+        {
+            public Type ValidatorType;
+            public Type CommandHandler;
+            public bool HasCompliance;
         }
         #endregion
     }

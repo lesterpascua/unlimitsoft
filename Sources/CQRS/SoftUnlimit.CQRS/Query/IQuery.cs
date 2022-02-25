@@ -28,6 +28,6 @@ namespace SoftUnlimit.CQRS.Query
         /// <param name="dispatcher"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task<(IQueryResponse, TResult)> ExecuteAsync(IQueryDispatcher dispatcher, CancellationToken ct = default);
+        Task<QueryResponse<TResult>> ExecuteAsync(IQueryDispatcher dispatcher, CancellationToken ct = default);
     }
 }

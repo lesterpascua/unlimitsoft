@@ -15,6 +15,6 @@ namespace SoftUnlimit.CQRS.Command
         /// </summary>
         /// <param name="command"></param>
         /// <param name="ct"></param>
-        Task<ICommandResponse> HandleComplianceAsync(TCommand command, CancellationToken ct = default);
+        ValueTask<ICommandResponse> ComplianceAsync(TCommand command, CancellationToken ct = default);
     }
 }

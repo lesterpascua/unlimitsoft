@@ -1,5 +1,6 @@
 ﻿using FluentValidation;
 using FluentValidation.Results;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SoftUnlimit.CQRS.Cache;
 using SoftUnlimit.CQRS.Command;
@@ -16,14 +17,18 @@ namespace SoftUnlimit.CQRS.Query
     /// <summary>
     /// Query provider dispatcher using and standard IServiceProvider to locate the QueryHandler associate with a query.
     /// </summary>
-    public class ServiceProviderQueryDispatcher : CacheDispatcher, IQueryDispatcher
+    public class ServiceProviderQueryDispatcher : IQueryDispatcher
     {
         private readonly IServiceProvider _provider;
+
         private readonly bool _validate;
-        private readonly string _invalidArgumendText;
         private readonly Action<IServiceProvider, IQuery> _preeDispatch;
+
+        private readonly string _invalidArgumendText;
+        private readonly Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>> _errorTransforms;
+
+        private readonly Dictionary<Type, QueryMetadata> _cache;
         private readonly ILogger<ServiceProviderQueryDispatcher> _logger;
-        private readonly Func<IList<ValidationFailure>, IDictionary<string, IEnumerable<string>>> _errorTransforms;
 
 
         /// <summary>
@@ -31,16 +36,14 @@ namespace SoftUnlimit.CQRS.Query
         /// </summary>
         /// <param name="provider"></param>
         /// <param name="validate"></param>
-        /// <param name="useCache"></param>
         /// <param name="errorTransforms"></param>
         /// <param name="invalidArgumendText"></param>
         /// <param name="preeDispatch"></param>
         /// <param name="logger"></param>
-        public ServiceProviderQueryDispatcher(IServiceProvider provider, bool validate = true, bool useCache = true,
-            Func<IList<ValidationFailure>, IDictionary<string, IEnumerable<string>>> errorTransforms = null, string invalidArgumendText = null,
+        public ServiceProviderQueryDispatcher(IServiceProvider provider, bool validate = true,
+            Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>> errorTransforms = null, string invalidArgumendText = null,
             Action<IServiceProvider, IQuery> preeDispatch = null, ILogger<ServiceProviderQueryDispatcher> logger = null
         )
-            : base(useCache)
         {
             _provider = provider;
             _validate = validate;
@@ -48,6 +51,7 @@ namespace SoftUnlimit.CQRS.Query
             _invalidArgumendText = invalidArgumendText;
             _preeDispatch = preeDispatch;
             _logger = logger;
+            _cache = new Dictionary<Type, QueryMetadata>();
         }
 
         /// <summary>
@@ -60,90 +64,160 @@ namespace SoftUnlimit.CQRS.Query
         public async Task<IQueryResponse> DispatchAsync<TResult>(IQuery query, CancellationToken ct = default)
         {
             _preeDispatch?.Invoke(_provider, query);
+            _logger?.LogDebug("Process query: {@Query}", query);
 
+            //
+            // Get handler and execute command.
             var queryType = query.GetType();
             var entityType = typeof(TResult);
+            _logger?.LogDebug("Execute query type: {Type}", queryType);
 
-            _logger?.LogDebug("Execute Query type: {Type}", queryType);
-
-            var handler = GetQueryHandler(_provider, entityType, queryType);
-            var handlerType = handler.GetType();
-
-            dynamic dynamicHandler = handler;
-            dynamic dynamicQuery = query;
+            var handler = GetQueryHandler(_provider, entityType, queryType, out var metadata);
             if (_validate)
             {
-                var interfaces = handlerType.GetInterfaces();
+                IQueryResponse response;
 
-                #region Verify if query implement internal validation
-                var validationHandlerType = typeof(IQueryHandlerValidator<>).MakeGenericType(queryType);
-                if (interfaces.Any(type => type == validationHandlerType))
-                {
-                    _logger?.LogDebug("Query handler implement internal validation");
+                response = await RunValidationAsync(handler, query, queryType, metadata, ct);
+                if (response is not null)
+                    return response;
 
-                    var validatorType = typeof(QueryValidator<>).MakeGenericType(queryType);
-                    IValidator validator = (IValidator)Activator.CreateInstance(validatorType);
-
-                    validator = await (ValueTask<IValidator>)dynamicHandler.ValidatorAsync(dynamicQuery, (dynamic)validator, ct);
-
-                    var valContext = new ValidationContext<IQuery>(query);
-                    var errors = await validator.ValidateAsync(valContext, ct);
-
-                    _logger?.LogDebug("Evaluate validator process result: {@Errors}", errors);
-                    if (errors?.IsValid == false)
-                    {
-                        if (_errorTransforms == null)
-                            return query.BadResponse(errors.Errors, _invalidArgumendText);
-                        return query.BadResponse(_errorTransforms(errors.Errors), _invalidArgumendText);
-                    }
-                }
-                else
-                    _logger?.LogDebug("Query not handler implement internal validation");
-                #endregion
-
-                #region Verify if Query implement internal compliance
-                var complianceHandlerType = typeof(IQueryHandlerCompliance<>).MakeGenericType(queryType);
-                if (interfaces.Any(type => type == complianceHandlerType))
-                {
-                    _logger?.LogDebug("Query handler implement internal compliance");
-
-                    var response = await (Task<IQueryResponse>)dynamicHandler.HandleComplianceAsync(dynamicQuery, ct);
-                    if (!response.IsSuccess)
-                        return response;
-                }
-                else
-                    _logger?.LogDebug("Query not handler implement internal compliance");
-                #endregion
+                response = await ComplianceAsync(handler, query, queryType, metadata, ct);
+                if (response is not null)
+                    return response;
             }
-            TResult result = await ExecuteHandlerForQueryAsync<TResult>(handler, dynamicHandler, query, dynamicQuery, queryType, UseCache, ct);
-
+            
+            var result = await HandlerAsync<TResult>(handler, query, queryType, ct);
             return query.OkResponse(result);
         }
 
         #region Private Methods
-
-        private static IQueryHandler GetQueryHandler(IServiceProvider scopeProvider, Type entity, Type query)
+        /// <summary>
+        /// Get command handler and metadata asociate to a command.
+        /// </summary>
+        /// <param name="provider"></param>
+        /// <param name="entity"></param>
+        /// <param name="queryType"></param>
+        /// <param name="metadata"></param>
+        /// <returns></returns>
+        private IQueryHandler GetQueryHandler(IServiceProvider provider, Type entity, Type queryType, out QueryMetadata metadata)
         {
-            Type serviceType = typeof(IQueryHandler<,>).MakeGenericType(entity, query);
-            IQueryHandler queryHandler = (IQueryHandler)scopeProvider.GetService(serviceType);
-            if (queryHandler == null)
-                throw new KeyNotFoundException("There is no handler associated with this query");
+            if (_cache.TryGetValue(queryType, out metadata))
+                return (IQueryHandler)provider.GetRequiredService(metadata.QueryHandler);
 
-            return queryHandler;
+            lock (_cache)
+                if (!_cache.TryGetValue(queryType, out metadata))
+                {
+                    _cache.Add(queryType, metadata = new QueryMetadata());
+
+                    // Handler
+                    metadata.QueryHandler = typeof(IQueryHandler<,>).MakeGenericType(entity, queryType);
+                    var handler = (IQueryHandler)provider.GetRequiredService(metadata.QueryHandler);
+
+                    // Features implemented by this command
+                    var interfaces = handler.GetType().GetInterfaces();
+
+                    // Validator
+                    var validationHandlerType = typeof(IQueryHandlerValidator<>).MakeGenericType(queryType);
+                    if (interfaces.Any(type => type == validationHandlerType))
+                        metadata.ValidatorType = typeof(QueryValidator<>).MakeGenericType(queryType);
+
+                    // Compliance
+                    var complianceHandlerType = typeof(IQueryHandlerCompliance<>).MakeGenericType(queryType);
+                    if (interfaces.Any(type => type == complianceHandlerType))
+                        metadata.HasCompliance = true;
+
+                    return handler;
+                }
+
+            // Resolve service
+            return (IQueryHandler)provider.GetRequiredService(metadata.QueryHandler);
         }
-        private static async Task<TEntity> ExecuteHandlerForQueryAsync<TEntity>(IQueryHandler handler, dynamic dynamicHandler, IQuery query, dynamic dynamicQuery, Type queryType, bool useCache, CancellationToken ct)
+        /// <summary>
+        /// Execute query handler
+        /// </summary>
+        /// <typeparam name="TEntity"></typeparam>
+        /// <param name="handler"></param>
+        /// <param name="query"></param>
+        /// <param name="queryType"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        private async Task<TEntity> HandlerAsync<TEntity>(IQueryHandler handler, IQuery query, Type queryType, CancellationToken ct)
         {
-            Task<TEntity> result;
-            if (useCache)
-            {
-                var method = GetQueryHandlerFromCache<TEntity>(queryType, handler);
-                result = (Task<TEntity>)method(handler, query, ct);
-            } else
-                result = (Task<TEntity>)dynamicHandler.HandleAsync(dynamicQuery, ct);
+            var method = CacheDispatcher.GetQueryHandler<TEntity>(queryType, handler);
+            var result = (Task<TEntity>)method(handler, query, ct);
 
             return await result;
         }
-        
+        /// <summary>
+        /// Execute Query compliance
+        /// </summary>
+        /// <param name="handler"></param>
+        /// <param name="query"></param>
+        /// <param name="queryType"></param>
+        /// <param name="metadata"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        private async ValueTask<IQueryResponse> ComplianceAsync(IQueryHandler handler, IQuery query, Type queryType, QueryMetadata metadata, CancellationToken ct)
+        {
+            if (!metadata.HasCompliance)
+            {
+                _logger?.LogDebug("Query not handler implement internal compliance");
+                return null;
+            }
+
+            _logger?.LogDebug("Query handler implement internal compliance");
+
+            var method = CacheDispatcher.GetQueryCompliance(queryType, handler);
+            var response = await method(handler, query, ct);
+            if (!response.IsSuccess)
+                return response;
+
+            return null;
+        }
+        /// <summary>
+        /// Execute validator
+        /// </summary>
+        /// <param name="handler"></param>
+        /// <param name="query"></param>
+        /// <param name="queryType"></param>
+        /// <param name="metadata"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        private async ValueTask<IQueryResponse> RunValidationAsync(IQueryHandler handler, IQuery query, Type queryType, QueryMetadata metadata, CancellationToken ct)
+        {
+            if (metadata.ValidatorType is null)
+            {
+                _logger?.LogDebug("Query not handler implement internal validation");
+                return null;
+            }
+
+            _logger?.LogDebug("Query handler implement internal validation");
+
+            var validator = (IValidator)Activator.CreateInstance(metadata.ValidatorType);
+            var method = CacheDispatcher.GetQueryValidator(queryType, metadata.ValidatorType, handler);
+
+            await method(handler, query, validator, ct);
+
+            var valContext = new ValidationContext<IQuery>(query);
+            var errors = await validator.ValidateAsync(valContext, ct);
+
+            _logger?.LogDebug("Evaluate validator process result: {@Errors}", errors);
+            if (errors?.IsValid != false)
+                return null;
+
+            if (_errorTransforms is null)
+                return query.BadResponse(errors.Errors, _invalidArgumendText);
+            return query.BadResponse(_errorTransforms(errors.Errors), _invalidArgumendText);
+        }
+        #endregion
+
+        #region Nested Classes
+        private sealed class QueryMetadata
+        {
+            public Type ValidatorType;
+            public Type QueryHandler;
+            public bool HasCompliance;
+        }
         #endregion
     }
 }

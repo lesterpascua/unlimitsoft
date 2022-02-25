@@ -156,12 +156,12 @@ namespace SoftUnlimit.WebApi.DependencyInjection
 
             if (cqrsSettings != null)
             {
-                if (cqrsSettings.PreeDispatchAction == null)
-                    cqrsSettings.PreeDispatchAction = (provider, command) => {
+                if (cqrsSettings.PreeDispatchCommand == null)
+                    cqrsSettings.PreeDispatchCommand = (provider, command) => {
                         var identity = command.GetProps<MyCommandProps>().User;
                         LoggerUtility.SafeUpdateCorrelation(provider.GetService<ILoggerContextAccessor>(), identity.TraceId, identity.CorrelationId);
                     };
-                services.AddSoftUnlimitDefaultCQRS(cqrsSettings);
+                services.AddUnlimitSoftCQRS(cqrsSettings);
             }
             return services;
         }

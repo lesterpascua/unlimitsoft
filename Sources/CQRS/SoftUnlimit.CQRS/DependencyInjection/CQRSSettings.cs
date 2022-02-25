@@ -1,9 +1,8 @@
 ﻿using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Event;
-using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.CQRS.Query;
+using SoftUnlimit.Event;
 using System;
-using System.Collections.Generic;
 using System.Reflection;
 
 namespace SoftUnlimit.CQRS.DependencyInjection
@@ -16,7 +15,7 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         /// <summary>
         /// Assemblies used to scan for CommandHandler, QueryHandler and EventHandler
         /// </summary>
-        public IEnumerable<Assembly> Assemblies { get; set; }
+        public Assembly[] Assemblies { get; set; }
 
         /// <summary>
         /// typeof(IQueryAsyncHandler&lt;,&gt;)
@@ -34,13 +33,13 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         public Type IEventHandler { get; set; }
 
         /// <summary>
-        /// Event dispatcher used to handler events.
+        /// Trigger some action before dispatch command
         /// </summary>
-        public Func<IServiceProvider, IEventDispatcher> EventDispatcher { get; set; }
+        public Action<IServiceProvider, IEvent> PreeDispatchEvent { get; set; }
         /// <summary>
         /// Trigger some action before dispatch command
         /// </summary>
-        public Action<IServiceProvider, ICommand> PreeDispatchAction { get; set; }
+        public Action<IServiceProvider, ICommand> PreeDispatchCommand { get; set; }
         /// <summary>
         /// Trigger some action before dispatch command
         /// </summary>

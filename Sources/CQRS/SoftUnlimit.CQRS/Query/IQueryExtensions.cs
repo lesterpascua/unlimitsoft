@@ -11,12 +11,13 @@ namespace SoftUnlimit.CQRS.Query
         /// <summary>
         /// Generate a success response using query data.
         /// </summary>
+        /// <typeparam name="T"></typeparam>
         /// <param name="query"></param>
+        /// <param name="body"></param>
         /// <param name="uiText">Global information about message</param>
         /// <param name="skipqueryInfo"></param>
         /// <returns></returns>
-        public static IQueryResponse OkResponse(this IQuery query, string uiText = null, bool skipqueryInfo = true) => new QueryResponse<object>(skipqueryInfo ? new SealedQueryAsync<object>(query.GetProps<QueryProps>()) : query, 200, null, uiText ?? Resources.Response_OkResponse);
-
+        public static IQueryResponse OkResponse<T>(this IQuery query, T body, string uiText = null, bool skipqueryInfo = true) => new QueryResponse<T>(skipqueryInfo ? new SealedQueryAsync<T>(query.GetProps<QueryProps>()) : query, 200, body, uiText ?? Resources.Response_OkResponse);
         /// <summary>
         /// Generate a success response using query data.
         /// </summary>
@@ -26,7 +27,9 @@ namespace SoftUnlimit.CQRS.Query
         /// <param name="uiText">Global information about message</param>
         /// <param name="skipqueryInfo"></param>
         /// <returns></returns>
-        public static IQueryResponse OkResponse<T>(this IQuery query, T body, string uiText = null, bool skipqueryInfo = true) => new QueryResponse<T>(skipqueryInfo ? new SealedQueryAsync<T>(query.GetProps<QueryProps>()) : query, 200, body, uiText ?? Resources.Response_OkResponse);
+        public static IQueryResponse OkResponse<T>(this IQuery<T> query, T body = default, string uiText = null, bool skipqueryInfo = true) => new QueryResponse<T>(skipqueryInfo ? new SealedQueryAsync<T>(query.GetProps<QueryProps>()) : query, 200, body, uiText ?? Resources.Response_OkResponse);
+
+
         /// <summary>
         /// Generate a bad response using query data.
         /// </summary>

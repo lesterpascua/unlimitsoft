@@ -1,5 +1,4 @@
-﻿using FluentValidation;
-using SoftUnlimit.CQRS.Command.Validation;
+﻿using SoftUnlimit.CQRS.Command.Validation;
 using System.Threading;
 using System.Threading.Tasks;
 

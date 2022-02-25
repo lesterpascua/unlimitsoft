@@ -10,9 +10,9 @@ namespace SoftUnlimit.WebApi.Sources.CQRS.Query
     /// </summary>
     public partial class TestQueryHandler : IQueryHandlerCompliance<TestQuery>
     {
-        public Task<IQueryResponse> HandleComplianceAsync(TestQuery query, CancellationToken ct = default)
+        public ValueTask<IQueryResponse> ComplianceAsync(TestQuery query, CancellationToken ct = default)
         {
-            return Task.FromResult(query.OkResponse());
+            return ValueTask.FromResult(query.OkResponse());
         }
     }
 }

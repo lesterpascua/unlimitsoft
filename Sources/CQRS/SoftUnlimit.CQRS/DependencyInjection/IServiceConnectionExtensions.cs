@@ -22,11 +22,11 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         /// </summary>
         /// <param name="services"></param>
         /// <param name="settings"></param>
-        public static void AddSoftUnlimitDefaultCQRS(this IServiceCollection services, CQRSSettings settings)
+        public static void AddUnlimitSoftCQRS(this IServiceCollection services, CQRSSettings settings)
         {
-            services.RegisterQueryHandler(settings);
-            services.RegisterCommandHandler(settings);
-            services.RegisterEventHandler(settings);
+            services.AddQueryHandler(settings);
+            services.AddCommandHandler(settings);
+            services.AddEventHandler(settings);
         }
         /// <summary>
         /// Scan assemblies and register all events.
@@ -58,123 +58,180 @@ namespace SoftUnlimit.CQRS.DependencyInjection
             return services.AddSingleton<IEventNameResolver>(new DefaultEventCommandResolver(register));
         }
 
+
         /// <summary>
         /// Scan assemblies and register all QueryHandler implement the interfaces set in <see cref="CQRSSettings.IQueryHandler"/>
         /// </summary>
         /// <param name="services"></param>
         /// <param name="settings"></param>
-        public static void RegisterQueryHandler(this IServiceCollection services, CQRSSettings settings)
+        public static void AddQueryHandler(this IServiceCollection services, CQRSSettings settings)
         {
-            if (settings.IQueryHandler != null)
-            {
-                services.AddScoped<IQueryDispatcher>(provider => new ServiceProviderQueryDispatcher(provider, preeDispatch: settings.PreeDispatchQuery));
-
-                #region Assembly Scan
-                var existHandler = settings.Assemblies
-                    .SelectMany(s => s.GetTypes())
-                    .Where(p => p.IsClass && !p.IsAbstract && p.GetInterfaces().Contains(typeof(IQueryHandler)));
-
-                foreach (var handlerImplementation in existHandler)
-                {
-                    var queryHandlerImplementedInterfaces = handlerImplementation
-                        .GetInterfaces()
-                        .Where(p => p.GetGenericArguments().Length == 2 && p.GetGenericTypeDefinition() == settings.IQueryHandler);
-
-                    foreach (var queryHandlerInterface in queryHandlerImplementedInterfaces)
-                    {
-                        var argsTypes = queryHandlerInterface.GetGenericArguments();
-                        var handlerInterface = typeof(IQueryHandler<,>).MakeGenericType(argsTypes);
-                        var currHandlerInterface = settings.IQueryHandler.MakeGenericType(argsTypes);
-
-                        services.AddScoped(handlerInterface, handlerImplementation);
-                        if (currHandlerInterface != handlerInterface)
-                            services.AddScoped(currHandlerInterface, provider => provider.GetService(handlerInterface));
-                    }
-                }
-                #endregion
-            }
+            if (settings.IQueryHandler is not null)
+                AddQueryHandler(services, settings.IQueryHandler, settings.PreeDispatchQuery, true, settings.Assemblies);
         }
+        /// <summary>
+        /// Scan assemblies and register all QueryHandler implement the interfaces set in <see cref="CQRSSettings.IQueryHandler"/>
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="queryHandlerType"></param>
+        /// <param name="preeDispatch"></param>
+        /// <param name="validate"></param>
+        /// <param name="assemblies"></param>
+        public static void AddQueryHandler(this IServiceCollection services, Type queryHandlerType, Action<IServiceProvider, IQuery> preeDispatch = null, bool validate = true, params Assembly[] assemblies)
+        {
+            services.AddScoped<IQueryDispatcher>((provider) =>
+            {
+                var logger = provider.GetService<ILogger<ServiceProviderQueryDispatcher>>();
+                return new ServiceProviderQueryDispatcher(
+                    provider,
+                    errorTransforms: ServiceProviderCommandDispatcher.DefaultErrorTransforms,
+                    preeDispatch: preeDispatch,
+                    validate: validate,
+                    logger: logger
+                );
+            });
+
+            #region Assembly Scan
+            var existHandler = assemblies
+                .SelectMany(s => s.GetTypes())
+                .Where(p => p.IsClass && !p.IsAbstract && p.GetInterfaces().Contains(typeof(IQueryHandler)));
+
+            foreach (var handlerImplementation in existHandler)
+            {
+                var queryHandlerImplementedInterfaces = handlerImplementation
+                    .GetInterfaces()
+                    .Where(p => p.GetGenericArguments().Length == 2 && p.GetGenericTypeDefinition() == queryHandlerType);
+
+                foreach (var queryHandlerInterface in queryHandlerImplementedInterfaces)
+                {
+                    var argsTypes = queryHandlerInterface.GetGenericArguments();
+                    var handlerInterface = typeof(IQueryHandler<,>).MakeGenericType(argsTypes);
+                    var currHandlerInterface = queryHandlerType.MakeGenericType(argsTypes);
+
+                    services.AddScoped(handlerInterface, handlerImplementation);
+                    if (currHandlerInterface != handlerInterface)
+                        services.AddScoped(currHandlerInterface, provider => provider.GetService(handlerInterface));
+                }
+            }
+            #endregion
+        }
+
         /// <summary>
         /// Scan assemblies and register all CommandHandler implement the interfaces set in <see cref="CQRSSettings.ICommandHandler"/>
         /// </summary>
         /// <param name="services"></param>
         /// <param name="settings"></param>
-        public static void RegisterCommandHandler(this IServiceCollection services, CQRSSettings settings)
+        public static IServiceCollection AddCommandHandler(this IServiceCollection services, CQRSSettings settings)
         {
             if (settings.ICommandHandler is not null)
-            {
-                services.AddSingleton<ICommandDispatcher>((provider) => {
-                    var logger = provider.GetService<ILogger<ServiceProviderCommandDispatcher>>();
-                    return new ServiceProviderCommandDispatcher(
-                        provider,
-                        errorTransforms: ServiceProviderCommandDispatcher.DefaultErrorTransforms,
-                        preeDispatch: settings.PreeDispatchAction, 
-                        logger: logger
-                    );
-                });
-
-                #region Assembly Scan
-                var existHandler = settings.Assemblies
-                    .SelectMany(s => s.GetTypes())
-                    .Where(p => p.IsClass && !p.IsAbstract && p.GetInterfaces().Contains(typeof(ICommandHandler)));
-
-                foreach (var handlerImplementation in existHandler)
-                {
-                    var commandHandlerImplementedInterfaces = handlerImplementation
-                        .GetInterfaces()
-                        .Where(p => p.GetGenericArguments().Length == 1 && p.GetGenericTypeDefinition() == settings.ICommandHandler);
-
-                    foreach (var commandHandlerInterface in commandHandlerImplementedInterfaces)
-                    {
-                        var argsTypes = commandHandlerInterface.GetGenericArguments();
-                        var handlerInterface = typeof(ICommandHandler<>).MakeGenericType(argsTypes);
-                        var currHandlerInterface = settings.ICommandHandler.MakeGenericType(argsTypes);
-
-                        services.AddScoped(handlerInterface, handlerImplementation);
-                        if (currHandlerInterface != handlerInterface)
-                            services.AddScoped(currHandlerInterface, provider => provider.GetService(handlerInterface));
-                    }
-                }
-                #endregion
-            }
+                AddCommandHandler(services, settings.ICommandHandler, settings.PreeDispatchCommand, true, settings.Assemblies);
+            return services;
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="commandHandlerType"></param>
+        /// <param name="preeDispatch"></param>
+        /// <param name="validate"></param>
+        /// <param name="assemblies"></param>
+        public static IServiceCollection AddCommandHandler(this IServiceCollection services, Type commandHandlerType, Action<IServiceProvider, ICommand> preeDispatch = null, bool validate = true, params Assembly[] assemblies)
+        {
+            services.AddSingleton<ICommandDispatcher>((provider) =>
+            {
+                var logger = provider.GetService<ILogger<ServiceProviderCommandDispatcher>>();
+                return new ServiceProviderCommandDispatcher(
+                    provider,
+                    errorTransforms: ServiceProviderCommandDispatcher.DefaultErrorTransforms,
+                    preeDispatch: preeDispatch,
+                    validate: validate,
+                    logger: logger
+                );
+            });
+
+            #region Assembly Scan
+            var existHandler = assemblies
+                .SelectMany(s => s.GetTypes())
+                .Where(p => p.IsClass && !p.IsAbstract && p.GetInterfaces().Contains(typeof(ICommandHandler)));
+
+            foreach (var handlerImplementation in existHandler)
+            {
+                var commandHandlerImplementedInterfaces = handlerImplementation
+                    .GetInterfaces()
+                    .Where(p => p.GetGenericArguments().Length == 1 && p.GetGenericTypeDefinition() == commandHandlerType);
+
+                foreach (var commandHandlerInterface in commandHandlerImplementedInterfaces)
+                {
+                    var argsTypes = commandHandlerInterface.GetGenericArguments();
+                    var handlerInterface = typeof(ICommandHandler<>).MakeGenericType(argsTypes);
+                    var currHandlerInterface = commandHandlerType.MakeGenericType(argsTypes);
+
+                    services.AddScoped(handlerInterface, handlerImplementation);
+                    if (currHandlerInterface != handlerInterface)
+                        services.AddScoped(currHandlerInterface, provider => provider.GetService(handlerInterface));
+                }
+            }
+            #endregion
+
+            return services;
+        }
+        
         /// <summary>
         /// Scan assemblies and register all EventHandler implement the interfaces set in <see cref="CQRSSettings.IEventHandler"/>
         /// </summary>
         /// <param name="services"></param>
         /// <param name="settings"></param>
         /// <returns></returns>
-        public static IServiceCollection RegisterEventHandler(this IServiceCollection services, CQRSSettings settings)
+        public static IServiceCollection AddEventHandler(this IServiceCollection services, CQRSSettings settings)
         {
             if (settings.IEventHandler is not null)
+                AddEventHandler(services, settings.IEventHandler, settings.PreeDispatchEvent, settings.Assemblies);
+            return services;
+        }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="services"></param>
+        /// <param name="eventHandlerType"></param>
+        /// <param name="preeDispatch"></param>
+        /// <param name="assemblies"></param>
+        /// <returns></returns>
+        public static IServiceCollection AddEventHandler(this IServiceCollection services, Type eventHandlerType, Action<IServiceProvider, IEvent> preeDispatch = null, params Assembly[] assemblies)
+        {
+            services.AddSingleton<IEventDispatcher>((provider) =>
             {
-                if (settings.EventDispatcher is not null)
-                    services.AddSingleton(settings.EventDispatcher);
+                var logger = provider.GetService<ILogger<ServiceProviderEventDispatcher>>();
+                return new ServiceProviderEventDispatcher(
+                    provider,
+                    preeDispatch: preeDispatch,
+                    logger: logger
+                );
+            });
 
-                #region Assembly Scan
-                var existHandler = settings.Assemblies
-                    .SelectMany(s => s.GetTypes())
-                    .Where(p => p.IsClass && !p.IsAbstract && p.GetInterfaces().Contains(typeof(IEventHandler)));
+            #region Assembly Scan
+            var existHandler = assemblies
+                .SelectMany(s => s.GetTypes())
+                .Where(p => p.IsClass && !p.IsAbstract && p.GetInterfaces().Contains(typeof(IEventHandler)));
 
-                foreach (var handlerImplementation in existHandler)
+            foreach (var handlerImplementation in existHandler)
+            {
+                var eventHandlerImplementedInterfaces = handlerImplementation
+                    .GetInterfaces()
+                    .Where(p => p.GetGenericArguments().Length == 1 && p.GetGenericTypeDefinition() == eventHandlerType);
+
+                foreach (var eventHandlerInterface in eventHandlerImplementedInterfaces)
                 {
-                    var eventHandlerImplementedInterfaces = handlerImplementation
-                        .GetInterfaces()
-                        .Where(p => p.GetGenericArguments().Length == 1 && p.GetGenericTypeDefinition() == settings.IEventHandler);
+                    var argsTypes = eventHandlerInterface.GetGenericArguments().Single();
+                    var handlerInterface = typeof(IEventHandler<>).MakeGenericType(argsTypes);
+                    var currHandlerInterface = eventHandlerType.MakeGenericType(argsTypes);
 
-                    foreach (var eventHandlerInterface in eventHandlerImplementedInterfaces)
-                    {
-                        var argsTypes = eventHandlerInterface.GetGenericArguments().Single();
-                        var handlerInterface = typeof(IEventHandler<>).MakeGenericType(argsTypes);
-                        var currHandlerInterface = settings.IEventHandler.MakeGenericType(argsTypes);
-
-                        services.AddScoped(handlerInterface, handlerImplementation);
-                        if (currHandlerInterface != handlerInterface)
-                            services.AddScoped(currHandlerInterface, provider => provider.GetService(handlerInterface));
-                    }
+                    services.AddScoped(handlerInterface, handlerImplementation);
+                    if (currHandlerInterface != handlerInterface)
+                        services.AddScoped(currHandlerInterface, provider => provider.GetService(handlerInterface));
                 }
-                #endregion
             }
+            #endregion
+
             return services;
         }
     }

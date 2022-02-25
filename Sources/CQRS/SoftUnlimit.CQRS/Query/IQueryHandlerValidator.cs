@@ -1,5 +1,4 @@
-﻿using FluentValidation;
-using SoftUnlimit.CQRS.Query.Validation;
+﻿using SoftUnlimit.CQRS.Query.Validation;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,6 +16,6 @@ namespace SoftUnlimit.CQRS.Query
         /// <param name="query"></param>
         /// <param name="validator"></param>
         /// <param name="ct"></param>
-        ValueTask<IValidator> ValidatorAsync(TQuery query, QueryValidator<TQuery> validator, CancellationToken ct = default);
+        ValueTask ValidatorAsync(TQuery query, QueryValidator<TQuery> validator, CancellationToken ct = default);
     }
 }

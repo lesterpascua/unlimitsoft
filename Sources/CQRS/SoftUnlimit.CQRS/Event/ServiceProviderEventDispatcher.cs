@@ -13,32 +13,34 @@ namespace SoftUnlimit.CQRS.Event
     /// <summary>
     /// 
     /// </summary>
-    public class ServiceProviderEventDispatcher : CacheDispatcher, IEventDispatcher
+    public class ServiceProviderEventDispatcher : IEventDispatcher
     {
-        private readonly bool _useCache, _useScope;
-        private readonly Action<IServiceProvider, IEvent> _preeDispatch;
-        private readonly ILogger<ServiceProviderEventDispatcher> _logger;
         private readonly IServiceProvider _provider;
+
+        private readonly bool _useScope;
+        private readonly Action<IServiceProvider, IEvent> _preeDispatch;
+
+        private readonly ILogger<ServiceProviderEventDispatcher> _logger;
+
+        private readonly Dictionary<Type, Type> _cache;
 
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="provider"></param>
-        /// <param name="useCache"></param>
         /// <param name="useScope"></param>
         /// <param name="preeDispatch"></param>
         /// <param name="logger"></param>
-        public ServiceProviderEventDispatcher(IServiceProvider provider, bool useCache = true, bool useScope = true,
+        public ServiceProviderEventDispatcher(IServiceProvider provider, bool useScope = true,
             Action<IServiceProvider, IEvent> preeDispatch = null, ILogger<ServiceProviderEventDispatcher> logger = null
         )
-            : base(useCache)
         {
             _provider = provider;
-            _useCache = useCache;
             _useScope = useScope;
             _preeDispatch = preeDispatch;
             _logger = logger;
+            _cache = new Dictionary<Type, Type>();
         }
 
         /// <inheritdoc />
@@ -47,7 +49,7 @@ namespace SoftUnlimit.CQRS.Event
             if (!_useScope)
                 return await DispatchAsync(_provider, @event, ct);
 
-            using IServiceScope scope = _provider.CreateScope();
+            using var scope = _provider.CreateScope();
             return await DispatchAsync(scope.ServiceProvider, @event, ct);
         }
         /// <inheritdoc />
@@ -58,11 +60,12 @@ namespace SoftUnlimit.CQRS.Event
 
             //
             // get handler and execute event.
-            Type eventType = @event.GetType();
+            var eventType = @event.GetType();
+            _logger?.LogDebug("Execute event type: {Type}", eventType);
 
             var handler = GetEventHandler(provider, eventType);
             if (handler is not null)
-                return await ExecuteHandlerForCommandAsync(handler, @event, eventType, UseCache, ct);
+                return await HandlerAsync(handler, @event, eventType, ct);
 
             _logger.LogWarning("There is no handler associated with this event");
             return @event.OkResponse();
@@ -70,28 +73,26 @@ namespace SoftUnlimit.CQRS.Event
         #region Static Methods
 
         /// <summary>
-        /// 
+        /// Get event handler and metadata asociate to a event.
         /// </summary>
-        /// <param name="scopeProvider"></param>
+        /// <param name="provider"></param>
         /// <param name="eventType"></param>
         /// <returns></returns>
-        private static IEventHandler GetEventHandler(IServiceProvider scopeProvider, Type eventType)
+        private IEventHandler GetEventHandler(IServiceProvider provider, Type eventType)
         {
-            Type serviceType = typeof(IEventHandler<>).MakeGenericType(eventType);
-            return scopeProvider.GetService(serviceType) as IEventHandler;
-        }
-        private static async Task<IEventResponse> ExecuteHandlerForCommandAsync(IEventHandler handler, IEvent e, Type commandType, bool useCache, CancellationToken ct)
-        {
-            Task<IEventResponse> result;
-            if (useCache)
-            {
-                var method = GetEventHandlerFromCache(commandType, handler);
-                result = method(handler, e, ct);
-            }
-            else
-                result = (Task<IEventResponse>)((dynamic)handler).HandleAsync((dynamic)e, ct);
+            if (_cache.TryGetValue(eventType, out var handleType))
+                return (IEventHandler)provider.GetRequiredService(handleType);
 
-            return await result;
+            lock (_cache)
+                if (!_cache.TryGetValue(eventType, out handleType))
+                    _cache.Add(eventType, handleType = typeof(IEventHandler<>).MakeGenericType(eventType));
+
+            return (IEventHandler)provider.GetRequiredService(handleType);
+        }
+        private Task<IEventResponse> HandlerAsync(IEventHandler handler, IEvent @event, Type commandType, CancellationToken ct)
+        {
+            var method = CacheDispatcher.GetEventHandler(commandType, handler);
+            return method(handler, @event, ct);
         }
         #endregion
     }

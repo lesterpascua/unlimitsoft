@@ -52,9 +52,9 @@ namespace SoftUnlimit.WebApi.Sources.CQRS.Command
             return command.OkResponse(body: "Command ok");
         }
 
-        public Task<ICommandResponse> HandleComplianceAsync(TestCommand command, CancellationToken ct = default)
+        public ValueTask<ICommandResponse> ComplianceAsync(TestCommand command, CancellationToken ct = default)
         {
-            return Task.FromResult(command.OkResponse());
+            return ValueTask.FromResult(command.OkResponse());
         }
     }
 }

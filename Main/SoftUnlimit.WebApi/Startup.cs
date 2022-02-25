@@ -150,11 +150,7 @@ namespace SoftUnlimit.WebApi
                     ICommandHandler = typeof(IMyCommandHandler<>),
                     IEventHandler = typeof(IMyEventHandler<>),
                     IQueryHandler = typeof(IMyQueryHandler<,>),
-                    EventDispatcher = provider => new ServiceProviderEventDispatcher(
-                        provider,
-                        preeDispatch: (provider, e) => LoggerUtility.SafeUpdateCorrelation(provider.GetService<ILoggerContextAccessor>(), null, e.CorrelationId),
-                        logger: provider.GetService<ILogger<ServiceProviderEventDispatcher>>()
-                    )
+                    PreeDispatchEvent = (provider, e) => LoggerUtility.SafeUpdateCorrelation(provider.GetService<ILoggerContextAccessor>(), null, e.CorrelationId),
                 }
             );
             services.AddScoped<IMemento<Customer>>(provider =>

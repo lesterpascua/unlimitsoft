@@ -1,8 +1,4 @@
-﻿using FluentValidation;
-using SoftUnlimit.CQRS.Message;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using SoftUnlimit.CQRS.Message;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,6 +15,6 @@ namespace SoftUnlimit.CQRS.Query
         /// </summary>
         /// <param name="query"></param>
         /// <param name="ct"></param>
-        Task<IQueryResponse> HandleComplianceAsync(TQuery query, CancellationToken ct = default);
+        ValueTask<IQueryResponse> ComplianceAsync(TQuery query, CancellationToken ct = default);
     }
 }

@@ -1,11 +1,9 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using SoftUnlimit.CQRS.Query;
-using SoftUnlimit.Security.Cryptography;
 using SoftUnlimit.Web.Client;
 using SoftUnlimit.WebApi.Sources.CQRS.Query;
 using SoftUnlimit.WebApi.Sources.Data.Model;
-using SoftUnlimit.WebApi.Sources.Security.Cryptography;
 using SoftUnlimit.WebApi.Sources.Web;
 using System.Threading.Tasks;
 
@@ -16,7 +14,6 @@ namespace SoftUnlimit.WebApi.Controllers
     [AllowAnonymous]
     public class QueryController : ControllerBase
     {
-        private readonly IMyIdGenerator _gen;
         private readonly IQueryDispatcher _queryDispatcher;
 
 
@@ -25,9 +22,8 @@ namespace SoftUnlimit.WebApi.Controllers
         /// </summary>
         /// <param name="queryDispatcher"></param>
         /// <param name="gen"></param>
-        public QueryController(IMyIdGenerator gen, IQueryDispatcher queryDispatcher)
+        public QueryController(IQueryDispatcher queryDispatcher)
         {
-            _gen = gen;
             _queryDispatcher = queryDispatcher;
         }
 
@@ -35,7 +31,7 @@ namespace SoftUnlimit.WebApi.Controllers
         public async Task<ActionResult<Response<Customer[]>>> Get()
         {
             var query = new TestQuery(this.GetIdentity());
-            var (response, _) = await query.ExecuteAsync(_queryDispatcher);
+            var response = await query.ExecuteAsync(_queryDispatcher);
 
             return this.ToActionResult(response);
         }
