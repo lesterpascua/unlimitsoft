@@ -24,7 +24,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Sources\Core\SoftUnlimit.Logger\SoftUnlimit.Logger.csproj" />
     <ProjectReference Include="..\..\Sources\Core\SoftUnlimit\SoftUnlimit.csproj" />
-    <ProjectReference Include="..\..\Sources\Core\UnlimitSoft.Evals\UnlimitSoft.Evals.csproj" />
     <ProjectReference Include="..\..\Sources\CQRS\SoftUnlimit.CQRS\SoftUnlimit.CQRS.csproj" />
   </ItemGroup>
 
