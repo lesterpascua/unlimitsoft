@@ -173,7 +173,7 @@ namespace SoftUnlimit.EventBus.Azure
             message.ApplicationProperties[BusProperty.MessageType] = transformed.GetType().AssemblyQualifiedName;
 
             await _retryPolicy.ExecuteAsync((cancelationToken) => sender.SendMessageAsync(message, cancelationToken), ct);
-            _logger?.LogInformation("Publish to {Queue} event: {@Event}", queue.Queue, transformed);
+            _logger?.LogInformation("Publish to {Queue} event: {Event}", queue.Queue, json);
         }
         #endregion
     }
