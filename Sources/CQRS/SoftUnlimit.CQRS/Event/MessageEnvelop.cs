@@ -1,9 +1,4 @@
-﻿using SoftUnlimit.CQRS.Event;
-using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace SoftUnlimit.CQRS.Event
+﻿namespace SoftUnlimit.CQRS.Event
 {
     /// <summary>
     /// Messaje envelop with messaje metadata.

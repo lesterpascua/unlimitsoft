@@ -84,14 +84,14 @@ namespace SoftUnlimit.EventBus.Azure
         }
 
         /// <inheritdoc/>
-        public Task PublishAsync(IEvent @event, CancellationToken ct = default) => SendMessageAsync(@event, @event.Id, @event.Name, @event.CorrelationId, MessageType.Event, ct);
+        public Task PublishAsync(IEvent @event, bool useEnvelop = true, CancellationToken ct = default) => SendMessageAsync(@event, @event.Id, @event.Name, @event.CorrelationId, MessageType.Event, useEnvelop, ct);
         /// <inheritdoc/>
-        public async Task PublishPayloadAsync<T>(EventPayload<T> eventPayload, MessageType type, CancellationToken ct = default)
+        public async Task PublishPayloadAsync<T>(EventPayload<T> eventPayload, MessageType type, bool useEnvelop = true, CancellationToken ct = default)
         {
             switch (type)
             {
                 case MessageType.Json:
-                    await SendMessageAsync(eventPayload, eventPayload.Id, eventPayload.EventName, eventPayload.CorrelationId, type, ct);
+                    await SendMessageAsync(eventPayload, eventPayload.Id, eventPayload.EventName, eventPayload.CorrelationId, type, useEnvelop, ct);
                     break;
                 case MessageType.Event:
                     if (eventPayload.Payload is not string payload)
@@ -101,7 +101,7 @@ namespace SoftUnlimit.EventBus.Azure
                     if (eventType is not null)
                     {
                         var @event = JsonUtility.Deserialize(eventType, payload);
-                        await SendMessageAsync(@event, eventPayload.Id, eventPayload.EventName, eventPayload.CorrelationId, type, ct);
+                        await SendMessageAsync(@event, eventPayload.Id, eventPayload.EventName, eventPayload.CorrelationId, type, useEnvelop, ct);
                     }
                     else
                         _logger?.LogWarning("Not found event {EventType}", eventPayload.EventName);
@@ -118,12 +118,13 @@ namespace SoftUnlimit.EventBus.Azure
         /// <param name="id"></param>
         /// <param name="eventName"></param>
         /// <param name="correlationId"></param>
+        /// <param name="useEnvelop"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, CancellationToken ct = default) => SendMessageAsync(graph, id, eventName, correlationId, MessageType.Event, ct);
+        public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop, CancellationToken ct = default) => SendMessageAsync(graph, id, eventName, correlationId, MessageType.Event, useEnvelop, ct);
 
         #region Private Method
-        private async Task SendMessageAsync(object graph, Guid id, string eventName, string correlationId, MessageType type, CancellationToken ct)
+        private async Task SendMessageAsync(object graph, Guid id, string eventName, string correlationId, MessageType type, bool useEnvelop, CancellationToken ct)
         {
             if (graph == null)
                 throw new ArgumentNullException(nameof(graph));
@@ -133,25 +134,29 @@ namespace SoftUnlimit.EventBus.Azure
                 destQueues = destQueues.Where(queue => _filter(queue.Alias, eventName, graph));
 
             var msgTasks = destQueues
-                .Select(queue => PublishMessageInQueueAsync(graph, id, eventName, correlationId, type, queue, ct))
+                .Select(queue => PublishMessageInQueueAsync(graph, id, eventName, correlationId, type, queue, useEnvelop, ct))
                 .ToArray();
             //
             // Wait to send message over all queue 
             await Task.WhenAll(msgTasks);
         }
-        private async Task PublishMessageInQueueAsync(object graph, Guid id, string eventName, string correlationId, MessageType type, QueueAlias<TAlias> queue, CancellationToken ct)
+        private async Task PublishMessageInQueueAsync(object graph, Guid id, string eventName, string correlationId, MessageType type, QueueAlias<TAlias> queue, bool useEnvelop, CancellationToken ct)
         {
             await using var sender = _client.CreateSender(queue.Queue);
             var transformed = _transform?.Invoke(queue.Alias, eventName, graph) ?? graph;
 
-            var messageEnvelop = new MessageEnvelop
+            var envelop = transformed;
+            if (useEnvelop)
             {
-                Type = type,
-                Messaje = transformed,
-                MessajeType = transformed.GetType().FullName
-            };
+                envelop = new MessageEnvelop
+                {
+                    Type = type,
+                    Messaje = transformed,
+                    MessajeType = transformed.GetType().FullName
+                };
+            }
 
-            var json = JsonUtility.Serialize(messageEnvelop);
+            var json = JsonUtility.Serialize(envelop);
             var raw = Encoding.UTF8.GetBytes(json);
 
             var message = new ServiceBusMessage(raw);

@@ -21,16 +21,29 @@ namespace SoftUnlimit.CQRS.Event
         /// Publis event in bus.
         /// </summary>
         /// <param name="event"></param>
+        /// <param name="useEnvelop"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task PublishAsync(IEvent @event, CancellationToken ct = default);
+        Task PublishAsync(IEvent @event, bool useEnvelop = true, CancellationToken ct = default);
         /// <summary>
         /// Publis event in bus.
         /// </summary>
         /// <param name="event"></param>
         /// <param name="type">Messaje format type.</param>
+        /// <param name="useEnvelop"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task PublishPayloadAsync<T>(EventPayload<T> @event, MessageType type, CancellationToken ct = default);
+        Task PublishPayloadAsync<T>(EventPayload<T> @event, MessageType type, bool useEnvelop = true, CancellationToken ct = default);
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="graph"></param>
+        /// <param name="id"></param>
+        /// <param name="eventName"></param>
+        /// <param name="correlationId"></param>
+        /// <param name="useEnvelop"></param>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        Task PublishAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop = true, CancellationToken ct = default);
     }
 }

@@ -14,15 +14,20 @@ namespace SoftUnlimit.Web.AspNet.Testing
         /// <inheritdoc />
         public ValueTask StartAsync(TimeSpan waitRetry, CancellationToken ct) => ValueTask.CompletedTask;
         /// <inheritdoc />
-        public Task PublishAsync(IEvent @event, CancellationToken ct = default)
+        public Task PublishAsync(IEvent @event, bool useEnvelop = true, CancellationToken ct = default)
         {
             Action?.Invoke(@event.Id, @event.Name, @event, @event.CorrelationId, ++EventArrive);
             return Task.CompletedTask;
         }
         /// <inheritdoc />
-        public Task PublishPayloadAsync<T>(EventPayload<T> @event, MessageType type, CancellationToken ct = default)
+        public Task PublishPayloadAsync<T>(EventPayload<T> @event, MessageType type, bool useEnvelop = true, CancellationToken ct = default)
         {
             Action?.Invoke(@event.Id, @event.EventName, @event.Payload, @event.CorrelationId, ++EventArrive);
+            return Task.CompletedTask;
+        }
+        public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop = true, CancellationToken ct = default)
+        {
+            Action?.Invoke(id, eventName, graph, correlationId, ++EventArrive);
             return Task.CompletedTask;
         }
 

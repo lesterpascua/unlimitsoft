@@ -33,7 +33,7 @@ namespace SoftUnlimit.Tests.SoftUnlimit.CQRS.Event
 
             _eventBus = Substitute.For<IEventBus>();
             _eventBus
-                .PublishPayloadAsync(Arg.Any<JsonVersionedEventPayload>(), MessageType.Event, Arg.Any<CancellationToken>())
+                .PublishPayloadAsync(Arg.Any<JsonVersionedEventPayload>(), MessageType.Event, Arg.Any<bool>(), Arg.Any<CancellationToken>())
                 .Returns(args =>
                 {
                     _publish.Add(args.ArgAt<JsonVersionedEventPayload>(0));
@@ -87,7 +87,7 @@ namespace SoftUnlimit.Tests.SoftUnlimit.CQRS.Event
         public async Task StartLoadingPendingEvent_Load3EventOnly2SchedulerInTime_ShouldPublish2EventInEventBus()
         {
             // Arrange
-            using var publishWorker = new QueueEventPublishWorker<IEventSourcedRepository<JsonVersionedEventPayload, string>, JsonVersionedEventPayload, string>(_factory, _eventBus, MessageType.Event, TimeSpan.Zero, TimeSpan.Zero, 10, true, null);
+            using var publishWorker = new QueueEventPublishWorker<IEventSourcedRepository<JsonVersionedEventPayload, string>, JsonVersionedEventPayload, string>(_factory, _eventBus, MessageType.Event, TimeSpan.Zero, TimeSpan.Zero, 10, true, true, null);
 
 
             // Act

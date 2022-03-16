@@ -29,6 +29,7 @@ namespace SoftUnlimit.CQRS.Event
     {
         private readonly int _bachSize;
         private readonly bool _enableScheduled;
+        private readonly bool _useEnvelop;
         private readonly IServiceScopeFactory _factory;
         private readonly IEventBus _eventBus;
         private readonly MessageType _type;
@@ -55,6 +56,7 @@ namespace SoftUnlimit.CQRS.Event
         /// <param name="errorDelay">Wait time if some error happened in the bus, 20 second default time.</param>
         /// <param name="bachSize">Amount of pulling event for every iteration. 10 event by default.</param>
         /// <param name="enableScheduled">Enable scheduler feature by software. If false no scheduler feature will added and all will be handler by the queue provider.</param>
+        /// <param name="useEnvelop">Use envelop when publish the event</param>
         /// <param name="logger"></param>
         public QueueEventPublishWorker(
             IServiceScopeFactory factory,
@@ -64,6 +66,7 @@ namespace SoftUnlimit.CQRS.Event
             TimeSpan? errorDelay = null,
             int bachSize = 10,
             bool enableScheduled = false,
+            bool useEnvelop = true,
             ILogger logger = null)
         {
             _disposed = false;
@@ -76,6 +79,7 @@ namespace SoftUnlimit.CQRS.Event
             _logger = logger;
             _bachSize = bachSize;
             _enableScheduled = enableScheduled;
+            _useEnvelop = useEnvelop;
             _backgoundWorker = null;
             _pending = new();
             _cts = new();
@@ -246,7 +250,7 @@ namespace SoftUnlimit.CQRS.Event
                         if (!ePayload.IsPubliched)
                         {
                             lastEvent = ePayload;
-                            await _eventBus.PublishPayloadAsync(lastEvent, _type, _cts.Token);
+                            await _eventBus.PublishPayloadAsync(lastEvent, _type, _useEnvelop, _cts.Token);
                             await eventSourcedRepository.MarkEventsAsPublishedAsync(lastEvent, _cts.Token);
                         }
 
