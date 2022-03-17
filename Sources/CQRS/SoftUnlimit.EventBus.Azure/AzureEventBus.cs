@@ -84,14 +84,14 @@ namespace SoftUnlimit.EventBus.Azure
         }
 
         /// <inheritdoc/>
-        public Task PublishAsync(IEvent @event, bool useEnvelop = true, CancellationToken ct = default) => SendMessageAsync(@event, @event.Id, @event.Name, @event.CorrelationId, MessageType.Event, useEnvelop, ct);
+        public Task PublishAsync(IEvent @event, bool useEnvelop = true, CancellationToken ct = default) => SendMessageAsync(@event, @event.Id, @event.Name, @event.CorrelationId, useEnvelop, ct);
         /// <inheritdoc/>
         public async Task PublishPayloadAsync<T>(EventPayload<T> eventPayload, MessageType type, bool useEnvelop = true, CancellationToken ct = default)
         {
             switch (type)
             {
                 case MessageType.Json:
-                    await SendMessageAsync(eventPayload, eventPayload.Id, eventPayload.EventName, eventPayload.CorrelationId, type, useEnvelop, ct);
+                    await SendMessageAsync(eventPayload, eventPayload.Id, eventPayload.EventName, eventPayload.CorrelationId, useEnvelop, ct);
                     break;
                 case MessageType.Event:
                     if (eventPayload.Payload is not string payload)
@@ -101,7 +101,7 @@ namespace SoftUnlimit.EventBus.Azure
                     if (eventType is not null)
                     {
                         var @event = JsonUtility.Deserialize(eventType, payload);
-                        await SendMessageAsync(@event, eventPayload.Id, eventPayload.EventName, eventPayload.CorrelationId, type, useEnvelop, ct);
+                        await SendMessageAsync(@event, eventPayload.Id, eventPayload.EventName, eventPayload.CorrelationId, useEnvelop, ct);
                     }
                     else
                         _logger?.LogWarning("Not found event {EventType}", eventPayload.EventName);
@@ -121,10 +121,10 @@ namespace SoftUnlimit.EventBus.Azure
         /// <param name="useEnvelop"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop, CancellationToken ct = default) => SendMessageAsync(graph, id, eventName, correlationId, MessageType.Event, useEnvelop, ct);
+        public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop, CancellationToken ct = default) => SendMessageAsync(graph, id, eventName, correlationId, useEnvelop, ct);
 
         #region Private Method
-        private async Task SendMessageAsync(object graph, Guid id, string eventName, string correlationId, MessageType type, bool useEnvelop, CancellationToken ct)
+        private async Task SendMessageAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop, CancellationToken ct)
         {
             if (graph == null)
                 throw new ArgumentNullException(nameof(graph));
@@ -134,13 +134,13 @@ namespace SoftUnlimit.EventBus.Azure
                 destQueues = destQueues.Where(queue => _filter(queue.Alias, eventName, graph));
 
             var msgTasks = destQueues
-                .Select(queue => PublishMessageInQueueAsync(graph, id, eventName, correlationId, type, queue, useEnvelop, ct))
+                .Select(queue => PublishMessageInQueueAsync(graph, id, eventName, correlationId, queue, useEnvelop, ct))
                 .ToArray();
             //
             // Wait to send message over all queue 
             await Task.WhenAll(msgTasks);
         }
-        private async Task PublishMessageInQueueAsync(object graph, Guid id, string eventName, string correlationId, MessageType type, QueueAlias<TAlias> queue, bool useEnvelop, CancellationToken ct)
+        private async Task PublishMessageInQueueAsync(object graph, Guid id, string eventName, string correlationId, QueueAlias<TAlias> queue, bool useEnvelop, CancellationToken ct)
         {
             await using var sender = _client.CreateSender(queue.Queue);
             var transformed = _transform?.Invoke(queue.Alias, eventName, graph) ?? graph;
@@ -150,8 +150,8 @@ namespace SoftUnlimit.EventBus.Azure
             {
                 envelop = new MessageEnvelop
                 {
-                    Type = type,
                     Msg = transformed,
+                    Type = MessageType.Json,
                     MsgType = transformed.GetType().FullName
                 };
             }
