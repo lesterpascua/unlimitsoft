@@ -87,17 +87,17 @@ namespace SoftUnlimit.EventBus.Azure
         }
         private async Task ProcessMessageAsync(string queue, ProcessMessageEventArgs arg)
         {
-            var messageEnvelop = arg.Message.Body?.ToObjectFromJson<MessageEnvelop>();
+            var envelop = arg.Message.Body?.ToObjectFromJson<MessageEnvelop>();
 
             try
             {
-                _logger.LogDebug("Receive from {Queue}, event: {@Event}", queue, messageEnvelop);
+                _logger.LogDebug("Receive from {Queue}, event: {@Event}", queue, envelop);
 
-                await _processor(messageEnvelop, arg.Message, arg.CancellationToken);
+                await _processor(envelop, arg.Message, arg.CancellationToken);
                 await arg.CompleteMessageAsync(arg.Message, arg.CancellationToken);
             } catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing event: {Event}", messageEnvelop.Messaje);
+                _logger.LogError(ex, "Error processing event: {Event}", envelop.Msg);
                 await Task.Delay(_waitRetry);
 
                 throw;

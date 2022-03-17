@@ -6,6 +6,7 @@ using SoftUnlimit.Event;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using SoftUnlimit.CQRS.Logging;
 
 namespace SoftUnlimit.CQRS.Event
 {
@@ -36,34 +37,45 @@ namespace SoftUnlimit.CQRS.Event
             try
             {
                 Type eventType = null;
-                if (!string.IsNullOrEmpty(envelop.MessajeType))
-                    eventType = resolver.Resolver(envelop.MessajeType);
+                if (!string.IsNullOrEmpty(envelop.MsgType))
+                    eventType = resolver.Resolver(envelop.MsgType);
                 if (eventType is null && !string.IsNullOrEmpty(eventName))
                     eventType = resolver.Resolver(eventName);
 
                 if (eventType is null)
                 {
-                    logger?.LogWarning("Skip event Type: {EventType}, Name: {EventName}", eventType, eventName);
+                    logger?.NoTypeForTheEvent(eventType, eventName);
                     return (responses, ex);
                 }
 
-                var payload = envelop.Messaje.ToString();
-                if (JsonUtility.Deserialize(eventType, payload) is TEvent @event)
+                switch (envelop.Type)
                 {
-                    curr = @event;
-                    beforeProcess?.Invoke(@event);
-                    responses = await DispatchEvent(dispatcher, logger, @event, ct);
+                    case MessageType.Json:
+                        var json = envelop.Msg.ToString();
+                        if (JsonUtility.Deserialize(eventType, json) is not TEvent @event)
+                        {
+                            logger?.LogWarning("Skip event Type: {EventType}, Name: {EventName} don't meet the requirement", eventType, eventName);
+                            break;
+                        }
+                        curr = @event;
+                        break;
+                    case MessageType.Event:
+                        curr = (TEvent)envelop.Msg;
+                        break;
+                    default:
+                        throw new NotSupportedException($"Message type {envelop.Type} is not suported");
                 }
-                else
-                    logger?.LogWarning("Skip event Type: {EventType}, Name: {EventName} don't meet the requirement", eventType, eventName);
+                beforeProcess?.Invoke(curr);
+                responses = await DispatchEvent(dispatcher, logger, curr, ct);
 
+                // Log error if fail
                 if (responses?.IsSuccess != true)
                     throw new EventResponseException("Some event process has error see responses", responses);
             }
             catch (Exception e)
             {
                 ex = e;
-                logger?.LogError(ex, "Error handling event {Type}, {CorrelationId} payload: {Event}, {@Response}", envelop.MessajeType, curr?.CorrelationId, envelop.Messaje, responses);
+                logger?.LogError(ex, "Error handling event {Type}, {CorrelationId} payload: {Event}, {@Response}", envelop.MsgType, curr?.CorrelationId, envelop.Msg, responses);
 
                 if (onError != null)
                     await onError(ex, curr, envelop, ct);

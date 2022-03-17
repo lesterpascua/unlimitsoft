@@ -25,6 +25,7 @@ namespace SoftUnlimit.Web.AspNet.Testing
             Action?.Invoke(@event.Id, @event.EventName, @event.Payload, @event.CorrelationId, ++EventArrive);
             return Task.CompletedTask;
         }
+        /// <inheritdoc />
         public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop = true, CancellationToken ct = default)
         {
             Action?.Invoke(id, eventName, graph, correlationId, ++EventArrive);

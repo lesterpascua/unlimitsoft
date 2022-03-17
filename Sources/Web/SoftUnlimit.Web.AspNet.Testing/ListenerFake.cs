@@ -1,9 +1,8 @@
 ﻿using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.Event.Json;
-using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.CQRS.Message;
-using SoftUnlimit.Security;
 using SoftUnlimit.Event;
+using SoftUnlimit.Security;
 using System;
 using System.Text.Json;
 using System.Threading;
@@ -73,8 +72,8 @@ namespace SoftUnlimit.Web.AspNet.Testing
             var envelop = new MessageEnvelop
             {
                 Type = MessageType.Json,
-                MessajeType = eventName,
-                Messaje = JsonSerializer.Serialize(@event),
+                MsgType = eventName,
+                Msg = JsonSerializer.Serialize(@event),
             };
             return await EventUtility.ProcessAsync<TEvent>(
                 eventName, 

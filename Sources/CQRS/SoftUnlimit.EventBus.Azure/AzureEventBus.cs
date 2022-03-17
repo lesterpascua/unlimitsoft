@@ -151,8 +151,8 @@ namespace SoftUnlimit.EventBus.Azure
                 envelop = new MessageEnvelop
                 {
                     Type = type,
-                    Messaje = transformed,
-                    MessajeType = transformed.GetType().FullName
+                    Msg = transformed,
+                    MsgType = transformed.GetType().FullName
                 };
             }
 
