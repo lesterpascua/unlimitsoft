@@ -46,7 +46,7 @@ namespace SoftUnlimit.Logger.DependencyInjection
             //
             // Write start information
             if (!string.IsNullOrEmpty(environment) && !string.IsNullOrEmpty(compilation))
-                Log.Information($"Starting, ENV: {environment}, COMPILER: {compilation} ...");
+                Log.Information("Starting, ENV: {Environment}, COMPILER: {Compilation} ...", environment, compilation);
 
             services.TryAddSingleton<ILoggerContextAccessor, LoggerContextAccessor>();
 

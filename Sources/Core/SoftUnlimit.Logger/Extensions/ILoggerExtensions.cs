@@ -1,6 +1,7 @@
-﻿using System.Runtime.CompilerServices;
+﻿using Microsoft.Extensions.Logging;
+using System.Runtime.CompilerServices;
 
-namespace Microsoft.Extensions.Logging
+namespace SoftUnlimit.Logger.Extensions
 {
     /// <summary>
     /// Extenssions methods to optimize logger

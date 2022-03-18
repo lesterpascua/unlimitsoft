@@ -36,7 +36,7 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
 
             var provider = scope.ServiceProvider;
             var unitOfWorkType = typeof(TUnitOfWork);
-            var unitOfWork = (IUnitOfWork)provider.GetService(unitOfWorkType);
+            var unitOfWork = (IUnitOfWork)provider.GetRequiredService(unitOfWorkType);
 
             await EntityBuilderUtility.ExecuteSeedAndMigrationAsync(provider, unitOfWorkType: unitOfWorkType, assemblies: seedAssemblies, logger: logger, ct: ct);
             if (setup is not null)

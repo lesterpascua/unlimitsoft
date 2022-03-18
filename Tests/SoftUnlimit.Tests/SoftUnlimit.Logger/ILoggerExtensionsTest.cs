@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.Logging;
+using SoftUnlimit.Logger.Extensions;
 using System;
 using Xunit;
 

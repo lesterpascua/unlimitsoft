@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using SoftUnlimit.Logger.Logging;
 using System.Threading.Tasks;
 
 namespace SoftUnlimit.Logger.Web
@@ -54,7 +55,7 @@ namespace SoftUnlimit.Logger.Web
             );
             // Log the asociation to historical debuging process
             if (context.TraceIdentifier != correlationId)
-                _logger.LogInformation("Associate {Trace} with {Correlation}", context.TraceIdentifier, correlationId);
+                _logger.AssociateTraceWithCorrelation(context.TraceIdentifier, correlationId);
 
             // Call the next delegate/middleware in the pipeline.
             await _next(context);

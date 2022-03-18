@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SoftUnlimit.CQRS.Cache;
 using SoftUnlimit.CQRS.Command.Validation;
+using SoftUnlimit.CQRS.Logging;
 using SoftUnlimit.CQRS.Message;
 using System;
 using System.Collections.Generic;
@@ -75,12 +76,12 @@ namespace SoftUnlimit.CQRS.Command
         public async Task<ICommandResponse> DispatchAsync(IServiceProvider provider, ICommand command, CancellationToken ct = default)
         {
             _preeDispatch?.Invoke(provider, command);
-            _logger?.LogDebug("Process command: {@Command}", command);
+            _logger?.ProcessCommand(command);
 
             //
             // Get handler and execute command.
             var commandType = command.GetType();
-            _logger?.LogDebug("Execute command type: {Type}", commandType);
+            _logger?.ExecuteCommandType(commandType);
 
             var handler = GetCommandHandler(provider, command.GetType(), out var metadata);
             if (_validate)
@@ -168,11 +169,11 @@ namespace SoftUnlimit.CQRS.Command
         {
             if (!metadata.HasCompliance)
             {
-                _logger?.LogDebug("Command not handler implement internal compliance");
+                _logger?.CommandNotHandlerImplementCompliance(command);
                 return null;
             }
 
-            _logger?.LogDebug("Command handler implement internal compliance");
+            _logger?.CommandNotHandlerImplementCompliance(command);
 
             var method = CacheDispatcher.GetCommandCompliance(commandType, handler);
             var response = await method(handler, command, ct);
@@ -194,11 +195,11 @@ namespace SoftUnlimit.CQRS.Command
         {
             if (metadata.ValidatorType is null)
             {
-                _logger?.LogDebug("Command not handler implement internal validation");
+                _logger?.CommandNotHandlerImplementValidation(command);
                 return null;
             }
 
-            _logger?.LogDebug("Command handler implement internal validation");
+            _logger?.CommandHandlerImplementValidation(command);
 
             var validator = (IValidator)Activator.CreateInstance(metadata.ValidatorType);
             var method = CacheDispatcher.GetCommandValidator(commandType, metadata.ValidatorType, handler);
@@ -208,7 +209,7 @@ namespace SoftUnlimit.CQRS.Command
             var valContext = new ValidationContext<ICommand>(command);
             var errors = await validator.ValidateAsync(valContext, ct);
 
-            _logger?.LogDebug("Evaluate validator process result: {@Errors}", errors);
+            _logger?.EvaluateValidatorProcessResultErrors(errors);
             if (errors?.IsValid != false)
                 return null;
 

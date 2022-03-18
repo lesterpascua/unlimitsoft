@@ -54,7 +54,7 @@ namespace SoftUnlimit.CQRS.Event
                         var json = envelop.Msg.ToString();
                         if (JsonUtility.Deserialize(eventType, json) is not TEvent @event)
                         {
-                            logger?.LogWarning("Skip event Type: {EventType}, Name: {EventName} don't meet the requirement", eventType, eventName);
+                            logger?.SkipEventType(eventType, eventName);
                             break;
                         }
                         curr = @event;
@@ -75,9 +75,9 @@ namespace SoftUnlimit.CQRS.Event
             catch (Exception e)
             {
                 ex = e;
-                logger?.LogError(ex, "Error handling event {Type}, {CorrelationId} payload: {Event}, {@Response}", envelop.MsgType, curr?.CorrelationId, envelop.Msg, responses);
+                logger?.ErrorHandlingEvent(ex, envelop.MsgType, curr?.CorrelationId, envelop.Msg, responses);
 
-                if (onError != null)
+                if (onError is not null)
                     await onError(ex, curr, envelop, ct);
             }
             return (responses, ex);

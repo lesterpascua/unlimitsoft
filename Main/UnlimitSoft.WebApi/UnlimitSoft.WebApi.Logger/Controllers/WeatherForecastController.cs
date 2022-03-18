@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using UnlimitSoft.WebApi.Logger.Logger;
 
 namespace UnlimitSoft.WebApi.Logger.Controllers
 {
@@ -20,8 +21,10 @@ namespace UnlimitSoft.WebApi.Logger.Controllers
 
         [HttpGet(Name = "GetWeatherForecast")]
         public IEnumerable<WeatherForecast> Get()
-        {
-            _logger.LogInformation("Enter in Get");
+        {   
+            _logger.TestLogger(new { a = 1 });
+
+                _logger.LogInformation("Enter in Get");
             return Enumerable.Range(1, 5).Select(index => new WeatherForecast
             {
                 Date = DateTime.Now.AddDays(index),
