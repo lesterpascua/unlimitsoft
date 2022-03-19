@@ -29,13 +29,12 @@ namespace SoftUnlimit.CQRS.Query
         /// <param name="dispatcher"></param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        public async Task<QueryResponse<TResult>> ExecuteAsync(IQueryDispatcher dispatcher, CancellationToken ct = default)
+        public async Task<(IQueryResponse, TResult)> ExecuteAsync(IQueryDispatcher dispatcher, CancellationToken ct = default)
         {
             var response = await dispatcher.DispatchAsync<TResult>(this, ct);
             if (response.IsSuccess)
-                return (QueryResponse<TResult>)response;
-
-            throw new ResponseException(response.UIText, response.GetBody<IDictionary<string, string[]>>(), response.Code);
+                return (response, response.GetBody<TResult>());
+            return (response, default);
         }
     }
     /// <summary>

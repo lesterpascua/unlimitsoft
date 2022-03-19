@@ -30,9 +30,9 @@ namespace UnlimitSoft.Benchmark.SoftUnlimit.CQRS.Labs
         public async Task<string> Dispatch()
         {
             var query = new Query { Name = "Lester Pastrana" };
-            var response = await query.ExecuteAsync(_dispatcher);
+            var (_, body) = await query.ExecuteAsync(_dispatcher);
 
-            return response.Body;
+            return body;
         }
 
         #region Nested Classes
