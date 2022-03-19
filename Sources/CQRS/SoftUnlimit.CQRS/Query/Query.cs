@@ -1,4 +1,7 @@
 ﻿using SoftUnlimit.CQRS.Message;
+using SoftUnlimit.Web;
+using SoftUnlimit.Web.Client;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -29,7 +32,10 @@ namespace SoftUnlimit.CQRS.Query
         public async Task<QueryResponse<TResult>> ExecuteAsync(IQueryDispatcher dispatcher, CancellationToken ct = default)
         {
             var response = await dispatcher.DispatchAsync<TResult>(this, ct);
-            return (QueryResponse<TResult>)response;
+            if (response.IsSuccess)
+                return (QueryResponse<TResult>)response;
+
+            throw new ResponseException(response.UIText, response.GetBody<IDictionary<string, string[]>>(), response.Code);
         }
     }
     /// <summary>
