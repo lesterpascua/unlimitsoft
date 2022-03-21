@@ -26,8 +26,9 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
         /// <typeparam name="TPayload">Type of the payload used as body of the event. The body is where save the data.</typeparam>
         /// <typeparam name="TVersionedEvent"> Versioned event type. Example: <see cref="JsonVersionedEventPayload"/> or you can create your personalize.</typeparam>
         /// <param name="builder"></param>
+        /// <param name="useIndex">Add index for properties like Created and IsPubliched</param>
         /// <param name="payloadBuilder">Extra properties applied over payload.</param>
-        public static void ConfigureVersionedEvent<TVersionedEvent, TPayload>(EntityTypeBuilder<TVersionedEvent> builder, Action<PropertyBuilder<TPayload>> payloadBuilder = null)
+        public static void ConfigureVersionedEvent<TVersionedEvent, TPayload>(EntityTypeBuilder<TVersionedEvent> builder, bool useIndex = true, Action<PropertyBuilder<TPayload>> payloadBuilder = null)
             where TVersionedEvent : VersionedEventPayload<TPayload>
         {
             builder.ToTable("VersionedEvent");
@@ -39,6 +40,12 @@ namespace SoftUnlimit.Data.EntityFramework.Utility
 
             var payloadPropertyBuilder = builder.Property(p => p.Payload).IsRequired();
             payloadBuilder?.Invoke(payloadPropertyBuilder);
+
+            if (useIndex)
+            {
+                builder.HasIndex(i => i.IsPubliched).IsUnique(false);
+                builder.HasIndex(i => i.Created).IsUnique(false);
+            }
         }
 
         /// <summary>
