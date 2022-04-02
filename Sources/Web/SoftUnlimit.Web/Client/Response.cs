@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 
 namespace SoftUnlimit.Web.Client
 {
@@ -10,7 +11,7 @@ namespace SoftUnlimit.Web.Client
         /// <summary>
         /// Http response code for execution of command.
         /// </summary>
-        int Code { get; }
+        HttpStatusCode Code { get; }
         /// <summary>
         /// Message diplayed to the user. With generic information.
         /// </summary>
@@ -22,7 +23,7 @@ namespace SoftUnlimit.Web.Client
         /// <summary>
         /// Trace operation identifier.
         /// </summary>
-        string TraceIdentifier { get; }
+        string TraceIdentifier { get; set; }
 
         /// <summary>
         /// Get body.
@@ -52,7 +53,7 @@ namespace SoftUnlimit.Web.Client
         /// <param name="body"></param>
         /// <param name="uiText"></param>
         /// <param name="traceId"></param>
-        public Response(int code, T body, string uiText, string traceId)
+        public Response(HttpStatusCode code, T body, string uiText, string traceId)
         {
             Code = code;
             Body = body;
@@ -61,7 +62,7 @@ namespace SoftUnlimit.Web.Client
         }
 
         /// <inheritdoc />
-        public int Code { get; set; }
+        public HttpStatusCode Code { get; set; }
         /// <inheritdoc />
         public string UIText { get; set; }
         /// <summary>
@@ -72,7 +73,7 @@ namespace SoftUnlimit.Web.Client
         /// <inheritdoc />
         public string TraceIdentifier { get; set; }
         /// <inheritdoc />
-        public bool IsSuccess => 200 <= Code && Code <= 299;
+        public bool IsSuccess => HttpStatusCode.OK <= Code && Code < HttpStatusCode.Ambiguous;
 
         /// <inheritdoc />
         public object GetBody() => Body;

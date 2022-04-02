@@ -20,7 +20,7 @@ namespace SoftUnlimit.WebApi.Sources.CQRS.Event
         /// <param name="logger"></param>
         /// <param name="bachSize"></param>
         public MyQueueEventPublishWorker(IServiceScopeFactory factory, IEventBus eventBus, MessageType type, TimeSpan? checkTime = null, TimeSpan? errorDelay = null, int bachSize = 10, ILogger<MyQueueEventPublishWorker> logger = null)
-            : base(factory, eventBus, type, checkTime, errorDelay, bachSize, true, logger)
+            : base(factory, eventBus, type, checkTime, errorDelay, bachSize, true, true, logger)
         {
         }
     }

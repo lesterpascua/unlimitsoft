@@ -31,7 +31,7 @@ namespace SoftUnlimit.WebApi.Controllers
         public async Task<ActionResult<Response<Customer[]>>> Get()
         {
             var query = new TestQuery(this.GetIdentity());
-            var response = await query.ExecuteAsync(_queryDispatcher);
+            var (response, _) = await query.ExecuteAsync(_queryDispatcher);
 
             return this.ToActionResult(response);
         }

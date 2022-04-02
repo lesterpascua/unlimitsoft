@@ -37,7 +37,7 @@ namespace SoftUnlimit.WebApi.Sources.CQRS.Event
         {
             var body = @event.GetBody<TestEventBody>();
 
-            return Task.FromResult(@event.OkResponse(body));
+            return Task.FromResult(@event.QuickOkResponse());
         }
     }
 }

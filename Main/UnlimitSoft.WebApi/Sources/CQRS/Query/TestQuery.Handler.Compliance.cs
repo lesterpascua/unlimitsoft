@@ -12,7 +12,7 @@ namespace SoftUnlimit.WebApi.Sources.CQRS.Query
     {
         public ValueTask<IQueryResponse> ComplianceAsync(TestQuery query, CancellationToken ct = default)
         {
-            return ValueTask.FromResult(query.OkResponse());
+            return ValueTask.FromResult(query.QuickOkResponse());
         }
     }
 }

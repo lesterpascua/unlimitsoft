@@ -6,6 +6,7 @@ using SoftUnlimit.Json;
 using SoftUnlimit.Web.Client;
 using System;
 using System.Linq;
+using System.Net;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
@@ -84,7 +85,7 @@ namespace SoftUnlimit.Web.AspNet.Security.Authentication
             Response.StatusCode = StatusCodes.Status401Unauthorized;
 
             var uiText = Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidAPIKey) ?? "Invalid API Key";
-            var problemDetails = new Response<object>(StatusCodes.Status401Unauthorized, null, uiText, Context.TraceIdentifier);
+            var problemDetails = new Response<object>(HttpStatusCode.Unauthorized, null, uiText, Context.TraceIdentifier);
 
             await Response.WriteAsync(JsonUtility.Serialize(problemDetails));
         }
@@ -99,7 +100,7 @@ namespace SoftUnlimit.Web.AspNet.Security.Authentication
             Response.StatusCode = StatusCodes.Status403Forbidden;
 
             var problemDetails = new Response<object>(
-                StatusCodes.Status403Forbidden,
+                HttpStatusCode.Forbidden,
                 null,
                 Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidUserPermission) ?? "User no have permission for the operation",
                 Context.TraceIdentifier

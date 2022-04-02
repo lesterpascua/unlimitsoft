@@ -15,9 +15,9 @@ namespace SoftUnlimit.CQRS.Message
         /// </summary>
         /// <param name="command"></param>
         /// <param name="response"></param>
-        /// <param name="ex">If some exception happened send here</param>
+        /// <param name="error">If some exception happened send here</param>
         /// <param name="ct"></param>
         /// <returns></returns>
-        Task CompleteAsync(ICommand command, ICommandResponse response, Exception ex = null, CancellationToken ct = default);
+        Task CompleteAsync(ICommand command, ICommandResponse response, Exception error = null, CancellationToken ct = default);
     }
 }

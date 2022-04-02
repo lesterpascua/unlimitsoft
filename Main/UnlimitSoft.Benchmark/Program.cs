@@ -2,4 +2,4 @@
 using SoftUnlimit.Benchmark.SoftUnlimit.CQRS;
 
 
-BenchmarkRunner.Run<EventDispatcherBenchmarks>();
+BenchmarkRunner.Run<QueryBenchmark>();

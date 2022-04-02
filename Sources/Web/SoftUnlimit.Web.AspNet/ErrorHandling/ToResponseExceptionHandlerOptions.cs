@@ -9,6 +9,7 @@ using SoftUnlimit.Web.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace SoftUnlimit.Web.AspNet.ErrorHandling
@@ -66,7 +67,7 @@ namespace SoftUnlimit.Web.AspNet.ErrorHandling
         {
             var feature = context.Features.Get<IExceptionHandlerFeature>();
 
-            _logger?.LogError(feature.Error, $"User: {context.User.Identity.Name}, logged in from: {context.GetIpAddress()}");
+            _logger?.LogError(feature.Error, "User: {Name}, logged in from: {IpAddress}", context.User.Identity.Name, context.GetIpAddress());
             if (_handlers != null)
                 foreach (var handler in _handlers.Where(x => x.ShouldHandle(context)))
                     await handler.HandleAsync(context);
@@ -76,13 +77,13 @@ namespace SoftUnlimit.Web.AspNet.ErrorHandling
                 body = _errorBody?.Invoke(context) ?? _defaultErrorBody;
 
             var response = new Response<object>(
-                StatusCodes.Status500InternalServerError, 
+                HttpStatusCode.InternalServerError, 
                 body, 
                 _errText ?? "An error occurred while processing your request. Submit this bug and we'll fix it.",
                 context.TraceIdentifier
             );
 
-            context.Response.StatusCode = response.Code;
+            context.Response.StatusCode = (int)response.Code;
             context.Response.ContentType = "application/json";
 
             var json = _useNewtonSoft ? 

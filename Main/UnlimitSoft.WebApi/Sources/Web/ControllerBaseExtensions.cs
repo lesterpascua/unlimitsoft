@@ -56,6 +56,6 @@ namespace SoftUnlimit.WebApi.Sources.Web
         /// <param name="self"></param>
         /// <param name="response"></param>
         /// <returns></returns>
-        public static ObjectResult ToActionResult(this ControllerBase self, IResponse response) => self.StatusCode(response.Code, response);
+        public static ObjectResult ToActionResult(this ControllerBase self, IResponse response) => self.StatusCode((int)response.Code, response);
     }
 }

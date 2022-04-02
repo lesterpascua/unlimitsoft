@@ -7,6 +7,7 @@ using SoftUnlimit.Web.Client;
 using SoftUnlimit.Web.Security.Claims;
 using System;
 using System.Collections.Generic;
+using System.Net;
 
 namespace SoftUnlimit.Web.AspNet.Filter
 {
@@ -41,8 +42,9 @@ namespace SoftUnlimit.Web.AspNet.Filter
                 case BadRequestObjectResult result:
                     if (result.Value is ValidationProblemDetails validationProblem)
                     {
+                        var code = (HttpStatusCode)result.StatusCode.Value;
                         result.Value = new Response<IDictionary<string, string[]>>(
-                            result.StatusCode.Value,
+                            code,
                             validationProblem.Errors,
                             _options.InvalidArgumentText,
                             context.HttpContext.TraceIdentifier
@@ -52,7 +54,7 @@ namespace SoftUnlimit.Web.AspNet.Filter
                     break;
                 case ObjectResult result:
                     if (result.Value is IResponse response)
-                        result.Value = new Response<object>(response.Code, response.GetBody(), response.UIText, context.HttpContext.TraceIdentifier);
+                        response.TraceIdentifier = context.HttpContext.TraceIdentifier;
                     break;
             }
         }

@@ -120,41 +120,6 @@ namespace SoftUnlimit.CQRS.EventSourcing
             return tmp;
         }
         /// <summary>
-        /// Add event asociate with the command and adding to the event list. Every time added a new event the version of entity increment in one.
-        /// </summary>
-        /// <remarks>
-        /// The command time needs has the attribute <see cref="MasterEventAttribute" />.
-        /// </remarks>
-        /// <param name="eventId">Event identifier.</param>
-        /// <param name="serviceId"></param>
-        /// <param name="workerId"></param>
-        /// <param name="correlationId">Using to trace operations from source to destination.</param>
-        /// <param name="command">Command from the event is originated.</param>
-        /// <param name="currState">Actual entity snapshot.</param>
-        /// <param name="isDomain"></param>
-        /// <param name="prevState">Previous entity snapshot.</param>
-        /// <param name="body"></param>
-        protected IEnumerable<IVersionedEvent> AddMasterEvent(Guid eventId, ushort serviceId, string workerId, string correlationId, ICommand command, object prevState, object currState = null, bool isDomain = false, object body = null)
-        {
-            var events = AddMasterEvent(
-                EventFactory,
-                AddVersionedEvent,
-                Id,
-                ref _version,
-                eventId,
-                serviceId,
-                workerId,
-                correlationId,
-                command,
-                prevState,
-                currState,
-                isDomain,
-                body
-            );
-            return events;
-        }
-
-        /// <summary>
         /// Create versioned event factory
         /// </summary>
         /// <param name="eventType"></param>
@@ -172,69 +137,6 @@ namespace SoftUnlimit.CQRS.EventSourcing
         /// <returns></returns>
         protected virtual IVersionedEvent EventFactory(Type eventType, Guid eventId, TKey sourceId, long version, ushort serviceId, string workerId, string correlationId, ICommand creator, object prevState, object currState, bool isDomain, object body) => (IVersionedEvent)Activator.CreateInstance(eventType, eventId, sourceId, version, serviceId, workerId, correlationId, creator, prevState, currState, isDomain, body);
 
-        #endregion
-
-        #region Static Properties
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="eventFactory"></param>
-        /// <param name="addVersionedEvent"></param>
-        /// <param name="sourceId"></param>
-        /// <param name="version"></param>
-        /// <param name="eventId"></param>
-        /// <param name="serviceId"></param>
-        /// <param name="workerId">Worker identifier. Can't be null.</param>
-        /// <param name="correlationId">Correlation identifier to trace the events.</param>
-        /// <param name="command"></param>
-        /// <param name="prevState"></param>
-        /// <param name="currState"></param>
-        /// <param name="isDomain"></param>
-        /// <param name="body"></param>
-        /// <returns></returns>
-        public static IEnumerable<IVersionedEvent> AddMasterEvent(
-            Func<Type, Guid, TKey, long, ushort, string, string, ICommand, object, object, bool, object, IVersionedEvent> eventFactory,
-            Action<IVersionedEvent> addVersionedEvent,
-            TKey sourceId,
-            ref long version,
-            Guid eventId,
-            ushort serviceId,
-            string workerId,
-            string correlationId,
-            ICommand command,
-            object prevState = null,
-            object currState = null,
-            bool isDomain = false,
-            object body = null
-        )
-        {
-            var events = new List<IVersionedEvent>();
-            var eventTypes = command.GetMasterEvent();
-            if (eventTypes != null)
-            {
-                foreach (var eventType in eventTypes)
-                {
-                    var tmp = eventFactory(
-                        eventType, 
-                        eventId, 
-                        sourceId, 
-                        Interlocked.Increment(ref version), 
-                        serviceId, 
-                        workerId, 
-                        correlationId, 
-                        command, 
-                        prevState, 
-                        currState, 
-                        isDomain, 
-                        body
-                    );
-                    addVersionedEvent(tmp);
-
-                    events.Add(tmp);
-                }
-            }
-            return events;
-        }
         #endregion
     }
 }

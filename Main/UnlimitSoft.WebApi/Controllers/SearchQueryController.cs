@@ -38,7 +38,7 @@ namespace SoftUnlimit.WebApi.Controllers
                 Order = vm.Order,
                 Paging = vm.Paging
             };
-            var response = await query.ExecuteAsync(_queryDispatcher);
+            var (response, _) = await query.ExecuteAsync(_queryDispatcher);
 
             return this.ToActionResult(response);
         }

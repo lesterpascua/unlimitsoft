@@ -51,17 +51,17 @@ namespace UnlimitSoft.Benchmark.SoftUnlimit.CQRS.Labs
             public Task<ICommandResponse> HandleAsync(Command command, CancellationToken ct = default)
             {
                 var result = $"{command.Name} - {DateTime.UtcNow}";
-                return Task.FromResult(command.OkResponse<string>(result));
+                return Task.FromResult(command.OkResponse(result));
             }
 
             public ValueTask<ICommandResponse> ComplianceAsync(Command command, CancellationToken ct = default)
             {
-                return ValueTask.FromResult(command.OkResponse());
+                return ValueTask.FromResult(command.QuickOkResponse());
             }
 
-            public ValueTask ValidatorAsync(Command command, CommandValidator<Command> validator, CancellationToken ct = default)
+            public ValueTask<ICommandResponse> ValidatorAsync(Command command, CommandValidator<Command> validator, CancellationToken ct = default)
             {
-                return ValueTask.CompletedTask;
+                return ValueTask.FromResult(command.QuickOkResponse());
             }
         }
         #endregion

@@ -36,10 +36,6 @@ namespace SoftUnlimit.WebApi.Sources.CQRS.Command
             _customerRepository = customerRepository;
         }
 
-        public ValueTask ValidatorAsync(TestCommand command, CommandValidator<TestCommand> validator, CancellationToken ct = default)
-        {
-            return ValueTask.CompletedTask;
-        }
 
         public async Task<ICommandResponse> HandleAsync(TestCommand command, CancellationToken ct = default)
         {
@@ -54,7 +50,11 @@ namespace SoftUnlimit.WebApi.Sources.CQRS.Command
 
         public ValueTask<ICommandResponse> ComplianceAsync(TestCommand command, CancellationToken ct = default)
         {
-            return ValueTask.FromResult(command.OkResponse());
+            return ValueTask.FromResult(command.QuickOkResponse());
+        }
+        public ValueTask<ICommandResponse> ValidatorAsync(TestCommand command, CommandValidator<TestCommand> validator, CancellationToken ct = default)
+        {
+            return ValueTask.FromResult(command.QuickOkResponse());
         }
     }
 }

@@ -20,19 +20,4 @@ namespace SoftUnlimit.CQRS.Command
         /// <returns></returns>
         TProps ICommand.GetProps<TProps>() => Props as TProps;
     }
-    /// <summary>
-    /// 
-    /// </summary>
-    public sealed class SealedCommand : Command<CommandProps>
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        public SealedCommand() { }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="props"></param>
-        public SealedCommand(CommandProps props) => Props = props;
-    }
 }

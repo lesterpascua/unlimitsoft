@@ -1,4 +1,5 @@
 ﻿using FluentValidation;
+using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.CQRS.Query;
 using SoftUnlimit.CQRS.Query.Validation;
 using System.Threading;
@@ -11,13 +12,13 @@ namespace SoftUnlimit.WebApi.Sources.CQRS.Query
     /// </summary>
     public partial class TestQueryHandler : IQueryHandlerValidator<TestQuery>
     {
-        public ValueTask ValidatorAsync(TestQuery query, QueryValidator<TestQuery> validator, CancellationToken ct = default)
+        public ValueTask<IQueryResponse> ValidatorAsync(TestQuery query, QueryValidator<TestQuery> validator, CancellationToken ct = default)
         {
             validator.RuleFor(p => p.Name).Must(name =>
             {
                 return true;
             });
-            return ValueTask.CompletedTask;
+            return ValueTask.FromResult(query.QuickOkResponse());
         }
     }
 }

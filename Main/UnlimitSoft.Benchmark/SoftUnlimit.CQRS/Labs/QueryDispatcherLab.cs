@@ -46,7 +46,7 @@ namespace UnlimitSoft.Benchmark.SoftUnlimit.CQRS.Labs
             /// </summary>
             public string? Name { get; init; }
         }
-        public class CommandHandler : IQueryHandler<string, Query>, IQueryHandlerValidator<Query>, IQueryHandlerCompliance<Query>
+        public class QueryHandler : IQueryHandler<string, Query>, IQueryHandlerValidator<Query>, IQueryHandlerCompliance<Query>
         {
             public Task<string> HandleAsync(Query query, CancellationToken ct = default)
             {
@@ -56,13 +56,12 @@ namespace UnlimitSoft.Benchmark.SoftUnlimit.CQRS.Labs
 
             public ValueTask<IQueryResponse> ComplianceAsync(Query query, CancellationToken ct = default)
             {
-                var a = query!.OkResponse();
-                return ValueTask.FromResult(a);
+                return ValueTask.FromResult(query.QuickOkResponse());
             }
 
-            public ValueTask ValidatorAsync(Query query, QueryValidator<Query> validator, CancellationToken ct = default)
+            public ValueTask<IQueryResponse> ValidatorAsync(Query query, QueryValidator<Query> validator, CancellationToken ct = default)
             {
-                return ValueTask.CompletedTask;
+                return ValueTask.FromResult(query.QuickOkResponse());
             }
         }
         #endregion

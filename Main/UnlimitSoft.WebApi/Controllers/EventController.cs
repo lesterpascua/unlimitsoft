@@ -42,7 +42,7 @@ namespace SoftUnlimit.WebApi.Controllers
             var @event = new TestEvent(Guid.NewGuid(), _gen.GenerateId(), 1, 1, "w", "c", null, null, null, false, body);
             var json = JsonUtility.Serialize(@event);
 
-            var envelop = new MessageEnvelop { Messaje = json, MessajeType = null, Type = MessageType.Json };
+            var envelop = new MessageEnvelop { Msg = json, MsgType = null, Type = MessageType.Json };
             var (response, err) = await EventUtility.ProcessAsync<IEvent>(typeof(TestEvent).FullName, envelop, _dispatcher, _nameResolver, ct: ct);
 
             //var obj = JsonUtility.Deserializer<TestEvent>(json);

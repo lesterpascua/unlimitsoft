@@ -14,6 +14,7 @@ using SoftUnlimit.Bus.Hangfire.DependencyInjection;
 using SoftUnlimit.CQRS.DependencyInjection;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.Event.Json;
+using SoftUnlimit.CQRS.EventSourcing;
 using SoftUnlimit.CQRS.Memento;
 using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.Data.EntityFramework.Configuration;
@@ -142,6 +143,7 @@ namespace SoftUnlimit.WebApi
                         IEventSourcedRepository = typeof(IMyEventSourcedRepository),
                         EventSourcedRepository = typeof(MyEventSourcedRepository),
                         MediatorDispatchEventSourced = typeof(MyMediatorDispatchEventSourced),
+                        IMediatorDispatchEventSourced = typeof(IMediatorDispatchEventSourced),
                     }
                 },
                 new CQRSSettings
@@ -244,16 +246,19 @@ namespace SoftUnlimit.WebApi
                     var repository = provider.GetService<IMyEventSourcedRepository>();
 
                     var versionedEntity = await repository.GetAllSourceIdAsync();
-                    var history1 = await repository.GetHistoryAsync(versionedEntity[0].Id, 10);
-                    var history2 = await repository.GetHistoryAsync(versionedEntity[0].Id, DateTime.UtcNow);
+                    if (versionedEntity.Any())
+                    {
+                        var history1 = await repository.GetHistoryAsync(versionedEntity[0].Id, 10);
+                        var history2 = await repository.GetHistoryAsync(versionedEntity[0].Id, DateTime.UtcNow);
 
-                    var nonPublishes = await repository.GetNonPublishedEventsAsync();
-                    var events = await repository.GetEventsAsync(nonPublishes.Select(s => s.Id).ToArray());
-                    await repository.MarkEventsAsPublishedAsync(events);
+                        var nonPublishes = await repository.GetNonPublishedEventsAsync();
+                        var events = await repository.GetEventsAsync(nonPublishes.Select(s => s.Id).ToArray());
+                        await repository.MarkEventsAsPublishedAsync(events);
 
-                    var entity = await memento.FindByVersionAsync(versionedEntity[0].Id);
+                        var entity = await memento.FindByVersionAsync(versionedEntity[0].Id);
 
-                    Console.WriteLine(entity);
+                        Console.WriteLine(entity);
+                    }
                 }
             ).Wait();
 

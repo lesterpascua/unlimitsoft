@@ -120,7 +120,7 @@ namespace SoftUnlimit.CQRS.Cache
         /// <param name="handler"></param>
         /// <returns></returns>
         /// <exception cref="KeyNotFoundException"></exception>
-        public static Func<IQueryHandler, IQuery, IValidator, CancellationToken, ValueTask> GetQueryValidator(Type queryType, Type validatorType, IQueryHandler handler)
+        public static Func<IQueryHandler, IQuery, IValidator, CancellationToken, ValueTask<IQueryResponse>> GetQueryValidator(Type queryType, Type validatorType, IQueryHandler handler)
         {
             var cache = GetQueryMeta();
             if (cache.TryGetValue(queryType, out var metadata) && metadata.Validator is not null)
@@ -140,7 +140,7 @@ namespace SoftUnlimit.CQRS.Cache
                     throw new KeyNotFoundException($"Not found validator for {handler}");
 
                 var handlerType = handler.GetType();
-                metadata.Validator = Emit<Func<IQueryHandler, IQuery, IValidator, CancellationToken, ValueTask>>
+                metadata.Validator = Emit<Func<IQueryHandler, IQuery, IValidator, CancellationToken, ValueTask<IQueryResponse>>>
                     .NewDynamicMethod($"{ValidatorAsync}_{queryType.FullName}")
                     .LoadArgument(0).CastClass(handlerType)
                     .LoadArgument(1).CastClass(queryType)
@@ -160,7 +160,7 @@ namespace SoftUnlimit.CQRS.Cache
         private sealed class QueryMethod
         {
             public Func<IQueryHandler, IQuery, CancellationToken, Task> Handler;
-            public Func<IQueryHandler, IQuery, IValidator, CancellationToken, ValueTask> Validator;
+            public Func<IQueryHandler, IQuery, IValidator, CancellationToken, ValueTask<IQueryResponse>> Validator;
             public Func<IQueryHandler, IQuery, CancellationToken, ValueTask<IQueryResponse>> Compliance;
         }
         #endregion
@@ -262,7 +262,7 @@ namespace SoftUnlimit.CQRS.Cache
         /// <param name="handler"></param>
         /// <returns></returns>
         /// <exception cref="KeyNotFoundException"></exception>
-        public static Func<ICommandHandler, ICommand, IValidator, CancellationToken, ValueTask> GetCommandValidator(Type commandType, Type validatorType, ICommandHandler handler)
+        public static Func<ICommandHandler, ICommand, IValidator, CancellationToken, ValueTask<ICommandResponse>> GetCommandValidator(Type commandType, Type validatorType, ICommandHandler handler)
         {
             var cache = GetCommandMeta();
             if (cache.TryGetValue(commandType, out var metadata) && metadata.Validator is not null)
@@ -282,7 +282,7 @@ namespace SoftUnlimit.CQRS.Cache
                     throw new KeyNotFoundException($"Not found validator for {handler}");
 
                 var handlerType = handler.GetType();
-                metadata.Validator = Emit<Func<ICommandHandler, ICommand, IValidator, CancellationToken, ValueTask>>
+                metadata.Validator = Emit<Func<ICommandHandler, ICommand, IValidator, CancellationToken, ValueTask<ICommandResponse>>>
                     .NewDynamicMethod($"{ValidatorAsync}_{commandType.FullName}")
                     .LoadArgument(0).CastClass(handlerType)
                     .LoadArgument(1).CastClass(commandType)
@@ -302,7 +302,7 @@ namespace SoftUnlimit.CQRS.Cache
         private sealed class CommandMethod
         {
             public Func<ICommandHandler, ICommand, CancellationToken, Task<ICommandResponse>> Handler;
-            public Func<ICommandHandler, ICommand, IValidator, CancellationToken, ValueTask> Validator;
+            public Func<ICommandHandler, ICommand, IValidator, CancellationToken, ValueTask<ICommandResponse>> Validator;
             public Func<ICommandHandler, ICommand, CancellationToken, ValueTask<ICommandResponse>> Compliance;
         }
         #endregion
