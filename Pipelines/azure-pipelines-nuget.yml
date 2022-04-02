@@ -34,7 +34,7 @@ steps:
     command: restore
     projects: $(restoreBuildProjects)
     
- task: CmdLine@2
+- task: CmdLine@2
   displayName: Install & Run security-scan
   inputs:
     script: |
