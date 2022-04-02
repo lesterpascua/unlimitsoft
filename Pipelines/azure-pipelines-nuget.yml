@@ -1,0 +1,62 @@
+# ASP.NET Core (.NET Framework)
+# Build and test ASP.NET Core projects targeting the full .NET Framework.
+# Add steps that publish symbols, save build artifacts, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/dotnet-core
+
+trigger:
+  branches:
+    include:
+    - master
+  paths:
+    include:
+    - Sources/*
+
+pool:
+  name: Azure Pipelines
+  vmImage: 'ubuntu-latest'
+
+variables:
+  solution: '**/*.sln'
+  buildPlatform: 'Any CPU'
+  buildConfiguration: 'Release'
+  restoreBuildProjects: Sources/**/*.csproj
+
+name: 3.0.1$(Rev:.r)
+
+steps:
+- task: UseDotNet@2
+  inputs:
+    version: '6.0.x'
+    
+- task: DotNetCoreCLI@2
+  displayName: Restore
+  inputs:
+    command: restore
+    projects: $(restoreBuildProjects)
+    
+ task: CmdLine@2
+  displayName: Install & Run security-scan
+  inputs:
+    script: |
+      dotnet tool install --global security-scan --version 5.6.2
+      security-scan UnlimitSoft.sln --export=out.sarif
+      
+- task: DotNetCoreCLI@2
+  displayName: Test
+  inputs:
+    command: test
+    projects: '$(testProjects)'
+    arguments: '--filter "Category!=Integration&TestCategory!=Integration" --configuration $(buildConfiguration)'
+      
+- task: DotNetCoreCLI@2
+  displayName: Pack
+  inputs:
+    command: pack
+    packagesToPack: 'Sources/**/*.csproj'
+    packDestination: '$(build.artifactstagingdirectory)'
+
+- task: PublishBuildArtifacts@1
+  displayName: 'Publish Artifact'
+  inputs:
+    PathtoPublish: '$(build.artifactstagingdirectory)'
+  condition: succeededOrFailed()
