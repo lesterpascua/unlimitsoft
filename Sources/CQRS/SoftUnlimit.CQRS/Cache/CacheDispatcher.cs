@@ -1,6 +1,7 @@
 ﻿using FluentValidation;
 using Sigil;
 using SoftUnlimit.CQRS.Command;
+using SoftUnlimit.CQRS.Command.Pipeline;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.CQRS.Query;
@@ -21,6 +22,7 @@ namespace SoftUnlimit.CQRS.Cache
         private const string HandleAsync = nameof(ICommandHandler<ICommand>.HandleAsync);
         private const string ValidatorAsync = nameof(ICommandHandlerValidator<ICommand>.ValidatorAsync);
         private const string ComplianceAsync = nameof(ICommandHandlerCompliance<ICommand>.ComplianceAsync);
+        private const string PostPipelineAsync = nameof(ICommandHandler<ICommand>.HandleAsync); // ICommandHandlerPostPipeline<ICommand, ICommandHandler, T>.HandleAsync
 
 
         #region Query
@@ -297,6 +299,54 @@ namespace SoftUnlimit.CQRS.Cache
         }
 
         /// <summary>
+        /// Get a function to execute the commmand handler validator without use a dynamic methods (faster)
+        /// </summary>
+        /// <param name="commandType"></param>
+        /// <param name="validatorType"></param>
+        /// <param name="handler"></param>
+        /// <returns></returns>
+        /// <exception cref="KeyNotFoundException"></exception>
+        public static Func<ICommandHandlerPostPipeline, ICommand, ICommandHandler, ICommandResponse, CancellationToken, Task> GetCommandPostPipeline(Type commandType, Type commandHandlerType, ICommandHandlerPostPipeline pipelineHandler)
+        {
+            Type pipelineHandleType = pipelineHandler.GetType();
+
+            var cache = GetCommandMeta();
+            if (cache.TryGetValue(commandType, out var metadata) && metadata.PostPipelines is not null && metadata.PostPipelines.TryGetValue(pipelineHandleType, out var handle))
+                return handle;
+
+            lock (cache)
+            {
+                if (!cache.TryGetValue(commandType, out metadata))
+                    cache.Add(commandType, metadata = new CommandMethod());
+
+                metadata.PostPipelines ??= new();
+                if (metadata.PostPipelines.TryGetValue(pipelineHandleType, out handle))
+                    return handle;
+
+                var method = pipelineHandler
+                    .GetType()
+                    .GetMethod(PostPipelineAsync, new Type[] { commandType, commandHandlerType, typeof(ICommandResponse), typeof(CancellationToken) });
+                if (method is null)
+                    throw new KeyNotFoundException($"Not found validator for {pipelineHandler}");
+
+                var handlerType = pipelineHandler.GetType();
+                handle = Emit<Func<ICommandHandlerPostPipeline, ICommand, ICommandHandler, ICommandResponse, CancellationToken, Task>>
+                    .NewDynamicMethod($"{PostPipelineAsync}_{pipelineHandleType.FullName}")
+                    .LoadArgument(0).CastClass(pipelineHandleType)
+                    .LoadArgument(1).CastClass(commandType)
+                    .LoadArgument(2).CastClass(commandHandlerType)
+                    .LoadArgument(3)
+                    .LoadArgument(4)
+                    .Call(method)
+                    .Return()
+                    .CreateDelegate();
+                metadata.PostPipelines[pipelineHandleType] = handle;
+
+                return handle;
+            }
+        }
+
+        /// <summary>
         /// Bucket cache
         /// </summary>
         private sealed class CommandMethod
@@ -304,6 +354,7 @@ namespace SoftUnlimit.CQRS.Cache
             public Func<ICommandHandler, ICommand, CancellationToken, Task<ICommandResponse>> Handler;
             public Func<ICommandHandler, ICommand, IValidator, CancellationToken, ValueTask<ICommandResponse>> Validator;
             public Func<ICommandHandler, ICommand, CancellationToken, ValueTask<ICommandResponse>> Compliance;
+            public Dictionary<Type, Func<ICommandHandlerPostPipeline, ICommand, ICommandHandler, ICommandResponse, CancellationToken, Task>> PostPipelines;
         }
         #endregion
 

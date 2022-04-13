@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SoftUnlimit.CQRS.Command;
+using SoftUnlimit.CQRS.Command.Pipeline;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.Event.Json;
 using SoftUnlimit.CQRS.Query;
@@ -169,6 +170,29 @@ namespace SoftUnlimit.CQRS.DependencyInjection
                     services.AddScoped(handlerInterface, handlerImplementation);
                     if (currHandlerInterface != handlerInterface)
                         services.AddScoped(currHandlerInterface, provider => provider.GetService(handlerInterface));
+
+                    // Post Pipelines
+                    var attrs = argsTypes[0].GetCustomAttributes(typeof(PostPipelineAttribute), true);
+                    if (attrs?.Any() == true)
+                    {
+                        var postPipelineHandlerTypes = attrs
+                            .Cast<PostPipelineAttribute>()
+                            .Select(s => s.Pipeline)
+                            .ToArray();
+                        foreach (var postPipelineHandlerType in postPipelineHandlerTypes)
+                        {
+                            var interfaces = postPipelineHandlerType
+                                .GetInterfaces()
+                                .Where(p => p.IsGenericType && p.GetGenericTypeDefinition() == typeof(ICommandHandlerPostPipeline<,,>));
+                            foreach (var @interface in interfaces)
+                            {
+                                var args = @interface.GetGenericArguments();
+                                var interfaceType = typeof(ICommandHandlerPostPipeline<,,>).MakeGenericType(args);
+                                services.AddScoped(interfaceType, postPipelineHandlerType);
+                            }
+                        }
+
+                    }
                 }
             }
             #endregion

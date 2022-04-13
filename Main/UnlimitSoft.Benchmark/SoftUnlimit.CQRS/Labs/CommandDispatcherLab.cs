@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using SoftUnlimit.CQRS.Command;
+using SoftUnlimit.CQRS.Command.Pipeline;
 using SoftUnlimit.CQRS.Command.Validation;
 using SoftUnlimit.CQRS.DependencyInjection;
 using SoftUnlimit.CQRS.Message;
@@ -39,6 +40,8 @@ namespace UnlimitSoft.Benchmark.SoftUnlimit.CQRS.Labs
         /// <summary>
         /// 
         /// </summary>
+        [PostPipeline(typeof(CommandHandlerPipeline1), 0)]
+        [PostPipeline(typeof(CommandHandlerPipeline2), 0)]
         public class Command : Command<CommandProps>
         {
             /// <summary>
@@ -65,5 +68,20 @@ namespace UnlimitSoft.Benchmark.SoftUnlimit.CQRS.Labs
             }
         }
         #endregion
+
+        public class CommandHandlerPipeline1 : ICommandHandlerPostPipeline<Command, CommandHandler, CommandHandlerPipeline1>
+        {
+            public Task HandleAsync(Command command, CommandHandler handler, ICommandResponse response, CancellationToken ct)
+            {
+                return Task.CompletedTask;
+            }
+        }
+        public class CommandHandlerPipeline2 : ICommandHandlerPostPipeline<Command, CommandHandler, CommandHandlerPipeline2>
+        {
+            public Task HandleAsync(Command command, CommandHandler handler, ICommandResponse response, CancellationToken ct)
+            {
+                return Task.CompletedTask;
+            }
+        }
     }
 }

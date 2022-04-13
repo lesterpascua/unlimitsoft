@@ -3,6 +3,7 @@ using FluentValidation.Results;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using SoftUnlimit.CQRS.Cache;
+using SoftUnlimit.CQRS.Command.Pipeline;
 using SoftUnlimit.CQRS.Command.Validation;
 using SoftUnlimit.CQRS.Logging;
 using SoftUnlimit.CQRS.Message;
@@ -83,12 +84,11 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
         var commandType = command.GetType();
         _logger?.ServiceProviderCommandDispatcher_ExecuteCommandType(commandType);
 
+        ICommandResponse response;
         var handler = GetCommandHandler(provider, command.GetType(), out var metadata);
         if (_validate)
         {
-            ICommandResponse response;
-
-            response = await RunValidationAsync(handler, command, commandType, metadata, ct);
+            response = await ValidationAsync(handler, command, commandType, metadata, ct);
             if (response is not null)
                 return response;
 
@@ -96,9 +96,16 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
             if (response is not null)
                 return response;
         }
+        response = await HandlerAsync(handler, command, commandType, ct);
 
-        return await HandlerAsync(handler, command, commandType, ct);
+        // Check if exist post operations
+        if (metadata.PostPipeline is null)
+            return response;
+        await PostPipelineHandlerAsync(provider, commandType, command, handler, response, metadata, ct);
+
+        return response;
     }
+
 
     #endregion
 
@@ -125,7 +132,8 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
                 var handler = (ICommandHandler)provider.GetRequiredService(metadata.CommandHandler);
 
                 // Features implemented by this command
-                var interfaces = handler.GetType().GetInterfaces();
+                var handlerType = handler.GetType();
+                var interfaces = handlerType.GetInterfaces();
 
                 // Validator
                 var validationHandlerType = typeof(ICommandHandlerValidator<>).MakeGenericType(commandType);
@@ -136,6 +144,25 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
                 var complianceHandlerType = typeof(ICommandHandlerCompliance<>).MakeGenericType(commandType);
                 if (interfaces.Any(type => type == complianceHandlerType))
                     metadata.HasCompliance = true;
+
+                var attrs = commandType.GetCustomAttributes(typeof(PostPipelineAttribute), true);
+                if (attrs?.Any() == true)
+                {
+                    metadata.PostPipeline = attrs
+                        .Cast<PostPipelineAttribute>()
+                        .SelectMany(attribute =>
+                        {
+                            var pipelineType = typeof(ICommandHandlerPostPipeline<,,>).MakeGenericType(commandType, handlerType, attribute.Pipeline);
+                            return attribute.Pipeline
+                                .GetInterfaces()
+                                .Where(p => p == pipelineType)
+                                .Select(s => (Type: pipelineType, attribute.Order));
+                        })
+                        .GroupBy(k => k.Order, s => s.Type)
+                        .OrderBy(k => k.Key)
+                        .Select(s => s.ToArray())
+                        .ToArray();
+                }
 
                 return handler;
             }
@@ -191,7 +218,7 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
     /// <param name="metadata"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    private async ValueTask<ICommandResponse> RunValidationAsync(ICommandHandler handler, ICommand command, Type commandType, CommandMetadata metadata, CancellationToken ct)
+    private async ValueTask<ICommandResponse> ValidationAsync(ICommandHandler handler, ICommand command, Type commandType, CommandMetadata metadata, CancellationToken ct)
     {
         if (metadata.ValidatorType is null)
         {
@@ -219,6 +246,34 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
             return command.BadResponse(errors.Errors, _invalidArgumendText);
         return command.BadResponse(_errorTransforms(errors.Errors), _invalidArgumendText);
     }
+
+    /// <summary>
+    /// Handler post async operations
+    /// </summary>
+    /// <param name="provider"></param>
+    /// <param name="commandType"></param>
+    /// <param name="command"></param>
+    /// <param name="handler"></param>
+    /// <param name="response"></param>
+    /// <param name="metadata"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    private static async Task PostPipelineHandlerAsync(IServiceProvider provider, Type commandType, ICommand command, ICommandHandler handler, ICommandResponse response, CommandMetadata metadata, CancellationToken ct)
+    {
+        var commandHandlerType = handler.GetType();
+        foreach (var pipelineType in metadata.PostPipeline)
+        {
+            var tasks = new Task[pipelineType.Length];
+            for (var i = 0; i < pipelineType.Length; i++)
+            {
+                var pipelineHandler = (ICommandHandlerPostPipeline)provider.GetService(pipelineType[i]);
+                var method = CacheDispatcher.GetCommandPostPipeline(commandType, commandHandlerType, pipelineHandler);
+
+                tasks[i] = method(pipelineHandler, command, handler, response, ct);
+            }
+            await Task.WhenAll(tasks);
+        }
+    }
     #endregion
 
     #region Nested Classes
@@ -227,6 +282,8 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
         public Type ValidatorType;
         public Type CommandHandler;
         public bool HasCompliance;
+
+        public Type[][] PostPipeline;
     }
     #endregion
 }

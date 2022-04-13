@@ -1,5 +1,6 @@
-﻿using BenchmarkDotNet.Running;
-using SoftUnlimit.Benchmark.SoftUnlimit.CQRS;
+﻿using UnlimitSoft.Benchmark.SoftUnlimit.CQRS.Labs;
 
+var lab = new CommandDispatcherLab(true);
+await lab.Dispatch();
 
-BenchmarkRunner.Run<QueryBenchmark>();
+//BenchmarkRunner.Run<QueryBenchmark>();

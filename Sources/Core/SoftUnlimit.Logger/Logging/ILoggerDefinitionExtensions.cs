@@ -6,7 +6,7 @@ namespace SoftUnlimit.Logger.Logging
     /// <summary>
     /// 
     /// </summary>
-    public static class ILoggerDefinitionExtensions
+    internal static class ILoggerDefinitionExtensions
     {
         private static readonly Action<ILogger, string, string?, Exception?> __AssociateTraceWithCorrelation = LoggerMessage.Define<string, string?>(LogLevel.Information, 0, "Associate {Trace} with {Correlation}");
 
