@@ -90,7 +90,7 @@ namespace SoftUnlimit.Bus.Hangfire
 
                 if (_onError != null)
                     await _onError(exc);
-                response = command.ErrorResponse(GetErrorBody(exc));
+                response = command.ErrorResponse(GetErrorBody(exc), null);
             }
 
             if (_completionService != null && (!props.Silent || !response.IsSuccess))

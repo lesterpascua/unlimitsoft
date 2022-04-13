@@ -20,7 +20,6 @@ namespace SoftUnlimit.AkkaBus
         private readonly Func<ICommand, Task> _preeSendCommand;
         private readonly static Dictionary<string, string[]> GENERIC_ERROR = new() { [string.Empty] = new string[] { Resources.Text_GenericError } };
 
-
         /// <summary>
         /// 
         /// </summary>

@@ -1,5 +1,6 @@
 ﻿using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.CQRS.Properties;
+using System.Collections.Generic;
 using System.Net;
 
 namespace SoftUnlimit.CQRS.Command;
@@ -68,6 +69,22 @@ public static class ICommandExtension
     /// <param name="uiText">Global information about message</param>
     /// <returns></returns>
     public static ICommandResponse BadResponse<T>(this ICommand _, T body, string uiText = null) => new CommandResponse<T>(HttpStatusCode.BadRequest, body, uiText ?? Resources.Response_BadResponse);
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="_"></param>
+    /// <param name="body"></param>
+    /// <param name="uiText"></param>
+    /// <returns></returns>
+    public static ICommandResponse BadResponse(this ICommand _, Dictionary<string, string[]> body, string uiText = null) => new CommandResponse<Dictionary<string, string[]>>(HttpStatusCode.BadRequest, body, uiText ?? Resources.Response_BadResponse);
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="_"></param>
+    /// <param name="body"></param>
+    /// <param name="uiText"></param>
+    /// <returns></returns>
+    public static ICommandResponse BadResponse(this ICommand _, IDictionary<string, string[]> body, string uiText = null) => new CommandResponse<IDictionary<string, string[]>>(HttpStatusCode.BadRequest, body, uiText ?? Resources.Response_BadResponse);
 
     /// <summary>
     /// Generate a error response using command data.
@@ -78,6 +95,14 @@ public static class ICommandExtension
     /// <param name="uiText">Global information about message</param>
     /// <returns></returns>
     public static ICommandResponse ErrorResponse<T>(this ICommand _, T body, string uiText = null) => new CommandResponse<T>(HttpStatusCode.InternalServerError, body, uiText ?? Resources.Response_ErrorResponse);
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="_"></param>
+    /// <param name="body"></param>
+    /// <param name="uiText"></param>
+    /// <returns></returns>
+    public static ICommandResponse ErrorResponse(this ICommand _, Dictionary<string, string[]> body, string uiText = null) => new CommandResponse<Dictionary<string, string[]>>(HttpStatusCode.InternalServerError, body, uiText ?? Resources.Response_ErrorResponse);
 
     /// <summary>
     /// Generate a not found response using command data.
