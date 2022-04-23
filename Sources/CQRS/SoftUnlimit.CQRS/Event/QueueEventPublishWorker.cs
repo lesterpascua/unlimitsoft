@@ -117,42 +117,12 @@ namespace SoftUnlimit.CQRS.Event
 
             // Know issue if all services start at the same time this will be a problem because the event will load multiples times.
             if (loadEvent)
-            {
-                using var scope = _factory.CreateScope();
-                var eventSourcedRepository = scope.ServiceProvider.GetService<TEventSourcedRepository>();
-
-                int page = 0;
-                NonPublishVersionedEventPayload[] nonPublishEvents;
-                var pending = new List<NonPublishVersionedEventPayload>();
-                do
-                {
-                    var paging = new Paging { Page = page++, PageSize = 1000 };
-                    nonPublishEvents = await eventSourcedRepository.GetNonPublishedEventsAsync(paging, ct);
-                    pending.AddRange(nonPublishEvents);
-                } while (nonPublishEvents?.Any() == true);
-
-                pending.Sort((x, y) =>
-                {
-                    int compare = 0;
-                    if (x.Scheduled is null)
-                    {
-                        if (y.Scheduled is not null)
-                            compare = DateTime.UtcNow.CompareTo(y.Scheduled.Value);
-                    }
-                    else if (y.Scheduled is not null)
-                        compare = x.Scheduled.Value.CompareTo(DateTime.UtcNow);
-
-                    if (compare != 0)
-                        return compare;
-                    return x.Created.CompareTo(y.Created);
-                });
-
-                foreach (var @event in pending)
-                    _pending.TryAdd(@event.Id, new Bucket(@event.Scheduled, @event.Created));
-            }
+                await LoadEventAsync(ct);
 
             // Create an independance task to publish all event in the event bus.
-            _backgoundWorker = Task.Run(PublishBackground);
+            _backgoundWorker = PublishBackground();
+
+            _logger.LogInformation("EventPublishWorker start");
         }
         /// <inheritdoc />
         public virtual ValueTask RetryPublishAsync(Guid id, CancellationToken ct)
@@ -190,11 +160,12 @@ namespace SoftUnlimit.CQRS.Event
             return ValueTaskExtensions.CompletedTask;
         }
 
+        #region Protected Methods
         /// <summary>
         /// Verified if exist any new event to publish
         /// </summary>
         /// <returns></returns>
-        protected bool ExistNewEvent()
+        protected virtual bool ExistNewEvent()
         {
             if (_cts.Token.IsCancellationRequested)
                 return true;
@@ -242,7 +213,7 @@ namespace SoftUnlimit.CQRS.Event
                 try
                 {
                     using var scope = _factory.CreateScope();
-                    var eventSourcedRepository = scope.ServiceProvider.GetService<TEventSourcedRepository>();
+                    var eventSourcedRepository = scope.ServiceProvider.GetRequiredService<TEventSourcedRepository>();
 
                     var eventsPayload = await eventSourcedRepository.GetEventsAsync(buffer, _cts.Token);
                     foreach (var ePayload in eventsPayload)
@@ -265,8 +236,46 @@ namespace SoftUnlimit.CQRS.Event
                 }
             }
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="ct"></param>
+        /// <returns></returns>
+        protected virtual async Task LoadEventAsync(CancellationToken ct)
+        {
+            using var scope = _factory.CreateScope();
+            var eventSourcedRepository = scope.ServiceProvider.GetRequiredService<TEventSourcedRepository>();
 
+            int page = 0;
+            NonPublishVersionedEventPayload[] nonPublishEvents;
+            var pending = new List<NonPublishVersionedEventPayload>();
+            do
+            {
+                var paging = new Paging { Page = page++, PageSize = 1000 };
+                nonPublishEvents = await eventSourcedRepository.GetNonPublishedEventsAsync(paging, ct);
+                pending.AddRange(nonPublishEvents);
+            } while (nonPublishEvents?.Any() == true);
 
+            pending.Sort((x, y) =>
+            {
+                int compare = 0;
+                if (x.Scheduled is null)
+                {
+                    if (y.Scheduled is not null)
+                        compare = DateTime.UtcNow.CompareTo(y.Scheduled.Value);
+                }
+                else if (y.Scheduled is not null)
+                    compare = x.Scheduled.Value.CompareTo(DateTime.UtcNow);
+
+                if (compare != 0)
+                    return compare;
+                return x.Created.CompareTo(y.Created);
+            });
+
+            foreach (var @event in pending)
+                _pending.TryAdd(@event.Id, new Bucket(@event.Scheduled, @event.Created));
+        }
+        #endregion
 
         #region Nested Classes
         /// <summary>

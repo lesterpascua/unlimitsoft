@@ -58,6 +58,7 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         public virtual async Task MarkEventsAsPublishedAsync(JsonVersionedEventPayload @event, CancellationToken ct = default)
         {
             @event.MarkEventAsPublished();
+            _dbContext.Update(@event);
             int amount = await _dbContext.SaveChangesAsync(ct);
 
             _logger.LogDebug("MarkEventsAsPublishedAsync {Amount} passed {@Event}", amount, @event);
@@ -66,7 +67,10 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         public virtual async Task MarkEventsAsPublishedAsync(IEnumerable<JsonVersionedEventPayload> events, CancellationToken ct = default)
         {
             foreach (var @event in events)
+            {
                 @event.MarkEventAsPublished();
+                _dbContext.Update(@event);
+            }
             int amount = await _dbContext.SaveChangesAsync(ct);
 
             _logger.LogDebug("MarkEventsAsPublishedAsync {Amount} passed {@Events}", amount, events);
