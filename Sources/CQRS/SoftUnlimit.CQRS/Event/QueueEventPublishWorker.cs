@@ -86,6 +86,14 @@ namespace SoftUnlimit.CQRS.Event
         }
 
         /// <summary>
+        /// Object was disposed
+        /// </summary>
+        protected bool Disposed => _disposed;
+        /// <summary>
+        /// Token using to cancelate the background task
+        /// </summary>
+        protected CancellationTokenSource Cts => _cts;
+        /// <summary>
         /// Collection with pending to publish event.
         /// </summary>
         protected ConcurrentDictionary<Guid, Bucket> Pending => _pending;
@@ -120,7 +128,7 @@ namespace SoftUnlimit.CQRS.Event
                 await LoadEventAsync(ct);
 
             // Create an independance task to publish all event in the event bus.
-            _backgoundWorker = PublishBackground();
+            _backgoundWorker = Task.Run(PublishBackground);
 
             _logger.LogInformation("EventPublishWorker start");
         }
