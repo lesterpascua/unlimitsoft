@@ -38,7 +38,6 @@ namespace SoftUnlimit.CQRS.Event
         private readonly CancellationTokenSource _cts;
         private readonly ConcurrentDictionary<Guid, Bucket> _pending;
         private bool _disposed;
-        private Task _backgoundWorker;
 
 
         /// <summary>
@@ -80,11 +79,14 @@ namespace SoftUnlimit.CQRS.Event
             _bachSize = bachSize;
             _enableScheduled = enableScheduled;
             _useEnvelop = useEnvelop;
-            _backgoundWorker = null;
             _pending = new();
             _cts = new();
         }
 
+        /// <summary>
+        /// Job used to publish event
+        /// </summary>
+        protected Task? Worker { get; set; }
         /// <summary>
         /// Object was disposed
         /// </summary>
@@ -102,11 +104,11 @@ namespace SoftUnlimit.CQRS.Event
         public virtual void Dispose()
         {
             _cts.Cancel();
-            if (_backgoundWorker != null)
+            if (Worker is not null)
             {
                 try
                 {
-                    _backgoundWorker.Wait();
+                    Worker.Wait();
                 }
                 catch (TaskCanceledException) { }
                 catch (AggregateException e) when (e.InnerException is TaskCanceledException) { }
@@ -120,7 +122,7 @@ namespace SoftUnlimit.CQRS.Event
         {
             if (_disposed)
                 throw new ObjectDisposedException(GetType().FullName);
-            if (_backgoundWorker is not null)
+            if (Worker is not null)
                 throw new InvalidProgramException("Already initialized");
 
             // Know issue if all services start at the same time this will be a problem because the event will load multiples times.
@@ -128,7 +130,7 @@ namespace SoftUnlimit.CQRS.Event
                 await LoadEventAsync(ct);
 
             // Create an independance task to publish all event in the event bus.
-            _backgoundWorker = Task.Run(PublishBackground);
+            Worker = Task.Run(PublishBackground);
 
             _logger.LogInformation("EventPublishWorker start");
         }
