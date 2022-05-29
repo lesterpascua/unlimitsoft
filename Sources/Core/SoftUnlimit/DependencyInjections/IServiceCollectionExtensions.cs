@@ -90,20 +90,18 @@ public static class IServiceCollectionExtensions
                     provider =>
                     {
                         var factory = provider.GetService<IHttpClientFactory>();
-
-                        var httpClient = factory.CreateClient(key);
-                        var apiClient = apiClientFactory?.Invoke(serviceType, httpClient) ?? new DefaultApiClient(httpClient, logger: provider.GetService<ILogger<DefaultApiClient>>());
                         var policy = expirationPolicyFactory?.Invoke(serviceType) ?? new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(10) };
 
-                        object service = serviceFactory?.Invoke(serviceType, apiClient, MemoryCache.Default, policy, provider);
-                        if (service is null)
+
+                        object service;
+                        if (serviceFactory is null)
                         {
                             service = serviceType.CreateInstance(
                                 provider,
                                 resolver: (parameter) =>
                                 {
                                     if (parameter.ParameterType == typeof(IApiClient))
-                                        return apiClient;
+                                        return CreateApiClient(apiClientFactory, provider, key, serviceType, factory);
                                     if (parameter.ParameterType == typeof(ObjectCache))
                                         return MemoryCache.Default;
                                     if (parameter.ParameterType == typeof(CacheItemPolicy))
@@ -113,6 +111,12 @@ public static class IServiceCollectionExtensions
                                 }
                             );
                         }
+                        else
+                        {
+                            var apiClient = CreateApiClient(apiClientFactory, provider, key, serviceType, factory);
+                            service = serviceFactory?.Invoke(serviceType, apiClient, MemoryCache.Default, policy, provider);
+                        }
+
                         return service;
                     },
                     lifeTimeResolver?.Invoke(serviceType) ?? ServiceLifetime.Singleton
@@ -121,5 +125,12 @@ public static class IServiceCollectionExtensions
             }
         }
         return services;
+    }
+
+    private static IApiClient CreateApiClient(Func<Type, HttpClient, IApiClient> apiClientFactory, IServiceProvider provider, string key, Type serviceType, IHttpClientFactory factory)
+    {
+        var httpClient = factory.CreateClient(key);
+        var apiClient = apiClientFactory?.Invoke(serviceType, httpClient) ?? new DefaultApiClient(httpClient, logger: provider.GetService<ILogger<DefaultApiClient>>());
+        return apiClient;
     }
 }
