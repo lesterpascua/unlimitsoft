@@ -90,14 +90,14 @@ public static class IServiceCollectionExtensions
                     provider =>
                     {
                         var factory = provider.GetService<IHttpClientFactory>();
-                        var policy = expirationPolicyFactory?.Invoke(serviceType) ?? new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(10) };
+                        var policy = expirationPolicyFactory?.Invoke(typeInterface) ?? new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(10) };
 
                         object service = null;
                         IApiClient apiClient = null;
                         if (serviceFactory is not null)
                         {
-                            apiClient = CreateApiClient(provider, apiClientFactory, key, serviceType, factory);
-                            service = serviceFactory(serviceType, apiClient, MemoryCache.Default, policy, provider);
+                            apiClient = CreateApiClient(provider, apiClientFactory, key, typeInterface, factory);
+                            service = serviceFactory(typeInterface, apiClient, MemoryCache.Default, policy, provider);
                         }
                         if (service is null)
                         {
@@ -106,7 +106,7 @@ public static class IServiceCollectionExtensions
                                 resolver: (parameter) =>
                                 {
                                     if (parameter.ParameterType == typeof(IApiClient))
-                                        return apiClient ?? CreateApiClient(provider, apiClientFactory, key, serviceType, factory);
+                                        return apiClient ?? CreateApiClient(provider, apiClientFactory, key, typeInterface, factory);
                                     if (parameter.ParameterType == typeof(ObjectCache))
                                         return MemoryCache.Default;
                                     if (parameter.ParameterType == typeof(CacheItemPolicy))
