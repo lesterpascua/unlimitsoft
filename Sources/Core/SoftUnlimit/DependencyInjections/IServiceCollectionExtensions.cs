@@ -119,7 +119,7 @@ public static class IServiceCollectionExtensions
 
                         return service;
                     },
-                    lifeTimeResolver?.Invoke(serviceType) ?? ServiceLifetime.Singleton
+                    lifeTimeResolver?.Invoke(typeInterface) ?? ServiceLifetime.Singleton
                 );
                 services.Add(descriptor);
             }
