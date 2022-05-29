@@ -20,7 +20,7 @@ using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.Data.EntityFramework.Configuration;
 using SoftUnlimit.Data.EntityFramework.DependencyInjection;
 using SoftUnlimit.Data.EntityFramework.Utility;
-using SoftUnlimit.DespendencyInjections;
+using SoftUnlimit.DependencyInjections;
 using SoftUnlimit.EventBus.Azure.Configuration;
 using SoftUnlimit.Logger;
 using SoftUnlimit.Logger.Web;
