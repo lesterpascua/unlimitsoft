@@ -74,7 +74,7 @@ public static class IServiceCollectionExtensions
                 .Where(p => p.IsClass && !p.IsAbstract && p.GetInterface(typeof(IApiService).Name, true) != null);
             foreach (var serviceType in servicesTypes)
             {
-                var typeInterface = serviceType.GetInterfaces()
+                var typeInterfaces = serviceType.GetInterfaces()
                     .Where(i =>
                     {
                         if (i == typeof(IApiService) || i == typeof(IDisposable))
@@ -83,8 +83,13 @@ public static class IServiceCollectionExtensions
                             return true;
                         return false;
                     })
-                    .Single();
+                    .ToArray();
+                if (typeInterfaces is null || typeInterfaces.Length == 0)
+                    throw new InvalidOperationException($"The type {serviceType.FullName} not implement IApiService");
+                 if (typeInterfaces.Length != 1)
+                    throw new InvalidOperationException($"The type {serviceType.FullName} implement multiple time IApiService");
 
+                var typeInterface = typeInterfaces.First();
                 var descriptor = new ServiceDescriptor(
                     typeInterface,
                     provider =>
