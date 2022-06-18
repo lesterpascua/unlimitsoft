@@ -4,12 +4,15 @@ using SoftUnlimit.CQRS.Command;
 using SoftUnlimit.CQRS.Command.Pipeline;
 using SoftUnlimit.CQRS.Event;
 using SoftUnlimit.CQRS.Event.Json;
+using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.CQRS.Query;
 using SoftUnlimit.Event;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SoftUnlimit.CQRS.DependencyInjection
 {
@@ -78,7 +81,7 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         /// <param name="preeDispatch"></param>
         /// <param name="validate"></param>
         /// <param name="assemblies"></param>
-        public static void AddQueryHandler(this IServiceCollection services, Type queryHandlerType, Action<IServiceProvider, IQuery> preeDispatch = null, bool validate = true, params Assembly[] assemblies)
+        public static void AddQueryHandler(this IServiceCollection services, Type queryHandlerType, Func<IQuery, Func<IQuery, CancellationToken, Task<IQueryResponse>>, CancellationToken, Task<IQueryResponse>> preeDispatch = null, bool validate = true, params Assembly[] assemblies)
         {
             services.AddScoped<IQueryDispatcher>((provider) =>
             {
@@ -136,7 +139,7 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         /// <param name="preeDispatch"></param>
         /// <param name="validate"></param>
         /// <param name="assemblies"></param>
-        public static IServiceCollection AddCommandHandler(this IServiceCollection services, Type commandHandlerType, Action<IServiceProvider, ICommand> preeDispatch = null, bool validate = true, params Assembly[] assemblies)
+        public static IServiceCollection AddCommandHandler(this IServiceCollection services, Type commandHandlerType, Func<IServiceProvider, ICommand, Func<IServiceProvider, ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>> preeDispatch = null, bool validate = true, params Assembly[] assemblies)
         {
             services.AddSingleton<ICommandDispatcher>((provider) =>
             {
@@ -220,7 +223,7 @@ namespace SoftUnlimit.CQRS.DependencyInjection
         /// <param name="preeDispatch"></param>
         /// <param name="assemblies"></param>
         /// <returns></returns>
-        public static IServiceCollection AddEventHandler(this IServiceCollection services, Type eventHandlerType, Action<IServiceProvider, IEvent> preeDispatch = null, params Assembly[] assemblies)
+        public static IServiceCollection AddEventHandler(this IServiceCollection services, Type eventHandlerType, Func<IServiceProvider, IEvent, Func<IServiceProvider, IEvent, CancellationToken, Task<IEventResponse>>, CancellationToken, Task<IEventResponse>> preeDispatch = null, params Assembly[] assemblies)
         {
             services.AddSingleton<IEventDispatcher>((provider) =>
             {

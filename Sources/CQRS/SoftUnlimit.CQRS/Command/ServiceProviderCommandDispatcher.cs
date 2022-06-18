@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 
 namespace SoftUnlimit.CQRS.Command;
 
+
 /// <summary>
 /// Implement a command dispatcher resolving all handler by a ServiceProvider.
 /// </summary>
@@ -23,7 +24,7 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
     private readonly IServiceProvider _provider;
 
     private readonly bool _validate, _useScope;
-    private readonly Action<IServiceProvider, ICommand> _preeDispatch;
+    private readonly Func<IServiceProvider, ICommand, Func<IServiceProvider, ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>> _preeDispatch;
 
     private readonly string _invalidArgumendText;
     private readonly Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>> _errorTransforms;
@@ -47,9 +48,14 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
     /// <param name="invalidArgumendText">Default text used to response in Inotify object when validation not success.</param>
     /// <param name="preeDispatch">Before dispatch command flow call this action.</param>
     /// <param name="logger"></param>
-    public ServiceProviderCommandDispatcher(IServiceProvider provider, bool validate = true,
-        bool useScope = true, Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>> errorTransforms = null,
-        string invalidArgumendText = null, Action<IServiceProvider, ICommand> preeDispatch = null, ILogger<ServiceProviderCommandDispatcher> logger = null
+    public ServiceProviderCommandDispatcher(
+        IServiceProvider provider, 
+        bool validate = true,
+        bool useScope = true, 
+        Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>> errorTransforms = null,
+        string invalidArgumendText = null, 
+        Func<IServiceProvider, ICommand, Func<IServiceProvider, ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>> preeDispatch = null, 
+        ILogger<ServiceProviderCommandDispatcher> logger = null
     )
     {
         _provider = provider;
@@ -76,7 +82,18 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
     /// <inheritdoc />
     public async Task<ICommandResponse> DispatchAsync(IServiceProvider provider, ICommand command, CancellationToken ct = default)
     {
-        _preeDispatch?.Invoke(provider, command);
+        if (_preeDispatch is null)
+            return await RunAsync(provider, command, ct);
+
+        return await _preeDispatch(provider, command, RunAsync, ct);
+    }
+
+
+    #endregion
+
+    #region Static Methods
+    private async Task<ICommandResponse> RunAsync(IServiceProvider provider, ICommand command, CancellationToken ct)
+    {
         _logger?.ServiceProviderCommandDispatcher_ProcessCommand(command);
 
         //
@@ -105,11 +122,6 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
 
         return response;
     }
-
-
-    #endregion
-
-    #region Static Methods
     /// <summary>
     /// Get command handler and metadata asociate to a command.
     /// </summary>

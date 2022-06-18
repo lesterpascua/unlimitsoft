@@ -8,132 +8,112 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.Bus.Hangfire
+namespace SoftUnlimit.Bus.Hangfire;
+
+
+/// <summary>
+/// Default job processor.
+/// </summary>
+public class DefaultJobProcessor : IJobProcessor
 {
+    private readonly IServiceProvider _provider;
+    private readonly ICommandDispatcher _dispatcher;
+    private readonly Func<Exception, Task> _onError;
+    private readonly ICommandCompletionService _completionService;
+    private readonly Func<IServiceProvider, ICommand, BackgroundJob, Func<ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>> _preeProcess;
+    private readonly ILogger<DefaultJobProcessor> _logger;
+
+    private readonly string _errorCode;
+    private readonly Dictionary<string, string[]> _errorBody;
+
+
     /// <summary>
-    /// Default job processor.
+    /// 
     /// </summary>
-    public class DefaultJobProcessor : IJobProcessor
+    /// <param name="provider"></param>
+    /// <param name="dispatcher"></param>
+    /// <param name="errorCode"></param>
+    /// <param name="onError"></param>
+    /// <param name="preeProcess">Allow to invoke some action before the command processing.</param>
+    /// <param name="completionService"> After finish some command processing will call the method <see cref="ICommandCompletionService.CompleteAsync(ICommand, ICommandResponse, Exception, CancellationToken)"/>
+    /// </param>
+    /// <param name="logger"></param>
+    public DefaultJobProcessor(
+        IServiceProvider provider,
+        ICommandDispatcher dispatcher,
+        string errorCode = "-1",
+        Func<Exception, Task> onError = null,
+        ICommandCompletionService completionService = null,
+        Func<IServiceProvider, ICommand, BackgroundJob, Func<ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>> preeProcess = null,
+        ILogger<DefaultJobProcessor> logger = null
+    )
     {
-        private readonly IServiceProvider _provider;
-        private readonly ICommandDispatcher _dispatcher;
-        private readonly Func<Exception, Task> _onError;
-        private readonly ICommandCompletionService _completionService;
-        private readonly Action<IServiceProvider, ICommand, BackgroundJob> _preeProcess;
-        private readonly ILogger<DefaultJobProcessor> _logger;
+        _logger = logger;
+        _provider = provider;
+        _dispatcher = dispatcher;
+        _onError = onError;
+        _preeProcess = preeProcess;
+        _completionService = completionService;
 
-        private static string _errorCode;
-        private static Dictionary<string, string[]> _genericError;
+        _errorCode = errorCode;
+        _errorBody = new Dictionary<string, string[]> { [string.Empty] = new string[] { _errorCode } };
+    }
 
+    /// <summary>
+    /// 
+    /// </summary>
+    public BackgroundJob Metadata { get; set; }
+    /// <summary>
+    /// Cancelation token for this job.
+    /// </summary>
+    public CancellationToken CancellationToken { get; set; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="provider"></param>
-        /// <param name="dispatcher"></param>
-        /// <param name="errorCode"></param>
-        /// <param name="onError"></param>
-        /// <param name="preeProcess">Allow to invoke some action before the command processing.</param>
-        /// <param name="completionService"> After finish some command processing will call the method <see cref="ICommandCompletionService.CompleteAsync(ICommand, ICommandResponse, Exception, CancellationToken)"/>
-        /// </param>
-        /// <param name="logger"></param>
-        public DefaultJobProcessor(
-            IServiceProvider provider,
-            ICommandDispatcher dispatcher,
-            string errorCode = null,
-            Func<Exception, Task> onError = null,
-            ICommandCompletionService completionService = null,
-            Action<IServiceProvider, ICommand, BackgroundJob> preeProcess = null,
-            ILogger<DefaultJobProcessor> logger = null
-        )
+    /// <inheritdoc />
+    public async Task<ICommandResponse> ProcessAsync(string json, Type type)
+    {
+        Exception err = null;
+        ICommandResponse response;
+        var command = (ICommand)JsonUtility.Deserialize(type, json);
+
+        var props = command.GetProps<CommandProps>();
+        try
         {
-            _logger = logger;
-            _provider = provider;
-            _dispatcher = dispatcher;
-            _onError = onError;
-            _preeProcess = preeProcess;
-            _completionService = completionService;
-            ErrorCode = errorCode;
+            if (_preeProcess is null)
+                return await RunAsync(command, CancellationToken);
+
+            return await _preeProcess(_provider, command, Metadata, RunAsync, CancellationToken);
+        }
+        catch (Exception exc)
+        {
+            err = exc;
+            _logger.LogError(exc, "Error processing jobId: {JobId}, command: {@Command}", Metadata.Id, command);
+
+            if (_onError != null)
+                await _onError(exc);
+            response = command.ErrorResponse(_errorBody);
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        BackgroundJob IJobProcessor.Metadata { get; set; }
-        /// <summary>
-        /// Cancelation token for this job.
-        /// </summary>
-        CancellationToken IJobProcessor.CancellationToken { get; set; }
+        if (_completionService != null && (!props.Silent || !response.IsSuccess))
+            await _completionService.CompleteAsync(command, response, err, CancellationToken);
 
-        /// <inheritdoc />
-        public async Task<ICommandResponse> ProcessAsync(string json, Type type)
-        {
-            Exception err = null;
-            ICommandResponse response;
-            var command = (ICommand)JsonUtility.Deserialize(type, json);
-
-            var processor = (IJobProcessor)this;
-            var props = command.GetProps<CommandProps>();
-            try
-            {
-                _preeProcess?.Invoke(_provider, command, processor.Metadata);
-
-                _logger.LogDebug("Start process command: {@Command}", command);
-                _logger.LogInformation("Start process {Job} command: {Id}", processor.Metadata.Id, props.Id);
-
-                response = await _dispatcher.DispatchAsync(_provider, command, processor.CancellationToken);
-            }
-            catch (Exception exc)
-            {
-                err = exc;
-                _logger.LogError(exc, "Error processing jobId: {JobId}, command: {@Command}", processor.Metadata.Id, command);
-
-                if (_onError != null)
-                    await _onError(exc);
-                response = command.ErrorResponse(GetErrorBody(exc), null);
-            }
-
-            if (_completionService != null && (!props.Silent || !response.IsSuccess))
-                await _completionService.CompleteAsync(command, response, err, processor.CancellationToken);
-
-            _logger.LogDebug(@"End process
+        _logger.LogDebug(@"End process
 JobId: {JobId}
 command: {@Command}
-Response: {@Response}", processor.Metadata.Id, command, response);
-            _logger.LogInformation("End process {Job} with error {Error}", processor.Metadata.Id, err is not null || response?.IsSuccess == false);
+Response: {@Response}", Metadata.Id, command, response);
+        _logger.LogInformation("End process {Job} with error {Error}", Metadata.Id, err is not null || response?.IsSuccess == false);
 
-            return response;
-        }
-
-        /// <summary>
-        /// Define global error code.
-        /// </summary>
-        protected virtual string ErrorCode
-        {
-            get => _errorCode;
-            set
-            {
-                _errorCode = value;
-                if (_errorCode != null)
-                    _genericError = new Dictionary<string, string[]> { [string.Empty] = new string[] { _errorCode } };
-            }
-        }
-
-        /// <summary>
-        /// Get error body asociate with the operation. 
-        /// </summary>
-        /// <param name="ex"></param>
-        /// <returns>By default is <see cref="IReadOnlyDictionary{String, StringArray}"/>, where StringArray is the errorCode.</returns>
-        protected virtual object GetErrorBody(Exception ex)
-        {
-            if (_genericError == null)
-            {
-                if (_errorCode == null)
-                    return new Dictionary<string, Exception[]> { [string.Empty] = new Exception[] { ex } };
-
-                _genericError = new Dictionary<string, string[]> { [string.Empty] = new string[] { _errorCode } };
-            }
-            return _genericError;
-        }
+        return response;
     }
+
+
+    #region Private Methods
+    private async Task<ICommandResponse> RunAsync(ICommand command, CancellationToken ct)
+    {
+        var props = command.GetProps<CommandProps>();
+        _logger.LogDebug("Start process command: {@Command}", command);
+        _logger.LogInformation("Start process {Job} command: {Id}", Metadata.Id, props.Id);
+
+        return await _dispatcher.DispatchAsync(_provider, command, ct);
+    }
+    #endregion
 }
