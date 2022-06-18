@@ -61,6 +61,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.Benchmark", "Ma
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.WebApi", "Main\UnlimitSoft.WebApi\UnlimitSoft.WebApi.csproj", "{FE13E09F-16CB-4099-AD83-492FFE7ED1C3}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Example", "Example", "{1E2F4303-FEFD-488D-AAEF-B55AEAC1F43F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.WebApi.Logger", "Main\Examples\UnlimitSoft.WebApi.Logger\UnlimitSoft.WebApi.Logger.csproj", "{C96B9B65-9FAC-4E69-A58B-0FE5391824AD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -139,6 +143,10 @@ Global
 		{FE13E09F-16CB-4099-AD83-492FFE7ED1C3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FE13E09F-16CB-4099-AD83-492FFE7ED1C3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FE13E09F-16CB-4099-AD83-492FFE7ED1C3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C96B9B65-9FAC-4E69-A58B-0FE5391824AD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C96B9B65-9FAC-4E69-A58B-0FE5391824AD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C96B9B65-9FAC-4E69-A58B-0FE5391824AD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C96B9B65-9FAC-4E69-A58B-0FE5391824AD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -170,6 +178,8 @@ Global
 		{109B11EE-EA3B-4788-9388-8E88F14B926E} = {6049A5AF-055B-4815-A667-C6E90F5AFFA7}
 		{BE2C8DC7-4A9E-4CD2-8605-8EE7D487931C} = {BD55C0D4-0EA4-44C9-A2C2-A0F487792D46}
 		{FE13E09F-16CB-4099-AD83-492FFE7ED1C3} = {BD55C0D4-0EA4-44C9-A2C2-A0F487792D46}
+		{1E2F4303-FEFD-488D-AAEF-B55AEAC1F43F} = {BD55C0D4-0EA4-44C9-A2C2-A0F487792D46}
+		{C96B9B65-9FAC-4E69-A58B-0FE5391824AD} = {1E2F4303-FEFD-488D-AAEF-B55AEAC1F43F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9B9451D6-06A9-4FE7-BD5A-062F758B8538}
