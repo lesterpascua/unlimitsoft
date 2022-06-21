@@ -71,17 +71,25 @@ public class DefaultJobProcessor : IJobProcessor
     /// <inheritdoc />
     public async Task<ICommandResponse> ProcessAsync(string json, Type type)
     {
+        var command = (ICommand)JsonUtility.Deserialize(type, json);
+        if (_preeProcess is null)
+            return await RunAsync(command, CancellationToken);
+
+        return await _preeProcess(_provider, command, Metadata, RunAsync, CancellationToken);
+    }
+
+    #region Private Methods
+    private async Task<ICommandResponse> RunAsync(ICommand command, CancellationToken ct)
+    {
         Exception err = null;
         ICommandResponse response;
-        var command = (ICommand)JsonUtility.Deserialize(type, json);
-
         var props = command.GetProps<CommandProps>();
         try
         {
-            if (_preeProcess is null)
-                return await RunAsync(command, CancellationToken);
+            _logger.LogDebug("Start process command: {@Command}", command);
+            _logger.LogInformation("Start process {Job} command: {Id}", Metadata.Id, props.Id);
 
-            return await _preeProcess(_provider, command, Metadata, RunAsync, CancellationToken);
+            response = await _dispatcher.DispatchAsync(_provider, command, ct);
         }
         catch (Exception exc)
         {
@@ -93,7 +101,7 @@ public class DefaultJobProcessor : IJobProcessor
             response = command.ErrorResponse(_errorBody);
         }
 
-        if (_completionService != null && (!props.Silent || !response.IsSuccess))
+        if (_completionService is not null && (!props.Silent || !response.IsSuccess))
             await _completionService.CompleteAsync(command, response, err, CancellationToken);
 
         _logger.LogDebug(@"End process
@@ -103,17 +111,6 @@ Response: {@Response}", Metadata.Id, command, response);
         _logger.LogInformation("End process {Job} with error {Error}", Metadata.Id, err is not null || response?.IsSuccess == false);
 
         return response;
-    }
-
-
-    #region Private Methods
-    private async Task<ICommandResponse> RunAsync(ICommand command, CancellationToken ct)
-    {
-        var props = command.GetProps<CommandProps>();
-        _logger.LogDebug("Start process command: {@Command}", command);
-        _logger.LogInformation("Start process {Job} command: {Id}", Metadata.Id, props.Id);
-
-        return await _dispatcher.DispatchAsync(_provider, command, ct);
     }
     #endregion
 }

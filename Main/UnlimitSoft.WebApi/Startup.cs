@@ -150,13 +150,7 @@ public class Startup
                 Assemblies = new Assembly[] { typeof(Startup).Assembly },
                 ICommandHandler = typeof(IMyCommandHandler<>),
                 IEventHandler = typeof(IMyEventHandler<>),
-                IQueryHandler = typeof(IMyQueryHandler<,>),
-                PreeDispatchEvent = async (provider, @event, next, ct) =>
-                {
-                    using var _1 = LogContext.PushProperty("TraceId", @event.CorrelationId);
-                    using var _2 = LogContext.PushProperty("CorrelationId", @event.CorrelationId);
-                    return await next(provider, @event, ct);
-                }
+                IQueryHandler = typeof(IMyQueryHandler<,>)
             }
         );
         services.AddScoped<IMemento<Customer>>(provider =>
@@ -266,26 +260,27 @@ public class Startup
             eventListener: eventBusOption.Value.ListenQueues?.Any(p => p.Active == true) ?? false,
             publishWorker: hasEventBus,
             loadEvent: hasEventBus,
-            logger: logger,
-            setup: async provider => {
-                var memento = provider.GetService<IMemento<Customer>>();
-                var repository = provider.GetService<IMyEventSourcedRepository>();
+            logger: logger
+            //setup: async provider =>
+            //{
+            //    var memento = provider.GetService<IMemento<Customer>>();
+            //    var repository = provider.GetService<IMyEventSourcedRepository>();
 
-                var versionedEntity = await repository.GetAllSourceIdAsync();
-                if (versionedEntity.Any())
-                {
-                    var history1 = await repository.GetHistoryAsync(versionedEntity[0].Id, 10);
-                    var history2 = await repository.GetHistoryAsync(versionedEntity[0].Id, DateTime.UtcNow);
+            //    var versionedEntity = await repository.GetAllSourceIdAsync();
+            //    if (versionedEntity.Any())
+            //    {
+            //        var history1 = await repository.GetHistoryAsync(versionedEntity[0].Id, 10);
+            //        var history2 = await repository.GetHistoryAsync(versionedEntity[0].Id, DateTime.UtcNow);
 
-                    var nonPublishes = await repository.GetNonPublishedEventsAsync();
-                    var events = await repository.GetEventsAsync(nonPublishes.Select(s => s.Id).ToArray());
-                    await repository.MarkEventsAsPublishedAsync(events);
+            //        var nonPublishes = await repository.GetNonPublishedEventsAsync();
+            //        var events = await repository.GetEventsAsync(nonPublishes.Select(s => s.Id).ToArray());
+            //        await repository.MarkEventsAsPublishedAsync(events);
 
-                    var entity = await memento.FindByVersionAsync(versionedEntity[0].Id);
+            //        var entity = await memento.FindByVersionAsync(versionedEntity[0].Id);
 
-                    Console.WriteLine(entity);
-                }
-            }
+            //        Console.WriteLine(entity);
+            //    }
+            //}
         ).Wait();
 
         app.UseMiddleware<LoggerMiddleware>();
