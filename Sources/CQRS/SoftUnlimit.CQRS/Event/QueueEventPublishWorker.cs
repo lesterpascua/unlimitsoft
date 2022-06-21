@@ -34,7 +34,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
     private readonly IServiceScopeFactory _factory;
     private readonly IEventBus _eventBus;
     private readonly MessageType _type;
-    private readonly Func<TVersionedEventPayload, Func<TVersionedEventPayload, Task>, Task> _middleware;
+    private readonly Func<TVersionedEventPayload, Func<Task>, CancellationToken, Task> _middleware;
     private readonly TimeSpan _startDelay, _errorDelay;
     private readonly ILogger _logger;
     private readonly CancellationTokenSource _cts;
@@ -65,7 +65,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
         IServiceScopeFactory factory,
         IEventBus eventBus,
         MessageType type,
-        Func<TVersionedEventPayload, Func<TVersionedEventPayload, Task>, Task> middleware = null,
+        Func<TVersionedEventPayload, Func<Task>, CancellationToken, Task> middleware = null,
         TimeSpan? startDelay = null,
         TimeSpan? errorDelay = null,
         int bachSize = 10,
@@ -78,7 +78,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
         _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
 
         _type = type;
-        this._middleware = middleware;
+        _middleware = middleware;
         _startDelay = startDelay ?? TimeSpan.FromSeconds(5);
         _errorDelay = errorDelay ?? TimeSpan.FromSeconds(20);
         _logger = logger;
@@ -308,7 +308,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
 
         if (_middleware is not null)
         {
-            await _middleware(payload, e => PublishPayloadAsync(repository, e));
+            await _middleware(payload, () => PublishPayloadAsync(repository, payload), _cts.Token);
             return payload;
         }
 
