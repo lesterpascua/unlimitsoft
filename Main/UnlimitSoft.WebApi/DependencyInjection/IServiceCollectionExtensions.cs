@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Serilog;
+using Serilog.Context;
 using Serilog.Sinks.SystemConsole.Themes;
 using SoftUnlimit.CQRS.DependencyInjection;
 using SoftUnlimit.CQRS.Event;
@@ -195,7 +196,21 @@ public static class IServiceCollectionExtensions
                 if (transform != null)
                     busTransform = (queueName, eventName, @event) => transform(provider, queueName, eventName, @event);
 
-                return new AzureEventBus<QueueIdentifier>(options.Endpoint, publishs, eventNameResolver, busFilter, busTransform, logger);
+                return new AzureEventBus<QueueIdentifier>(
+                    options.Endpoint, 
+                    publishs, 
+                    eventNameResolver, 
+                    busFilter, 
+                    busTransform,
+                    setup: (graph, message) =>
+                    {
+                        Guid? identityId = null;
+                        if (graph is IEvent e && e.CorrelationId is not null)
+                            identityId = Guid.NewGuid();
+                        message.ApplicationProperties["IdentityId"] = identityId;       // set identity
+                    },
+                    logger
+                );
             });
             services.AddSingleton<IEventPublishWorker>(provider =>
             {
@@ -227,7 +242,44 @@ public static class IServiceCollectionExtensions
                 return new AzureEventListener<QueueIdentifier>(
                     options.Endpoint,
                     listerners,
-                    (envelop, message, ct) => ProcessorUtility.Default(eventDispatcher, resolver, envelop, message, beforeProcess, listenerOnError, logger, ct),
+                    async (args, ct) =>
+                    {
+                        const string Retry = "Retry";
+
+                        var message = args.Azure.Message;
+                        var identityId = message.ApplicationProperties["IdentityId"];
+
+                        using var _1 = LogContext.PushProperty("IdentityId", identityId);
+                        using var _2 = LogContext.PushProperty("TraceId", message.CorrelationId);
+                        using var _3 = LogContext.PushProperty("CorrelationId", message.CorrelationId);
+
+                        logger.LogDebug("Receive from {Queue}, event: {@Event}", args.Queue, args.Envelop);
+                        try
+                        {
+                            await ProcessorUtility.Default(eventDispatcher, resolver, args.Envelop, message, beforeProcess, listenerOnError, logger, ct);
+                            await args.Azure.CompleteMessageAsync(message, ct);
+                        }
+                        catch (Exception ex)
+                        {
+                            int retry = 0;
+                            if (args.Azure.Message.ApplicationProperties.TryGetValue(Retry, out var tmp))
+                                retry = Convert.ToInt32(tmp);
+
+                            if (retry >= 3)
+                            {
+                                logger.LogWarning(ex, "Error processing event: {Event}", args.Envelop.Msg);
+                                await args.Azure.CompleteMessageAsync(message, cancellationToken: ct);
+                                //await args.Azure.DeadLetterMessageAsync(message, new Dictionary<string, object> { { "Error", ex.Message } }, cancellationToken: ct);
+                                return;
+                            }
+
+                            retry++;
+                            logger.LogWarning(ex, "Error processing event: {Event}, Retry: {Attempt}", args.Envelop.Msg, retry);
+
+                            await Task.Delay(args.WaitRetry, ct);
+                            await args.Azure.AbandonMessageAsync(message, new Dictionary<string, object> { { Retry, retry } }, cancellationToken: ct);
+                        }
+                    },
                     maxConcurrentCalls,
                     logger
                 );

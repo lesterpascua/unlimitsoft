@@ -46,12 +46,13 @@ namespace SoftUnlimit.CQRS.EventSourcing.Json
         /// <inheritdoc />
         public virtual async Task<NonPublishVersionedEventPayload[]> GetNonPublishedEventsAsync(Paging paging, CancellationToken ct = default)
         {
-            return await _repository
+            var data = await _repository
                 .Where(p => !p.IsPubliched)
                 .OrderBy(p => p.Id)
                 .ApplyPagging(paging.Page, paging.PageSize)
                 .Select(s => new NonPublishVersionedEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
                 .ToArrayAsync(ct);
+            return data ?? Array.Empty<NonPublishVersionedEventPayload>();
         }
 
         /// <inheritdoc />

@@ -30,8 +30,7 @@ namespace SoftUnlimit.WebApi.Sources.CQRS.Event
         public void Rollback(Customer entity) => throw new NotSupportedException();
         public Customer GetEntity() => new() { Version = Version, Name = "Lester", Id = SourceId };
     }
-    public class TestEventHandler :
-        IMyEventHandler<TestEvent>
+    public class TestEventHandler : IMyEventHandler<TestEvent>
     {
         public Task<IEventResponse> HandleAsync(TestEvent @event, CancellationToken ct = default)
         {

@@ -253,6 +253,8 @@ namespace SoftUnlimit.CQRS.Event
         /// <returns></returns>
         protected virtual async Task LoadEventAsync(CancellationToken ct)
         {
+            const int PageSize = 100;
+
             using var scope = _factory.CreateScope();
             var eventSourcedRepository = scope.ServiceProvider.GetRequiredService<TEventSourcedRepository>();
 
@@ -261,10 +263,10 @@ namespace SoftUnlimit.CQRS.Event
             var pending = new List<NonPublishVersionedEventPayload>();
             do
             {
-                var paging = new Paging { Page = page++, PageSize = 1000 };
+                var paging = new Paging { Page = page++, PageSize = PageSize };
                 nonPublishEvents = await eventSourcedRepository.GetNonPublishedEventsAsync(paging, ct);
                 pending.AddRange(nonPublishEvents);
-            } while (nonPublishEvents?.Any() == true);
+            } while (nonPublishEvents.Length == PageSize);
 
             pending.Sort((x, y) =>
             {
