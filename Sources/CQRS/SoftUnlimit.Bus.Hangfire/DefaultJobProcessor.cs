@@ -102,7 +102,7 @@ public class DefaultJobProcessor : IJobProcessor
         }
 
         if (_completionService is not null && (!props.Silent || !response.IsSuccess))
-            await _completionService.CompleteAsync(command, response, err, CancellationToken);
+            response = await _completionService.CompleteAsync(command, response, err, CancellationToken);
 
         _logger.LogDebug(@"End process
 JobId: {JobId}
