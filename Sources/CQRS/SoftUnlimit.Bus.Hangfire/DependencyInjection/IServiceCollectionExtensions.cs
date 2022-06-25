@@ -31,6 +31,8 @@ public static class IServiceCollectionExtensions
     /// <param name="providerFactory"></param>
     /// <param name="activatorFactory">Custom activator creator.</param>
     /// <param name="setup"></param>
+    /// <param name="recomendedConfig"></param>
+    /// <param name="compatibility">Default <see cref="CompatibilityLevel.Version_170"/>.</param>
     /// <returns></returns>
     public static IServiceCollection AddHangfireCommandBus(this IServiceCollection services,
         HangfireOptions options,
@@ -41,24 +43,29 @@ public static class IServiceCollectionExtensions
         bool addLoggerFilter = false,
         Func<IServiceProvider, JobActivator> activatorFactory = null,
         Func<IServiceProvider, IServiceProvider> providerFactory = null,
-        Action<IGlobalConfiguration> setup = null
+        Action<IGlobalConfiguration> setup = null,
+        bool recomendedConfig = true,
+        CompatibilityLevel compatibility = CompatibilityLevel.Version_170
     )
     {
         services
             .AddHangfire((provider, config) =>
             {
+                config.SetDataCompatibilityLevel(compatibility);
                 if (providerFactory is not null)
                     provider = providerFactory(provider);
 
-                config.SetDataCompatibilityLevel(CompatibilityLevel.Version_170);
-                config.UseSimpleAssemblyNameTypeSerializer();
-                config.UseRecommendedSerializerSettings();
+                if (recomendedConfig)
+                {
+                    config.UseSimpleAssemblyNameTypeSerializer();
+                    config.UseRecommendedSerializerSettings();
 
-                if (addLoggerFilter)
-                    config.UseFilter(new LogEverythingAttribute(provider.GetService<ILogger<LogEverythingAttribute>>()));
+                    if (addLoggerFilter)
+                        config.UseFilter(new LogEverythingAttribute(provider.GetService<ILogger<LogEverythingAttribute>>()));
 
-                var activator = activatorFactory?.Invoke(provider);
-                config.UseActivator(activator ?? new DefaultJobActivator(ActivatorUtilities.GetServiceOrCreateInstance<IServiceScopeFactory>(provider)));
+                    var activator = activatorFactory?.Invoke(provider);
+                    config.UseActivator(activator ?? new DefaultJobActivator(ActivatorUtilities.GetServiceOrCreateInstance<IServiceScopeFactory>(provider)));
+                }
 
                 if (setup is null)
                 {

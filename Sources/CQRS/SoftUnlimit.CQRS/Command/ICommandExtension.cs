@@ -12,6 +12,7 @@ public static class ICommandExtension
 {
     private static readonly ICommandResponse _ok = new CommandResponse<object>(HttpStatusCode.OK, null, Resources.Response_OkResponse);
     private static readonly ICommandResponse _accepted = new CommandResponse<object>(HttpStatusCode.Accepted, null, Resources.Response_OkResponse);
+    private static readonly ICommandResponse _notfound = new CommandResponse<object>(HttpStatusCode.NotFound, null, Resources.Response_NotFoundResponse);
 
     #region Accepted
     /// <summary>
@@ -104,6 +105,14 @@ public static class ICommandExtension
     /// <returns></returns>
     public static ICommandResponse ErrorResponse(this ICommand _, Dictionary<string, string[]> body, string uiText = null) => new CommandResponse<Dictionary<string, string[]>>(HttpStatusCode.InternalServerError, body, uiText ?? Resources.Response_ErrorResponse);
 
+
+    #region NotFound
+    /// <summary>
+    /// Use this to move over validation and compliance step to avoid memory allocation
+    /// </summary>
+    /// <param name="_"></param>
+    /// <returns></returns>
+    public static ICommandResponse QuickNotFoundResponse(this ICommand _) => _notfound;
     /// <summary>
     /// Generate a not found response using command data.
     /// </summary>
@@ -111,6 +120,7 @@ public static class ICommandExtension
     /// <param name="uiText">Global information about message</param>
     /// <returns></returns>
     public static ICommandResponse NotFoundResponse(this ICommand _, string uiText = null) => new CommandResponse<object>(HttpStatusCode.NotFound, null, uiText ?? Resources.Response_NotFoundResponse);
+    #endregion
 
     /// <summary>
     /// Generate a response using command data.
