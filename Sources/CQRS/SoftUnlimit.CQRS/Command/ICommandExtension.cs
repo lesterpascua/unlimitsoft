@@ -1,5 +1,6 @@
 ﻿using SoftUnlimit.CQRS.Message;
 using SoftUnlimit.CQRS.Properties;
+using System;
 using System.Collections.Generic;
 using System.Net;
 
@@ -61,6 +62,7 @@ public static class ICommandExtension
     public static ICommandResponse OkResponse<T>(this ICommand _, T body, string uiText = null) => new CommandResponse<T>(HttpStatusCode.OK, body, uiText ?? Resources.Response_OkResponse);
     #endregion
 
+    #region BadResponse
     /// <summary>
     /// Generate a bad response using command data.
     /// </summary>
@@ -81,12 +83,33 @@ public static class ICommandExtension
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="_"></param>
-    /// <param name="body"></param>
+    /// <param name="this"></param>
+    /// <param name="key"></param>
+    /// <param name="error"></param>
     /// <param name="uiText"></param>
     /// <returns></returns>
-    public static ICommandResponse BadResponse(this ICommand _, IDictionary<string, string[]> body, string uiText = null) => new CommandResponse<IDictionary<string, string[]>>(HttpStatusCode.BadRequest, body, uiText ?? Resources.Response_BadResponse);
+    public static ICommandResponse BadResponse(this ICommand @this, string key, string error, string uiText = null) => @this.BadResponse(new Dictionary<string, string[]> { [key] = new string[] { error } }, uiText);
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="this"></param>
+    /// <param name="key"></param>
+    /// <param name="error"></param>
+    /// <param name="uiText"></param>
+    /// <returns></returns>
+    public static ICommandResponse BadResponse(this ICommand @this, string key, int error, string uiText = null) => @this.BadResponse(key, error.ToString(), uiText);
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="this"></param>
+    /// <param name="key"></param>
+    /// <param name="error"></param>
+    /// <param name="uiText"></param>
+    /// <returns></returns>
+    public static ICommandResponse BadResponse<TError>(this ICommand @this, string key, TError error, string uiText = null) where TError : Enum => @this.BadResponse(key, error.ToString("D"), uiText);
+    #endregion
 
+    #region ErrorResponse
     /// <summary>
     /// Generate a error response using command data.
     /// </summary>
@@ -104,7 +127,7 @@ public static class ICommandExtension
     /// <param name="uiText"></param>
     /// <returns></returns>
     public static ICommandResponse ErrorResponse(this ICommand _, Dictionary<string, string[]> body, string uiText = null) => new CommandResponse<Dictionary<string, string[]>>(HttpStatusCode.InternalServerError, body, uiText ?? Resources.Response_ErrorResponse);
-
+    #endregion
 
     #region NotFound
     /// <summary>
