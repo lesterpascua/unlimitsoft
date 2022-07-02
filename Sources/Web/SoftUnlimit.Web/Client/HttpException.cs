@@ -62,7 +62,7 @@ public static class HttpExceptionExtensions
     /// </exception>
     /// <param name="this"></param>
     /// <returns></returns>
-    public static Response<Dictionary<string, string[]>> GetResponse(this HttpException @this)
+    public static Response<Dictionary<string, string[]>>? GetResponse(this HttpException @this)
     {
         var body = @this.Body;
         return JsonUtility.Deserialize<Response<Dictionary<string, string[]>>>(body);

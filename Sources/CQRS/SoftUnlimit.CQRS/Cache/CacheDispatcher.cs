@@ -302,8 +302,8 @@ namespace SoftUnlimit.CQRS.Cache
         /// Get a function to execute the commmand handler validator without use a dynamic methods (faster)
         /// </summary>
         /// <param name="commandType"></param>
-        /// <param name="validatorType"></param>
-        /// <param name="handler"></param>
+        /// <param name="commandHandlerType"></param>
+        /// <param name="pipelineHandler"></param>
         /// <returns></returns>
         /// <exception cref="KeyNotFoundException"></exception>
         public static Func<ICommandHandlerPostPipeline, ICommand, ICommandHandler, ICommandResponse, CancellationToken, Task> GetCommandPostPipeline(Type commandType, Type commandHandlerType, ICommandHandlerPostPipeline pipelineHandler)

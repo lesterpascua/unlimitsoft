@@ -6,7 +6,6 @@ using System;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
-using System.Runtime.Caching;
 
 namespace SoftUnlimit.DependencyInjections;
 
@@ -23,26 +22,29 @@ public static class IServiceCollectionExtensions
     /// <param name="scanPreloadAssemblies">
     /// Scan also the preload assemblies <see cref="AppDomain.GetAssemblies"/>. Some assemblies can load later so recomend pass the assembly explicity
     /// </param>
-    /// <param name="assemblyFilter">Function to get the baseUrl according with some assembly. If the base url is null.</param>
+    /// <param name="assemblyFilter">
+    /// Function to get the baseUrl according with some assembly. 
+    ///     If the base url is null the assembly will skipped.
+    ///     if base url is empty the <see cref="HttpClient.BaseAddress"/> will not assign.
+    ///     In other case the <see cref="HttpClient.BaseAddress"/> will assign with the value.
+    /// </param>
     /// <param name="lifeTimeResolver">If set allow to change the </param>
     /// <param name="serviceFactory"></param>
     /// <param name="resolver"></param>
     /// <param name="httpClientBuilder"></param>
     /// <param name="httpBuilder"></param>
     /// <param name="apiClientFactory">Allow create a custom ApiClient if null use <see cref="DefaultApiClient"/> </param>
-    /// <param name="expirationPolicyFactory"></param>
     /// <param name="extraAssemblies"></param>
     /// <returns></returns>
     public static IServiceCollection AddApiServices(this IServiceCollection services,
         Func<Assembly, string> assemblyFilter,
         Func<Type, ServiceLifetime> lifeTimeResolver = null,
         bool scanPreloadAssemblies = false,
-        Func<Type, IApiClient, ObjectCache, CacheItemPolicy, IServiceProvider, IApiService> serviceFactory = null,
+        Func<IServiceProvider, Type, IApiClient, IApiService> serviceFactory = null,
         Func<Type, object> resolver = null,
         Action<Assembly, HttpClient> httpClientBuilder = null,
         Action<Assembly, IHttpClientBuilder> httpBuilder = null,
         Func<Type, HttpClient, IApiClient> apiClientFactory = null,
-        Func<Type, CacheItemPolicy> expirationPolicyFactory = null,
         params Assembly[] extraAssemblies
     )
     {
@@ -95,14 +97,13 @@ public static class IServiceCollectionExtensions
                     provider =>
                     {
                         var factory = provider.GetService<IHttpClientFactory>();
-                        var policy = expirationPolicyFactory?.Invoke(typeInterface) ?? new CacheItemPolicy { SlidingExpiration = TimeSpan.FromMinutes(10) };
 
                         object service = null;
                         IApiClient apiClient = null;
                         if (serviceFactory is not null)
                         {
                             apiClient = CreateApiClient(provider, apiClientFactory, key, typeInterface, factory);
-                            service = serviceFactory(typeInterface, apiClient, MemoryCache.Default, policy, provider);
+                            service = serviceFactory(provider, typeInterface, apiClient);
                         }
                         if (service is null)
                         {
@@ -112,10 +113,6 @@ public static class IServiceCollectionExtensions
                                 {
                                     if (parameter.ParameterType == typeof(IApiClient))
                                         return apiClient ?? CreateApiClient(provider, apiClientFactory, key, typeInterface, factory);
-                                    if (parameter.ParameterType == typeof(ObjectCache))
-                                        return MemoryCache.Default;
-                                    if (parameter.ParameterType == typeof(CacheItemPolicy))
-                                        return policy;
 
                                     return resolver?.Invoke(parameter.ParameterType);
                                 }

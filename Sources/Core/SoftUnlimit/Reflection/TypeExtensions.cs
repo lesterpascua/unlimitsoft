@@ -52,7 +52,7 @@ namespace SoftUnlimit.Reflection
                 foreach (var parameter in ctor.GetParameters())
                 {
                     var instance = provider.GetService(parameter.ParameterType);
-                    if (instance == null)
+                    if (instance is null)
                         instance = resolver?.Invoke(parameter);
 
                     tmp.Add(instance);

@@ -4,6 +4,7 @@ using System.Net;
 
 namespace SoftUnlimit.Web;
 
+
 /// <summary>
 /// Indicate special exception in the response.
 /// </summary>
@@ -15,7 +16,7 @@ public class ResponseException : Exception
     /// <param name="message"></param>
     /// <param name="code"></param>
     /// <param name="innerException"></param>
-    public ResponseException(string message, HttpStatusCode code = HttpStatusCode.InternalServerError, Exception innerException = null)
+    public ResponseException(string message, HttpStatusCode code = HttpStatusCode.InternalServerError, Exception? innerException = null)
         : this(message, new Dictionary<string, string[]> { { string.Empty, new string[] { message } } }, code, innerException)
     {
     }
@@ -25,7 +26,7 @@ public class ResponseException : Exception
     /// <param name="body"></param>
     /// <param name="code"></param>
     /// <param name="innerException"></param>
-    public ResponseException(IDictionary<string, string[]> body, HttpStatusCode code = HttpStatusCode.InternalServerError, Exception innerException = null)
+    public ResponseException(IDictionary<string, string[]> body, HttpStatusCode code = HttpStatusCode.InternalServerError, Exception? innerException = null)
         : this("Operation has error, see body for more details.", body, code, innerException)
     {
     }
@@ -36,7 +37,7 @@ public class ResponseException : Exception
     /// <param name="body"></param>
     /// <param name="code"></param>
     /// <param name="innerException"></param>
-    public ResponseException(string message, IDictionary<string, string[]> body, HttpStatusCode code = HttpStatusCode.InternalServerError, Exception innerException = null)
+    public ResponseException(string message, IDictionary<string, string[]> body, HttpStatusCode code = HttpStatusCode.InternalServerError, Exception? innerException = null)
         : base(message, innerException)
     {
         Code = code;

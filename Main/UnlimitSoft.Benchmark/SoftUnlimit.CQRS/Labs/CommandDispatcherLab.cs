@@ -28,12 +28,12 @@ namespace UnlimitSoft.Benchmark.SoftUnlimit.CQRS.Labs
             _dispatcher = _provider.GetRequiredService<ICommandDispatcher>();
         }
 
-        public async Task<string> Dispatch()
+        public async Task<string?> Dispatch()
         {
             var command = new Command { Name = "Lester Pastrana" };
             var result = await _dispatcher.DispatchAsync(command);
 
-            return (string)result.GetBody();
+            return (string?)result.GetBody();
         }
 
         #region Nested Classes

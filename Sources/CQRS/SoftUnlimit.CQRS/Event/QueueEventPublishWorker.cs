@@ -24,7 +24,7 @@ namespace SoftUnlimit.CQRS.Event;
 /// <typeparam name="TEventSourcedRepository"></typeparam>
 /// <typeparam name="TVersionedEventPayload"></typeparam>
 /// <typeparam name="TPayload"></typeparam>
-public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPayload, TPayload> : IEventPublishWorker, IDisposable
+public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPayload, TPayload> : IEventPublishWorker
     where TVersionedEventPayload : VersionedEventPayload<TPayload>
     where TEventSourcedRepository : IEventSourcedRepository<TVersionedEventPayload, TPayload>
 {
@@ -138,10 +138,10 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
         // Create an independance task to publish all event in the event bus.
         Worker = Task.Run(PublishBackground);
 
-        _logger.LogInformation("EventPublishWorker start");
+        _logger?.LogInformation("EventPublishWorker start");
     }
     /// <inheritdoc />
-    public virtual ValueTask RetryPublishAsync(Guid id, CancellationToken ct)
+    public virtual ValueTask RetryPublishAsync(Guid id, CancellationToken ct = default)
     {
         if (_disposed)
             throw new ObjectDisposedException(GetType().FullName);
@@ -150,7 +150,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
         return ValueTaskExtensions.CompletedTask;
     }
     /// <inheritdoc />
-    public virtual ValueTask PublishAsync(IEnumerable<IEvent> events, CancellationToken ct)
+    public virtual ValueTask PublishAsync(IEnumerable<IEvent> events, CancellationToken ct = default)
     {
         if (_disposed)
             throw new ObjectDisposedException(GetType().FullName);
@@ -191,8 +191,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
                 return true;
             //
             // only if scheduled feature is enable by software
-            var now = DateTime.UtcNow;
-            return _pending.Any(p => p.Value.Scheduled is null || p.Value.Scheduled.Value <= now);
+            return _pending.Any(ScheduledCondition());
         }
 
         return false;
@@ -209,21 +208,15 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
             SpinWait.SpinUntil(ExistNewEvent);
             if (_cts.Token.IsCancellationRequested)
                 break;
+
+            // Dispatch event throws the bus
             _logger?.LogDebug("Start to publish events {Time}", DateTime.UtcNow);
 
             TVersionedEventPayload lastEvent = null;
             int count = Math.Min(_pending.Count, _bachSize);
 
-            IOrderedEnumerable<KeyValuePair<Guid, Bucket>> orderedPending;
-            if (_enableScheduled)
-            {
-                var now = DateTime.UtcNow;
-                orderedPending = _pending
-                    .Where(p => p.Value.Scheduled is null || p.Value.Scheduled.Value <= now)
-                    .OrderBy(k => k.Value);
-            }
-            else
-                orderedPending = _pending.OrderBy(k => k.Value.Created);
+            var orderedPending = _enableScheduled ? 
+                _pending.Where(ScheduledCondition()).OrderBy(k => k.Value) : _pending.OrderBy(k => k.Value.Created);
 
             var buffer = orderedPending.Select(s => s.Key).Take(count).ToArray();
             try
@@ -241,17 +234,16 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
                     _pending.TryRemove(payload.Id, out var _);
                 }
             }
-            catch (Exception ex) when (ex is not TaskCanceledException)
+            catch (Exception ex) when (!_cts.Token.IsCancellationRequested)
             {
-                _logger?.LogError(ex, "Error publish with correlation: {CorrelationId} and {@Event}.", lastEvent.CorrelationId, lastEvent);
-                if (!_cts.Token.IsCancellationRequested)
-                    await Task.Delay(_errorDelay, _cts.Token);
+                _logger?.LogError(
+                    ex, 
+                    "Error publish with correlation: {CorrelationId} and {@Event}.", lastEvent.CorrelationId, lastEvent
+                );
+                await Task.Delay(_errorDelay, _cts.Token);
             }
         }
     }
-
-
-
     /// <summary>
     /// 
     /// </summary>
@@ -296,6 +288,11 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
     #endregion
 
     #region Private Methods
+    private Func<KeyValuePair<Guid, Bucket>, bool> ScheduledCondition()
+    {
+        var now = DateTime.UtcNow;
+        return p => p.Value.Scheduled is null || p.Value.Scheduled.Value <= now;
+    }
     private async Task PublishPayloadAsync(TEventSourcedRepository repository, TVersionedEventPayload payload)
     {
         await _eventBus.PublishPayloadAsync(payload, _type, _useEnvelop, _cts.Token);
