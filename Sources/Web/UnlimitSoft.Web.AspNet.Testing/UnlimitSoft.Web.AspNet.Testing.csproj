@@ -41,7 +41,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Data\SoftUnlimit.Data.EntityFramework\UnlimitSoft.Data.EntityFramework.csproj" />
+		<ProjectReference Include="..\..\Data\UnlimitSoft.Data.EntityFramework\UnlimitSoft.Data.EntityFramework.csproj" />
 	</ItemGroup>
 
 </Project>
