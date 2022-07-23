@@ -1,7 +1,7 @@
-﻿using SoftUnlimit.MultiTenant.AspNet;
+﻿using UnlimitSoft.MultiTenant.AspNet;
 using System;
 
-namespace SoftUnlimit.MultiTenant.ResolutionStrategy;
+namespace UnlimitSoft.MultiTenant.ResolutionStrategy;
 
 /// <summary>
 /// Resolve using query string url tenant=identifier

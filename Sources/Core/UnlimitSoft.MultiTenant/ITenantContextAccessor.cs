@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace SoftUnlimit.MultiTenant;
+namespace UnlimitSoft.MultiTenant;
 
 
 /// <summary>

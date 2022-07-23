@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SoftUnlimit.MultiTenant;
+namespace UnlimitSoft.MultiTenant;
 
 /// <summary>
 /// Base class for tenant information.

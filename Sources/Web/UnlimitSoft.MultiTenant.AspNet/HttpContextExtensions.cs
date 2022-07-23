@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace SoftUnlimit.MultiTenant.AspNet;
+namespace UnlimitSoft.MultiTenant.AspNet;
 
 /// <summary>
 /// Extensions to HttpContext to make multi-tenancy easier to use

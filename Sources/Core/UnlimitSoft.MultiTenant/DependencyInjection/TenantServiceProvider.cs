@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SoftUnlimit.MultiTenant.DependencyInjection;
+namespace UnlimitSoft.MultiTenant.DependencyInjection;
 
 /// <summary>
 /// Provider root used to create an specific provider per tenant.

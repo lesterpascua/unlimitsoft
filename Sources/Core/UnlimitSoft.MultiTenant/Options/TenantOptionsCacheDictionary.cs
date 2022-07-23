@@ -2,7 +2,7 @@
 using System;
 using System.Collections.Concurrent;
 
-namespace SoftUnlimit.MultiTenant.Options;
+namespace UnlimitSoft.MultiTenant.Options;
 
 /// <summary>
 /// Dictionary of tenant specific options caches

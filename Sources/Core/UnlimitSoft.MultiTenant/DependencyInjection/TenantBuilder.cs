@@ -1,13 +1,13 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
-using SoftUnlimit.MultiTenant.Options;
-using SoftUnlimit.MultiTenant.ResolutionStrategy;
-using SoftUnlimit.MultiTenant.Store;
+using UnlimitSoft.MultiTenant.Options;
+using UnlimitSoft.MultiTenant.ResolutionStrategy;
+using UnlimitSoft.MultiTenant.Store;
 using System;
 using System.Collections.Generic;
 
-namespace SoftUnlimit.MultiTenant.DependencyInjection;
+namespace UnlimitSoft.MultiTenant.DependencyInjection;
 
 /// <summary>
 /// Configure tenant services

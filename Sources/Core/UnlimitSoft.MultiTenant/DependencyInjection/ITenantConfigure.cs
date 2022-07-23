@@ -1,4 +1,4 @@
-﻿namespace SoftUnlimit.MultiTenant.DependencyInjection
+﻿namespace UnlimitSoft.MultiTenant.DependencyInjection
 {
     /// <summary>
     /// 

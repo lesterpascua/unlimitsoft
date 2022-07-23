@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using System.Threading;
 
-namespace SoftUnlimit.MultiTenant.Options;
+namespace UnlimitSoft.MultiTenant.Options;
 
 /// <summary>
 /// Make IOptions tenant aware

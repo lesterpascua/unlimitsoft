@@ -3,7 +3,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 
-namespace SoftUnlimit.MultiTenant.Options;
+namespace UnlimitSoft.MultiTenant.Options;
 
 /// <summary>
 /// Create a new options instance with configuration applied

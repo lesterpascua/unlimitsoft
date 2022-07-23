@@ -1,4 +1,4 @@
-﻿namespace SoftUnlimit.MultiTenant;
+﻿namespace UnlimitSoft.MultiTenant;
 
 /// <summary>
 /// Get context information used to build the tenant
