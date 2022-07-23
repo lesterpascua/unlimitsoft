@@ -1,10 +1,10 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using SoftUnlimit.CQRS.EventSourcing;
-using SoftUnlimit.Data.EntityFramework;
+using UnlimitSoft.CQRS.EventSourcing;
+using UnlimitSoft.Data.EntityFramework;
 using System.Data;
 
-namespace SoftUnlimit.WebApi.Sources.Data
+namespace UnlimitSoft.WebApi.Sources.Data
 {
     public class MyUnitOfWork : EFCQRSDbUnitOfWork<DbContextWrite>, IMyUnitOfWork
     {

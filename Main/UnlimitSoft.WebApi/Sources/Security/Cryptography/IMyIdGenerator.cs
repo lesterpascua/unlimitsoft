@@ -1,8 +1,8 @@
-﻿using SoftUnlimit.Security;
-using SoftUnlimit.Security.Cryptography;
+﻿using UnlimitSoft.Security;
+using UnlimitSoft.Security.Cryptography;
 using System;
 
-namespace SoftUnlimit.WebApi.Sources.Security.Cryptography
+namespace UnlimitSoft.WebApi.Sources.Security.Cryptography
 {
     public interface IMyIdGenerator : IIdGenerator<Guid>, IServiceMetadata
     {

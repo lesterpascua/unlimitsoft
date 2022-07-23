@@ -8,7 +8,7 @@
 //using System.Text;
 //using System.Threading.Tasks;
 
-//namespace SoftUnlimit.Benchmark.SoftUnlimit.Logger
+//namespace UnlimitSoft.Benchmark.UnlimitSoft.Logger
 //{
 //    [MemoryDiagnoser]
 //    public class LoggerTest

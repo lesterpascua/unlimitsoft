@@ -1,0 +1,42 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net6.0;net5.0</TargetFrameworks>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<LangVersion>latest</LangVersion>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+		<Authors>Lester Pastrana</Authors>
+		<Company>Private</Company>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">0.0.0.1</Version>
+		<Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
+		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+		<Description>ASP.NET helpers</Description>
+		<PackageLicenseFile>License.txt</PackageLicenseFile>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="License.txt">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="5.0.17" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
+		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="6.0.7" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Core\UnlimitSoft\UnlimitSoft.csproj" />
+	</ItemGroup>
+
+</Project>

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace SoftUnlimit.Web.Security
+namespace UnlimitSoft.Web.Security
 {
     /// <summary>
     /// Short information about the customer, use in commands and queries

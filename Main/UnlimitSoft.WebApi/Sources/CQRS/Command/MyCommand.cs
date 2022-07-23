@@ -1,8 +1,8 @@
-﻿using SoftUnlimit.CQRS.Command;
-using SoftUnlimit.Web.Security;
+﻿using UnlimitSoft.CQRS.Command;
+using UnlimitSoft.Web.Security;
 using System;
 
-namespace SoftUnlimit.WebApi.Sources.CQRS.Command
+namespace UnlimitSoft.WebApi.Sources.CQRS.Command
 {
     public class MyCommand : Command<MyCommandProps>
     {

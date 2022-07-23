@@ -1,13 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SoftUnlimit.Logger;
-using SoftUnlimit.Logger.Web;
-using SoftUnlimit.Web.Client;
-using SoftUnlimit.Web.Security;
-using SoftUnlimit.Web.Security.Claims;
+using UnlimitSoft.Logger;
+using UnlimitSoft.Logger.Web;
+using UnlimitSoft.Web.Client;
+using UnlimitSoft.Web.Security;
+using UnlimitSoft.Web.Security.Claims;
 using System;
 using System.Linq;
 
-namespace SoftUnlimit.WebApi.Sources.Web
+namespace UnlimitSoft.WebApi.Sources.Web
 {
     public static class ControllerBaseExtensions
     {

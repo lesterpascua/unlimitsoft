@@ -9,39 +9,39 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Serilog.Context;
-using SoftUnlimit.AutoMapper.DependencyInjection;
-using SoftUnlimit.Bus.Hangfire;
-using SoftUnlimit.Bus.Hangfire.DependencyInjection;
-using SoftUnlimit.CQRS.DependencyInjection;
-using SoftUnlimit.CQRS.Event;
-using SoftUnlimit.CQRS.Event.Json;
-using SoftUnlimit.CQRS.EventSourcing;
-using SoftUnlimit.CQRS.Memento;
-using SoftUnlimit.CQRS.Message;
-using SoftUnlimit.Data.EntityFramework.Configuration;
-using SoftUnlimit.Data.EntityFramework.DependencyInjection;
-using SoftUnlimit.Data.EntityFramework.Utility;
-using SoftUnlimit.DependencyInjections;
-using SoftUnlimit.EventBus.Azure.Configuration;
-using SoftUnlimit.Logger;
-using SoftUnlimit.Logger.Web;
-using SoftUnlimit.Web;
-using SoftUnlimit.Web.AspNet.Filter;
-using SoftUnlimit.WebApi.DependencyInjection;
-using SoftUnlimit.WebApi.Sources.CQRS;
-using SoftUnlimit.WebApi.Sources.CQRS.Bus;
-using SoftUnlimit.WebApi.Sources.CQRS.Command;
-using SoftUnlimit.WebApi.Sources.CQRS.Event;
-using SoftUnlimit.WebApi.Sources.CQRS.Query;
-using SoftUnlimit.WebApi.Sources.Data;
-using SoftUnlimit.WebApi.Sources.Data.Configuration;
-using SoftUnlimit.WebApi.Sources.Data.Model;
-using SoftUnlimit.WebApi.Sources.Security;
+using UnlimitSoft.AutoMapper.DependencyInjection;
+using UnlimitSoft.Bus.Hangfire;
+using UnlimitSoft.Bus.Hangfire.DependencyInjection;
+using UnlimitSoft.CQRS.DependencyInjection;
+using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.CQRS.Event.Json;
+using UnlimitSoft.CQRS.EventSourcing;
+using UnlimitSoft.CQRS.Memento;
+using UnlimitSoft.CQRS.Message;
+using UnlimitSoft.Data.EntityFramework.Configuration;
+using UnlimitSoft.Data.EntityFramework.DependencyInjection;
+using UnlimitSoft.Data.EntityFramework.Utility;
+using UnlimitSoft.DependencyInjections;
+using UnlimitSoft.EventBus.Azure.Configuration;
+using UnlimitSoft.Logger;
+using UnlimitSoft.Logger.Web;
+using UnlimitSoft.Web;
+using UnlimitSoft.Web.AspNet.Filter;
+using UnlimitSoft.WebApi.DependencyInjection;
+using UnlimitSoft.WebApi.Sources.CQRS;
+using UnlimitSoft.WebApi.Sources.CQRS.Bus;
+using UnlimitSoft.WebApi.Sources.CQRS.Command;
+using UnlimitSoft.WebApi.Sources.CQRS.Event;
+using UnlimitSoft.WebApi.Sources.CQRS.Query;
+using UnlimitSoft.WebApi.Sources.Data;
+using UnlimitSoft.WebApi.Sources.Data.Configuration;
+using UnlimitSoft.WebApi.Sources.Data.Model;
+using UnlimitSoft.WebApi.Sources.Security;
 using System;
 using System.Linq;
 using System.Reflection;
 
-namespace SoftUnlimit.WebApi;
+namespace UnlimitSoft.WebApi;
 
 
 /// <summary>
@@ -163,7 +163,7 @@ public class Startup
         #endregion
 
         #region EventBus
-        services.AddSoftUnlimitEventNameResolver(new Assembly[] { typeof(Startup).Assembly });
+        services.AddUnlimitSoftEventNameResolver(new Assembly[] { typeof(Startup).Assembly });
         services.AddAzureEventBus<IMyUnitOfWork, TestEvent>(
             eventBusOptions,
             filter: TransformEventToDomain.Filter,
@@ -232,7 +232,7 @@ public class Startup
         services.AddControllers();
         services.AddSwaggerGen(c =>
         {
-            c.SwaggerDoc("v1", new OpenApiInfo { Title = "SoftUnlimit.WebApi", Version = "v1" });
+            c.SwaggerDoc("v1", new OpenApiInfo { Title = "UnlimitSoft.WebApi", Version = "v1" });
         });
     }
 
@@ -290,7 +290,7 @@ public class Startup
         {
             app.UseDeveloperExceptionPage();
             app.UseSwagger();
-            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "SoftUnlimit.WebApi v1"));
+            app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "UnlimitSoft.WebApi v1"));
         }
 
         app.UseHttpsRedirection();

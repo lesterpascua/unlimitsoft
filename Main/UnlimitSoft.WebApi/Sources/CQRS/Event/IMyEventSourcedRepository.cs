@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using SoftUnlimit.CQRS.EventSourcing;
-using SoftUnlimit.CQRS.EventSourcing.Json;
-using SoftUnlimit.WebApi.Sources.Data;
+using UnlimitSoft.CQRS.EventSourcing;
+using UnlimitSoft.CQRS.EventSourcing.Json;
+using UnlimitSoft.WebApi.Sources.Data;
 
-namespace SoftUnlimit.WebApi.Sources.CQRS.Event
+namespace UnlimitSoft.WebApi.Sources.CQRS.Event
 {
     public interface IMyEventSourcedRepository : IEventSourcedRepository<JsonVersionedEventPayload, string>
     {

@@ -1,7 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-namespace SoftUnlimit.WebApi.Sources.Data.Configuration
+namespace UnlimitSoft.WebApi.Sources.Data.Configuration
 {
 #pragma warning disable IDE1006 // Naming Styles
     public abstract class _EntityTypeBuilder<TEntity> : IEntityTypeConfiguration<TEntity>

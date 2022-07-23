@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Design;
 using Microsoft.Extensions.Configuration;
 using System.IO;
 
-namespace SoftUnlimit.WebApi.Sources.Data
+namespace UnlimitSoft.WebApi.Sources.Data
 {
     public class DesignTimeDbContextFactory : IDesignTimeDbContextFactory<DbContextWrite>
     {

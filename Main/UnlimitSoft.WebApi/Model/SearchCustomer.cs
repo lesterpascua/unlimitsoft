@@ -1,6 +1,6 @@
-﻿using SoftUnlimit.Web.Model;
+﻿using UnlimitSoft.Web.Model;
 
-namespace SoftUnlimit.WebApi.Model
+namespace UnlimitSoft.WebApi.Model
 {
     public class SearchCustomer : Search<SearchCustomer.FilterVM>
     {

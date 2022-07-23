@@ -1,11 +1,11 @@
 ﻿using Microsoft.Extensions.Logging;
-using SoftUnlimit.CQRS.Command;
-using SoftUnlimit.CQRS.Message;
+using UnlimitSoft.CQRS.Command;
+using UnlimitSoft.CQRS.Message;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.WebApi.Sources.CQRS;
+namespace UnlimitSoft.WebApi.Sources.CQRS;
 
 
 public class MyCommandCompletionService : ICommandCompletionService

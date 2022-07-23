@@ -1,11 +1,11 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
-using SoftUnlimit.Logger;
-using SoftUnlimit.Web.Client;
+using UnlimitSoft.Logger;
+using UnlimitSoft.Web.Client;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.WebApi.Sources.Adapter;
+namespace UnlimitSoft.WebApi.Sources.Adapter;
 
 
 public record TestApiResponse

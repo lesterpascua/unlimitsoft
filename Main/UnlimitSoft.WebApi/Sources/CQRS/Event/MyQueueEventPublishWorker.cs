@@ -1,10 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using SoftUnlimit.CQRS.Event;
-using SoftUnlimit.CQRS.EventSourcing.Json;
+using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.CQRS.EventSourcing.Json;
 using System;
 
-namespace SoftUnlimit.WebApi.Sources.CQRS.Event;
+namespace UnlimitSoft.WebApi.Sources.CQRS.Event;
 
 
 /// <inheritdoc />

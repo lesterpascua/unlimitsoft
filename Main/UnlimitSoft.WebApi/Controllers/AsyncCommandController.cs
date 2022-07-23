@@ -1,14 +1,14 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SoftUnlimit.CQRS.Command;
-using SoftUnlimit.WebApi.Sources.CQRS.Command;
-using SoftUnlimit.WebApi.Sources.Security.Cryptography;
-using SoftUnlimit.WebApi.Sources.Web;
+using UnlimitSoft.CQRS.Command;
+using UnlimitSoft.WebApi.Sources.CQRS.Command;
+using UnlimitSoft.WebApi.Sources.Security.Cryptography;
+using UnlimitSoft.WebApi.Sources.Web;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.WebApi.Controllers
+namespace UnlimitSoft.WebApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]

@@ -1,18 +1,18 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SoftUnlimit.CQRS;
-using SoftUnlimit.CQRS.Event;
-using SoftUnlimit.CQRS.Event.Json;
-using SoftUnlimit.CQRS.EventSourcing.Json;
-using SoftUnlimit.Event;
-using SoftUnlimit.Json;
-using SoftUnlimit.WebApi.Sources.CQRS.Event;
-using SoftUnlimit.WebApi.Sources.Security.Cryptography;
-using SoftUnlimit.WebApi.Sources.Web;
+using UnlimitSoft.CQRS;
+using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.CQRS.Event.Json;
+using UnlimitSoft.CQRS.EventSourcing.Json;
+using UnlimitSoft.Event;
+using UnlimitSoft.Json;
+using UnlimitSoft.WebApi.Sources.CQRS.Event;
+using UnlimitSoft.WebApi.Sources.Security.Cryptography;
+using UnlimitSoft.WebApi.Sources.Web;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.WebApi.Controllers;
+namespace UnlimitSoft.WebApi.Controllers;
 
 
 [ApiController]

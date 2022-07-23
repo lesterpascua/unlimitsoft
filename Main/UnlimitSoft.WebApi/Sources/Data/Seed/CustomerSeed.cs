@@ -1,14 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SoftUnlimit.Data;
-using SoftUnlimit.Data.EntityFramework.Seed;
-using SoftUnlimit.WebApi.Sources.Data.Model;
+using UnlimitSoft.Data;
+using UnlimitSoft.Data.EntityFramework.Seed;
+using UnlimitSoft.WebApi.Sources.Data.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.WebApi.Sources.Data.Seed
+namespace UnlimitSoft.WebApi.Sources.Data.Seed
 {
     public class CustomerSeed : BaseCustomSeed<Customer>
     {

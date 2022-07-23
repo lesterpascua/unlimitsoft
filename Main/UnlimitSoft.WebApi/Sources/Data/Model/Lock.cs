@@ -1,7 +1,7 @@
-﻿using SoftUnlimit.Data;
+﻿using UnlimitSoft.Data;
 using System;
 
-namespace SoftUnlimit.WebApi.Sources.Data.Model
+namespace UnlimitSoft.WebApi.Sources.Data.Model
 {
     public class Lock : Entity<int>
     {

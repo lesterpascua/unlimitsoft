@@ -1,9 +1,9 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using SoftUnlimit.Data.EntityFramework;
+using UnlimitSoft.Data.EntityFramework;
 using System.Data;
 
-namespace SoftUnlimit.WebApi.Sources.Data
+namespace UnlimitSoft.WebApi.Sources.Data
 {
     /// <summary>
     /// 

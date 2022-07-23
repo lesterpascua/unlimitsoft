@@ -1,6 +1,6 @@
-﻿using SoftUnlimit.Web.Security;
+﻿using UnlimitSoft.Web.Security;
 
-namespace SoftUnlimit.WebApi.Sources.Security
+namespace UnlimitSoft.WebApi.Sources.Security
 {
     public class AuthorizeOptions
     {

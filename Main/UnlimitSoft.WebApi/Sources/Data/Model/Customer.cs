@@ -1,9 +1,9 @@
-﻿using SoftUnlimit.CQRS.EventSourcing;
-using SoftUnlimit.Event;
-using SoftUnlimit.WebApi.Sources.Security.Cryptography;
+﻿using UnlimitSoft.CQRS.EventSourcing;
+using UnlimitSoft.Event;
+using UnlimitSoft.WebApi.Sources.Security.Cryptography;
 using System;
 
-namespace SoftUnlimit.WebApi.Sources.Data.Model
+namespace UnlimitSoft.WebApi.Sources.Data.Model
 {
     public class Customer : EventSourced<Guid>
     {

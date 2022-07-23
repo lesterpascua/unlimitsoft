@@ -1,9 +1,9 @@
-﻿using SoftUnlimit.CQRS.Message;
-using SoftUnlimit.CQRS.Query;
+﻿using UnlimitSoft.CQRS.Message;
+using UnlimitSoft.CQRS.Query;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.WebApi.Sources.CQRS.Query
+namespace UnlimitSoft.WebApi.Sources.CQRS.Query
 {
     /// <summary>
     /// Handler

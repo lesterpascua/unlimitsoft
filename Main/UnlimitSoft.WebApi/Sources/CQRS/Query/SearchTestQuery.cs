@@ -1,17 +1,17 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SoftUnlimit.CQRS.Query;
-using SoftUnlimit.Data.EntityFramework;
-using SoftUnlimit.Web.Model;
-using SoftUnlimit.Web.Security;
-using SoftUnlimit.WebApi.Model;
-using SoftUnlimit.WebApi.Sources.Data;
-using SoftUnlimit.WebApi.Sources.Data.Model;
+using UnlimitSoft.CQRS.Query;
+using UnlimitSoft.Data.EntityFramework;
+using UnlimitSoft.Web.Model;
+using UnlimitSoft.Web.Security;
+using UnlimitSoft.WebApi.Model;
+using UnlimitSoft.WebApi.Sources.Data;
+using UnlimitSoft.WebApi.Sources.Data.Model;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.WebApi.Sources.CQRS.Query
+namespace UnlimitSoft.WebApi.Sources.CQRS.Query
 {
     public class SearchTestQuery : MyQuery<SearchModel<Customer>>, IQuerySearch
     {

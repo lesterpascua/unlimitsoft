@@ -1,7 +1,7 @@
-﻿using SoftUnlimit.Web.Security;
-using SoftUnlimit.WebApi.Sources.Data.Model;
+﻿using UnlimitSoft.Web.Security;
+using UnlimitSoft.WebApi.Sources.Data.Model;
 
-namespace SoftUnlimit.WebApi.Sources.CQRS.Query
+namespace UnlimitSoft.WebApi.Sources.CQRS.Query
 {
     public class TestQuery : MyQuery<Customer[]>
     {

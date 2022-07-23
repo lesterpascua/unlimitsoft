@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SoftUnlimit.Data;
+using UnlimitSoft.Data;
 using System.Collections;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.WebApi.Sources.Data
+namespace UnlimitSoft.WebApi.Sources.Data
 {
     public interface IMyQueryRepository : IDbConnectionFactory
     {
