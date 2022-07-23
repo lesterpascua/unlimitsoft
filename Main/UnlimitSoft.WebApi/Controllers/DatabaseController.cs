@@ -3,16 +3,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using SoftUnlimit.Data;
-using SoftUnlimit.WebApi.Sources.Adapter;
-using SoftUnlimit.WebApi.Sources.Data;
-using SoftUnlimit.WebApi.Sources.Data.Model;
+using UnlimitSoft.Data;
+using UnlimitSoft.WebApi.Sources.Adapter;
+using UnlimitSoft.WebApi.Sources.Data;
+using UnlimitSoft.WebApi.Sources.Data.Model;
 using System;
 using System.Data;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.WebApi.Controllers
+namespace UnlimitSoft.WebApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]

@@ -1,11 +1,11 @@
-﻿using SoftUnlimit.CQRS.Command;
-using SoftUnlimit.CQRS.Message;
-using SoftUnlimit.Web.Security;
+﻿using UnlimitSoft.CQRS.Command;
+using UnlimitSoft.CQRS.Message;
+using UnlimitSoft.Web.Security;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.WebApi.Sources.CQRS.Command
+namespace UnlimitSoft.WebApi.Sources.CQRS.Command
 {
     public class AsyncTestCommand : MyCommand
     {

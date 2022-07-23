@@ -1,10 +1,10 @@
-﻿using SoftUnlimit.Event;
-using SoftUnlimit.WebApi.Sources.CQRS.Bus;
-using SoftUnlimit.WebApi.Sources.CQRS.Event;
+﻿using UnlimitSoft.Event;
+using UnlimitSoft.WebApi.Sources.CQRS.Bus;
+using UnlimitSoft.WebApi.Sources.CQRS.Event;
 using System;
 using System.Linq;
 
-namespace SoftUnlimit.WebApi.Sources.CQRS
+namespace UnlimitSoft.WebApi.Sources.CQRS
 {
     /// <summary>
     /// 

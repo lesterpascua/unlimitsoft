@@ -1,14 +1,14 @@
-﻿using SoftUnlimit.CQRS.Event;
-using SoftUnlimit.CQRS.Memento;
-using SoftUnlimit.CQRS.Message;
-using SoftUnlimit.CQRS.Query;
-using SoftUnlimit.Event;
-using SoftUnlimit.WebApi.Sources.Data.Model;
+﻿using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.CQRS.Memento;
+using UnlimitSoft.CQRS.Message;
+using UnlimitSoft.CQRS.Query;
+using UnlimitSoft.Event;
+using UnlimitSoft.WebApi.Sources.Data.Model;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.WebApi.Sources.CQRS.Event
+namespace UnlimitSoft.WebApi.Sources.CQRS.Event
 {
     public class TestEventBody
     {

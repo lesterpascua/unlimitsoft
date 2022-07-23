@@ -1,7 +1,7 @@
 ﻿using System;
 using Microsoft.EntityFrameworkCore.Migrations;
 
-namespace SoftUnlimit.WebApi.Sources.Data.Migrations
+namespace UnlimitSoft.WebApi.Sources.Data.Migrations
 {
     public partial class AddScheduler : Migration
     {

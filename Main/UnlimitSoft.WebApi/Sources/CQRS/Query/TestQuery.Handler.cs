@@ -1,10 +1,10 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SoftUnlimit.WebApi.Sources.Data;
-using SoftUnlimit.WebApi.Sources.Data.Model;
+using UnlimitSoft.WebApi.Sources.Data;
+using UnlimitSoft.WebApi.Sources.Data.Model;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.WebApi.Sources.CQRS.Query
+namespace UnlimitSoft.WebApi.Sources.CQRS.Query
 {
     /// <summary>
     /// Handler definitial (you can choose put all in the same file or separate using partial class)

@@ -1,11 +1,11 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using SoftUnlimit.CQRS.Event;
-using SoftUnlimit.CQRS.EventSourcing;
-using SoftUnlimit.CQRS.EventSourcing.Json;
-using SoftUnlimit.Data;
+using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.CQRS.EventSourcing;
+using UnlimitSoft.CQRS.EventSourcing.Json;
+using UnlimitSoft.Data;
 using System;
 
-namespace SoftUnlimit.WebApi.Sources.CQRS.Event
+namespace UnlimitSoft.WebApi.Sources.CQRS.Event
 {
     /// <inheritdoc />
     public class MyMediatorDispatchEventSourced : JsonMediatorDispatchEventSourced

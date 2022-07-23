@@ -1,4 +1,4 @@
-﻿namespace SoftUnlimit.WebApi.Sources.Security
+﻿namespace UnlimitSoft.WebApi.Sources.Security
 {
     public static class ClaimExtension
     {

@@ -1,6 +1,6 @@
-﻿using SoftUnlimit.Web;
+﻿using UnlimitSoft.Web;
 
-namespace SoftUnlimit.WebApi.Sources.CQRS.Bus
+namespace UnlimitSoft.WebApi.Sources.CQRS.Bus
 {
     public enum QueueIdentifier
     {

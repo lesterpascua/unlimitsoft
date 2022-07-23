@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using SoftUnlimit.WebApi.Sources.Data;
+using UnlimitSoft.WebApi.Sources.Data;
 
-namespace SoftUnlimit.WebApi.Sources.Data.Migrations
+namespace UnlimitSoft.WebApi.Sources.Data.Migrations
 {
     [DbContext(typeof(DbContextWrite))]
     [Migration("20211218105843_AddScheduler")]
@@ -22,7 +22,7 @@ namespace SoftUnlimit.WebApi.Sources.Data.Migrations
                 .HasAnnotation("ProductVersion", "5.0.12")
                 .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-            modelBuilder.Entity("SoftUnlimit.CQRS.EventSourcing.Json.JsonVersionedEventPayload", b =>
+            modelBuilder.Entity("UnlimitSoft.CQRS.EventSourcing.Json.JsonVersionedEventPayload", b =>
                 {
                     b.Property<Guid>("Id")
                         .HasColumnType("uniqueidentifier");
@@ -61,7 +61,7 @@ namespace SoftUnlimit.WebApi.Sources.Data.Migrations
                     b.ToTable("VersionedEvent");
                 });
 
-            modelBuilder.Entity("SoftUnlimit.WebApi.Sources.Data.Model.Customer", b =>
+            modelBuilder.Entity("UnlimitSoft.WebApi.Sources.Data.Model.Customer", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -79,7 +79,7 @@ namespace SoftUnlimit.WebApi.Sources.Data.Migrations
                     b.ToTable("Customer");
                 });
 
-            modelBuilder.Entity("SoftUnlimit.WebApi.Sources.Data.Model.Lock", b =>
+            modelBuilder.Entity("UnlimitSoft.WebApi.Sources.Data.Model.Lock", b =>
                 {
                     b.Property<int>("Id")
                         .HasColumnType("int");

@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using SoftUnlimit.WebApi.Sources.Data.Model;
+using UnlimitSoft.WebApi.Sources.Data.Model;
 
-namespace SoftUnlimit.WebApi.Sources.Data.Configuration
+namespace UnlimitSoft.WebApi.Sources.Data.Configuration
 {
     public class LockEntityTypeBuilder : _EntityTypeBuilder<Lock>
     {

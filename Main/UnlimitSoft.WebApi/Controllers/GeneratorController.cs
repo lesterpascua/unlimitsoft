@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using SoftUnlimit.WebApi.Sources.Security.Cryptography;
+using UnlimitSoft.WebApi.Sources.Security.Cryptography;
 using System;
 
-namespace SoftUnlimit.WebApi.Controllers
+namespace UnlimitSoft.WebApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]

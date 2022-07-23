@@ -1,13 +1,13 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using SoftUnlimit.CQRS.Query;
-using SoftUnlimit.Web.Client;
-using SoftUnlimit.WebApi.Sources.CQRS.Query;
-using SoftUnlimit.WebApi.Sources.Data.Model;
-using SoftUnlimit.WebApi.Sources.Web;
+using UnlimitSoft.CQRS.Query;
+using UnlimitSoft.Web.Client;
+using UnlimitSoft.WebApi.Sources.CQRS.Query;
+using UnlimitSoft.WebApi.Sources.Data.Model;
+using UnlimitSoft.WebApi.Sources.Web;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.WebApi.Controllers
+namespace UnlimitSoft.WebApi.Controllers
 {
     [ApiController]
     [Route("[controller]")]

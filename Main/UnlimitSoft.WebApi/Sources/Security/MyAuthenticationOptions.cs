@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
-using SoftUnlimit.Json;
-using SoftUnlimit.Web.AspNet.Security.Authentication;
-using SoftUnlimit.Web.Security;
+using UnlimitSoft.Json;
+using UnlimitSoft.Web.AspNet.Security.Authentication;
+using UnlimitSoft.Web.Security;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +10,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.WebApi.Sources.Security
+namespace UnlimitSoft.WebApi.Sources.Security
 {
     public class MyAuthenticationOptions : ApiKeyAuthenticationOptions
     {

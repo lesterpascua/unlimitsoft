@@ -1,7 +1,7 @@
-﻿using SoftUnlimit.CQRS.Query;
-using SoftUnlimit.Web.Security;
+﻿using UnlimitSoft.CQRS.Query;
+using UnlimitSoft.Web.Security;
 
-namespace SoftUnlimit.WebApi.Sources.CQRS.Query
+namespace UnlimitSoft.WebApi.Sources.CQRS.Query
 {
     public class MyQuery<TResult> : Query<TResult, MyQueryProps>
     {

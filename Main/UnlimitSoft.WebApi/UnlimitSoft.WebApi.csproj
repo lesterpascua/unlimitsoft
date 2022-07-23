@@ -11,32 +11,32 @@
 
 	<ItemGroup>
 		<PackageReference Include="BenchmarkDotNet" Version="0.13.1" />
-		<PackageReference Include="DistributedLock.SqlServer" Version="1.0.1" />
+		<PackageReference Include="DistributedLock.SqlServer" Version="1.0.2" />
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="6.0.6" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.6" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.6">
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="6.0.7" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="6.0.7">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Serilog.AspNetCore" Version="5.0.0" />
+		<PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
 		<PackageReference Include="Serilog.Sinks.Console" Version="4.0.1" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.3.1" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Sources\Core\SoftUnlimit.AutoMapper.DependencyInjection\SoftUnlimit.AutoMapper.DependencyInjection.csproj" />
-		<ProjectReference Include="..\..\Sources\Core\SoftUnlimit.AutoMapper\SoftUnlimit.AutoMapper.csproj" />
-		<ProjectReference Include="..\..\Sources\Core\SoftUnlimit.Logger\SoftUnlimit.Logger.csproj" />
-		<ProjectReference Include="..\..\Sources\Core\SoftUnlimit\SoftUnlimit.csproj" />
-		<ProjectReference Include="..\..\Sources\CQRS\SoftUnlimit.AkkaBus\SoftUnlimit.AkkaBus.csproj" />
-		<ProjectReference Include="..\..\Sources\CQRS\SoftUnlimit.Bus.Hangfire\SoftUnlimit.Bus.Hangfire.csproj" />
-		<ProjectReference Include="..\..\Sources\CQRS\SoftUnlimit.CQRS\SoftUnlimit.CQRS.csproj" />
-		<ProjectReference Include="..\..\Sources\CQRS\SoftUnlimit.EventBus.Azure\SoftUnlimit.EventBus.Azure.csproj" />
-		<ProjectReference Include="..\..\Sources\Data\SoftUnlimit.Data.EntityFramework\SoftUnlimit.Data.EntityFramework.csproj" />
-		<ProjectReference Include="..\..\Sources\Data\SoftUnlimit.Data\SoftUnlimit.Data.csproj" />
-		<ProjectReference Include="..\..\Sources\Web\SoftUnlimit.Web.AspNet\SoftUnlimit.Web.AspNet.csproj" />
-		<ProjectReference Include="..\..\Sources\Web\SoftUnlimit.Web\SoftUnlimit.Web.csproj" />
+		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.AutoMapper.DependencyInjection\UnlimitSoft.AutoMapper.DependencyInjection.csproj" />
+		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.AutoMapper\UnlimitSoft.AutoMapper.csproj" />
+		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.Logger\UnlimitSoft.Logger.csproj" />
+		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft\UnlimitSoft.csproj" />
+		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.AkkaBus\UnlimitSoft.AkkaBus.csproj" />
+		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.Bus.Hangfire\UnlimitSoft.Bus.Hangfire.csproj" />
+		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.CQRS\UnlimitSoft.CQRS.csproj" />
+		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.EventBus.Azure\UnlimitSoft.EventBus.Azure.csproj" />
+		<ProjectReference Include="..\..\Sources\Data\UnlimitSoft.Data.EntityFramework\UnlimitSoft.Data.EntityFramework.csproj" />
+		<ProjectReference Include="..\..\Sources\Data\UnlimitSoft.Data\UnlimitSoft.Data.csproj" />
+		<ProjectReference Include="..\..\Sources\Web\UnlimitSoft.Web.AspNet\UnlimitSoft.Web.AspNet.csproj" />
+		<ProjectReference Include="..\..\Sources\Web\UnlimitSoft.Web\UnlimitSoft.Web.csproj" />
 	</ItemGroup>
 
 </Project>

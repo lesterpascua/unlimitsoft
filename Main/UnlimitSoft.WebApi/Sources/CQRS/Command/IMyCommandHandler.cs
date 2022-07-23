@@ -1,6 +1,6 @@
-﻿using SoftUnlimit.CQRS.Command;
+﻿using UnlimitSoft.CQRS.Command;
 
-namespace SoftUnlimit.WebApi.Sources.CQRS.Command
+namespace UnlimitSoft.WebApi.Sources.CQRS.Command
 {
 
     /// <summary>

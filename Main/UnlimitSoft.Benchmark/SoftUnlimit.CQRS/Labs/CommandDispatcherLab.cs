@@ -1,14 +1,14 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using SoftUnlimit.CQRS.Command;
-using SoftUnlimit.CQRS.Command.Pipeline;
-using SoftUnlimit.CQRS.Command.Validation;
-using SoftUnlimit.CQRS.DependencyInjection;
-using SoftUnlimit.CQRS.Message;
+using UnlimitSoft.CQRS.Command;
+using UnlimitSoft.CQRS.Command.Pipeline;
+using UnlimitSoft.CQRS.Command.Validation;
+using UnlimitSoft.CQRS.DependencyInjection;
+using UnlimitSoft.CQRS.Message;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace UnlimitSoft.Benchmark.SoftUnlimit.CQRS.Labs
+namespace UnlimitSoft.Benchmark.UnlimitSoft.CQRS.Labs
 {
     /// <summary>
     /// Test UnlimitSoftDispatcher vs MediatR

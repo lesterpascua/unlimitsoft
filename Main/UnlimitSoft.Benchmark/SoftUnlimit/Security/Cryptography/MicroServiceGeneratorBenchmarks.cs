@@ -1,8 +1,8 @@
 ﻿using BenchmarkDotNet.Attributes;
-using SoftUnlimit.Security.Cryptography;
+using UnlimitSoft.Security.Cryptography;
 using System;
 
-namespace SoftUnlimit.Benchmark.SoftUnlimit.Security.Cryptography
+namespace UnlimitSoft.Benchmark.UnlimitSoft.Security.Cryptography
 {
     [MemoryDiagnoser]
     public class MicroServiceGeneratorBenchmarks

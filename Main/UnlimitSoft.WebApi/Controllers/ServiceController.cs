@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using SoftUnlimit.WebApi.Sources.Adapter;
+using UnlimitSoft.WebApi.Sources.Adapter;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.WebApi.Controllers;
+namespace UnlimitSoft.WebApi.Controllers;
 
 
 [ApiController]

@@ -1,17 +1,17 @@
 ﻿using FluentValidation;
-using SoftUnlimit.CQRS.Command;
-using SoftUnlimit.CQRS.Command.Validation;
-using SoftUnlimit.CQRS.Message;
-using SoftUnlimit.Web.Security;
-using SoftUnlimit.WebApi.Sources.CQRS.Event;
-using SoftUnlimit.WebApi.Sources.Data;
-using SoftUnlimit.WebApi.Sources.Data.Model;
-using SoftUnlimit.WebApi.Sources.Security.Cryptography;
+using UnlimitSoft.CQRS.Command;
+using UnlimitSoft.CQRS.Command.Validation;
+using UnlimitSoft.CQRS.Message;
+using UnlimitSoft.Web.Security;
+using UnlimitSoft.WebApi.Sources.CQRS.Event;
+using UnlimitSoft.WebApi.Sources.Data;
+using UnlimitSoft.WebApi.Sources.Data.Model;
+using UnlimitSoft.WebApi.Sources.Security.Cryptography;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.WebApi.Sources.CQRS.Command
+namespace UnlimitSoft.WebApi.Sources.CQRS.Command
 {
     public class TestCommand : MyCommand
     {

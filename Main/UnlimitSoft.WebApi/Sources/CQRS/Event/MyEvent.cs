@@ -1,7 +1,7 @@
-﻿using SoftUnlimit.Event;
+﻿using UnlimitSoft.Event;
 using System;
 
-namespace SoftUnlimit.WebApi.Sources.CQRS.Event
+namespace UnlimitSoft.WebApi.Sources.CQRS.Event
 {
     public abstract class MyEvent<T> : VersionedEvent<Guid, T>
     {

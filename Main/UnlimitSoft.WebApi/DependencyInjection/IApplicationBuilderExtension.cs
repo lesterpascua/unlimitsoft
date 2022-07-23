@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using SoftUnlimit.Web.AspNet.ErrorHandling;
+using UnlimitSoft.Web.AspNet.ErrorHandling;
 using System;
 using System.Collections.Generic;
 
-namespace SoftUnlimit.WebApi.DependencyInjection
+namespace UnlimitSoft.WebApi.DependencyInjection
 {
     public static class IApplicationBuilderExtension
     {

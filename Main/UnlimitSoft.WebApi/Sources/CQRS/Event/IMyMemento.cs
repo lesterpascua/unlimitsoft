@@ -1,12 +1,12 @@
-﻿using SoftUnlimit.CQRS.Event.Json;
-using SoftUnlimit.CQRS.EventSourcing;
-using SoftUnlimit.CQRS.EventSourcing.Json;
-using SoftUnlimit.CQRS.Memento;
-using SoftUnlimit.Event;
-using SoftUnlimit.Json;
+﻿using UnlimitSoft.CQRS.Event.Json;
+using UnlimitSoft.CQRS.EventSourcing;
+using UnlimitSoft.CQRS.EventSourcing.Json;
+using UnlimitSoft.CQRS.Memento;
+using UnlimitSoft.Event;
+using UnlimitSoft.Json;
 using System;
 
-namespace SoftUnlimit.WebApi.Sources.CQRS.Event
+namespace UnlimitSoft.WebApi.Sources.CQRS.Event
 {
     public class MyMemento<TEntity> : Memento<TEntity, TEntity, JsonVersionedEventPayload, string>
         where TEntity : class, IEventSourced, new()

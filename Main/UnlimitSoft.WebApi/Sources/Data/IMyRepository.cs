@@ -1,6 +1,6 @@
-﻿using SoftUnlimit.Data;
+﻿using UnlimitSoft.Data;
 
-namespace SoftUnlimit.WebApi.Sources.Data
+namespace UnlimitSoft.WebApi.Sources.Data
 {
     public interface IMyRepository<TEntity> : IMyQueryRepository<TEntity>, IRepository<TEntity> where TEntity : class
     {

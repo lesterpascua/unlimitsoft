@@ -7,25 +7,25 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Context;
 using Serilog.Sinks.SystemConsole.Themes;
-using SoftUnlimit.CQRS.DependencyInjection;
-using SoftUnlimit.CQRS.Event;
-using SoftUnlimit.CQRS.Event.Json;
-using SoftUnlimit.Data;
-using SoftUnlimit.Data.EntityFramework.Configuration;
-using SoftUnlimit.Data.EntityFramework.DependencyInjection;
-using SoftUnlimit.Event;
-using SoftUnlimit.EventBus.Azure;
-using SoftUnlimit.EventBus.Azure.Configuration;
-using SoftUnlimit.Logger.Configuration;
-using SoftUnlimit.Logger.DependencyInjection;
-using SoftUnlimit.Security;
-using SoftUnlimit.Web.AspNet.Filter;
-using SoftUnlimit.Web.AspNet.Security;
-using SoftUnlimit.Web.AspNet.Security.Authentication;
-using SoftUnlimit.WebApi.Sources.CQRS.Bus;
-using SoftUnlimit.WebApi.Sources.CQRS.Event;
-using SoftUnlimit.WebApi.Sources.Security;
-using SoftUnlimit.WebApi.Sources.Security.Cryptography;
+using UnlimitSoft.CQRS.DependencyInjection;
+using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.CQRS.Event.Json;
+using UnlimitSoft.Data;
+using UnlimitSoft.Data.EntityFramework.Configuration;
+using UnlimitSoft.Data.EntityFramework.DependencyInjection;
+using UnlimitSoft.Event;
+using UnlimitSoft.EventBus.Azure;
+using UnlimitSoft.EventBus.Azure.Configuration;
+using UnlimitSoft.Logger.Configuration;
+using UnlimitSoft.Logger.DependencyInjection;
+using UnlimitSoft.Security;
+using UnlimitSoft.Web.AspNet.Filter;
+using UnlimitSoft.Web.AspNet.Security;
+using UnlimitSoft.Web.AspNet.Security.Authentication;
+using UnlimitSoft.WebApi.Sources.CQRS.Bus;
+using UnlimitSoft.WebApi.Sources.CQRS.Event;
+using UnlimitSoft.WebApi.Sources.Security;
+using UnlimitSoft.WebApi.Sources.Security.Cryptography;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -33,7 +33,7 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.WebApi.DependencyInjection;
+namespace UnlimitSoft.WebApi.DependencyInjection;
 
 
 public static class IServiceCollectionExtensions
@@ -145,7 +145,7 @@ public static class IServiceCollectionExtensions
 
         if (unitOfWorkSettings?.Any() == true)
             foreach (var unitOfWorkSetting in unitOfWorkSettings)
-                services.AddSoftUnlimitDefaultFrameworkUnitOfWork(unitOfWorkSetting);
+                services.AddUnlimitSoftDefaultFrameworkUnitOfWork(unitOfWorkSetting);
 
         if (cqrsSettings is not null)
             services.AddUnlimitSoftCQRS(cqrsSettings);

@@ -1,7 +1,7 @@
-﻿using SoftUnlimit.CQRS.Data;
-using SoftUnlimit.Data;
+﻿using UnlimitSoft.CQRS.Data;
+using UnlimitSoft.Data;
 
-namespace SoftUnlimit.WebApi.Sources.Data
+namespace UnlimitSoft.WebApi.Sources.Data
 {
     public interface IMyUnitOfWork : ICQRSUnitOfWork, IDbConnectionFactory
     {

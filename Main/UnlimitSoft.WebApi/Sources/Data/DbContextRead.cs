@@ -1,9 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using SoftUnlimit.Data.EntityFramework;
-using SoftUnlimit.WebApi.Sources.Data.Configuration;
+using UnlimitSoft.Data.EntityFramework;
+using UnlimitSoft.WebApi.Sources.Data.Configuration;
 using System.Diagnostics.CodeAnalysis;
 
-namespace SoftUnlimit.WebApi.Sources.Data
+namespace UnlimitSoft.WebApi.Sources.Data
 {
     /// <summary>
     /// 

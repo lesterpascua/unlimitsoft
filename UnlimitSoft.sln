@@ -19,33 +19,33 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Storage", "Storage", "{8CC1
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{23719B5B-044A-4D14-9192-A84CCD213D99}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit", "Sources\Core\SoftUnlimit\SoftUnlimit.csproj", "{15488214-517D-4F89-A5C4-5833548EB937}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft", "Sources\Core\UnlimitSoft\UnlimitSoft.csproj", "{15488214-517D-4F89-A5C4-5833548EB937}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.Tests", "Tests\SoftUnlimit.Tests\SoftUnlimit.Tests.csproj", "{B8E84401-E59E-4DCE-9E71-294B1B3E1C58}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.Tests", "Tests\UnlimitSoft.Tests\UnlimitSoft.Tests.csproj", "{B8E84401-E59E-4DCE-9E71-294B1B3E1C58}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.AutoMapper", "Sources\Core\SoftUnlimit.AutoMapper\SoftUnlimit.AutoMapper.csproj", "{E618B090-58C1-469C-B254-F06D886237F0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.AutoMapper", "Sources\Core\UnlimitSoft.AutoMapper\UnlimitSoft.AutoMapper.csproj", "{E618B090-58C1-469C-B254-F06D886237F0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.Data", "Sources\Data\SoftUnlimit.Data\SoftUnlimit.Data.csproj", "{AC4CD108-8BD8-4BB8-A56B-7DD1FE1D32B9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.Data", "Sources\Data\UnlimitSoft.Data\UnlimitSoft.Data.csproj", "{AC4CD108-8BD8-4BB8-A56B-7DD1FE1D32B9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.CQRS", "Sources\CQRS\SoftUnlimit.CQRS\SoftUnlimit.CQRS.csproj", "{888E9829-5BB3-4252-B6C6-6A2BB952516C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.CQRS", "Sources\CQRS\UnlimitSoft.CQRS\UnlimitSoft.CQRS.csproj", "{888E9829-5BB3-4252-B6C6-6A2BB952516C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.Web", "Sources\Web\SoftUnlimit.Web\SoftUnlimit.Web.csproj", "{6A799653-4AE6-4EDC-A904-962E9661E18F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.Web", "Sources\Web\UnlimitSoft.Web\UnlimitSoft.Web.csproj", "{6A799653-4AE6-4EDC-A904-962E9661E18F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.Data.EntityFramework", "Sources\Data\SoftUnlimit.Data.EntityFramework\SoftUnlimit.Data.EntityFramework.csproj", "{730D498B-6CE4-4671-83BA-078897F0D0A5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.Data.EntityFramework", "Sources\Data\UnlimitSoft.Data.EntityFramework\UnlimitSoft.Data.EntityFramework.csproj", "{730D498B-6CE4-4671-83BA-078897F0D0A5}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.AkkaBus", "Sources\CQRS\SoftUnlimit.AkkaBus\SoftUnlimit.AkkaBus.csproj", "{86EDBA82-2947-47BA-8E39-834D4A963666}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.AkkaBus", "Sources\CQRS\UnlimitSoft.AkkaBus\UnlimitSoft.AkkaBus.csproj", "{86EDBA82-2947-47BA-8E39-834D4A963666}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.Web.AspNet", "Sources\Web\SoftUnlimit.Web.AspNet\SoftUnlimit.Web.AspNet.csproj", "{A1C4EF4E-0B93-4C20-807D-068486A2556E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.Web.AspNet", "Sources\Web\UnlimitSoft.Web.AspNet\UnlimitSoft.Web.AspNet.csproj", "{A1C4EF4E-0B93-4C20-807D-068486A2556E}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.Logger", "Sources\Core\SoftUnlimit.Logger\SoftUnlimit.Logger.csproj", "{50CCF9F6-A645-476B-BC78-4E80F9450F8A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.Logger", "Sources\Core\UnlimitSoft.Logger\UnlimitSoft.Logger.csproj", "{50CCF9F6-A645-476B-BC78-4E80F9450F8A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.EventBus.Azure", "Sources\CQRS\SoftUnlimit.EventBus.Azure\SoftUnlimit.EventBus.Azure.csproj", "{2F9F474D-59E0-4649-BC87-CED9743C0A99}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.EventBus.Azure", "Sources\CQRS\UnlimitSoft.EventBus.Azure\UnlimitSoft.EventBus.Azure.csproj", "{2F9F474D-59E0-4649-BC87-CED9743C0A99}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.AutoMapper.DependencyInjection", "Sources\Core\SoftUnlimit.AutoMapper.DependencyInjection\SoftUnlimit.AutoMapper.DependencyInjection.csproj", "{838ABB07-8C85-4DBD-A001-7623E7CFEA36}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.AutoMapper.DependencyInjection", "Sources\Core\UnlimitSoft.AutoMapper.DependencyInjection\UnlimitSoft.AutoMapper.DependencyInjection.csproj", "{838ABB07-8C85-4DBD-A001-7623E7CFEA36}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.Bus.Hangfire", "Sources\CQRS\SoftUnlimit.Bus.Hangfire\SoftUnlimit.Bus.Hangfire.csproj", "{759666F9-0CDB-4D8D-9D1A-8DDB01B9579C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.Bus.Hangfire", "Sources\CQRS\UnlimitSoft.Bus.Hangfire\UnlimitSoft.Bus.Hangfire.csproj", "{759666F9-0CDB-4D8D-9D1A-8DDB01B9579C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SoftUnlimit.Web.AspNet.Testing", "Sources\Web\SoftUnlimit.Web.AspNet.Testing\SoftUnlimit.Web.AspNet.Testing.csproj", "{5674F93C-7A3B-4BDD-892B-130468F83288}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.Web.AspNet.Testing", "Sources\Web\UnlimitSoft.Web.AspNet.Testing\UnlimitSoft.Web.AspNet.Testing.csproj", "{5674F93C-7A3B-4BDD-892B-130468F83288}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AspNet", "AspNet", "{3F8DCC98-FB7A-4227-B370-C21E78DD3717}"
 EndProject

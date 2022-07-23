@@ -1,4 +1,4 @@
-﻿using UnlimitSoft.Benchmark.SoftUnlimit.CQRS.Labs;
+﻿using UnlimitSoft.Benchmark.UnlimitSoft.CQRS.Labs;
 
 var lab = new CommandDispatcherLab(true);
 await lab.Dispatch();

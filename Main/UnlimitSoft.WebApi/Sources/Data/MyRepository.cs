@@ -1,6 +1,6 @@
-﻿using SoftUnlimit.Data.EntityFramework;
+﻿using UnlimitSoft.Data.EntityFramework;
 
-namespace SoftUnlimit.WebApi.Sources.Data
+namespace UnlimitSoft.WebApi.Sources.Data
 {
     /// <summary>
     /// 

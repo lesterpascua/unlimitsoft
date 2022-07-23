@@ -1,8 +1,8 @@
 ﻿using BenchmarkDotNet.Attributes;
 using System.Threading.Tasks;
-using UnlimitSoft.Benchmark.SoftUnlimit.CQRS.Labs;
+using UnlimitSoft.Benchmark.UnlimitSoft.CQRS.Labs;
 
-namespace SoftUnlimit.Benchmark.SoftUnlimit.CQRS;
+namespace UnlimitSoft.Benchmark.UnlimitSoft.CQRS;
 
 [MemoryDiagnoser]
 public class QueryBenchmark

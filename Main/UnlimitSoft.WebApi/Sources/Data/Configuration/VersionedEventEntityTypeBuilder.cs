@@ -1,8 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using SoftUnlimit.CQRS.EventSourcing.Json;
-using SoftUnlimit.Data.EntityFramework.Utility;
+using UnlimitSoft.CQRS.EventSourcing.Json;
+using UnlimitSoft.Data.EntityFramework.Utility;
 
-namespace SoftUnlimit.WebApi.Sources.Data.Configuration
+namespace UnlimitSoft.WebApi.Sources.Data.Configuration
 {
     public class VersionedEventEntityTypeBuilder : _EntityTypeBuilder<JsonVersionedEventPayload>
     {

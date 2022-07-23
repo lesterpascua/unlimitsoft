@@ -4,7 +4,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace UnlimitSoft.Benchmark.SoftUnlimit.CQRS.Labs
+namespace UnlimitSoft.Benchmark.UnlimitSoft.CQRS.Labs
 {
 
     /// <summary>
