@@ -1,6 +1,6 @@
 ﻿using System.Threading.Tasks;
 
-namespace SoftUnlimit.MultiTenant.Store;
+namespace UnlimitSoft.MultiTenant.Store;
 
 /// <summary>
 /// Provide a way to access to a tenant store.

@@ -1,8 +1,8 @@
-﻿using SoftUnlimit.MultiTenant.ResolutionStrategy;
-using SoftUnlimit.MultiTenant.Store;
+﻿using UnlimitSoft.MultiTenant.ResolutionStrategy;
+using UnlimitSoft.MultiTenant.Store;
 using System;
 
-namespace SoftUnlimit.MultiTenant;
+namespace UnlimitSoft.MultiTenant;
 
 /// <summary>
 /// Allow access to the current tenant.

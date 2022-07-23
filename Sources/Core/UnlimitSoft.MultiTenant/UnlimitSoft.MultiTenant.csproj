@@ -32,7 +32,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\SoftUnlimit\SoftUnlimit.csproj" />
+		<ProjectReference Include="..\UnlimitSoft\UnlimitSoft.csproj" />
 	</ItemGroup>
 
 </Project>

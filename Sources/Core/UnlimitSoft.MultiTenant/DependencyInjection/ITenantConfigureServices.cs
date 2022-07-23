@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 
-namespace SoftUnlimit.MultiTenant.DependencyInjection
+namespace UnlimitSoft.MultiTenant.DependencyInjection
 {
     /// <summary>
     /// Define a tenant configuration

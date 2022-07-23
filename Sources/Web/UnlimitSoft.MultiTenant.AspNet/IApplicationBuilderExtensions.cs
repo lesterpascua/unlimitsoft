@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 
-namespace SoftUnlimit.MultiTenant.AspNet;
+namespace UnlimitSoft.MultiTenant.AspNet;
 
 /// <summary>
 /// Nice method to register our middleware

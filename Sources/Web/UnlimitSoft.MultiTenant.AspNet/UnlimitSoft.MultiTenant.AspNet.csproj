@@ -37,7 +37,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\Core\SoftUnlimit.MultiTenant\SoftUnlimit.MultiTenant.csproj" />
+	  <ProjectReference Include="..\..\Core\UnlimitSoft.MultiTenant\UnlimitSoft.MultiTenant.csproj" />
 	</ItemGroup>
 	
 </Project>

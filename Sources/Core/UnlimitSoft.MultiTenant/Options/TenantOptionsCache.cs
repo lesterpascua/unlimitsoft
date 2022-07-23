@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using System;
 
-namespace SoftUnlimit.MultiTenant.Options;
+namespace UnlimitSoft.MultiTenant.Options;
 
 /// <summary>
 /// Tenant aware options cache

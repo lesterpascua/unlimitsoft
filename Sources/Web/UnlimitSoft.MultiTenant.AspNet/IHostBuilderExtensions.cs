@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using SoftUnlimit.MultiTenant.DependencyInjection;
+using UnlimitSoft.MultiTenant.DependencyInjection;
 
-namespace SoftUnlimit.MultiTenant.AspNet
+namespace UnlimitSoft.MultiTenant.AspNet
 {
     /// <summary>
     /// Utility to register tenant provider.

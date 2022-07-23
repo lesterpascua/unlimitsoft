@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SoftUnlimit.MultiTenant.ResolutionStrategy;
+namespace UnlimitSoft.MultiTenant.ResolutionStrategy;
 
 /// <summary>
 /// Define a resolution strategy to get the current tenant identifier.

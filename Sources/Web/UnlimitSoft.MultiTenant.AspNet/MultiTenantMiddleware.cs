@@ -1,10 +1,10 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
-using SoftUnlimit.MultiTenant.DependencyInjection;
+using UnlimitSoft.MultiTenant.DependencyInjection;
 using System;
 using System.Threading.Tasks;
 
-namespace SoftUnlimit.MultiTenant.AspNet;
+namespace UnlimitSoft.MultiTenant.AspNet;
 
 /// <summary>
 /// <list>

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 
-namespace SoftUnlimit.MultiTenant.DependencyInjection;
+namespace UnlimitSoft.MultiTenant.DependencyInjection;
 
 /// <summary>
 /// Build a provider using multitenance.

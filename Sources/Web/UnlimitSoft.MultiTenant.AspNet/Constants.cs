@@ -1,4 +1,4 @@
-﻿namespace SoftUnlimit.MultiTenant.AspNet;
+﻿namespace UnlimitSoft.MultiTenant.AspNet;
 
 /// <summary>
 /// 

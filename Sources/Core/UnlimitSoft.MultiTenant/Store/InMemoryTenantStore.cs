@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace SoftUnlimit.MultiTenant.Store;
+namespace UnlimitSoft.MultiTenant.Store;
 
 /// <summary>
 /// In memory store. If the tenant not found use the <see cref="String.Empty"/> value
