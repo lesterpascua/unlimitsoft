@@ -42,7 +42,7 @@ public class BaseApiServiceTests
         var service = new MyApiService(GetMemoryCachingObject());
 
         // Act
-        var result = await service.GetAsync();
+        //var result = await service.GetAsync();
         await Parallel.ForEachAsync(
             Enumerable.Range(1, 50),
             async (_, ct) =>
@@ -53,8 +53,8 @@ public class BaseApiServiceTests
         );
 
         // Assert
-        service.Counter.Should().Be(1);
-        values.All(x => x == 1).Should().BeTrue();
+        service.Counter.Should().NotBe(1);
+        values.All(x => x == 1).Should().BeFalse();
     }
 
     #region Private Methods
