@@ -266,3 +266,4 @@ __pycache__/
 /Main/SoftUnlimit.WebApi/appsettings.Development.json
 /Cloud/03 - Partner/SoftUnlimit.Cloud.Partner.WebApi/appsettings.Development.json
 /Main/UnlimitSoft.WebApi/appsettings.Development.json
+/Main/Examples/UnlimitSoft.WebApi.EventBus/appsettings.Development.json

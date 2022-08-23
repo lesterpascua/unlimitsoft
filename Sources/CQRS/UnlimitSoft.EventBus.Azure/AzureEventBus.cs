@@ -131,11 +131,11 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
     #region Private Method
     private async Task SendMessageAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop, CancellationToken ct)
     {
-        if (graph == null)
+        if (graph is null)
             throw new ArgumentNullException(nameof(graph));
 
         var destQueues = _queues;
-        if (_filter != null)
+        if (_filter is not null)
             destQueues = destQueues.Where(queue => _filter(queue.Alias, eventName, graph));
 
         var msgTasks = destQueues
