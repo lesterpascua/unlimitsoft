@@ -19,11 +19,11 @@ public interface IEvent
     /// <summary>
     /// Identifier of the worker were the event is create.
     /// </summary>
-    string WorkerId { get; set; }
+    string? WorkerId { get; set; }
     /// <summary>
     /// Operation correlation identifier.
     /// </summary>
-    string CorrelationId { get; set; }
+    string? CorrelationId { get; set; }
     /// <summary>
     /// Event creation date
     /// </summary>
@@ -35,15 +35,15 @@ public interface IEvent
     /// <summary>
     /// Command where event is originate (fullname).
     /// </summary>
-    object Command { get; set; }
+    object? Command { get; set; }
     /// <summary>
     /// Previous snapshot in json representation.
     /// </summary>
-    object PrevState { get; set; }
+    object? PrevState { get; set; }
     /// <summary>
     /// Currenct snapshot in json representation
     /// </summary>
-    object CurrState { get; set; }
+    object? CurrState { get; set; }
     /// <summary>
     /// Specify if an event belown to domain. This have optimization propouse.
     /// </summary>
@@ -90,7 +90,7 @@ public abstract class Event<TKey, TBody> : IEvent
     /// <param name="currState"></param>
     /// <param name="isDomain"></param>
     /// <param name="body"></param>
-    protected Event(Guid id, TKey sourceId, ushort serviceId, string workerId, string correlationId, object command, object prevState, object currState, bool isDomain, TBody body)
+    protected Event(Guid id, TKey sourceId, ushort serviceId, string? workerId, string? correlationId, object? command, object? prevState, object? currState, bool isDomain, TBody? body)
     {
         Id = id;
         SourceId = sourceId;
@@ -118,7 +118,7 @@ public abstract class Event<TKey, TBody> : IEvent
     /// <inheritdoc />
     public ushort ServiceId { get; set; }
     /// <inheritdoc />
-    public string WorkerId { get; set; }
+    public string? WorkerId { get; set; }
     /// <inheritdoc />
     public TimeSpan? Delay { get; set; }
     /// <inheritdoc />
@@ -127,18 +127,18 @@ public abstract class Event<TKey, TBody> : IEvent
     public string Name { get; set; }
 
     /// <inheritdoc />
-    public object Command { get; set; }
+    public object? Command { get; set; }
     /// <inheritdoc />
-    public object PrevState { get; set; }
+    public object? PrevState { get; set; }
     /// <inheritdoc />
-    public object CurrState { get; set; }
+    public object? CurrState { get; set; }
 
     /// <inheritdoc />
     public bool IsDomainEvent { get; set; }
     /// <inheritdoc />
-    public TBody Body { get; set; }
+    public TBody? Body { get; set; }
     /// <inheritdoc />
-    public string CorrelationId { get; set; }
+    public string? CorrelationId { get; set; }
 
     /// <inheritdoc />
     public object? GetBody() => Body;

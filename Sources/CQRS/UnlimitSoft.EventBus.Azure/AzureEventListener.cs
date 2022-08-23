@@ -19,7 +19,7 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
 {
     private readonly string _endpoint;
     private readonly QueueAlias<TAlias>[] _queues;
-    private readonly Processor _processor;
+    private readonly ProcessorCallback _processor;
     private readonly int _maxConcurrentCalls;
     private readonly ILogger _logger;
 
@@ -39,7 +39,7 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
     public AzureEventListener(
         string endpoint,
         IEnumerable<QueueAlias<TAlias>> queues,
-        Processor processor,
+        ProcessorCallback processor,
         int maxConcurrentCalls = 1,
         ILogger logger = null)
     {
@@ -70,16 +70,28 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
 
         for (int i = 0; i < _queues.Length; i++)
         {
-            var queue = _queues[i].Queue;
-            var busProcessor = _busProcessors[i] = _client.CreateProcessor(
-                queue,
-                new ServiceBusProcessorOptions { ReceiveMode = ServiceBusReceiveMode.PeekLock, MaxConcurrentCalls = _maxConcurrentCalls }
-            );
+            var entry = _queues[i];
+            var busProcessor = _busProcessors[i] = GetProcessor(_client, entry, _maxConcurrentCalls);
 
-            busProcessor.ProcessErrorAsync += args => ProcessErrorAsync(queue, args);
-            busProcessor.ProcessMessageAsync += args => ProcessMessageAsync(queue, args);
+            busProcessor.ProcessErrorAsync += args => ProcessErrorAsync(entry.Queue, args);
+            busProcessor.ProcessMessageAsync += args => ProcessMessageAsync(entry.Queue, args);
 
             await busProcessor.StartProcessingAsync(ct);
+        }
+
+        // ============================================================================================================================================
+        static ServiceBusProcessor GetProcessor(ServiceBusClient client, QueueAlias<TAlias> entry, int maxConcurrentCalls)
+        {
+            if (entry.Subscription is null)
+                return client.CreateProcessor(
+                    entry.Queue,
+                    new ServiceBusProcessorOptions { ReceiveMode = ServiceBusReceiveMode.PeekLock, MaxConcurrentCalls = maxConcurrentCalls }
+                );
+            return client.CreateProcessor(
+                entry.Queue,
+                entry.Subscription,
+                new ServiceBusProcessorOptions { ReceiveMode = ServiceBusReceiveMode.PeekLock, MaxConcurrentCalls = maxConcurrentCalls }
+            );
         }
     }
 

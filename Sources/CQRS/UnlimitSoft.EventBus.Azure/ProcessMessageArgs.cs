@@ -9,12 +9,12 @@ namespace UnlimitSoft.EventBus.Azure;
 
 
 /// <summary>
-/// 
+/// Funtion used to process the event
 /// </summary>
 /// <param name="args"></param>
 /// <param name="ct"></param>
 /// <returns></returns>
-public delegate Task Processor(ProcessMessageArgs args, CancellationToken ct);
+public delegate Task ProcessorCallback(ProcessMessageArgs args, CancellationToken ct);
 /// <summary>
 /// Arguments comming from bus
 /// </summary>
