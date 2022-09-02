@@ -52,7 +52,7 @@ public class RequestLoggerAttribute : ActionFilterAttribute
         }
 
         var url = $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}";
-        _logger.Log(_settings.LogLevel, "Request from {Address}, {Method} {Url} {@Arguments} {@Headers}",
+        _logger.Log(_settings.LogLevel, "Request from {Address}, {Method} {Url} Body = {@Arguments}, Header = {@Headers}",
             httpContext.GetIpAddress(),
             request.Method,
             url,
