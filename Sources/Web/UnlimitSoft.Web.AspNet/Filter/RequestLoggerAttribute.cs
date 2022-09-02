@@ -51,13 +51,11 @@ public class RequestLoggerAttribute : ActionFilterAttribute
                 headers = _settings.Transform(headers);
         }
 
-        _logger.Log(_settings.LogLevel, "Request from {Address}, {Method} {Scheme}://{Host}{Path}{QueryString} {@Arguments} {@Headers}",
+        var url = $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}";
+        _logger.Log(_settings.LogLevel, "Request from {Address}, {Method} {Url} {@Arguments} {@Headers}",
             httpContext.GetIpAddress(),
             request.Method,
-            request.Scheme,
-            request.Host,
-            request.Path,
-            request.QueryString,
+            url,
             context.ActionArguments,
             headers
         );
