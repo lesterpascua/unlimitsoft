@@ -1,3 +1,4 @@
+using Azure.Messaging.ServiceBus.Administration;
 using Microsoft.Extensions.Options;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
@@ -54,6 +55,7 @@ WebApplication ConfigureServices(IServiceCollection services)
         }
     );
     #endregion
+
 
     #region Event Bus
     services.AddUnlimitSoftEventNameResolver(new [] { typeof(Program).Assembly });
@@ -140,6 +142,7 @@ async Task Configure(WebApplication app)
         .LogInformation("Starting, ENV: {Environment}, COMPILER: {Compilation} ...", app.Environment.EnvironmentName, compilation);
     await app.Services.GetRequiredService<IEventBus>().StartAsync(TimeSpan.FromSeconds(5));
     await app.Services.GetRequiredService<IEventListener>().ListenAsync(TimeSpan.FromSeconds(5));
+
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())

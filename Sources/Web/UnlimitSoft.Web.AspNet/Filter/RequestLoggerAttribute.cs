@@ -3,6 +3,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using UnlimitSoft.Web.Security.Claims;
 using System;
+using Microsoft.AspNetCore.Mvc;
+using System.Linq;
 
 namespace UnlimitSoft.Web.AspNet.Filter
 {
@@ -25,29 +27,44 @@ namespace UnlimitSoft.Web.AspNet.Filter
             _logger = logger;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="context"></param>
+        /// <inheritdoc />
         public override void OnActionExecuting(ActionExecutingContext context)
         {
-            if (_settings.LogLevel != LogLevel.None)
-            {
-                var httpContext = context.HttpContext;
-                var request = httpContext.Request;
+            if (_settings.LogLevel == LogLevel.None || !_logger.IsEnabled(_settings.LogLevel))
+                return;
 
-                var sub = httpContext.User.GetSubjectId();
-                if (!string.IsNullOrEmpty(sub) && Guid.TryParse(sub, out var subGuid))
-                    sub = subGuid.ToString();
+            var httpContext = context.HttpContext;
+            var request = httpContext.Request;
 
-                _logger.Log(_settings.LogLevel, "User: {User}, Request: {@Request}",
-                    sub,
-                    new {
-                        Url = $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}",
-                        Address = httpContext.GetIpAddress(),
-                        Body = context.ActionArguments
-                    });
-            }
+            var sub = httpContext.User.GetSubjectId();
+            if (!string.IsNullOrEmpty(sub) && Guid.TryParse(sub, out var subGuid))
+                sub = subGuid.ToString();
+
+            _logger.Log(_settings.LogLevel, "User: {User}, Request: {@Request}",
+                sub,
+                new
+                {
+                    Url = $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}",
+                    Address = httpContext.GetIpAddress(),
+                    Body = context.ActionArguments,
+                    Headers = context.HttpContext.Request.Headers?.ToDictionary(k => k.Key, v => v.Value)
+                });
+        }
+        /// <inheritdoc />
+        public override void OnResultExecuted(ResultExecutedContext context)
+        {
+            if (_settings.LogLevel == LogLevel.None || !_logger.IsEnabled(_settings.LogLevel))
+                return;
+
+            var httpContext = context.HttpContext;
+            var sub = httpContext.User.GetSubjectId();
+            if (!string.IsNullOrEmpty(sub) && Guid.TryParse(sub, out var subGuid))
+                sub = subGuid.ToString();
+
+            _logger.Log(_settings.LogLevel, "User: {User}, Request: {@Request}",
+                sub,
+                context.Result is ObjectResult result ? result.Value : context.Result
+            );
         }
 
         #region Nested Classes
