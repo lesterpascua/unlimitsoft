@@ -61,7 +61,7 @@ namespace UnlimitSoft.Web.AspNet.Filter
             if (!string.IsNullOrEmpty(sub) && Guid.TryParse(sub, out var subGuid))
                 sub = subGuid.ToString();
 
-            _logger.Log(_settings.LogLevel, "User: {User}, Request: {@Request}",
+            _logger.Log(_settings.LogLevel, "User: {User}, Response: {@Response}",
                 sub,
                 context.Result is ObjectResult result ? result.Value : context.Result
             );
