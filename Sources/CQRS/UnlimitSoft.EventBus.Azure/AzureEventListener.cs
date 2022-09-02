@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure.Messaging.ServiceBus.Administration;
 
 namespace UnlimitSoft.EventBus.Azure;
 
@@ -71,7 +72,7 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
         for (int i = 0; i < _queues.Length; i++)
         {
             var entry = _queues[i];
-            var busProcessor = _busProcessors[i] = GetProcessor(_client, entry, _maxConcurrentCalls);
+            var busProcessor = _busProcessors[i] = await CreateProcessorAsync(entry, ct);
 
             busProcessor.ProcessErrorAsync += args => ProcessErrorAsync(entry.Queue, args);
             busProcessor.ProcessMessageAsync += args => ProcessMessageAsync(entry.Queue, args);
@@ -80,22 +81,44 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
         }
 
         // ============================================================================================================================================
-        static ServiceBusProcessor GetProcessor(ServiceBusClient client, QueueAlias<TAlias> entry, int maxConcurrentCalls)
-        {
-            if (entry.Subscription is null)
-                return client.CreateProcessor(
-                    entry.Queue,
-                    new ServiceBusProcessorOptions { ReceiveMode = ServiceBusReceiveMode.PeekLock, MaxConcurrentCalls = maxConcurrentCalls }
-                );
-            return client.CreateProcessor(
-                entry.Queue,
-                entry.Subscription,
-                new ServiceBusProcessorOptions { ReceiveMode = ServiceBusReceiveMode.PeekLock, MaxConcurrentCalls = maxConcurrentCalls }
-            );
-        }
+       
     }
 
     #region Private Methods
+    private Task CreateIfNotExistAsync(QueueAlias<TAlias> entry, CancellationToken ct)
+    {
+        return Task.CompletedTask;
+        //var administrationClient = new ServiceBusAdministrationClient(_endpoint);
+        //var topics = administrationClient.GetTopicsAsync();
+        //var asyncEnumerable = topics.AsPages();
+
+        //var topics = _queues.Where(p => p.Subscription);
+
+        //var enumerator = asyncEnumerable.GetAsyncEnumerator();
+        //while (await enumerator.MoveNextAsync())
+        //{
+        //    var topic = enumerator.Current;
+        //    var t = topic.Values.FirstOrDefault(p => p.Name == );
+
+        //    Console.WriteLine(t);
+        //}
+    }
+    private async Task<ServiceBusProcessor> CreateProcessorAsync(QueueAlias<TAlias> entry, CancellationToken ct)
+    {
+        await CreateIfNotExistAsync(entry, ct);
+
+        if (entry.Subscription is null)
+            return _client.CreateProcessor(
+                entry.Queue,
+                new ServiceBusProcessorOptions { ReceiveMode = ServiceBusReceiveMode.PeekLock, MaxConcurrentCalls = _maxConcurrentCalls }
+            );
+        return _client.CreateProcessor(
+            entry.Queue,
+            entry.Subscription,
+            new ServiceBusProcessorOptions { ReceiveMode = ServiceBusReceiveMode.PeekLock, MaxConcurrentCalls = _maxConcurrentCalls }
+        );
+    }
+
     private Task ProcessErrorAsync(string queue, ProcessErrorEventArgs arg)
     {
         _logger.LogError(arg.Exception, "Error from {Queue} in entity: {Entity}", queue, arg.EntityPath);
