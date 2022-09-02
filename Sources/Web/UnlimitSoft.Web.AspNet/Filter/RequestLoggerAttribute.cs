@@ -43,24 +43,24 @@ public class RequestLoggerAttribute : ActionFilterAttribute
         if (!string.IsNullOrEmpty(sub) && Guid.TryParse(sub, out var subGuid))
             sub = subGuid.ToString();
 
-        object headers = null;
+        Dictionary<string, StringValues> headers = null;
         if (_settings.AddHeader)
         {
-            var aux = context.HttpContext.Request.Headers?.ToDictionary(k => k.Key, v => v.Value);
+            headers = context.HttpContext.Request.Headers?.ToDictionary(k => k.Key, v => v.Value);
             if (_settings.Transform is not null)
-                aux = _settings.Transform(aux);
-            headers = aux;
+                headers = _settings.Transform(headers);
         }
 
-        _logger.Log(_settings.LogLevel, "User: {User}, Request: {@Request}",
-            sub,
-            new
-            {
-                Url = $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}",
-                Address = httpContext.GetIpAddress(),
-                Headers = headers,
-                Body = context.ActionArguments,
-            });
+        _logger.Log(_settings.LogLevel, "Request from {Address}, {Method} {Scheme}://{Host}{Path}{QueryString} {@Arguments} {@Headers}",
+            httpContext.GetIpAddress(),
+            request.Method,
+            request.Scheme,
+            request.Host,
+            request.Path,
+            request.QueryString,
+            context.ActionArguments,
+            headers
+        );
     }
     /// <inheritdoc />
     public override void OnResultExecuted(ResultExecutedContext context)
@@ -68,15 +68,7 @@ public class RequestLoggerAttribute : ActionFilterAttribute
         if (_settings.LogLevel == LogLevel.None || !_logger.IsEnabled(_settings.LogLevel))
             return;
 
-        var httpContext = context.HttpContext;
-        var sub = httpContext.User.GetSubjectId();
-        if (!string.IsNullOrEmpty(sub) && Guid.TryParse(sub, out var subGuid))
-            sub = subGuid.ToString();
-
-        _logger.Log(_settings.LogLevel, "User: {User}, Response: {@Response}",
-            sub,
-            context.Result is ObjectResult result ? result.Value : context.Result
-        );
+        _logger.Log(_settings.LogLevel, "Response {@Response}", context.Result is ObjectResult result ? result.Value : context.Result);
     }
 
     #region Nested Classes
