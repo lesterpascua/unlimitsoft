@@ -38,6 +38,7 @@ public static class EntityBuilderUtility
         builder.Property(p => p.Id).ValueGeneratedNever();                      // Guid
         builder.Property(p => p.SourceId).IsRequired().HasMaxLength(36);        // Guid
         builder.Property(p => p.EventName).IsRequired().HasMaxLength(255);
+        builder.Property(p => p.Created).HasConversion(DateTimeUtcConverter.Instance);
 
         var payloadPropertyBuilder = builder.Property(p => p.Payload).IsRequired();
         payloadBuilder?.Invoke(payloadPropertyBuilder);
