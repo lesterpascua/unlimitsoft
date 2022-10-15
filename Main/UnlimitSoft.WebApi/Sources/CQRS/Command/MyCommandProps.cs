@@ -1,19 +1,16 @@
 ﻿using UnlimitSoft.CQRS.Command;
 using UnlimitSoft.Web.Security;
 
-namespace UnlimitSoft.WebApi.Sources.CQRS.Command
+namespace UnlimitSoft.WebApi.Sources.CQRS.Command;
+
+
+/// <summary>
+/// 
+/// </summary>
+public sealed class MyCommandProps : SchedulerCommandProps
 {
-    public sealed class MyCommandProps : CommandProps
-    {
-        /// <summary>
-        /// If the command is dispatcher over hangfire here is the jobId asociate with the command.
-        /// </summary>
-        [Newtonsoft.Json.JsonIgnore]
-        [System.Text.Json.Serialization.JsonIgnore]
-        public string JobId { get; set; }
-        /// <summary>
-        /// Trace operation across services.
-        /// </summary>
-        public IdentityInfo User { get; set; }
-    }
+    /// <summary>
+    /// Trace operation across services.
+    /// </summary>
+    public IdentityInfo User { get; set; }
 }

@@ -1,8 +1,7 @@
 ﻿using Hangfire;
-using UnlimitSoft.CQRS.Message;
 using System;
-using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Message;
 
 namespace UnlimitSoft.Bus.Hangfire;
 
@@ -13,13 +12,9 @@ namespace UnlimitSoft.Bus.Hangfire;
 public interface IJobProcessor
 {
     /// <summary>
-    /// Job identifier for this processor.
+    /// Context of command execution
     /// </summary>
-    BackgroundJob Metadata { get; set; }
-    /// <summary>
-    /// Cancelation token for this processor
-    /// </summary>
-    CancellationToken CancellationToken { get; set; }
+    JobActivatorContext Context { get; set; }
 
     /// <summary>
     /// Process the logic asociate to some job.

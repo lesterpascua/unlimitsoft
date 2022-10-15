@@ -36,14 +36,14 @@ public static class IServiceCollectionExtensions
     /// <returns></returns>
     public static IServiceCollection AddHangfireCommandBus(this IServiceCollection services,
         HangfireOptions options,
-        string errorCode = null,
-        Func<IServiceProvider, ICommand, Task> preeSendCommand = null,
-        Func<IServiceProvider, ICommand, BackgroundJob, Func<ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>> preeProcessCommand = null,
-        Func<IServiceProvider, Exception, Task> onError = null,
+        string? errorCode = null,
+        Func<IServiceProvider, ICommand, Task>? preeSendCommand = null,
+        Func<IServiceProvider, ICommand, JobActivatorContext, Func<ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>>? preeProcessCommand = null,
+        Func<IServiceProvider, Exception, Task>? onError = null,
         bool addLoggerFilter = false,
-        Func<IServiceProvider, JobActivator> activatorFactory = null,
-        Func<IServiceProvider, IServiceProvider> providerFactory = null,
-        Action<IGlobalConfiguration> setup = null,
+        Func<IServiceProvider, JobActivator>? activatorFactory = null,
+        Func<IServiceProvider, IServiceProvider>? providerFactory = null,
+        Action<IGlobalConfiguration>? setup = null,
         bool recomendedConfig = true,
         CompatibilityLevel compatibility = CompatibilityLevel.Version_170
     )
@@ -61,7 +61,7 @@ public static class IServiceCollectionExtensions
                     config.UseRecommendedSerializerSettings();
 
                     if (addLoggerFilter)
-                        config.UseFilter(new LogEverythingAttribute(provider.GetService<ILogger<LogEverythingAttribute>>()));
+                        config.UseFilter(new LogEverythingAttribute(provider.GetRequiredService<ILogger<LogEverythingAttribute>>()));
 
                     var activator = activatorFactory?.Invoke(provider);
                     config.UseActivator(activator ?? new DefaultJobActivator(ActivatorUtilities.GetServiceOrCreateInstance<IServiceScopeFactory>(provider)));
@@ -84,7 +84,7 @@ public static class IServiceCollectionExtensions
             })
             .AddScoped<IJobProcessor>(provider =>
             {
-                Func<Exception, Task> interOnError = null;
+                Func<Exception, Task>? interOnError = null;
                 if (onError is not null)
                     interOnError = exc => onError(provider, exc);
 
@@ -104,14 +104,14 @@ public static class IServiceCollectionExtensions
             })
             .AddSingleton<ICommandBus>(provider =>
             {
-                var client = provider.GetService<IBackgroundJobClient>();
-                var logger = provider.GetService<ILogger<HangfireCommandBus>>();
+                var client = provider.GetRequiredService<IBackgroundJobClient>();
+                var logger = provider.GetRequiredService<ILogger<HangfireCommandBus>>();
 
-                Func<ICommand, Task> innerPreeSendCommand = null;
+                Func<ICommand, Task>? innerPreeSendCommand = null;
                 if (preeSendCommand is not null)
                     innerPreeSendCommand = command => preeSendCommand(provider, command);
 
-                return new HangfireCommandBus(client, innerPreeSendCommand, logger);
+                return new HangfireCommandBus(client, innerPreeSendCommand, logger: logger);
             });
 
         return services;
