@@ -40,6 +40,8 @@ using UnlimitSoft.WebApi.Sources.Security;
 using System;
 using System.Linq;
 using System.Reflection;
+using Hangfire;
+using Hangfire.SqlServer;
 
 namespace UnlimitSoft.WebApi;
 
@@ -174,21 +176,23 @@ public class Startup
 
         #region Hangfire
         services.AddScoped<ICommandCompletionService, MyCommandCompletionService>();
+        var hangfireOptions = new HangfireOptions
+        {
+            ConnectionString = connString,
+            Logger = Hangfire.Logging.LogLevel.Info,
+            SchedulePollingInterval = TimeSpan.FromSeconds(15),
+            Scheme = "hf",
+            WorkerCount = 1
+        };
         services.AddHangfireCommandBus(
-            new HangfireOptions
+            hangfireOptions,
+            preeProcessCommand: async (provider, command, context, next, ct) =>
             {
-                ConnectionString = connString,
-                Logger = Hangfire.Logging.LogLevel.Info,
-                SchedulePollingInterval = TimeSpan.FromSeconds(15),
-                Scheme = "hf",
-                WorkerCount = 1
-            },
-            preeProcessCommand: async (provider, command, meta, next, ct) =>
-            {
+                var meta = context.BackgroundJob;
                 string traceId = null, correlationId = null;
+
                 if (command is MyCommand cmd)
                 {
-                    cmd.Props.JobId = meta.Id;
                     traceId = cmd.Props.User.TraceId;
                     correlationId = cmd.Props.User.CorrelationId;
                 }
@@ -196,6 +200,23 @@ public class Startup
                 using var _1 = LogContext.PushProperty("TraceId", traceId);
                 using var _2 = LogContext.PushProperty("CorrelationId", correlationId);
                 return await next(command, ct);
+            },
+            setup: config =>
+            {
+                config.UseIgnoredAssemblyVersionTypeResolver();
+
+                // Define storage
+                var sqlOptions = new SqlServerStorageOptions
+                {
+                    SchemaName = hangfireOptions.Scheme,
+                    CommandBatchMaxTimeout = TimeSpan.FromMinutes(5.0),
+                    SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5.0),
+                    QueuePollInterval = hangfireOptions.SchedulePollingInterval,
+                    UseRecommendedIsolationLevel = true,
+                    DisableGlobalLocks = true
+                };
+                // Use a factory of the sql connection to avoid use the native drive connector
+                config.UseSqlServerStorage(() => new Microsoft.Data.SqlClient.SqlConnection(hangfireOptions.ConnectionString), sqlOptions);
             }
         );
         #endregion
@@ -301,6 +322,11 @@ public class Startup
         app.UseAuthorization();
         app.UseCommandBusHangfireServer(1, TimeSpan.FromSeconds(15));
 
-        app.UseEndpoints(endpoints => endpoints.MapControllers().RequireAuthorization());
+        app.UseEndpoints(endpoint => {
+            endpoint.MapControllers().RequireAuthorization();
+
+            var dashboardOptions = new DashboardOptions();
+            endpoint.MapHangfireDashboard("/hangfire", dashboardOptions);
+        });
     }
 }

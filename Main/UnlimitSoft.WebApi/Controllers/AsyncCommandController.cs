@@ -7,6 +7,7 @@ using UnlimitSoft.WebApi.Sources.Web;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Text.Json;
 
 namespace UnlimitSoft.WebApi.Controllers
 {
@@ -34,6 +35,8 @@ namespace UnlimitSoft.WebApi.Controllers
         public async Task<ActionResult<int>> Post(CancellationToken ct)
         {
             var command = new AsyncTestCommand(_gen.GenerateId(), this.GetIdentity());
+            command.Props.Delay = TimeSpan.FromSeconds(10);
+
             var response = await _bus.SendAsync(command, ct);
 
             return Accepted(response);
