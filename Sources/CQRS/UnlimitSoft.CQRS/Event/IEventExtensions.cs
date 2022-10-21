@@ -18,7 +18,7 @@ public static class IEventExtensions
     /// <typeparam name="T"></typeparam>
     /// <param name="event"></param>
     /// <returns></returns>
-    public static T GetBody<T>(this IEvent @event) => JsonUtility.Cast<T>(@event.GetBody());
+    public static T? GetBody<T>(this IEvent @event) => JsonUtility.Cast<T>(@event.GetBody());
 
     /// <summary>
     /// Generate a success response using event data.

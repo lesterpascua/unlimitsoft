@@ -34,8 +34,8 @@ namespace UnlimitSoft.WebApi.Controllers
         [HttpPost]
         public async Task<ActionResult<int>> Post(CancellationToken ct)
         {
-            var command = new AsyncTestCommand(_gen.GenerateId(), this.GetIdentity());
-            command.Props.Delay = TimeSpan.FromSeconds(10);
+            var command = new AsyncTestCommand(_gen.GenerateId(), this.GetIdentity()) { Id = Guid.NewGuid() };
+            command.Props!.Delay = TimeSpan.FromSeconds(10);
 
             var response = await _bus.SendAsync(command, ct);
 

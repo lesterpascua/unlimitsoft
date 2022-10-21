@@ -308,8 +308,8 @@ public static class IServiceCollectionExtensions
         string corsPolicy = "default",
         bool addViewToController = false,
         bool useNewtonsoft = true,
-        Action<IMvcBuilder> mvcBuilderOption = null,
-        Action<MvcOptions> mvcOptions = null
+        Action<IMvcBuilder>? mvcBuilderOption = null,
+        Action<MvcOptions>? mvcOptions = null
     )
         where TStartup : class
     {

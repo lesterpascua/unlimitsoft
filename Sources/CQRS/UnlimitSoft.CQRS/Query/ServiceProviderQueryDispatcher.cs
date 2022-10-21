@@ -24,13 +24,13 @@ public class ServiceProviderQueryDispatcher : IQueryDispatcher
     private readonly IServiceProvider _provider;
 
     private readonly bool _validate;
-    private readonly Func<IQuery, Func<IQuery, CancellationToken, Task<IQueryResponse>>, CancellationToken, Task<IQueryResponse>> _preeDispatch;
+    private readonly Func<IQuery, Func<IQuery, CancellationToken, Task<IQueryResponse>>, CancellationToken, Task<IQueryResponse>>? _preeDispatch;
 
-    private readonly string _invalidArgumendText;
-    private readonly Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>> _errorTransforms;
+    private readonly string? _invalidArgumendText;
+    private readonly Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>>? _errorTransforms;
 
     private readonly Dictionary<Type, QueryMetadata> _cache;
-    private readonly ILogger<ServiceProviderQueryDispatcher> _logger;
+    private readonly ILogger<ServiceProviderQueryDispatcher>? _logger;
 
 
     /// <summary>
@@ -45,10 +45,10 @@ public class ServiceProviderQueryDispatcher : IQueryDispatcher
     public ServiceProviderQueryDispatcher(
         IServiceProvider provider, 
         bool validate = true,
-        Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>> errorTransforms = null, 
-        string invalidArgumendText = null,
-        Func<IQuery, Func<IQuery, CancellationToken, Task<IQueryResponse>>, CancellationToken, Task<IQueryResponse>> preeDispatch = null, 
-        ILogger<ServiceProviderQueryDispatcher> logger = null
+        Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>>? errorTransforms = null, 
+        string? invalidArgumendText = null,
+        Func<IQuery, Func<IQuery, CancellationToken, Task<IQueryResponse>>, CancellationToken, Task<IQueryResponse>>? preeDispatch = null, 
+        ILogger<ServiceProviderQueryDispatcher>? logger = null
     )
     {
         _provider = provider;
@@ -89,7 +89,7 @@ public class ServiceProviderQueryDispatcher : IQueryDispatcher
         var handler = GetQueryHandler(_provider, entityType, queryType, out var metadata);
         if (_validate)
         {
-            IQueryResponse response;
+            IQueryResponse? response;
 
             response = await RunValidationAsync(handler, query, queryType, metadata, ct);
             if (response is not null)
@@ -169,7 +169,7 @@ public class ServiceProviderQueryDispatcher : IQueryDispatcher
     /// <param name="metadata"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    private async ValueTask<IQueryResponse> ComplianceAsync(IQueryHandler handler, IQuery query, Type queryType, QueryMetadata metadata, CancellationToken ct)
+    private async ValueTask<IQueryResponse?> ComplianceAsync(IQueryHandler handler, IQuery query, Type queryType, QueryMetadata metadata, CancellationToken ct)
     {
         if (!metadata.HasCompliance)
         {
@@ -195,7 +195,7 @@ public class ServiceProviderQueryDispatcher : IQueryDispatcher
     /// <param name="metadata"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    private async ValueTask<IQueryResponse> RunValidationAsync(IQueryHandler handler, IQuery query, Type queryType, QueryMetadata metadata, CancellationToken ct)
+    private async ValueTask<IQueryResponse?> RunValidationAsync(IQueryHandler handler, IQuery query, Type queryType, QueryMetadata metadata, CancellationToken ct)
     {
         if (metadata.ValidatorType is null)
         {
@@ -228,9 +228,11 @@ public class ServiceProviderQueryDispatcher : IQueryDispatcher
     #region Nested Classes
     private sealed class QueryMetadata
     {
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public Type ValidatorType;
         public Type QueryHandler;
         public bool HasCompliance;
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     }
     #endregion
 }

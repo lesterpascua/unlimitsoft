@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Threading;
@@ -15,19 +16,20 @@ namespace UnlimitSoft.Bus.Hangfire;
 /// <summary>
 /// Default job processor.
 /// </summary>
-public class DefaultJobProcessor : IJobProcessor
+public class DefaultJobProcessor<TProps> : IJobProcessor
+    where TProps : CommandProps
 {
     private readonly IServiceProvider _provider;
     private readonly ICommandDispatcher _dispatcher;
     private readonly Func<Exception, Task>? _onError;
     private readonly ICommandCompletionService? _completionService;
     private readonly Func<IServiceProvider, ICommand, JobActivatorContext, Func<ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>>? _preeProcess;
-    private readonly ILogger<DefaultJobProcessor>? _logger;
+    private readonly ILogger<DefaultJobProcessor<TProps>>? _logger;
 
     private readonly string _errorCode;
     private readonly Dictionary<string, string[]> _errorBody;
 
-    private static readonly JsonSerializerOptions _jsonSettings;
+    private static readonly JsonSerializerOptions _deserializerJsonSettings;
 
     /// <summary>
     /// Default error code raice if exist a problem in the process.
@@ -40,10 +42,10 @@ public class DefaultJobProcessor : IJobProcessor
     /// </summary>
     static DefaultJobProcessor()
     {
-        _jsonSettings = new()
+        _deserializerJsonSettings = new()
         {
-            WriteIndented = false,
             PropertyNameCaseInsensitive = true,
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
             NumberHandling = JsonNumberHandling.AllowReadingFromString
         };
     }
@@ -65,7 +67,7 @@ public class DefaultJobProcessor : IJobProcessor
         Func<Exception, Task>? onError = null,
         ICommandCompletionService? completionService = null,
         Func<IServiceProvider, ICommand, JobActivatorContext, Func<ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>>? preeProcess = null,
-        ILogger<DefaultJobProcessor>? logger = null
+        ILogger<DefaultJobProcessor<TProps>>? logger = null
     )
     {
         _logger = logger;
@@ -87,17 +89,12 @@ public class DefaultJobProcessor : IJobProcessor
     /// <inheritdoc />
     public async Task<ICommandResponse> ProcessAsync(string json, Type type)
     {
-        var command = (ICommand)JsonSerializer.Deserialize(json, type, _jsonSettings)!;
-        var props = command.GetProps<CommandProps>();
-        if (props is ISchedulerCommandProps schedulerCommandProps) 
-        {
-            schedulerCommandProps.JobId = Context.BackgroundJob.Id;
-            schedulerCommandProps.Retry = Context.GetJobParameter<int>(HangfireCommandBus.RetryParam);
-            
-            var delayTicks = Context.GetJobParameter<long?>(HangfireCommandBus.DelayTicksParam);
-            if (delayTicks.HasValue)
-                schedulerCommandProps.Delay = new TimeSpan(delayTicks.Value);
-        }
+        var command = (ICommand)JsonSerializer.Deserialize(json, type, _deserializerJsonSettings)!;
+        var props = Context.GetJobParameter<TProps>(HangfireCommandBus.PropsParam);
+        
+        command.SetProps(props);
+        if (command is ISchedulerCommand scheduler)
+            scheduler.SetJobId(Context.BackgroundJob.Id);
 
         if (_preeProcess is null)
             return await RunAsync(command, CancellationToken);
@@ -121,7 +118,7 @@ public class DefaultJobProcessor : IJobProcessor
         try
         {
             _logger?.LogDebug("Start process command: {@Command}", command);
-            _logger?.LogInformation("Start process {Job} command: {Id}", meta.Id, props.Id);
+            _logger?.LogInformation("Start process {Job} command: {Id}", meta.Id, props?.Id);
 
             response = await _dispatcher.DispatchAsync(_provider, command, ct);
         }
@@ -135,7 +132,7 @@ public class DefaultJobProcessor : IJobProcessor
             response = command.ErrorResponse(_errorBody);
         }
 
-        if (_completionService is not null && (!props.Silent || !response.IsSuccess))
+        if (_completionService is not null && (props?.Silent != true || !response.IsSuccess))
             response = await _completionService.CompleteAsync(command, response, err, CancellationToken);
 
         _logger?.LogDebug(@"End process

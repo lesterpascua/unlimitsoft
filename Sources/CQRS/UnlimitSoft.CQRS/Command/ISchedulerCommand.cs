@@ -6,38 +6,34 @@ namespace UnlimitSoft.CQRS.Command;
 /// <summary>
 /// Props asociate to a command of with scheduler time
 /// </summary>
-public interface ISchedulerCommandProps
+public interface ISchedulerCommand
 {
     /// <summary>
-    /// If the command is dispatcher over hangfire here is the jobId asociate with the command.
+    /// Get jobId asociate with the command.
     /// </summary>
-    public object? JobId { get; set; }
+    public object GetJobId();
+    /// <summary>
+    /// Set the jobId asociate with the command.
+    /// </summary>
+    /// <param name="jobId"></param>
+    public void SetJobId(object jobId);
 
     /// <summary>
-    /// Indicate how many time this command is retry
+    /// Get indicate how many time this command is retry
     /// </summary>
-    public int? Retry { get; set; }
+    public int? GetRetry();
     /// <summary>
-    /// Time to delay this command before procesed
+    /// Set indicate how many time this command is retry
     /// </summary>
-    public TimeSpan? Delay { get; set; }
-}
-/// <summary>
-/// Props asociate to a command of time scheduler.
-/// </summary>
-public class SchedulerCommandProps : CommandProps, ISchedulerCommandProps
-{
-    /// <inheritdoc />
-    [Newtonsoft.Json.JsonIgnore]
-    [System.Text.Json.Serialization.JsonIgnore]
-    public object? JobId { get; set; }
+    /// <param name="retry"></param>
+    public void SetRetry(int? retry);
 
-    /// <inheritdoc />
-    [Newtonsoft.Json.JsonIgnore]
-    [System.Text.Json.Serialization.JsonIgnore]
-    public int? Retry { get; set; }
-    /// <inheritdoc />
-    [Newtonsoft.Json.JsonIgnore]
-    [System.Text.Json.Serialization.JsonIgnore]
-    public TimeSpan? Delay { get; set; }
+    /// <summary>
+    /// Get time to delay this command before procesed
+    /// </summary>
+    public TimeSpan? GetDelay();
+    /// <summary>
+    /// Set time to delay this command before procesed
+    /// </summary>
+    public void SetDelay(TimeSpan? dalay);
 }

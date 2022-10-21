@@ -20,8 +20,9 @@ public abstract class VersionedEventPayload<TPayload> : EventPayload<TPayload>
     /// 
     /// </summary>
     /// <param name="event"></param>
-    public VersionedEventPayload(IVersionedEvent @event)
-        : base(@event)
+    /// <param name="payload"></param>
+    public VersionedEventPayload(IVersionedEvent @event, TPayload payload)
+        : base(@event, payload)
     {
         Version = @event.Version;
     }

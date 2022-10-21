@@ -34,7 +34,7 @@ public static class IServiceCollectionExtensions
     /// <param name="recomendedConfig"></param>
     /// <param name="compatibility">Default <see cref="CompatibilityLevel.Version_170"/>.</param>
     /// <returns></returns>
-    public static IServiceCollection AddHangfireCommandBus(this IServiceCollection services,
+    public static IServiceCollection AddHangfireCommandBus<TProps>(this IServiceCollection services,
         HangfireOptions options,
         string? errorCode = null,
         Func<IServiceProvider, ICommand, Task>? preeSendCommand = null,
@@ -47,6 +47,7 @@ public static class IServiceCollectionExtensions
         bool recomendedConfig = true,
         CompatibilityLevel compatibility = CompatibilityLevel.Version_170
     )
+        where TProps : CommandProps
     {
         services
             .AddHangfire((provider, config) =>
@@ -89,10 +90,10 @@ public static class IServiceCollectionExtensions
                     interOnError = exc => onError(provider, exc);
 
                 var dispatcher = provider.GetRequiredService<ICommandDispatcher>();
-                var logger = provider.GetRequiredService<ILogger<DefaultJobProcessor>>();
+                var logger = provider.GetRequiredService<ILogger<DefaultJobProcessor<TProps>>>();
                 var commandCompletionService = provider.GetService<ICommandCompletionService>();
 
-                return new DefaultJobProcessor(
+                return new DefaultJobProcessor<TProps>(
                     provider,
                     dispatcher, 
                     errorCode: errorCode,

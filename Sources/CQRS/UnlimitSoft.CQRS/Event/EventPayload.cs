@@ -9,10 +9,13 @@ namespace UnlimitSoft.CQRS.Event;
 /// </summary>
 public abstract class EventPayload
 {
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     /// <summary>
     /// 
     /// </summary>
     protected EventPayload() { }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+    
     /// <summary>
     /// 
     /// </summary>
@@ -20,7 +23,7 @@ public abstract class EventPayload
     protected EventPayload(IEvent @event)
     {
         Id = @event.Id;
-        SourceId = @event.GetSourceId().ToString();
+        SourceId = @event.GetSourceId()?.ToString();
         CorrelationId = @event.CorrelationId;
         EventName = @event.Name;
         Created = @event.Created;
@@ -36,11 +39,11 @@ public abstract class EventPayload
     /// <summary>
     /// 
     /// </summary>
-    public string SourceId { get; set; }
+    public string? SourceId { get; set; }
     /// <summary>
     /// Event correlation identifier.
     /// </summary>
-    public string CorrelationId { get; set; }
+    public string? CorrelationId { get; set; }
     /// <summary>
     /// Event unique name.
     /// </summary>
@@ -74,17 +77,22 @@ public abstract class EventPayload
 /// <typeparam name="TPayload"></typeparam>
 public abstract class EventPayload<TPayload> : EventPayload
 {
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     /// <summary>
     /// 
     /// </summary>
+    [System.Text.Json.Serialization.JsonConstructor]
     protected EventPayload() { }
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     /// <summary>
     /// 
     /// </summary>
     /// <param name="event"></param>
-    protected EventPayload(IEvent @event)
+    /// <param name="payload"></param>
+    protected EventPayload(IEvent @event, TPayload payload)
         : base(@event)
     {
+        Payload = payload;
     }
 
     /// <summary>

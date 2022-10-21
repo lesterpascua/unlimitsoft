@@ -1,6 +1,8 @@
-﻿using UnlimitSoft.CQRS.Event.Json;
+﻿#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+using UnlimitSoft.CQRS.Event.Json;
 
 namespace UnlimitSoft.CQRS.Event;
+
 
 /// <summary>
 /// Messaje envelop with messaje metadata.
@@ -19,5 +21,5 @@ public class MessageEnvelop
     /// <summary>
     /// String representation of the type of the message this will be use with <see cref="IEventNameResolver"/> to get the .net type asociate with the string type representation.
     /// </summary>
-    public string MsgType { get; set; }
+    public string? MsgType { get; set; }
 }
