@@ -3,6 +3,7 @@ using System.Net;
 
 namespace UnlimitSoft.CQRS.Message;
 
+
 /// <summary>
 /// Base class for all EventResponse 
 /// </summary>
@@ -22,7 +23,7 @@ public class EventResponse<T> : Response<T>, IEventResponse
     /// <param name="body"></param>
     /// <param name="uiText"></param>
     /// <param name="traceId"></param>
-    internal protected EventResponse(HttpStatusCode code, T body, string uiText = null, string traceId = null) : base(code, body, uiText, traceId)
+    internal protected EventResponse(HttpStatusCode code, T? body, string? uiText = null, string? traceId = null) : base(code, body, uiText, traceId)
     {
     }
 }

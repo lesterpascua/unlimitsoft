@@ -38,13 +38,13 @@ public static class IServiceCollectionExtensions
     /// <returns></returns>
     public static IServiceCollection AddApiServices(this IServiceCollection services,
         Func<Assembly, string> assemblyFilter,
-        Func<Type, ServiceLifetime> lifeTimeResolver = null,
+        Func<Type, ServiceLifetime>? lifeTimeResolver = null,
         bool scanPreloadAssemblies = false,
-        Func<IServiceProvider, Type, IApiClient, IApiService> serviceFactory = null,
-        Func<Type, object> resolver = null,
-        Action<Assembly, HttpClient> httpClientBuilder = null,
-        Action<Assembly, IHttpClientBuilder> httpBuilder = null,
-        Func<Type, HttpClient, IApiClient> apiClientFactory = null,
+        Func<IServiceProvider, Type, IApiClient, IApiService>? serviceFactory = null,
+        Func<Type, object>? resolver = null,
+        Action<Assembly, HttpClient>? httpClientBuilder = null,
+        Action<Assembly, IHttpClientBuilder>? httpBuilder = null,
+        Func<Type, HttpClient, IApiClient>? apiClientFactory = null,
         params Assembly[] extraAssemblies
     )
     {
@@ -96,10 +96,10 @@ public static class IServiceCollectionExtensions
                     typeInterface,
                     provider =>
                     {
-                        var factory = provider.GetService<IHttpClientFactory>();
+                        var factory = provider.GetRequiredService<IHttpClientFactory>();
 
-                        object service = null;
-                        IApiClient apiClient = null;
+                        object? service = null;
+                        IApiClient? apiClient = null;
                         if (serviceFactory is not null)
                         {
                             apiClient = CreateApiClient(provider, apiClientFactory, key, typeInterface, factory);
@@ -129,10 +129,12 @@ public static class IServiceCollectionExtensions
         return services;
     }
 
-    private static IApiClient CreateApiClient(IServiceProvider provider, Func<Type, HttpClient, IApiClient> apiClientFactory, string key, Type serviceType, IHttpClientFactory factory)
+    #region Private Methods
+    private static IApiClient CreateApiClient(IServiceProvider provider, Func<Type, HttpClient, IApiClient>? apiClientFactory, string key, Type serviceType, IHttpClientFactory factory)
     {
         var httpClient = factory.CreateClient(key);
         var apiClient = apiClientFactory?.Invoke(serviceType, httpClient) ?? new DefaultApiClient(httpClient, logger: provider.GetService<ILogger<DefaultApiClient>>());
         return apiClient;
     }
+    #endregion
 }

@@ -38,11 +38,13 @@ namespace UnlimitSoft.CQRS.Specification
         /// Create an AND expression between array of expressions.
         /// </summary>
         /// <param name="elements"></param>
+        /// <exception cref="ArgumentException">Elements can't be empty</exception>
         /// <returns></returns>
         public static Expression<Func<TEntity, bool>> BuildExpression(IEnumerable<Expression<Func<TEntity, bool>>> elements)
         {
             if (!elements.Any())
-                return null;
+                throw new ArgumentException("Elements can't be empty", nameof(elements));
+
             if (elements.Count() == 1)
                 return elements.Single();
 

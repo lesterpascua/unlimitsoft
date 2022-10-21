@@ -133,7 +133,7 @@ public static class JsonUtility
     /// <param name="data"></param>
     /// <param name="settings"></param>
     /// <returns></returns>
-    public static T? Cast<T>(object data, object? settings = null)
+    public static T? Cast<T>(object? data, object? settings = null)
     {
         if (data is null)
             return default;

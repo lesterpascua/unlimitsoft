@@ -1,6 +1,6 @@
-﻿using UnlimitSoft.CQRS.Command;
+﻿using System;
+using UnlimitSoft.CQRS.Command;
 using UnlimitSoft.Web.Security;
-using System;
 
 namespace UnlimitSoft.WebApi.Sources.CQRS.Command;
 
@@ -22,4 +22,21 @@ public class MyCommand : Command<MyCommandProps>
             User = user
         };
     }
+}
+public class MySchedulerCommand : MyCommand, ISchedulerCommand
+{
+    public MySchedulerCommand() { }
+    public MySchedulerCommand(Guid id, IdentityInfo? user = null) :
+        base(id, user) 
+    { 
+    }
+
+    public object? GetJobId() => Props.JobId;
+    public void SetJobId(object? jobId) => Props.JobId = (string?)jobId;
+
+    public int? GetRetry() => Props.Retry;
+    public void SetRetry(int? retry) => Props.Retry = retry;
+
+    public TimeSpan? GetDelay() => Props.Delay;
+    public void SetDelay(TimeSpan? delay) => Props.Delay = delay;
 }

@@ -20,7 +20,7 @@ public class CommandResponse<T> : Response<T>, ICommandResponse
     /// <param name="code"></param>
     /// <param name="body"></param>
     /// <param name="uiText"></param>
-    internal protected CommandResponse(HttpStatusCode code, T body, string uiText)
+    internal protected CommandResponse(HttpStatusCode code, T? body, string? uiText)
     {
         Code = code;
         Body = body;

@@ -184,17 +184,17 @@ public class Startup
             Scheme = "hf",
             WorkerCount = 1
         };
-        services.AddHangfireCommandBus(
+        services.AddHangfireCommandBus<MyCommandProps>(
             hangfireOptions,
             preeProcessCommand: async (provider, command, context, next, ct) =>
             {
                 var meta = context.BackgroundJob;
-                string traceId = null, correlationId = null;
+                string? traceId = null, correlationId = null;
 
                 if (command is MyCommand cmd)
                 {
-                    traceId = cmd.Props.User.TraceId;
-                    correlationId = cmd.Props.User.CorrelationId;
+                    traceId = cmd.Props.User?.TraceId;
+                    correlationId = cmd.Props.User?.CorrelationId;
                 }
 
                 using var _1 = LogContext.PushProperty("TraceId", traceId);

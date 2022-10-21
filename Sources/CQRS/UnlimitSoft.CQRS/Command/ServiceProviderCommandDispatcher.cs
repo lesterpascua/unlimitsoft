@@ -24,13 +24,13 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
     private readonly IServiceProvider _provider;
 
     private readonly bool _validate, _useScope;
-    private readonly Func<IServiceProvider, ICommand, Func<IServiceProvider, ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>> _preeDispatch;
+    private readonly Func<IServiceProvider, ICommand, Func<IServiceProvider, ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>>? _preeDispatch;
 
-    private readonly string _invalidArgumendText;
-    private readonly Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>> _errorTransforms;
+    private readonly string? _invalidArgumendText;
+    private readonly Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>>? _errorTransforms;
 
     private readonly Dictionary<Type, CommandMetadata> _cache;
-    private readonly ILogger<ServiceProviderCommandDispatcher> _logger;
+    private readonly ILogger<ServiceProviderCommandDispatcher>? _logger;
 
     /// <summary>
     /// Default function used to convert error transform to standard ASP.NET format
@@ -52,10 +52,10 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
         IServiceProvider provider, 
         bool validate = true,
         bool useScope = true, 
-        Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>> errorTransforms = null,
-        string invalidArgumendText = null, 
-        Func<IServiceProvider, ICommand, Func<IServiceProvider, ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>> preeDispatch = null, 
-        ILogger<ServiceProviderCommandDispatcher> logger = null
+        Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>>? errorTransforms = null,
+        string? invalidArgumendText = null, 
+        Func<IServiceProvider, ICommand, Func<IServiceProvider, ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>>? preeDispatch = null, 
+        ILogger<ServiceProviderCommandDispatcher>? logger = null
     )
     {
         _provider = provider;
@@ -101,7 +101,7 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
         var commandType = command.GetType();
         _logger?.ServiceProviderCommandDispatcher_ExecuteCommandType(commandType);
 
-        ICommandResponse response;
+        ICommandResponse? response;
         var handler = GetCommandHandler(provider, command.GetType(), out var metadata);
         if (_validate)
         {
@@ -204,7 +204,7 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
     /// <param name="metadata"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    private async ValueTask<ICommandResponse> ComplianceAsync(ICommandHandler handler, ICommand command, Type commandType, CommandMetadata metadata, CancellationToken ct)
+    private async ValueTask<ICommandResponse?> ComplianceAsync(ICommandHandler handler, ICommand command, Type commandType, CommandMetadata metadata, CancellationToken ct)
     {
         if (!metadata.HasCompliance)
         {
@@ -230,7 +230,7 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
     /// <param name="metadata"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    private async ValueTask<ICommandResponse> ValidationAsync(ICommandHandler handler, ICommand command, Type commandType, CommandMetadata metadata, CancellationToken ct)
+    private async ValueTask<ICommandResponse?> ValidationAsync(ICommandHandler handler, ICommand command, Type commandType, CommandMetadata metadata, CancellationToken ct)
     {
         if (metadata.ValidatorType is null)
         {
@@ -291,11 +291,13 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
     #region Nested Classes
     private sealed class CommandMetadata
     {
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         public Type ValidatorType;
         public Type CommandHandler;
         public bool HasCompliance;
 
         public Type[][] PostPipeline;
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     }
     #endregion
 }

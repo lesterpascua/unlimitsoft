@@ -29,23 +29,23 @@ public static class EventUtility
     /// <param name="logger"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async Task<(IEventResponse, Exception)> ProcessAsync<TEvent>(string eventName, MessageEnvelop envelop, IEventDispatcher dispatcher, IEventNameResolver resolver, Action<TEvent> beforeProcess = null, Func<Exception, TEvent, MessageEnvelop, CancellationToken, Task> onError = null, ILogger logger = null, CancellationToken ct = default)
+    public static async Task<(IEventResponse?, Exception?)> ProcessAsync<TEvent>(string eventName, MessageEnvelop envelop, IEventDispatcher dispatcher, IEventNameResolver resolver, Action<TEvent>? beforeProcess = null, Func<Exception, TEvent?, MessageEnvelop, CancellationToken, Task>? onError = null, ILogger? logger = null, CancellationToken ct = default)
         where TEvent : class, IEvent
     {
-        TEvent curr = null;
-        Exception ex = null;
-        IEventResponse responses = null;
+        TEvent? curr = null;
+        Exception? ex = null;
+        IEventResponse? responses = null;
         try
         {
-            Type eventType = null;
+            Type? eventType = null;
             if (!string.IsNullOrEmpty(envelop.MsgType))
-                eventType = resolver.Resolver(envelop.MsgType);
+                eventType = resolver.Resolver(envelop.MsgType!);
             if (eventType is null && !string.IsNullOrEmpty(eventName))
                 eventType = resolver.Resolver(eventName);
 
             if (eventType is null)
             {
-                logger?.NoTypeForTheEvent(eventType, eventName);
+                logger?.NoTypeForTheEvent(eventName);
                 return (responses, ex);
             }
 
@@ -66,8 +66,8 @@ public static class EventUtility
                 default:
                     throw new NotSupportedException($"Message type {envelop.Type} is not suported");
             }
-            beforeProcess?.Invoke(curr);
-            responses = await DispatchEvent(dispatcher, logger, curr, ct);
+            beforeProcess?.Invoke(curr!);
+            responses = await DispatchEvent(dispatcher, logger, curr!, ct);
 
             // Log error if fail
             if (responses?.IsSuccess != true)
@@ -84,7 +84,7 @@ public static class EventUtility
         return (responses, ex);
     }
 
-    private static async Task<IEventResponse> DispatchEvent(IEventDispatcher eventDispatcher, ILogger logger, IEvent @event, CancellationToken ct)
+    private static async Task<IEventResponse> DispatchEvent(IEventDispatcher eventDispatcher, ILogger? logger, IEvent @event, CancellationToken ct)
     {
         var responses = await eventDispatcher.DispatchAsync(@event, ct);
         logger?.LogInformation(@"Procesed

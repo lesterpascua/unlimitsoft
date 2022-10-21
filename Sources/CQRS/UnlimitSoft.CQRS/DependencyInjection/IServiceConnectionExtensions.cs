@@ -40,7 +40,7 @@ public static class IServiceConnectionExtensions
     /// <param name="typeResolverCache"></param>
     /// <param name="transform">Allow create custom name to the event.</param>
     /// <returns></returns>
-    public static IServiceCollection AddUnlimitSoftEventNameResolver(this IServiceCollection services, Assembly[] typeResolverCache, Func<Type, string> transform = null)
+    public static IServiceCollection AddUnlimitSoftEventNameResolver(this IServiceCollection services, Assembly[] typeResolverCache, Func<Type, string>? transform = null)
     {
         static IEnumerable<Type> GetTypesFromInterface<T>(params Assembly[] assemblies) where T : class
         {
@@ -82,7 +82,7 @@ public static class IServiceConnectionExtensions
     /// <param name="preeDispatch"></param>
     /// <param name="validate"></param>
     /// <param name="assemblies"></param>
-    public static void AddQueryHandler(this IServiceCollection services, Type queryHandlerType, Func<IQuery, Func<IQuery, CancellationToken, Task<IQueryResponse>>, CancellationToken, Task<IQueryResponse>> preeDispatch = null, bool validate = true, params Assembly[] assemblies)
+    public static void AddQueryHandler(this IServiceCollection services, Type queryHandlerType, Func<IQuery, Func<IQuery, CancellationToken, Task<IQueryResponse>>, CancellationToken, Task<IQueryResponse>>? preeDispatch = null, bool validate = true, params Assembly[] assemblies)
     {
         services.AddScoped<IQueryDispatcher>((provider) =>
         {
@@ -140,7 +140,7 @@ public static class IServiceConnectionExtensions
     /// <param name="preeDispatch"></param>
     /// <param name="validate"></param>
     /// <param name="assemblies"></param>
-    public static IServiceCollection AddCommandHandler(this IServiceCollection services, Type commandHandlerType, Func<IServiceProvider, ICommand, Func<IServiceProvider, ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>> preeDispatch = null, bool validate = true, params Assembly[] assemblies)
+    public static IServiceCollection AddCommandHandler(this IServiceCollection services, Type commandHandlerType, Func<IServiceProvider, ICommand, Func<IServiceProvider, ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>>? preeDispatch = null, bool validate = true, params Assembly[] assemblies)
     {
         services.AddSingleton<ICommandDispatcher>((provider) =>
         {
@@ -224,11 +224,11 @@ public static class IServiceConnectionExtensions
     /// <param name="preeDispatch"></param>
     /// <param name="assemblies"></param>
     /// <returns></returns>
-    public static IServiceCollection AddEventHandler(this IServiceCollection services, Type eventHandlerType, Func<IServiceProvider, IEvent, Func<IServiceProvider, IEvent, CancellationToken, Task<IEventResponse>>, CancellationToken, Task<IEventResponse>> preeDispatch = null, params Assembly[] assemblies)
+    public static IServiceCollection AddEventHandler(this IServiceCollection services, Type eventHandlerType, Func<IServiceProvider, IEvent, Func<IServiceProvider, IEvent, CancellationToken, Task<IEventResponse>>, CancellationToken, Task<IEventResponse>>? preeDispatch = null, params Assembly[] assemblies)
     {
         services.AddSingleton<IEventDispatcher>((provider) =>
         {
-            var logger = provider.GetService<ILogger<ServiceProviderEventDispatcher>>();
+            var logger = provider.GetRequiredService<ILogger<ServiceProviderEventDispatcher>>();
             return new ServiceProviderEventDispatcher(
                 provider,
                 preeDispatch: preeDispatch,

@@ -1,4 +1,8 @@
-﻿namespace UnlimitSoft.CQRS.Command;
+﻿#pragma warning disable CS8603, CS8769 
+// Possible null reference return.
+// Nullability of reference types in type of parameter doesn't match implemented member (possibly because of nullability attributes).
+
+namespace UnlimitSoft.CQRS.Command;
 
 
 /// <summary>
@@ -10,12 +14,10 @@ public abstract class Command<T> : ICommand
     /// <summary>
     /// Get or set metadata props associate with the command.
     /// </summary>
-    public T Props { get; set; }
+    public T? Props { get; set; }
 
-    /// <summary>
-    /// Return metadata props associate with the command.
-    /// </summary>
-    /// <typeparam name="TProps"></typeparam>
-    /// <returns></returns>
+    /// <inheritdoc />
     TProps ICommand.GetProps<TProps>() => Props as TProps;
+    /// <inheritdoc />
+    void ICommand.SetProps<TProps>(TProps props) => Props = props as T;
 }

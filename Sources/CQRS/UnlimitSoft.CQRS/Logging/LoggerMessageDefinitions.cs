@@ -5,8 +5,8 @@ using UnlimitSoft.CQRS.Message;
 using UnlimitSoft.CQRS.Query;
 using System;
 
-#pragma warning disable IDE0060 // Remove unused parameter
 namespace UnlimitSoft.CQRS.Logging;
+
 
 /// <summary>
 /// Logger definition message for this CQRS assembly
@@ -14,7 +14,7 @@ namespace UnlimitSoft.CQRS.Logging;
 internal static partial class LoggerMessageDefinitions
 {
     #region EventUtility
-    private static readonly Action<ILogger, string, string, object, IEventResponse, Exception?> __ErrorHandlingEvent = LoggerMessage.Define<string, string, object, IEventResponse>(LogLevel.Error, 0, "Error handling event {Type}, {CorrelationId} payload: {Event}, {@Response}", new LogDefineOptions { SkipEnabledCheck = true });
+    private static readonly Action<ILogger, string?, string?, object, IEventResponse?, Exception?> __ErrorHandlingEvent = LoggerMessage.Define<string?, string?, object, IEventResponse?>(LogLevel.Error, 0, "Error handling event {Type}, {CorrelationId} payload: {Event}, {@Response}", new LogDefineOptions { SkipEnabledCheck = true });
 
     /// <summary>
     /// 
@@ -25,15 +25,14 @@ internal static partial class LoggerMessageDefinitions
     /// <param name="correlation"></param>
     /// <param name="msg"></param>
     /// <param name="response"></param>
-    public static void ErrorHandlingEvent(this ILogger logger, Exception ex, string type, string correlation, object msg, IEventResponse response) => __ErrorHandlingEvent(logger, type, correlation, msg, response, ex);
+    public static void ErrorHandlingEvent(this ILogger logger, Exception ex, string? type, string? correlation, object msg, IEventResponse? response) => __ErrorHandlingEvent(logger, type, correlation, msg, response, ex);
     /// <summary>
     /// 
     /// </summary>
     /// <param name="logger"></param>
-    /// <param name="eventType"></param>
     /// <param name="eventName"></param>
-    [LoggerMessage(EventId = 1, Message = "Skip event Type: {EventType}, Name: {EventName}", Level = LogLevel.Warning, SkipEnabledCheck = true)]
-    public static partial void NoTypeForTheEvent(this ILogger logger, Type eventType, string eventName);
+    [LoggerMessage(EventId = 1, Message = "Skip event Name: {EventName}", Level = LogLevel.Warning, SkipEnabledCheck = true)]
+    public static partial void NoTypeForTheEvent(this ILogger logger, string eventName);
     /// <summary>
     /// 
     /// </summary>

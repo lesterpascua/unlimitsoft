@@ -51,7 +51,7 @@ namespace UnlimitSoft.CQRS.Query
         public static IQueryable<TEntity> ApplyOrdered<TEntity>(this IQueryable<TEntity> @this, IEnumerable<ColumnName> ordered)
         {
             bool first = true;
-            IOrderedQueryable<TEntity> orderedQuery = null;
+            IOrderedQueryable<TEntity>? orderedQuery = null;
             foreach (var entry in ordered)
             {
                 var expression = GetExpression<TEntity>(entry.Name);
@@ -67,7 +67,7 @@ namespace UnlimitSoft.CQRS.Query
 
                 first = false;
             }
-            if (orderedQuery != null)
+            if (orderedQuery is not null)
                 @this = orderedQuery;
             return @this;
         }

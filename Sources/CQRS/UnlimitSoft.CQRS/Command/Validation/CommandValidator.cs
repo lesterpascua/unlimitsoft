@@ -1,25 +1,26 @@
 ﻿using FluentValidation;
 
-namespace UnlimitSoft.CQRS.Command.Validation
+namespace UnlimitSoft.CQRS.Command.Validation;
+
+
+/// <summary>
+/// Class for validate if data of command is correct. 
+/// </summary>
+/// <typeparam name="TCommand"></typeparam>
+public sealed class CommandValidator<TCommand> : AbstractValidator<TCommand>
+    where TCommand : ICommand
 {
     /// <summary>
-    /// Class for validate if data of command is correct. 
+    /// 
     /// </summary>
-    /// <typeparam name="TCommand"></typeparam>
-    public sealed class CommandValidator<TCommand> : AbstractValidator<TCommand>
-        where TCommand : ICommand
+    public CommandValidator()
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        public CommandValidator()
-        {
-            CascadeMode = DefaultCascadeMode;
-        }
-
-        /// <summary>
-        /// Default value used for this validator
-        /// </summary>
-        public static CascadeMode DefaultCascadeMode { get; set; } = CascadeMode.Stop;
+        RuleLevelCascadeMode = DefaultCascadeMode;
+        ClassLevelCascadeMode = DefaultCascadeMode;
     }
+
+    /// <summary>
+    /// Default value used for this validator
+    /// </summary>
+    public static CascadeMode DefaultCascadeMode { get; set; } = CascadeMode.Stop;
 }

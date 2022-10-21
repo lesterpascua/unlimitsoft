@@ -34,9 +34,9 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
     private readonly IServiceScopeFactory _factory;
     private readonly IEventBus _eventBus;
     private readonly MessageType _type;
-    private readonly Func<TVersionedEventPayload, Func<Task>, CancellationToken, Task> _middleware;
+    private readonly Func<TVersionedEventPayload, Func<Task>, CancellationToken, Task>? _middleware;
     private readonly TimeSpan _startDelay, _errorDelay;
-    private readonly ILogger _logger;
+    private readonly ILogger? _logger;
     private readonly CancellationTokenSource _cts;
     private readonly ConcurrentDictionary<Guid, Bucket> _pending;
 
@@ -54,7 +54,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
     /// </param>
     /// <param name="eventBus"></param>
     /// <param name="type"></param>
-    /// <param name="middleware"></param>
+    /// <param name="middleware">Is is not null will call this function instead the action funcion, delegating the responsabilite to call the action for the middleware</param>
     /// <param name="startDelay">Wait time before start the listener.</param>
     /// <param name="errorDelay">Wait time if some error happened in the bus, 20 second default time.</param>
     /// <param name="bachSize">Amount of pulling event for every iteration. 10 event by default.</param>
@@ -65,13 +65,13 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
         IServiceScopeFactory factory,
         IEventBus eventBus,
         MessageType type,
-        Func<TVersionedEventPayload, Func<Task>, CancellationToken, Task> middleware = null,
+        Func<TVersionedEventPayload, Func<Task>, CancellationToken, Task>? middleware = null,
         TimeSpan? startDelay = null,
         TimeSpan? errorDelay = null,
         int bachSize = 10,
         bool enableScheduled = false,
         bool useEnvelop = true,
-        ILogger logger = null)
+        ILogger? logger = null)
     {
         _disposed = false;
         _factory = factory ?? throw new ArgumentNullException(nameof(factory));
@@ -212,7 +212,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
             // Dispatch event throws the bus
             _logger?.LogDebug("Start to publish events {Time}", DateTime.UtcNow);
 
-            TVersionedEventPayload lastEvent = null;
+            TVersionedEventPayload? lastEvent = null;
             int count = Math.Min(_pending.Count, _bachSize);
 
             var orderedPending = _enableScheduled ? 
@@ -238,7 +238,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
             {
                 _logger?.LogError(
                     ex, 
-                    "Error publish with correlation: {CorrelationId} and {@Event}.", lastEvent.CorrelationId, lastEvent
+                    "Error publish with correlation: {CorrelationId} and {@Event}.", lastEvent?.CorrelationId, lastEvent
                 );
                 await Task.Delay(_errorDelay, _cts.Token);
             }
@@ -298,7 +298,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
         await _eventBus.PublishPayloadAsync(payload, _type, _useEnvelop, _cts.Token);
         await repository.MarkEventsAsPublishedAsync(payload, _cts.Token);
     }
-    private async Task<TVersionedEventPayload> TryToPublishAsync(TEventSourcedRepository repository, TVersionedEventPayload payload)
+    private async Task<TVersionedEventPayload?> TryToPublishAsync(TEventSourcedRepository repository, TVersionedEventPayload payload)
     {
         if (payload.IsPubliched)
             return null;

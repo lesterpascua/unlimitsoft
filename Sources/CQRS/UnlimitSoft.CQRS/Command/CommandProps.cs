@@ -13,9 +13,9 @@ public class CommandProps
     /// </summary>
     public Guid Id { get; set; }
     /// <summary>
-    /// Command category name (normally Type FullName)
+    /// Command name (normally Type FullName)
     /// </summary>
-    public string Name { get; set; }
+    public string? Name { get; set; }
     /// <summary>
     /// If true alwais deliver the response, in other case only deliver response if response is an error.
     /// </summary>

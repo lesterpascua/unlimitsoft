@@ -8,7 +8,7 @@ using UnlimitSoft.Web.Security;
 namespace UnlimitSoft.WebApi.Sources.CQRS.Command;
 
 
-public class AsyncTestCommand : MyCommand
+public class AsyncTestCommand : MySchedulerCommand
 {
     /// <summary>
     /// Deserialization constructor.
@@ -20,10 +20,15 @@ public class AsyncTestCommand : MyCommand
     /// </summary>
     /// <param name="id"></param>
     /// <param name="user"></param>
-    public AsyncTestCommand(Guid id, IdentityInfo user = null) :
+    public AsyncTestCommand(Guid id, IdentityInfo? user = null) :
         base(id, user)
     {
     }
+
+    /// <summary>
+    /// Command identifier.
+    /// </summary>
+    public Guid Id { get; set; }
 }
 public class AsyncTestCommandHandler : IMyCommandHandler<AsyncTestCommand>
 {

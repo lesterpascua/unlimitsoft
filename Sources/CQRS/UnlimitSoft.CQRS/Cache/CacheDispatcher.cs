@@ -26,7 +26,7 @@ namespace UnlimitSoft.CQRS.Cache
 
 
         #region Query
-        private static Dictionary<Type, QueryMethod> _queryCache;
+        private static Dictionary<Type, QueryMethod>? _queryCache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Dictionary<Type, QueryMethod> GetQueryMeta()
@@ -161,14 +161,14 @@ namespace UnlimitSoft.CQRS.Cache
         /// </summary>
         private sealed class QueryMethod
         {
-            public Func<IQueryHandler, IQuery, CancellationToken, Task> Handler;
-            public Func<IQueryHandler, IQuery, IValidator, CancellationToken, ValueTask<IQueryResponse>> Validator;
-            public Func<IQueryHandler, IQuery, CancellationToken, ValueTask<IQueryResponse>> Compliance;
+            public Func<IQueryHandler, IQuery, CancellationToken, Task>? Handler;
+            public Func<IQueryHandler, IQuery, IValidator, CancellationToken, ValueTask<IQueryResponse>>? Validator;
+            public Func<IQueryHandler, IQuery, CancellationToken, ValueTask<IQueryResponse>>? Compliance;
         }
         #endregion
 
         #region Commands
-        private static Dictionary<Type, CommandMethod> _commandCache;
+        private static Dictionary<Type, CommandMethod>? _commandCache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Dictionary<Type, CommandMethod> GetCommandMeta()
@@ -351,15 +351,15 @@ namespace UnlimitSoft.CQRS.Cache
         /// </summary>
         private sealed class CommandMethod
         {
-            public Func<ICommandHandler, ICommand, CancellationToken, Task<ICommandResponse>> Handler;
-            public Func<ICommandHandler, ICommand, IValidator, CancellationToken, ValueTask<ICommandResponse>> Validator;
-            public Func<ICommandHandler, ICommand, CancellationToken, ValueTask<ICommandResponse>> Compliance;
-            public Dictionary<Type, Func<ICommandHandlerPostPipeline, ICommand, ICommandHandler, ICommandResponse, CancellationToken, Task>> PostPipelines;
+            public Func<ICommandHandler, ICommand, CancellationToken, Task<ICommandResponse>>? Handler;
+            public Func<ICommandHandler, ICommand, IValidator, CancellationToken, ValueTask<ICommandResponse>>? Validator;
+            public Func<ICommandHandler, ICommand, CancellationToken, ValueTask<ICommandResponse>>? Compliance;
+            public Dictionary<Type, Func<ICommandHandlerPostPipeline, ICommand, ICommandHandler, ICommandResponse, CancellationToken, Task>>? PostPipelines;
         }
         #endregion
 
         #region Events
-        private static Dictionary<Type, Func<IEventHandler, IEvent, CancellationToken, Task<IEventResponse>>> _eventCache;
+        private static Dictionary<Type, Func<IEventHandler, IEvent, CancellationToken, Task<IEventResponse>>>? _eventCache;
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Dictionary<Type, Func<IEventHandler, IEvent, CancellationToken, Task<IEventResponse>>> GetEventMeta()

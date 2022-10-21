@@ -19,9 +19,9 @@ public class ServiceProviderEventDispatcher : IEventDispatcher
     private readonly IServiceProvider _provider;
 
     private readonly bool _useScope;
-    private readonly Func<IServiceProvider, IEvent, Func<IServiceProvider, IEvent, CancellationToken, Task<IEventResponse>>, CancellationToken, Task<IEventResponse>> _preeDispatch;
+    private readonly Func<IServiceProvider, IEvent, Func<IServiceProvider, IEvent, CancellationToken, Task<IEventResponse>>, CancellationToken, Task<IEventResponse>>? _preeDispatch;
 
-    private readonly ILogger<ServiceProviderEventDispatcher> _logger;
+    private readonly ILogger<ServiceProviderEventDispatcher>? _logger;
 
     private readonly Dictionary<Type, Type> _cache;
 
@@ -36,8 +36,8 @@ public class ServiceProviderEventDispatcher : IEventDispatcher
     public ServiceProviderEventDispatcher(
         IServiceProvider provider, 
         bool useScope = true,
-        Func<IServiceProvider, IEvent, Func<IServiceProvider, IEvent, CancellationToken, Task<IEventResponse>>, CancellationToken, Task<IEventResponse>> preeDispatch = null, 
-        ILogger<ServiceProviderEventDispatcher> logger = null
+        Func<IServiceProvider, IEvent, Func<IServiceProvider, IEvent, CancellationToken, Task<IEventResponse>>, CancellationToken, Task<IEventResponse>>? preeDispatch = null, 
+        ILogger<ServiceProviderEventDispatcher>? logger = null
     )
     {
         _provider = provider;
@@ -79,7 +79,7 @@ public class ServiceProviderEventDispatcher : IEventDispatcher
         if (handler is not null)
             return await HandlerAsync(handler, @event, eventType, ct);
 
-        _logger.LogWarning("There is no handler associated with this event");
+        _logger?.LogWarning("There is no handler associated with this event");
         return @event.OkResponse();
     }
     /// <summary>

@@ -20,7 +20,7 @@ public class QueryResponse<T> : Response<T>, IQueryResponse
     /// <param name="code"></param>
     /// <param name="body"></param>
     /// <param name="uiText"></param>
-    internal protected QueryResponse(HttpStatusCode code, T body, string uiText)
+    internal protected QueryResponse(HttpStatusCode code, T? body, string? uiText)
     {
         Code = code;
         Body = body;

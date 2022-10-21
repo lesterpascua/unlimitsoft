@@ -21,7 +21,7 @@ namespace UnlimitSoft.AutoMapper.DependencyInjection
         /// <param name="assemblies"></param>
         /// <param name="setup"></param>
         /// <returns></returns>
-        public static IServiceCollection AddMapper(this IServiceCollection services, Assembly[] assemblies, Action<IServiceProvider, IMapperConfigurationExpression> setup = null)
+        public static IServiceCollection AddMapper(this IServiceCollection services, Assembly[] assemblies, Action<IServiceProvider, IMapperConfigurationExpression>? setup = null)
         {
             services.AddSingleton<IMapper>(provider => new Mapper(new MapperConfiguration(config => {
                 config.AllowNullCollections = true;
