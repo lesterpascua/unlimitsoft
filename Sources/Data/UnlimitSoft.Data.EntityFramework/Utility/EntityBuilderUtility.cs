@@ -108,9 +108,9 @@ public static class EntityBuilderUtility
             assemblies ?? new Assembly[] { unitOfWorkType.Assembly },
             (unitOfWork, ct) =>
             {
-                if (unitOfWork is IDbContextWrapper dbContext && dbContext.GetDbContext().Database.IsInMemory())
-                    return ExecuteMigrationAsync(dbContext.GetDbContext(), retryCount, logger, ct);
-                return Task.CompletedTask;
+                if (unitOfWork is not IDbContextWrapper dbContext || dbContext.GetDbContext().Database.IsInMemory())
+                    return Task.CompletedTask;
+                return ExecuteMigrationAsync(dbContext.GetDbContext(), retryCount, logger, ct);
             },
             condition,
             resolver,
