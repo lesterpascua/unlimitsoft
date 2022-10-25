@@ -2,7 +2,7 @@
 
 
 /// <summary>
-/// 
+/// Interface to define a Command 
 /// </summary>
 public interface ICommand
 {
