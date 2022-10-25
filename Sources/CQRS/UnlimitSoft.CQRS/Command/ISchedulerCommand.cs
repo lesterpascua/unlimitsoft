@@ -4,9 +4,9 @@ namespace UnlimitSoft.CQRS.Command;
 
 
 /// <summary>
-/// Props asociate to a command of with scheduler time
+/// Command that can be scheduler in the time.
 /// </summary>
-public interface ISchedulerCommand
+public interface ISchedulerCommand : ICommand
 {
     /// <summary>
     /// Get jobId asociate with the command.
