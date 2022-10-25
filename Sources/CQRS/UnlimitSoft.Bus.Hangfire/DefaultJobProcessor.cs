@@ -92,7 +92,9 @@ public class DefaultJobProcessor<TProps> : IJobProcessor
         var command = (ICommand)JsonSerializer.Deserialize(json, type, _deserializerJsonSettings)!;
         var props = Context.GetJobParameter<TProps>(HangfireCommandBus.PropsParam);
         
-        command.SetProps(props);
+        // Only assign if props is not null.
+        if (props is not null)
+            command.SetProps(props);
         if (command is ISchedulerCommand scheduler)
             scheduler.SetJobId(Context.BackgroundJob.Id);
 
