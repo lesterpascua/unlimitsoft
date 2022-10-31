@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 
 namespace UnlimitSoft.Web.Client;
@@ -80,4 +81,36 @@ public class Response<T> : IResponse
     public object? GetBody() => Body;
     /// <inheritdoc />
     public Type GetBodyType() => typeof(T);
+}
+
+/// <summary>
+/// Standard proposal to represent a response with error
+/// </summary>
+public sealed class ErrorResponse : Response<IDictionary<string, string[]>>
+{
+    /// <summary>
+    /// 
+    /// </summary>
+    public ErrorResponse()
+    {
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="code"></param>
+    /// <param name="body"></param>
+    /// <param name="uiText"></param>
+    /// <param name="traceId"></param>
+    public ErrorResponse(HttpStatusCode code, IDictionary<string, string[]>? body, string? uiText, string? traceId) : base(code, body, uiText, traceId)
+    {
+    }
+
+    /// <summary>
+    /// Return a bad request response
+    /// </summary>
+    /// <param name="body"></param>
+    /// <param name="uiText"></param>
+    /// <param name="traceId"></param>
+    /// <returns></returns>
+    public static ErrorResponse BadRequest(IDictionary<string, string[]> body, string? uiText = null, string? traceId = null) => new(HttpStatusCode.BadRequest, body, uiText, traceId);
 }

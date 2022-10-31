@@ -43,11 +43,11 @@ public class RequestLoggerAttribute : ActionFilterAttribute
         if (!string.IsNullOrEmpty(sub) && Guid.TryParse(sub, out var subGuid))
             sub = subGuid.ToString();
 
-        Dictionary<string, StringValues> headers = null;
+        Dictionary<string, StringValues>? headers = null;
         if (_settings.AddHeader)
         {
             headers = context.HttpContext.Request.Headers?.ToDictionary(k => k.Key, v => v.Value);
-            if (_settings.Transform is not null)
+            if (_settings.Transform is not null && headers is not null)
                 headers = _settings.Transform(headers);
         }
 
@@ -86,7 +86,7 @@ public class RequestLoggerAttribute : ActionFilterAttribute
         /// <summary>
         /// If is not null transform the header to be logged (use to remove sencitive information)
         /// </summary>
-        public Func<Dictionary<string, StringValues>, Dictionary<string, StringValues>> Transform { get; set; }
+        public Func<Dictionary<string, StringValues>, Dictionary<string, StringValues>>? Transform { get; set; }
         /// <summary>
         /// 
         /// </summary>
