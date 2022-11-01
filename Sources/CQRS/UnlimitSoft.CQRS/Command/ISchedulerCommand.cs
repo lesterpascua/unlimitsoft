@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace UnlimitSoft.CQRS.Command;
 
@@ -36,4 +39,37 @@ public interface ISchedulerCommand : ICommand
     /// Set time to delay this command before procesed
     /// </summary>
     public void SetDelay(TimeSpan? dalay);
+}
+/// <summary>
+/// 
+/// </summary>
+public static class ISchedulerCommandExtensions
+{
+    /// <summary>
+    /// Allow retry a command when some error is happening.
+    /// </summary>
+    /// <param name="this"></param>
+    /// <param name="bus"></param>
+    /// <param name="ex"></param>
+    /// <param name="maxDelay"></param>
+    /// <param name="logger"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    public static async Task<object?> ErrorRetryAsync(this ISchedulerCommand @this, ICommandBus bus, Exception ex, TimeSpan? maxDelay = null, ILogger? logger = null,  CancellationToken ct = default)
+    {
+        logger?.LogError(
+            ex,
+            "Error trying to execute operation {Type} using arguments: {@Command}",
+            @this.GetType().FullName,
+            @this
+        );
+
+        var delay = TimeSpanUtility.DuplicateRetryTime(@this.GetDelay(), maxDelay);
+        @this.SetDelay(delay);
+
+        var jobId = await bus.SendAsync(@this, ct);
+        logger?.LogInformation("Command will retry in {Delay} with id={JobId}", delay, jobId);
+
+        return jobId;
+    }
 }
