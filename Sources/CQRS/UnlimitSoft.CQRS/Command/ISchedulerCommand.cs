@@ -51,11 +51,12 @@ public static class ISchedulerCommandExtensions
     /// <param name="this"></param>
     /// <param name="bus"></param>
     /// <param name="ex"></param>
+    /// <param name="action">Execute action before reenqueue command.</param>
     /// <param name="maxDelay"></param>
     /// <param name="logger"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async Task<object?> ErrorRetryAsync(this ISchedulerCommand @this, ICommandBus bus, Exception ex, TimeSpan? maxDelay = null, ILogger? logger = null,  CancellationToken ct = default)
+    public static async Task<object?> ErrorRetryAsync(this ISchedulerCommand @this, ICommandBus bus, Exception ex, Func<TimeSpan, Task>? action, TimeSpan? maxDelay = null, ILogger? logger = null, CancellationToken ct = default)
     {
         logger?.LogError(
             ex,
@@ -67,9 +68,23 @@ public static class ISchedulerCommandExtensions
         var delay = TimeSpanUtility.DuplicateRetryTime(@this.GetDelay(), maxDelay);
         @this.SetDelay(delay);
 
+        if (action is not null)
+            await action(delay);
+
         var jobId = await bus.SendAsync(@this, ct);
         logger?.LogInformation("Command will retry in {Delay} with id={JobId}", delay, jobId);
 
         return jobId;
     }
+    /// <summary>
+    /// Allow retry a command when some error is happening.
+    /// </summary>
+    /// <param name="this"></param>
+    /// <param name="bus"></param>
+    /// <param name="ex"></param>
+    /// <param name="maxDelay"></param>
+    /// <param name="logger"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    public static Task<object?> ErrorRetryAsync(this ISchedulerCommand @this, ICommandBus bus, Exception ex, TimeSpan? maxDelay = null, ILogger? logger = null, CancellationToken ct = default) => @this.ErrorRetryAsync(bus, ex, null, maxDelay, logger, ct);
 }
