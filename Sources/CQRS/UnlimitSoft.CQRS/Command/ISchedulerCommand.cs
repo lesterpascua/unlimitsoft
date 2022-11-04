@@ -14,22 +14,22 @@ public interface ISchedulerCommand : ICommand
     /// <summary>
     /// Get jobId asociate with the command.
     /// </summary>
-    public object GetJobId();
+    public object? GetJobId();
     /// <summary>
     /// Set the jobId asociate with the command.
     /// </summary>
     /// <param name="jobId"></param>
-    public void SetJobId(object jobId);
+    public void SetJobId(object? jobId);
 
     /// <summary>
     /// Get indicate how many time this command is retry
     /// </summary>
-    public int? GetRetry();
+    public int GetRetry();
     /// <summary>
     /// Set indicate how many time this command is retry
     /// </summary>
     /// <param name="retry"></param>
-    public void SetRetry(int? retry);
+    public void SetRetry(int retry);
 
     /// <summary>
     /// Get time to delay this command before procesed

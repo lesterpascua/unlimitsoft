@@ -87,18 +87,16 @@ public class HangfireCommandBus : ICommandBus
         var props = command.GetProps<CommandProps>();
         var connection = JobStorage.Current.GetConnection();
 
+        var scheduler = command as ISchedulerCommand;
+        if (_incIfRetryDetect && scheduler is not null)
+            scheduler.SetRetry(scheduler.GetRetry() + 1);
+
         // If not scheduler command go and enqueue a new command
-        if (command is not ISchedulerCommand scheduler || (delay = scheduler.GetDelay()) is null || delay == TimeSpan.Zero)
+        if (scheduler is null || (delay = scheduler.GetDelay()) is null || delay == TimeSpan.Zero)
         {
             var json = SerializeWithoutProps(command, props);
             jobId = _client.Enqueue<IJobProcessor>(processor => processor.ProcessAsync(json, type));
             return UpdateJobParameters(connection, jobId, props);
-        }
-
-        if (_incIfRetryDetect)
-        {
-            var retry = scheduler.GetRetry();
-            scheduler.SetRetry(retry.HasValue ? retry + 1 : 0);
         }
 
         jobId = (string?)scheduler.GetJobId();

@@ -1,12 +1,13 @@
 ﻿using System;
 
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 namespace UnlimitSoft.EventBus.Azure.Configuration;
 
 
 /// <summary>
 /// 
 /// </summary>
-public class QueueAlias<TAlias> where TAlias : Enum
+public class QueueAlias<TAlias> where TAlias : notnull, Enum
 {
     /// <summary>
     /// Indicate if the queue is active in this service.

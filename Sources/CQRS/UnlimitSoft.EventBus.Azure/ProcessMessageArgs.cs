@@ -23,4 +23,4 @@ public delegate Task ProcessorCallback(ProcessMessageArgs args, CancellationToke
 /// <param name="Azure"></param>
 /// <param name="WaitRetry"></param>
 /// <param name="Logger"></param>
-public record ProcessMessageArgs(string Queue, MessageEnvelop Envelop, ProcessMessageEventArgs Azure, TimeSpan WaitRetry, ILogger Logger);
+public record ProcessMessageArgs(string Queue, MessageEnvelop Envelop, ProcessMessageEventArgs Azure, TimeSpan WaitRetry, ILogger? Logger);
