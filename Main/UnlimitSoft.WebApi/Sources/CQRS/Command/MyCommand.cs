@@ -13,7 +13,7 @@ public class MyCommand : Command<MyCommandProps>
     /// </summary>
     /// <param name="id"></param>
     /// <param name="user"></param>
-    public MyCommand(Guid id, IdentityInfo user)
+    public MyCommand(Guid id, IdentityInfo? user)
     {
         Props = new MyCommandProps
         {
@@ -31,12 +31,12 @@ public class MySchedulerCommand : MyCommand, ISchedulerCommand
     { 
     }
 
-    public object? GetJobId() => Props.JobId;
-    public void SetJobId(object? jobId) => Props.JobId = (string?)jobId;
+    public object? GetJobId() => Props!.JobId;
+    public void SetJobId(object? jobId) => Props!.JobId = (string?)jobId;
 
-    public int? GetRetry() => Props.Retry;
-    public void SetRetry(int? retry) => Props.Retry = retry;
+    public int GetRetry() => Props!.Retry;
+    public void SetRetry(int retry) => Props!.Retry = retry;
 
-    public TimeSpan? GetDelay() => Props.Delay;
-    public void SetDelay(TimeSpan? delay) => Props.Delay = delay;
+    public TimeSpan? GetDelay() => Props!.Delay;
+    public void SetDelay(TimeSpan? delay) => Props!.Delay = delay;
 }

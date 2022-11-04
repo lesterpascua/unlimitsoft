@@ -29,7 +29,7 @@ public static class EventUtility
     /// <param name="logger"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async Task<(IEventResponse?, Exception?)> ProcessAsync<TEvent>(string eventName, MessageEnvelop envelop, IEventDispatcher dispatcher, IEventNameResolver resolver, Action<TEvent>? beforeProcess = null, Func<Exception, TEvent?, MessageEnvelop, CancellationToken, Task>? onError = null, ILogger? logger = null, CancellationToken ct = default)
+    public static async Task<(IEventResponse?, Exception?)> ProcessAsync<TEvent>(string? eventName, MessageEnvelop envelop, IEventDispatcher dispatcher, IEventNameResolver resolver, Action<TEvent>? beforeProcess = null, Func<Exception, TEvent?, MessageEnvelop, CancellationToken, Task>? onError = null, ILogger? logger = null, CancellationToken ct = default)
         where TEvent : class, IEvent
     {
         TEvent? curr = null;
@@ -41,11 +41,11 @@ public static class EventUtility
             if (!string.IsNullOrEmpty(envelop.MsgType))
                 eventType = resolver.Resolver(envelop.MsgType!);
             if (eventType is null && !string.IsNullOrEmpty(eventName))
-                eventType = resolver.Resolver(eventName);
+                eventType = resolver.Resolver(eventName!);
 
             if (eventType is null)
             {
-                logger?.NoTypeForTheEvent(eventName);
+                logger?.NoTypeForTheEvent(eventName!);
                 return (responses, ex);
             }
 
@@ -55,7 +55,7 @@ public static class EventUtility
                     var json = envelop.Msg.ToString();
                     if (JsonUtility.Deserialize(eventType, json) is not TEvent @event)
                     {
-                        logger?.SkipEventType(eventType, eventName);
+                        logger?.SkipEventType(eventType, eventName!);
                         break;
                     }
                     curr = @event;

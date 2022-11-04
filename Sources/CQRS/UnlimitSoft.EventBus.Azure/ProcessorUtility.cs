@@ -28,14 +28,14 @@ public static class ProcessorUtility
     /// <param name="onError"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async Task<(IEventResponse, Exception)> Default<TEvent>(
+    public static async Task<(IEventResponse?, Exception?)> Default<TEvent>(
         IEventDispatcher dispatcher,
         IEventNameResolver resolver,
         MessageEnvelop envelop,
         ServiceBusReceivedMessage message,
-        Action<TEvent> beforeProcess = null,
-        Func<Exception, TEvent, MessageEnvelop, CancellationToken, Task> onError = null,
-        ILogger logger = null,
+        Action<TEvent>? beforeProcess = null,
+        Func<Exception, TEvent?, MessageEnvelop, CancellationToken, Task>? onError = null,
+        ILogger? logger = null,
         CancellationToken ct = default
     )
         where TEvent : class, IEvent

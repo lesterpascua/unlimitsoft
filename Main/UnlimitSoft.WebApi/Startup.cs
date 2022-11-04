@@ -81,7 +81,7 @@ public class Startup
             out TransformResponseAttributeOptions transformResponseOptions);
 
         // bus config by code.
-        var eventBusOptions = new AzureEventBusOptions<QueueIdentifier> { Endpoint = endpoint };
+        var eventBusOptions = new AzureEventBusOptions<QueueIdentifier>(endpoint);
         eventBusOptions.ListenQueues ??= new QueueAlias<QueueIdentifier>[] {
             new QueueAlias<QueueIdentifier> {
                 Active = true,

@@ -23,16 +23,16 @@ namespace UnlimitSoft.EventBus.Azure;
 public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
     where TAlias : Enum
 {
-    private ServiceBusClient _client;
-    private AsyncRetryPolicy _retryPolicy;
+    private ServiceBusClient? _client;
+    private AsyncRetryPolicy? _retryPolicy;
 
     private readonly IEnumerable<QueueAlias<TAlias>> _queues;
     private readonly string _endpoint;
     private readonly IEventNameResolver _eventNameResolver;
-    private readonly Func<TAlias, string, object, bool> _filter;
-    private readonly Func<TAlias, string, object, object> _transform;
-    private readonly Action<object, ServiceBusMessage> _setup;
-    private readonly ILogger _logger;
+    private readonly Func<TAlias, string, object, bool>? _filter;
+    private readonly Func<TAlias, string, object, object>? _transform;
+    private readonly Action<object, ServiceBusMessage>? _setup;
+    private readonly ILogger? _logger;
 
 
     /// <summary>
@@ -49,10 +49,10 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
         string endpoint,
         IEnumerable<QueueAlias<TAlias>> queues,
         IEventNameResolver eventNameResolver,
-        Func<TAlias, string, object, bool> filter = null,
-        Func<TAlias, string, object, object> transform = null,
-        Action<object, ServiceBusMessage> setup = null,
-        ILogger logger = null
+        Func<TAlias, string, object, bool>? filter = null,
+        Func<TAlias, string, object, object>? transform = null,
+        Action<object, ServiceBusMessage>? setup = null,
+        ILogger? logger = null
     )
     {
         _queues = queues.Where(p => p.Active == true).ToArray();
@@ -68,7 +68,8 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
     /// <inheritdoc/>
     public async ValueTask DisposeAsync()
     {
-        await _client.DisposeAsync();
+        if (_client is not null)
+            await _client.DisposeAsync();
         GC.SuppressFinalize(this);
     }
     /// <inheritdoc />
@@ -103,13 +104,18 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
                     throw new NotSupportedException("Only allow json payload");
 
                 var eventType = _eventNameResolver.Resolver(eventPayload.EventName);
-                if (eventType is not null)
+                if (eventType is null)
                 {
-                    var @event = JsonUtility.Deserialize(eventType, payload);
-                    await SendMessageAsync(@event, eventPayload.Id, eventPayload.EventName, eventPayload.CorrelationId, useEnvelop, ct);
-                }
-                else
                     _logger?.LogWarning("Not found event {EventType}", eventPayload.EventName);
+                    break;
+                }
+                var @event = JsonUtility.Deserialize(eventType, payload);
+                if (@event is null)
+                {
+                    _logger?.LogWarning("Skip event of {Type} because is null", eventType);
+                    break;
+                }
+                await SendMessageAsync(@event, eventPayload.Id, eventPayload.EventName, eventPayload.CorrelationId, useEnvelop, ct);
                 break;
             default:
                 throw new NotSupportedException();
@@ -129,7 +135,7 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
     public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop, CancellationToken ct = default) => SendMessageAsync(graph, id, eventName, correlationId, useEnvelop, ct);
 
     #region Private Method
-    private async Task SendMessageAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop, CancellationToken ct)
+    private async Task SendMessageAsync(object graph, Guid id, string eventName, string? correlationId, bool useEnvelop, CancellationToken ct)
     {
         if (graph is null)
             throw new ArgumentNullException(nameof(graph));
@@ -145,8 +151,11 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
         // Wait to send message over all queue 
         await Task.WhenAll(msgTasks);
     }
-    private async Task PublishMessageInQueueAsync(object graph, Guid id, string eventName, string correlationId, QueueAlias<TAlias> queue, bool useEnvelop, CancellationToken ct)
+    private async Task PublishMessageInQueueAsync(object graph, Guid id, string eventName, string? correlationId, QueueAlias<TAlias> queue, bool useEnvelop, CancellationToken ct)
     {
+        if (_client is null || _retryPolicy is null)
+            throw new InvalidOperationException("Bus is not started");
+
         await using var sender = _client.CreateSender(queue.Queue);
         var transformed = _transform?.Invoke(queue.Alias, eventName, graph) ?? graph;
 

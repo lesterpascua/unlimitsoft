@@ -170,8 +170,8 @@ public static class IServiceCollectionExtensions
         AzureEventBusOptions<QueueIdentifier> options,
         Func<IServiceProvider, QueueIdentifier, string, object, bool> filter,
         Func<IServiceProvider, QueueIdentifier, string, object, object> transform,
-        Action<TEvent> beforeProcess = null,
-        Func<IServiceProvider, Exception, TEvent, MessageEnvelop, CancellationToken, Task> onError = null,
+        Action<TEvent>? beforeProcess = null,
+        Func<IServiceProvider, Exception, TEvent, MessageEnvelop, CancellationToken, Task>? onError = null,
         int maxConcurrentCalls = 1
     )
         where TUnitOfWork : IUnitOfWork
@@ -233,7 +233,7 @@ public static class IServiceCollectionExtensions
             {
                 var resolver = provider.GetService<IEventNameResolver>();
                 var eventDispatcher = provider.GetService<IEventDispatcher>();
-                var logger = provider.GetService<ILogger<AzureEventListener<QueueIdentifier>>>();
+                var logger = provider.GetRequiredService<ILogger<AzureEventListener<QueueIdentifier>>>();
 
                 Func<Exception, TEvent, MessageEnvelop, CancellationToken, Task> listenerOnError = null;
                 if (onError != null)

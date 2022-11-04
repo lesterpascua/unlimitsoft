@@ -22,11 +22,11 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
     private readonly QueueAlias<TAlias>[] _queues;
     private readonly ProcessorCallback _processor;
     private readonly int _maxConcurrentCalls;
-    private readonly ILogger _logger;
+    private readonly ILogger? _logger;
 
     private TimeSpan _waitRetry;
-    private ServiceBusClient _client;
-    private ServiceBusProcessor[] _busProcessors;
+    private ServiceBusClient? _client;
+    private ServiceBusProcessor[]? _busProcessors;
 
 
     /// <summary>
@@ -42,7 +42,8 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
         IEnumerable<QueueAlias<TAlias>> queues,
         ProcessorCallback processor,
         int maxConcurrentCalls = 1,
-        ILogger logger = null)
+        ILogger? logger = null
+    )
     {
         _endpoint = endpoint;
         _queues = queues.ToArray();
@@ -54,6 +55,9 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
+        if (_busProcessors is null || _client is null)
+            return;
+
         for (int i = 0; i < _busProcessors.Length; i++)
             await _busProcessors[i].StopProcessingAsync();
         await _client.DisposeAsync();
@@ -61,7 +65,7 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
     /// <inheritdoc />
     public async ValueTask ListenAsync(TimeSpan waitRetry, CancellationToken ct = default)
     {
-        _logger.LogDebug("AzureEventListener start");
+        _logger?.LogDebug("AzureEventListener start");
         if (waitRetry > TimeSpan.FromMinutes(5))
             throw new ArgumentException("Retry time greather the the allowed", nameof(waitRetry));
 
@@ -72,40 +76,40 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
         for (int i = 0; i < _queues.Length; i++)
         {
             var entry = _queues[i];
-            var busProcessor = _busProcessors[i] = await CreateProcessorAsync(entry, ct);
+            var busProcessor = _busProcessors[i] = CreateProcessorAsync(entry);
 
             busProcessor.ProcessErrorAsync += args => ProcessErrorAsync(entry.Queue, args);
             busProcessor.ProcessMessageAsync += args => ProcessMessageAsync(entry.Queue, args);
 
             await busProcessor.StartProcessingAsync(ct);
         }
-
-        // ============================================================================================================================================
-       
     }
 
     #region Private Methods
-    private Task CreateIfNotExistAsync(QueueAlias<TAlias> entry, CancellationToken ct)
+    //private Task CreateIfNotExistAsync(QueueAlias<TAlias> entry, CancellationToken ct)
+    //{
+    //    return Task.CompletedTask;
+    //    //var administrationClient = new ServiceBusAdministrationClient(_endpoint);
+    //    //var topics = administrationClient.GetTopicsAsync();
+    //    //var asyncEnumerable = topics.AsPages();
+
+    //    //var topics = _queues.Where(p => p.Subscription);
+
+    //    //var enumerator = asyncEnumerable.GetAsyncEnumerator();
+    //    //while (await enumerator.MoveNextAsync())
+    //    //{
+    //    //    var topic = enumerator.Current;
+    //    //    var t = topic.Values.FirstOrDefault(p => p.Name == );
+
+    //    //    Console.WriteLine(t);
+    //    //}
+    //}
+    private ServiceBusProcessor CreateProcessorAsync(QueueAlias<TAlias> entry)
     {
-        return Task.CompletedTask;
-        //var administrationClient = new ServiceBusAdministrationClient(_endpoint);
-        //var topics = administrationClient.GetTopicsAsync();
-        //var asyncEnumerable = topics.AsPages();
+        if (_busProcessors is null || _client is null)
+            throw new InvalidOperationException("Call ListenAsync first");
 
-        //var topics = _queues.Where(p => p.Subscription);
-
-        //var enumerator = asyncEnumerable.GetAsyncEnumerator();
-        //while (await enumerator.MoveNextAsync())
-        //{
-        //    var topic = enumerator.Current;
-        //    var t = topic.Values.FirstOrDefault(p => p.Name == );
-
-        //    Console.WriteLine(t);
-        //}
-    }
-    private async Task<ServiceBusProcessor> CreateProcessorAsync(QueueAlias<TAlias> entry, CancellationToken ct)
-    {
-        await CreateIfNotExistAsync(entry, ct);
+        //await CreateIfNotExistAsync(entry, ct);
 
         if (entry.Subscription is null)
             return _client.CreateProcessor(
@@ -121,12 +125,17 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
 
     private Task ProcessErrorAsync(string queue, ProcessErrorEventArgs arg)
     {
-        _logger.LogError(arg.Exception, "Error from {Queue} in entity: {Entity}", queue, arg.EntityPath);
+        _logger?.LogError(arg.Exception, "Error from {Queue} in entity: {Entity}", queue, arg.EntityPath);
         return Task.CompletedTask;
     }
     private async Task ProcessMessageAsync(string queue, ProcessMessageEventArgs args)
     {
         var envelop = args.Message.Body?.ToObjectFromJson<MessageEnvelop>();
+        if (envelop is null)
+        {
+            _logger?.LogWarning("Invalid evelop for {MessageId}", args.Message.MessageId);
+            return;
+        }
 
         var message = new ProcessMessageArgs(queue, envelop, args, _waitRetry, _logger);
         await _processor(message, args.CancellationToken);

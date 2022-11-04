@@ -19,7 +19,7 @@ public sealed class MyCommandProps : CommandProps
     public string? JobId { get; set; }
 
     /// <inheritdoc />
-    public int? Retry { get; set; }
+    public int Retry { get; set; }
     /// <inheritdoc />
     public TimeSpan? Delay { get; set; }
 }
