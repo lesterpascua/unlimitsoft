@@ -137,7 +137,7 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
         lock (_cache)
             if (!_cache.TryGetValue(commandType, out metadata))
             {
-                _cache.Add(commandType, metadata = new CommandMetadata());
+                metadata = new CommandMetadata();
 
                 // Handler
                 metadata.CommandHandler = typeof(ICommandHandler<>).MakeGenericType(commandType);
@@ -176,6 +176,7 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
                         .ToArray();
                 }
 
+                _cache.Add(commandType, metadata);
                 return handler;
             }
 
@@ -190,7 +191,7 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
     /// <param name="commandType"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    private Task<ICommandResponse> HandlerAsync(ICommandHandler handler, ICommand command, Type commandType, CancellationToken ct)
+    private ValueTask<ICommandResponse> HandlerAsync(ICommandHandler handler, ICommand command, Type commandType, CancellationToken ct)
     {
         var method = CacheDispatcher.GetCommandHandler(commandType, handler);
         return method(handler, command, ct);

@@ -73,7 +73,7 @@ public abstract class BaseApiService : IApiService, IDisposable
     /// <returns></returns>
     protected async ValueTask<TResult> TryCacheFirst<TResult, TEntry>(Func<TEntry, Task<TResult>> factory, string? key = null)
     {
-        var cacheKey = key ?? typeof(TResult).FullName;
+        var cacheKey = key ?? typeof(TResult).FullName!;
         if (_ignorePrevCache)
             return await _cache!.GetOrCreateAsync(cacheKey, factory);
 

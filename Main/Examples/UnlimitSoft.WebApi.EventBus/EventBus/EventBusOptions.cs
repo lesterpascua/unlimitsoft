@@ -3,8 +3,8 @@
 
 public class EventBusOptions
 {
-    public string Endpoint { get; set; }
-    public string QueueOrTopic { get; set; }
-    public string Queue1 { get; set; }
-    public string Queue2 { get; set; }
+    public string Endpoint { get; set; } = null!;
+    public string QueueOrTopic { get; set; } = null!;
+    public string Queue1 { get; set; } = null!;
+    public string Queue2 { get; set; } = null!;
 }

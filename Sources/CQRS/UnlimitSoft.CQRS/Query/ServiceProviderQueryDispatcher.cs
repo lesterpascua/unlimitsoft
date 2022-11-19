@@ -153,7 +153,7 @@ public class ServiceProviderQueryDispatcher : IQueryDispatcher
     /// <param name="queryType"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    private async Task<TEntity> HandlerAsync<TEntity>(IQueryHandler handler, IQuery query, Type queryType, CancellationToken ct)
+    private async ValueTask<TEntity> HandlerAsync<TEntity>(IQueryHandler handler, IQuery query, Type queryType, CancellationToken ct)
     {
         var method = CacheDispatcher.GetQueryHandler<TEntity>(queryType, handler);
         var result = (Task<TEntity>)method(handler, query, ct);

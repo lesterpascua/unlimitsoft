@@ -1,4 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Query;
 using UnlimitSoft.Data.EntityFramework;
 using UnlimitSoft.Web.Model;
@@ -6,10 +9,6 @@ using UnlimitSoft.Web.Security;
 using UnlimitSoft.WebApi.Model;
 using UnlimitSoft.WebApi.Sources.Data;
 using UnlimitSoft.WebApi.Sources.Data.Model;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace UnlimitSoft.WebApi.Sources.CQRS.Query;
 
@@ -23,8 +22,8 @@ public class SearchTestQuery : MyQuery<SearchModel<Customer>>, IQuerySearch
 
     public SearchCustomer.FilterVM? Filter { get; set; }
 
-    public Paging? Paging { get; set; }
-    public IReadOnlyList<ColumnName>? Order { get; set; }
+    public Paging? Paging { get; init; }
+    public IReadOnlyList<ColumnName>? Order { get; init; }
 }
 
 /// <summary>

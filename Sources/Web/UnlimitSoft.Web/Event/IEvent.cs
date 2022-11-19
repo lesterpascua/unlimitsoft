@@ -97,7 +97,7 @@ public abstract class Event<TKey, TBody> : IEvent
         ServiceId = serviceId;
         WorkerId = workerId;
         CorrelationId = correlationId;
-        Name = GetType().FullName;
+        Name = GetType().FullName!;
 
         Command = command;
         PrevState = prevState;

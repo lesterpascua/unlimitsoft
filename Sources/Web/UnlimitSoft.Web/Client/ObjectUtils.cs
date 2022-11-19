@@ -18,6 +18,9 @@ public static class ObjectUtils
     public static async Task<string> ToQueryString(object obj)
     {
         var keyValueContent = JsonUtility.ToKeyValue(obj);
+        if (keyValueContent is null)
+            return string.Empty;
+
         using var formUrlEncodedContent = new FormUrlEncodedContent(keyValueContent);
         return await formUrlEncodedContent.ReadAsStringAsync();
     }
