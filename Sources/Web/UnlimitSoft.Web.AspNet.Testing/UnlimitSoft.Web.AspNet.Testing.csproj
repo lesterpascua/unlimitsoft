@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net6.0;net5.0</TargetFrameworks>
+		<TargetFrameworks>net7.0;net6.0</TargetFrameworks>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
@@ -28,13 +28,13 @@
 		</None>
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'net5.0'">
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="5.0.17" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="5.0.17" />
-	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="6.0.10" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="6.0.10" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="6.0.11" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="6.0.11" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

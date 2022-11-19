@@ -14,6 +14,13 @@ public class AzureEventBusOptions<TAlias>
     /// <summary>
     /// 
     /// </summary>
+    public AzureEventBusOptions() : this(string.Empty) 
+    { 
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="endpoint"></param>
     public AzureEventBusOptions(string endpoint)
     {
         PublishQueues = Enum

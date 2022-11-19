@@ -4,6 +4,7 @@
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<LangVersion>latest</LangVersion>
+		<NoWarn>1701;1702;8002</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -21,7 +22,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Akka" Version="1.4.41" />
+		<PackageReference Include="Akka" Version="1.4.46" />
 	</ItemGroup>
 
 	<ItemGroup>

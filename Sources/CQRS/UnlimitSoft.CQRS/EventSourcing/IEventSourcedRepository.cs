@@ -48,7 +48,7 @@ public interface IEventSourcedRepository<TVersionedEventPayload, TPayload>
     /// <param name="id"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<TVersionedEventPayload> GetEventAsync(Guid id, CancellationToken ct = default);
+    Task<TVersionedEventPayload?> GetEventAsync(Guid id, CancellationToken ct = default);
     /// <summary>
     /// 
     /// </summary>
@@ -72,7 +72,7 @@ public interface IEventSourcedRepository<TVersionedEventPayload, TPayload>
     /// <param name="version">If is null get the last saved</param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<TVersionedEventPayload> GetAsync(string sourceId, long? version = null, CancellationToken ct = default);
+    Task<TVersionedEventPayload?> GetAsync(string sourceId, long? version = null, CancellationToken ct = default);
     /// <summary>
     /// Get the serialized event in some date
     /// </summary>
@@ -80,7 +80,7 @@ public interface IEventSourcedRepository<TVersionedEventPayload, TPayload>
     /// <param name="dateTime">If is null get the last saved</param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<TVersionedEventPayload> GetAsync(string sourceId, DateTime? dateTime = null, CancellationToken ct = default);
+    Task<TVersionedEventPayload?> GetAsync(string sourceId, DateTime? dateTime = null, CancellationToken ct = default);
 
     /// <summary>
     /// Get history of operation asociate to some entity

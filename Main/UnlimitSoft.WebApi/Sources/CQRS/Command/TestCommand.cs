@@ -37,10 +37,10 @@ namespace UnlimitSoft.WebApi.Sources.CQRS.Command
         }
 
 
-        public async Task<ICommandResponse> HandleAsync(TestCommand command, CancellationToken ct = default)
+        public async ValueTask<ICommandResponse> HandleAsync(TestCommand command, CancellationToken ct = default)
         {
             var entity = new Customer { Id = Guid.NewGuid(), Name = Guid.NewGuid().ToString() };
-            entity.AddEvent(typeof(TestEvent), _gen, command.Props.User.CorrelationId, new TestEventBody { Test = "Test Body" });
+            entity.AddEvent(typeof(TestEvent), _gen, command.Props!.User!.CorrelationId, new TestEventBody { Test = "Test Body" });
 
             await _customerRepository.AddAsync(entity, ct);
             await _unitOfWork.SaveChangesAsync(ct);

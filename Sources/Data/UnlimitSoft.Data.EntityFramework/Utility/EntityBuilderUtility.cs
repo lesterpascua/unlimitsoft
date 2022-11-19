@@ -1,14 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Polly;
-using UnlimitSoft.CQRS.EventSourcing;
-using UnlimitSoft.CQRS.EventSourcing.Json;
-using UnlimitSoft.Data.Seed;
 using System;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.EventSourcing;
+using UnlimitSoft.CQRS.EventSourcing.Json;
+using UnlimitSoft.Data.Seed;
 
 namespace UnlimitSoft.Data.EntityFramework.Utility;
 
@@ -29,7 +30,7 @@ public static class EntityBuilderUtility
     /// <param name="builder"></param>
     /// <param name="useIndex">Add index for properties like Created and IsPubliched</param>
     /// <param name="payloadBuilder">Extra properties applied over payload.</param>
-    public static void ConfigureVersionedEvent<TVersionedEvent, TPayload>(EntityTypeBuilder<TVersionedEvent> builder, bool useIndex = true, Action<PropertyBuilder<TPayload>> payloadBuilder = null)
+    public static void ConfigureVersionedEvent<TVersionedEvent, TPayload>(EntityTypeBuilder<TVersionedEvent> builder, bool useIndex = true, Action<PropertyBuilder<TPayload>>? payloadBuilder = null)
         where TVersionedEvent : VersionedEventPayload<TPayload>
     {
         builder.ToTable("VersionedEvent");
@@ -58,7 +59,7 @@ public static class EntityBuilderUtility
     /// <param name="retryCount"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async Task ExecuteMigrationAsync(DbContext dbContext, int retryCount, ILogger logger = null, CancellationToken ct = default)
+    public static async Task ExecuteMigrationAsync(DbContext dbContext, int retryCount, ILogger? logger = null, CancellationToken ct = default)
     {
         var policy = Policy
             .Handle<Exception>()
@@ -93,15 +94,15 @@ public static class EntityBuilderUtility
     public static async Task ExecuteSeedAndMigrationAsync(
         IServiceProvider provider, 
         Type unitOfWorkType, 
-        Assembly[] assemblies = null, 
+        Assembly[]? assemblies = null, 
         int retryCount = 3, 
-        Func<Type, bool> condition = null,
-        Func<ParameterInfo, object> resolver = null,
-        ILogger logger = null,
+        Func<Type, bool>? condition = null,
+        Func<ParameterInfo, object>? resolver = null,
+        ILogger? logger = null,
         CancellationToken ct = default
     )
     {
-        var unitOfWork = (IUnitOfWork)provider.GetService(unitOfWorkType);
+        var unitOfWork = (IUnitOfWork)provider.GetRequiredService(unitOfWorkType);
         await SeedHelper.SeedAsync(
             provider,
             unitOfWork,

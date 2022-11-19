@@ -5,6 +5,7 @@
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
+		<NoWarn>1701;1702;8002</NoWarn>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -19,10 +20,6 @@
 		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
 		<Description>Logger library bases on Serilog.</Description>
 		<PackageLicenseFile>License.txt</PackageLicenseFile>
-	</PropertyGroup>
-
-	<PropertyGroup>
-		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
 	<ItemGroup>
