@@ -140,7 +140,7 @@ public static class IServiceConnectionExtensions
     /// <param name="preeDispatch"></param>
     /// <param name="validate"></param>
     /// <param name="assemblies"></param>
-    public static IServiceCollection AddCommandHandler(this IServiceCollection services, Type commandHandlerType, Func<IServiceProvider, ICommand, Func<IServiceProvider, ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>>? preeDispatch = null, bool validate = true, params Assembly[] assemblies)
+    public static IServiceCollection AddCommandHandler(this IServiceCollection services, Type commandHandlerType, Func<IServiceProvider, ICommand, Func<IServiceProvider, ICommand, CancellationToken, ValueTask<ICommandResponse>>, CancellationToken, ValueTask<ICommandResponse>>? preeDispatch = null, bool validate = true, params Assembly[] assemblies)
     {
         services.AddSingleton<ICommandDispatcher>((provider) =>
         {

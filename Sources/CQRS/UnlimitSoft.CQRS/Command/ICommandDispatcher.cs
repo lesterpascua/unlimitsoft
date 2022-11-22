@@ -17,7 +17,7 @@ public interface ICommandDispatcher
     /// <param name="command"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<ICommandResponse> DispatchAsync(ICommand command, CancellationToken ct = default);
+    ValueTask<ICommandResponse> DispatchAsync(ICommand command, CancellationToken ct = default);
     /// <summary>
     /// Send command to his handler using specific service provider. This operation use same scope of provider.
     /// </summary>
@@ -26,5 +26,5 @@ public interface ICommandDispatcher
     /// <param name="ct"></param>
     /// <exception cref="NotSupportedException">If the implentation not support dependcy injection.</exception>
     /// <returns></returns>
-    Task<ICommandResponse> DispatchAsync(IServiceProvider provider, ICommand command, CancellationToken ct = default);
+    ValueTask<ICommandResponse> DispatchAsync(IServiceProvider provider, ICommand command, CancellationToken ct = default);
 }
