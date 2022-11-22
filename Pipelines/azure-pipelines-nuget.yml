@@ -38,7 +38,7 @@ steps:
   displayName: Install & Run security-scan
   inputs:
     script: |
-      dotnet tool install --global security-scan --version 5.6.2
+      dotnet tool install --global security-scan --version 5.6.7
       security-scan UnlimitSoft.sln --export=out.sarif
       
 - task: DotNetCoreCLI@2
