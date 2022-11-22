@@ -24,7 +24,13 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
     private readonly IServiceProvider _provider;
 
     private readonly bool _validate, _useScope;
-    private readonly Func<IServiceProvider, ICommand, Func<IServiceProvider, ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>>? _preeDispatch;
+    private readonly Func<
+            IServiceProvider,
+            ICommand,
+            Func<IServiceProvider, ICommand, CancellationToken, ValueTask<ICommandResponse>>,
+            CancellationToken,
+            ValueTask<ICommandResponse>
+        >? _preeDispatch;
 
     private readonly string? _invalidArgumendText;
     private readonly Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>>? _errorTransforms;
@@ -54,7 +60,13 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
         bool useScope = true, 
         Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>>? errorTransforms = null,
         string? invalidArgumendText = null, 
-        Func<IServiceProvider, ICommand, Func<IServiceProvider, ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>>? preeDispatch = null, 
+        Func<
+            IServiceProvider, 
+            ICommand, 
+            Func<IServiceProvider, ICommand, CancellationToken, ValueTask<ICommandResponse>>, 
+            CancellationToken, 
+            ValueTask<ICommandResponse>
+        >? preeDispatch = null, 
         ILogger<ServiceProviderCommandDispatcher>? logger = null
     )
     {
@@ -71,7 +83,7 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
     #region Public Methods
 
     /// <inheritdoc />
-    public async Task<ICommandResponse> DispatchAsync(ICommand command, CancellationToken ct = default)
+    public async ValueTask<ICommandResponse> DispatchAsync(ICommand command, CancellationToken ct = default)
     {
         if (!_useScope)
             return await DispatchAsync(_provider, command, ct);
@@ -80,7 +92,7 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
         return await DispatchAsync(scope.ServiceProvider, command, ct);
     }
     /// <inheritdoc />
-    public async Task<ICommandResponse> DispatchAsync(IServiceProvider provider, ICommand command, CancellationToken ct = default)
+    public async ValueTask<ICommandResponse> DispatchAsync(IServiceProvider provider, ICommand command, CancellationToken ct = default)
     {
         if (_preeDispatch is null)
             return await RunAsync(provider, command, ct);
@@ -92,7 +104,7 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
     #endregion
 
     #region Static Methods
-    private async Task<ICommandResponse> RunAsync(IServiceProvider provider, ICommand command, CancellationToken ct)
+    private async ValueTask<ICommandResponse> RunAsync(IServiceProvider provider, ICommand command, CancellationToken ct)
     {
         _logger?.ServiceProviderCommandDispatcher_ProcessCommand(command);
 

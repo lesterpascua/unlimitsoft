@@ -27,7 +27,7 @@ public static class ICommandExecutableExtensions
     /// <param name="dispatcher"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async Task<(ICommandResponse, TResponse?)> ExecuteAsync<TResponse>(this ICommandExecutable<TResponse> command, ICommandDispatcher dispatcher, CancellationToken ct = default)
+    public static async ValueTask<(ICommandResponse, TResponse?)> ExecuteAsync<TResponse>(this ICommandExecutable<TResponse> command, ICommandDispatcher dispatcher, CancellationToken ct = default)
     {
         var response = await dispatcher.DispatchAsync(command, ct);
         if (response.IsSuccess)
@@ -44,7 +44,7 @@ public static class ICommandExecutableExtensions
     /// <param name="dispatcher"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async Task<(ICommandResponse, TResponse?)> ExecuteAsync<TResponse>(this ICommandExecutable<TResponse> command, IServiceProvider provider, ICommandDispatcher dispatcher, CancellationToken ct = default)
+    public static async ValueTask<(ICommandResponse, TResponse?)> ExecuteAsync<TResponse>(this ICommandExecutable<TResponse> command, IServiceProvider provider, ICommandDispatcher dispatcher, CancellationToken ct = default)
     {
         var response = await dispatcher.DispatchAsync(provider, command, ct);
         if (response.IsSuccess)

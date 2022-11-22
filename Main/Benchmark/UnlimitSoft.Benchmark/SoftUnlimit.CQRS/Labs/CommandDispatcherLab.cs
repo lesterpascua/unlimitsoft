@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using UnlimitSoft.CQRS.Command;
 using UnlimitSoft.CQRS.Command.Pipeline;
-using UnlimitSoft.CQRS.Command.Validation;
 using UnlimitSoft.CQRS.DependencyInjection;
 using UnlimitSoft.CQRS.Message;
 

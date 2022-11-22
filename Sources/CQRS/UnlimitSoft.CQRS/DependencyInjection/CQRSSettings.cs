@@ -46,5 +46,5 @@ public sealed class CQRSSettings
     /// <summary>
     /// Trigger some action before dispatch command
     /// </summary>
-    public Func<IServiceProvider, ICommand, Func<IServiceProvider, ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>>? PreeDispatchCommand { get; set; }
+    public Func<IServiceProvider, ICommand, Func<IServiceProvider, ICommand, CancellationToken, ValueTask<ICommandResponse>>, CancellationToken, ValueTask<ICommandResponse>>? PreeDispatchCommand { get; set; }
 }
