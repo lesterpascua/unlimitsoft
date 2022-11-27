@@ -1,7 +1,7 @@
 ﻿using Hangfire;
 using System;
 using System.Threading.Tasks;
-using UnlimitSoft.CQRS.Message;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Bus.Hangfire;
 
@@ -22,5 +22,5 @@ public interface IJobProcessor
     /// <param name="json">Command serialize as json</param>
     /// <param name="type">Type of the command</param>
     /// <returns></returns>
-    Task<ICommandResponse> ProcessAsync(string json, Type type);
+    Task<IResponse> ProcessAsync(string json, Type type);
 }

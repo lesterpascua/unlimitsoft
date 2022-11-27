@@ -16,8 +16,4 @@ public class CommandProps
     /// Command name (normally Type FullName)
     /// </summary>
     public string? Name { get; set; }
-    /// <summary>
-    /// If true alwais deliver the response, in other case only deliver response if response is an error.
-    /// </summary>
-    public bool Silent { get; set; }
 }

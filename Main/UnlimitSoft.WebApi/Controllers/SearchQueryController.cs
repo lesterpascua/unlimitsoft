@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using UnlimitSoft.CQRS.Query;
-using UnlimitSoft.Web.Client;
+using UnlimitSoft.Message;
 using UnlimitSoft.Web.Model;
 using UnlimitSoft.WebApi.Model;
 using UnlimitSoft.WebApi.Sources.CQRS.Query;

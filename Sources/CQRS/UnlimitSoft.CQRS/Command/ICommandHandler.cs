@@ -1,6 +1,4 @@
-﻿using UnlimitSoft.CQRS.Message;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using UnlimitSoft.Mediator;
 
 namespace UnlimitSoft.CQRS.Command;
 
@@ -8,20 +6,15 @@ namespace UnlimitSoft.CQRS.Command;
 /// <summary>
 /// Interfaz for all class for handler command
 /// </summary>
-public interface ICommandHandler
+public interface ICommandHandler : IRequestHandler
 {
 }
 /// <summary>
-/// Handle command of generic type.
+/// Command Handle
 /// </summary>
 /// <typeparam name="TCommand"></typeparam>
-public interface ICommandHandler<TCommand> : ICommandHandler where TCommand : ICommand
+/// <typeparam name="TResponse"></typeparam>
+public interface ICommandHandler<in TCommand, TResponse> : ICommandHandler, IRequestHandler<TCommand, TResponse>
+    where TCommand : ICommand<TResponse>
 {
-    /// <summary>  
-    /// Handler a command.
-    /// </summary>
-    /// <param name="command"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
-    ValueTask<ICommandResponse> HandleAsync(TCommand command, CancellationToken ct = default);
 }

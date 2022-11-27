@@ -13,6 +13,8 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.Message;
+using UnlimitSoft.Mediator;
 
 namespace UnlimitSoft.CQRS.DependencyInjection;
 
@@ -72,27 +74,23 @@ public static class IServiceConnectionExtensions
     public static void AddQueryHandler(this IServiceCollection services, CQRSSettings settings)
     {
         if (settings.IQueryHandler is not null)
-            AddQueryHandler(services, settings.IQueryHandler, settings.PreeDispatchQuery, true, settings.Assemblies);
+            AddQueryHandler(services, settings.IQueryHandler, true, settings.Assemblies);
     }
     /// <summary>
     /// Scan assemblies and register all QueryHandler implement the interfaces set in <see cref="CQRSSettings.IQueryHandler"/>
     /// </summary>
     /// <param name="services"></param>
     /// <param name="queryHandlerType"></param>
-    /// <param name="preeDispatch"></param>
     /// <param name="validate"></param>
     /// <param name="assemblies"></param>
-    public static void AddQueryHandler(this IServiceCollection services, Type queryHandlerType, Func<IQuery, Func<IQuery, CancellationToken, Task<IQueryResponse>>, CancellationToken, Task<IQueryResponse>>? preeDispatch = null, bool validate = true, params Assembly[] assemblies)
+    public static void AddQueryHandler(this IServiceCollection services, Type queryHandlerType, bool validate = true, params Assembly[] assemblies)
     {
         services.AddScoped<IQueryDispatcher>((provider) =>
         {
             var logger = provider.GetService<ILogger<ServiceProviderQueryDispatcher>>();
             return new ServiceProviderQueryDispatcher(
                 provider,
-                errorTransforms: ServiceProviderCommandDispatcher.DefaultErrorTransforms,
-                preeDispatch: preeDispatch,
-                validate: validate,
-                logger: logger
+                validate: validate
             );
         });
 
@@ -129,7 +127,7 @@ public static class IServiceConnectionExtensions
     public static IServiceCollection AddCommandHandler(this IServiceCollection services, CQRSSettings settings)
     {
         if (settings.ICommandHandler is not null)
-            AddCommandHandler(services, settings.ICommandHandler, settings.PreeDispatchCommand, true, settings.Assemblies);
+            AddCommandHandler(services, settings.ICommandHandler, true, settings.Assemblies);
         return services;
     }
     /// <summary>
@@ -137,20 +135,16 @@ public static class IServiceConnectionExtensions
     /// </summary>
     /// <param name="services"></param>
     /// <param name="commandHandlerType"></param>
-    /// <param name="preeDispatch"></param>
     /// <param name="validate"></param>
     /// <param name="assemblies"></param>
-    public static IServiceCollection AddCommandHandler(this IServiceCollection services, Type commandHandlerType, Func<IServiceProvider, ICommand, Func<IServiceProvider, ICommand, CancellationToken, ValueTask<ICommandResponse>>, CancellationToken, ValueTask<ICommandResponse>>? preeDispatch = null, bool validate = true, params Assembly[] assemblies)
+    public static IServiceCollection AddCommandHandler(this IServiceCollection services, Type commandHandlerType, bool validate = true, params Assembly[] assemblies)
     {
         services.AddSingleton<ICommandDispatcher>((provider) =>
         {
             var logger = provider.GetService<ILogger<ServiceProviderCommandDispatcher>>();
             return new ServiceProviderCommandDispatcher(
                 provider,
-                errorTransforms: ServiceProviderCommandDispatcher.DefaultErrorTransforms,
-                preeDispatch: preeDispatch,
-                validate: validate,
-                logger: logger
+                validate: validate
             );
         });
 
@@ -163,17 +157,25 @@ public static class IServiceConnectionExtensions
         {
             var commandHandlerImplementedInterfaces = handlerImplementation
                 .GetInterfaces()
-                .Where(p => p.GetGenericArguments().Length == 1 && p.GetGenericTypeDefinition() == commandHandlerType);
+                .Where(p =>
+                {
+                    if (p.GetGenericArguments().Length != 2)
+                        return false;
+                    return p.GetGenericTypeDefinition() == commandHandlerType;
+                });
 
             foreach (var commandHandlerInterface in commandHandlerImplementedInterfaces)
             {
                 var argsTypes = commandHandlerInterface.GetGenericArguments();
-                var handlerInterface = typeof(ICommandHandler<>).MakeGenericType(argsTypes);
+                var handlerInterface = typeof(ICommandHandler<,>).MakeGenericType(argsTypes);
+                var requestHandlerInterface = typeof(IRequestHandler<,>).MakeGenericType(argsTypes);
                 var currHandlerInterface = commandHandlerType.MakeGenericType(argsTypes);
 
                 services.AddScoped(handlerInterface, handlerImplementation);
                 if (currHandlerInterface != handlerInterface)
                     services.AddScoped(currHandlerInterface, provider => provider.GetService(handlerInterface));
+                if (requestHandlerInterface != handlerInterface)
+                    services.AddScoped(requestHandlerInterface, provider => provider.GetService(handlerInterface));
 
                 // Post Pipelines
                 var attrs = argsTypes[0].GetCustomAttributes(typeof(PostPipelineAttribute), true);
@@ -213,7 +215,7 @@ public static class IServiceConnectionExtensions
     public static IServiceCollection AddEventHandler(this IServiceCollection services, CQRSSettings settings)
     {
         if (settings.IEventHandler is not null)
-            AddEventHandler(services, settings.IEventHandler, settings.PreeDispatchEvent, settings.Assemblies);
+            AddEventHandler(services, settings.IEventHandler, settings.Assemblies);
         return services;
     }
     /// <summary>
@@ -221,17 +223,15 @@ public static class IServiceConnectionExtensions
     /// </summary>
     /// <param name="services"></param>
     /// <param name="eventHandlerType"></param>
-    /// <param name="preeDispatch"></param>
     /// <param name="assemblies"></param>
     /// <returns></returns>
-    public static IServiceCollection AddEventHandler(this IServiceCollection services, Type eventHandlerType, Func<IServiceProvider, IEvent, Func<IServiceProvider, IEvent, CancellationToken, Task<IEventResponse>>, CancellationToken, Task<IEventResponse>>? preeDispatch = null, params Assembly[] assemblies)
+    public static IServiceCollection AddEventHandler(this IServiceCollection services, Type eventHandlerType, params Assembly[] assemblies)
     {
         services.AddSingleton<IEventDispatcher>((provider) =>
         {
             var logger = provider.GetRequiredService<ILogger<ServiceProviderEventDispatcher>>();
             return new ServiceProviderEventDispatcher(
                 provider,
-                preeDispatch: preeDispatch,
                 logger: logger
             );
         });

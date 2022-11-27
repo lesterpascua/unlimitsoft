@@ -4,7 +4,7 @@ using Serilog.Context;
 using UnlimitSoft.Logger.Logging;
 using System.Threading.Tasks;
 
-namespace UnlimitSoft.Logger.Web;
+namespace UnlimitSoft.Logger.AspNet;
 
 
 /// <summary>

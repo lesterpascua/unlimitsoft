@@ -12,6 +12,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.Mediator;
 
 namespace UnlimitSoft.CQRS.Query;
 
@@ -53,7 +54,7 @@ public class ServiceProviderQueryDispatcher : IQueryDispatcher
     {
         _provider = provider;
         _validate = validate;
-        _errorTransforms = errorTransforms ?? ServiceProviderCommandDispatcher.DefaultErrorTransforms;
+        _errorTransforms = errorTransforms ?? ServiceProviderMediator.DefaultErrorTransforms;
         _invalidArgumendText = invalidArgumendText;
         _preeDispatch = preeDispatch;
         _logger = logger;

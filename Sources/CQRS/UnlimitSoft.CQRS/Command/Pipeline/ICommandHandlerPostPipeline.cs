@@ -1,6 +1,6 @@
-﻿using UnlimitSoft.CQRS.Message;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.CQRS.Command.Pipeline;
 
@@ -27,5 +27,5 @@ public interface ICommandHandlerPostPipeline<in TCommand, in THandler, TPipeline
     /// <param name="response"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public Task HandleAsync(TCommand command, THandler handler, ICommandResponse response, CancellationToken ct);
+    public Task HandleAsync(TCommand command, THandler handler, IResponse response, CancellationToken ct);
 }

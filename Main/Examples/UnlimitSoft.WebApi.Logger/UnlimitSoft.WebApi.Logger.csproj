@@ -13,7 +13,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\..\Sources\Core\UnlimitSoft.Logger.AspNet\UnlimitSoft.Logger.AspNet.csproj" />
+		<ProjectReference Include="..\..\..\Sources\Core\UnlimitSoft.Logger.DependencyInjection\UnlimitSoft.Logger.DependencyInjection.csproj" />
 		<ProjectReference Include="..\..\..\Sources\Core\UnlimitSoft.Logger\UnlimitSoft.Logger.csproj" />
+		<ProjectReference Include="..\..\..\Sources\Web\UnlimitSoft.Web.AspNet\UnlimitSoft.Web.AspNet.csproj" />
 	</ItemGroup>
 
 </Project>

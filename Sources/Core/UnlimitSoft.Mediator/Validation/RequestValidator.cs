@@ -1,19 +1,18 @@
 ﻿using FluentValidation;
 
-namespace UnlimitSoft.CQRS.Command.Validation;
+namespace UnlimitSoft.Mediator.Validation;
 
 
 /// <summary>
-/// Class for validate if data of command is correct. 
+/// Class for validate if data of request is correct. 
 /// </summary>
-/// <typeparam name="TCommand"></typeparam>
-public sealed class CommandValidator<TCommand> : AbstractValidator<TCommand>
-    where TCommand : ICommand
+/// <typeparam name="TRequest"></typeparam>
+public sealed class RequestValidator<TRequest> : AbstractValidator<TRequest>
 {
     /// <summary>
     /// 
     /// </summary>
-    public CommandValidator()
+    public RequestValidator()
     {
         RuleLevelCascadeMode = DefaultCascadeMode;
         ClassLevelCascadeMode = DefaultCascadeMode;

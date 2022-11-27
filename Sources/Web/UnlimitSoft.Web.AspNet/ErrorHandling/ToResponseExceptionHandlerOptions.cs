@@ -8,7 +8,7 @@ using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 using UnlimitSoft.Json;
-using UnlimitSoft.Web.Client;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Web.AspNet.ErrorHandling;
 

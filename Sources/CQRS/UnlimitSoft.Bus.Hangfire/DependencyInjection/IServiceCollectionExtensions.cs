@@ -9,6 +9,8 @@ using UnlimitSoft.CQRS.Message;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.Web.Client;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Bus.Hangfire.DependencyInjection;
 
@@ -38,7 +40,7 @@ public static class IServiceCollectionExtensions
         HangfireOptions options,
         string? errorCode = null,
         Func<IServiceProvider, ICommand, Task>? preeSendCommand = null,
-        Func<IServiceProvider, ICommand, JobActivatorContext, Func<ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>>? preeProcessCommand = null,
+        Func<IServiceProvider, ICommand, JobActivatorContext, Func<ICommand, CancellationToken, Task<IResponse>>, CancellationToken, Task<IResponse>>? preeProcessCommand = null,
         Func<IServiceProvider, Exception, Task>? onError = null,
         bool addLoggerFilter = false,
         Func<IServiceProvider, JobActivator>? activatorFactory = null,

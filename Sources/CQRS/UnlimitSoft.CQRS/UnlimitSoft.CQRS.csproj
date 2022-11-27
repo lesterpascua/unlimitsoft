@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>netstandard2.0</TargetFramework>
+		<TargetFrameworks>net7.0;net6.0;netstandard2.0</TargetFrameworks>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
@@ -22,7 +22,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="FluentValidation" Version="11.3.0" />
+		<PackageReference Include="FluentValidation" Version="11.4.0" />
 		<PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
 		<PackageReference Include="Sigil" Version="5.0.0" />
 	</ItemGroup>
@@ -50,7 +50,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<ProjectReference Include="..\..\Core\UnlimitSoft.Mediator\UnlimitSoft.Mediator.csproj" />
 		<ProjectReference Include="..\..\Data\UnlimitSoft.Data\UnlimitSoft.Data.csproj" />
+		<ProjectReference Include="..\..\Web\UnlimitSoft.Web\UnlimitSoft.Web.csproj" />
 	</ItemGroup>
 
 </Project>

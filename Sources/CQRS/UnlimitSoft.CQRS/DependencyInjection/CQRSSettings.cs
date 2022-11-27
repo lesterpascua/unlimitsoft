@@ -6,6 +6,7 @@ using System;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.CQRS.DependencyInjection;
 
@@ -34,17 +35,4 @@ public sealed class CQRSSettings
     /// typeof(IEventHandler&lt;&gt;)
     /// </summary>
     public Type? IEventHandler { get; set; }
-
-    /// <summary>
-    /// Trigger some action before dispatch command
-    /// </summary>
-    public Func<IQuery, Func<IQuery, CancellationToken, Task<IQueryResponse>>, CancellationToken, Task<IQueryResponse>>? PreeDispatchQuery { get; set; }
-    /// <summary>
-    /// Trigger some action before dispatch command
-    /// </summary>
-    public Func<IServiceProvider, IEvent, Func<IServiceProvider, IEvent, CancellationToken, Task<IEventResponse>>, CancellationToken, Task<IEventResponse>>? PreeDispatchEvent { get; set; }
-    /// <summary>
-    /// Trigger some action before dispatch command
-    /// </summary>
-    public Func<IServiceProvider, ICommand, Func<IServiceProvider, ICommand, CancellationToken, ValueTask<ICommandResponse>>, CancellationToken, ValueTask<ICommandResponse>>? PreeDispatchCommand { get; set; }
 }

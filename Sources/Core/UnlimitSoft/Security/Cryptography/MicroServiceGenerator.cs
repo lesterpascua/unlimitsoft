@@ -43,26 +43,26 @@ public class MicroServiceGenerator : IIdGenerator<Guid>, IServiceMetadata
     /// 
     /// </summary>
     /// <param name="serviceId"></param>
-    /// <param name="identifier">Worker identifier can be a mac addresss. the identifier is array of 6 entries.</param>
+    /// <param name="workerId">Worker identifier can be a mac addresss. the identifier is array of 6 entries.</param>
     /// <param name="epoch">Epoc start time, by default linux epoch</param>
-    public MicroServiceGenerator(ushort serviceId, byte[] identifier, DateTime? epoch = null)
+    public MicroServiceGenerator(ushort serviceId, byte[] workerId, DateTime? epoch = null)
     {
         epoch ??= CustomGeneratorSettings.Jan1st1970;
 
-        if (identifier == null)
-            throw new ArgumentNullException(nameof(identifier));
-        if (identifier.Length != 6)
-            throw new ArgumentException("Parameter must be an array of length equal 6.", nameof(identifier));
+        if (workerId == null)
+            throw new ArgumentNullException(nameof(workerId));
+        if (workerId.Length != 6)
+            throw new ArgumentException("Parameter must be an array of length equal 6.", nameof(workerId));
 
 
-        _id0 = identifier[0]; _id1 = identifier[1];
-        _id2 = identifier[2]; _id3 = identifier[3];
-        _id4 = identifier[4]; _id5 = identifier[5];
+        _id0 = workerId[0]; _id1 = workerId[1];
+        _id2 = workerId[2]; _id3 = workerId[3];
+        _id4 = workerId[4]; _id5 = workerId[5];
         _startEpoch = (ulong)epoch.Value.Ticks / TimeSpan.TicksPerMillisecond;
 
         ServiceId = serviceId;
-        WorkerId = Convert.ToBase64String(identifier);
-        Id = Convert.ToBase64String(BitConverter.GetBytes(serviceId).Concat(identifier).ToArray());
+        WorkerId = Convert.ToBase64String(workerId);
+        Id = Convert.ToBase64String(BitConverter.GetBytes(serviceId).Concat(workerId).ToArray());
     }
     /// <summary>
     /// Create generator using the MAC identifier.

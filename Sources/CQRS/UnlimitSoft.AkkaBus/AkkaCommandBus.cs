@@ -8,6 +8,8 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.Message;
+using UnlimitSoft.Mediator;
 
 namespace UnlimitSoft.AkkaBus;
 
@@ -102,7 +104,7 @@ public class AkkaCommandBus : ICommandBus
     public static async Task ProcessCommand(ICommandDispatcher dispatcher, CommandEnvelopment envelopment, IActorRef sender, ICommandCompletionService completionService, ILogger logger)
     {
         Exception err = null;
-        ICommandResponse response;
+        IResponse response;
         try
         {
             response = await dispatcher.DispatchAsync(envelopment.Command);
@@ -115,12 +117,8 @@ public class AkkaCommandBus : ICommandBus
 
         if (envelopment.IsAsk)
             sender.Tell(response);
-        if (completionService != null)
-        {
-            var silent = envelopment.Command.GetProps<CommandProps>().Silent;
-            if (!silent || !response.IsSuccess)
-                await completionService.CompleteAsync(envelopment.Command, response, err);
-        }
+        if (completionService is not null)
+            await completionService.CompleteAsync(envelopment.Command, response, err);
     }
 
     #endregion

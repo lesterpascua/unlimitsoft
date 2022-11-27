@@ -1,3 +1,5 @@
+using Hangfire;
+using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
@@ -9,11 +11,13 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.OpenApi.Models;
 using Serilog.Context;
+using System;
+using System.Linq;
+using System.Reflection;
 using UnlimitSoft.AutoMapper.DependencyInjection;
 using UnlimitSoft.Bus.Hangfire;
 using UnlimitSoft.Bus.Hangfire.DependencyInjection;
 using UnlimitSoft.CQRS.DependencyInjection;
-using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.CQRS.EventSourcing;
 using UnlimitSoft.CQRS.Memento;
@@ -23,8 +27,7 @@ using UnlimitSoft.Data.EntityFramework.DependencyInjection;
 using UnlimitSoft.Data.EntityFramework.Utility;
 using UnlimitSoft.DependencyInjections;
 using UnlimitSoft.EventBus.Azure.Configuration;
-using UnlimitSoft.Logger;
-using UnlimitSoft.Logger.Web;
+using UnlimitSoft.Logger.AspNet;
 using UnlimitSoft.Web;
 using UnlimitSoft.Web.AspNet.Filter;
 using UnlimitSoft.WebApi.DependencyInjection;
@@ -37,11 +40,6 @@ using UnlimitSoft.WebApi.Sources.Data;
 using UnlimitSoft.WebApi.Sources.Data.Configuration;
 using UnlimitSoft.WebApi.Sources.Data.Model;
 using UnlimitSoft.WebApi.Sources.Security;
-using System;
-using System.Linq;
-using System.Reflection;
-using Hangfire;
-using Hangfire.SqlServer;
 
 namespace UnlimitSoft.WebApi;
 
@@ -150,7 +148,7 @@ public class Startup
             new CQRSSettings
             {
                 Assemblies = new Assembly[] { typeof(Startup).Assembly },
-                ICommandHandler = typeof(IMyCommandHandler<>),
+                ICommandHandler = typeof(IMyCommandHandler<,>),
                 IEventHandler = typeof(IMyEventHandler<>),
                 IQueryHandler = typeof(IMyQueryHandler<,>)
             }
@@ -191,7 +189,7 @@ public class Startup
                 var meta = context.BackgroundJob;
                 string? traceId = null, correlationId = null;
 
-                if (command is MyCommand cmd)
+                if (command is IMyCommand cmd)
                 {
                     traceId = cmd.Props.User?.TraceId;
                     correlationId = cmd.Props.User?.CorrelationId;

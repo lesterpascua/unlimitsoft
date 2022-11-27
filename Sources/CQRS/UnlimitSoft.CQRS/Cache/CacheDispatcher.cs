@@ -1,16 +1,17 @@
 ﻿using FluentValidation;
 using Sigil;
+using System;
+using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Command;
 using UnlimitSoft.CQRS.Command.Pipeline;
 using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.CQRS.Message;
 using UnlimitSoft.CQRS.Query;
 using UnlimitSoft.Event;
-using System;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using System.Threading.Tasks;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.CQRS.Cache;
 
@@ -20,10 +21,10 @@ namespace UnlimitSoft.CQRS.Cache;
 /// </summary>
 internal static class CacheDispatcher
 {
-    private const string HandleAsync = nameof(ICommandHandler<ICommand>.HandleAsync);
-    private const string ValidatorAsync = nameof(ICommandHandlerValidator<ICommand>.ValidatorAsync);
-    private const string ComplianceAsync = nameof(ICommandHandlerCompliance<ICommand>.ComplianceAsync);
-    private const string PostPipelineAsync = nameof(ICommandHandler<ICommand>.HandleAsync); // ICommandHandlerPostPipeline<ICommand, ICommandHandler, T>.HandleAsync
+    private const string HandleAsync = "HandleAsync";
+    private const string ValidatorAsync = "ValidatorAsync";
+    private const string ComplianceAsync = "ComplianceAsync";
+    private const string PostPipelineAsync = "HandleAsync";
 
 
     #region Query
@@ -174,8 +175,10 @@ internal static class CacheDispatcher
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static Dictionary<Type, CommandMethod> GetCommandMeta()
     {
-        if (_commandCache is null)
-            Interlocked.CompareExchange(ref _commandCache, new(), null);
+        if (_commandCache is not null)
+            return _commandCache;
+
+        Interlocked.CompareExchange(ref _commandCache, new(), null);
         return _commandCache;
     }
 
@@ -186,7 +189,7 @@ internal static class CacheDispatcher
     /// <param name="handler"></param>
     /// <returns></returns>
     /// <exception cref="KeyNotFoundException"></exception>
-    public static Func<ICommandHandler, ICommand, CancellationToken, ValueTask<ICommandResponse>> GetCommandHandler(Type commandType, ICommandHandler handler)
+    public static Func<ICommandHandler, ICommand, CancellationToken, ValueTask<IResponse>> GetCommandHandler(Type commandType, ICommandHandler handler)
     {
         var cache = GetCommandMeta();
         if (cache.TryGetValue(commandType, out var metadata) && metadata.Handler is not null)
@@ -206,7 +209,7 @@ internal static class CacheDispatcher
                 throw new KeyNotFoundException($"Not found handler for {handler}");
 
             var handlerType = handler.GetType();
-            metadata.Handler = Emit<Func<ICommandHandler, ICommand, CancellationToken, ValueTask<ICommandResponse>>>
+            metadata.Handler = Emit<Func<ICommandHandler, ICommand, CancellationToken, ValueTask<IResponse>>>
                 .NewDynamicMethod($"{HandleAsync}_{commandType.FullName}")
                 .LoadArgument(0).CastClass(handlerType)
                 .LoadArgument(1).CastClass(commandType)
@@ -225,7 +228,7 @@ internal static class CacheDispatcher
     /// <param name="handler"></param>
     /// <returns></returns>
     /// <exception cref="KeyNotFoundException"></exception>
-    public static Func<ICommandHandler, ICommand, CancellationToken, ValueTask<ICommandResponse>> GetCommandCompliance(Type commandType, ICommandHandler handler)
+    public static Func<ICommandHandler, ICommand, CancellationToken, ValueTask<IResponse>> GetCommandCompliance(Type commandType, ICommandHandler handler)
     {
         var cache = GetCommandMeta();
         if (cache.TryGetValue(commandType, out var metadata) && metadata.Compliance is not null)
@@ -245,7 +248,7 @@ internal static class CacheDispatcher
                 throw new KeyNotFoundException($"Not found validator for {handler}");
 
             var handlerType = handler.GetType();
-            metadata.Compliance = Emit<Func<ICommandHandler, ICommand, CancellationToken, ValueTask<ICommandResponse>>>
+            metadata.Compliance = Emit<Func<ICommandHandler, ICommand, CancellationToken, ValueTask<IResponse>>>
                 .NewDynamicMethod($"{ComplianceAsync}_{commandType.FullName}")
                 .LoadArgument(0).CastClass(handlerType)
                 .LoadArgument(1).CastClass(commandType)
@@ -265,7 +268,7 @@ internal static class CacheDispatcher
     /// <param name="handler"></param>
     /// <returns></returns>
     /// <exception cref="KeyNotFoundException"></exception>
-    public static Func<ICommandHandler, ICommand, IValidator, CancellationToken, ValueTask<ICommandResponse>> GetCommandValidator(Type commandType, Type validatorType, ICommandHandler handler)
+    public static Func<ICommandHandler, ICommand, IValidator, CancellationToken, ValueTask<IResponse>> GetCommandValidator(Type commandType, Type validatorType, ICommandHandler handler)
     {
         var cache = GetCommandMeta();
         if (cache.TryGetValue(commandType, out var metadata) && metadata.Validator is not null)
@@ -285,7 +288,7 @@ internal static class CacheDispatcher
                 throw new KeyNotFoundException($"Not found validator for {handler}");
 
             var handlerType = handler.GetType();
-            metadata.Validator = Emit<Func<ICommandHandler, ICommand, IValidator, CancellationToken, ValueTask<ICommandResponse>>>
+            metadata.Validator = Emit<Func<ICommandHandler, ICommand, IValidator, CancellationToken, ValueTask<IResponse>>>
                 .NewDynamicMethod($"{ValidatorAsync}_{commandType.FullName}")
                 .LoadArgument(0).CastClass(handlerType)
                 .LoadArgument(1).CastClass(commandType)
@@ -307,7 +310,7 @@ internal static class CacheDispatcher
     /// <param name="pipelineHandler"></param>
     /// <returns></returns>
     /// <exception cref="KeyNotFoundException"></exception>
-    public static Func<ICommandHandlerPostPipeline, ICommand, ICommandHandler, ICommandResponse, CancellationToken, Task> GetCommandPostPipeline(Type commandType, Type commandHandlerType, ICommandHandlerPostPipeline pipelineHandler)
+    public static Func<ICommandHandlerPostPipeline, ICommand, ICommandHandler, IResponse, CancellationToken, Task> GetCommandPostPipeline(Type commandType, Type commandHandlerType, ICommandHandlerPostPipeline pipelineHandler)
     {
         Type pipelineHandleType = pipelineHandler.GetType();
 
@@ -326,12 +329,12 @@ internal static class CacheDispatcher
 
             var method = pipelineHandler
                 .GetType()
-                .GetMethod(PostPipelineAsync, new Type[] { commandType, commandHandlerType, typeof(ICommandResponse), typeof(CancellationToken) });
+                .GetMethod(PostPipelineAsync, new Type[] { commandType, commandHandlerType, typeof(IResponse), typeof(CancellationToken) });
             if (method is null)
                 throw new KeyNotFoundException($"Not found validator for {pipelineHandler}");
 
             var handlerType = pipelineHandler.GetType();
-            handle = Emit<Func<ICommandHandlerPostPipeline, ICommand, ICommandHandler, ICommandResponse, CancellationToken, Task>>
+            handle = Emit<Func<ICommandHandlerPostPipeline, ICommand, ICommandHandler, IResponse, CancellationToken, Task>>
                 .NewDynamicMethod($"{PostPipelineAsync}_{pipelineHandleType.FullName}")
                 .LoadArgument(0).CastClass(pipelineHandleType)
                 .LoadArgument(1).CastClass(commandType)
@@ -352,10 +355,10 @@ internal static class CacheDispatcher
     /// </summary>
     private sealed class CommandMethod
     {
-        public Func<ICommandHandler, ICommand, CancellationToken, ValueTask<ICommandResponse>>? Handler;
-        public Func<ICommandHandler, ICommand, IValidator, CancellationToken, ValueTask<ICommandResponse>>? Validator;
-        public Func<ICommandHandler, ICommand, CancellationToken, ValueTask<ICommandResponse>>? Compliance;
-        public Dictionary<Type, Func<ICommandHandlerPostPipeline, ICommand, ICommandHandler, ICommandResponse, CancellationToken, Task>>? PostPipelines;
+        public Func<ICommandHandler, ICommand, CancellationToken, ValueTask<IResponse>>? Handler;
+        public Func<ICommandHandler, ICommand, IValidator, CancellationToken, ValueTask<IResponse>>? Validator;
+        public Func<ICommandHandler, ICommand, CancellationToken, ValueTask<IResponse>>? Compliance;
+        public Dictionary<Type, Func<ICommandHandlerPostPipeline, ICommand, ICommandHandler, IResponse, CancellationToken, Task>>? PostPipelines;
     }
     #endregion
 
