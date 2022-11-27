@@ -14,5 +14,5 @@ public static class IIdGeneratorExtensions
     /// <param name="gen"></param>
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static string GenerateIdAsString<T>(this IIdGenerator<T> gen) where T : notnull => gen.GenerateId().ToString();
+    public static string GenerateIdAsString<T>(this IIdGenerator<T> gen) where T : notnull => gen.GenerateId().ToString()!;
 }

@@ -5,7 +5,11 @@ using UnlimitSoft.Web.Security;
 namespace UnlimitSoft.WebApi.Sources.CQRS.Command;
 
 
-public class MyCommand : Command<MyCommandProps>
+public interface IMyCommand
+{
+    MyCommandProps Props { get; }
+}
+public class MyCommand<TResponse> : Command<TResponse, MyCommandProps>, IMyCommand
 {
     public MyCommand() { }
     /// <summary>
@@ -23,7 +27,7 @@ public class MyCommand : Command<MyCommandProps>
         };
     }
 }
-public class MySchedulerCommand : MyCommand, ISchedulerCommand
+public class MySchedulerCommand<TResponse> : MyCommand<TResponse>, ISchedulerCommand
 {
     public MySchedulerCommand() { }
     public MySchedulerCommand(Guid id, IdentityInfo? user = null) :

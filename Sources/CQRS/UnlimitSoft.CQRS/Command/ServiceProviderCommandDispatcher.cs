@@ -1,17 +1,12 @@
-﻿using FluentValidation;
-using FluentValidation.Results;
+﻿using FluentValidation.Results;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using UnlimitSoft.CQRS.Cache;
-using UnlimitSoft.CQRS.Command.Pipeline;
-using UnlimitSoft.CQRS.Command.Validation;
-using UnlimitSoft.CQRS.Logging;
-using UnlimitSoft.CQRS.Message;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.Mediator;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.CQRS.Command;
 
@@ -21,28 +16,7 @@ namespace UnlimitSoft.CQRS.Command;
 /// </summary>
 public class ServiceProviderCommandDispatcher : ICommandDispatcher
 {
-    private readonly IServiceProvider _provider;
-
-    private readonly bool _validate, _useScope;
-    private readonly Func<
-            IServiceProvider,
-            ICommand,
-            Func<IServiceProvider, ICommand, CancellationToken, ValueTask<ICommandResponse>>,
-            CancellationToken,
-            ValueTask<ICommandResponse>
-        >? _preeDispatch;
-
-    private readonly string? _invalidArgumendText;
-    private readonly Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>>? _errorTransforms;
-
-    private readonly Dictionary<Type, CommandMetadata> _cache;
-    private readonly ILogger<ServiceProviderCommandDispatcher>? _logger;
-
-    /// <summary>
-    /// Default function used to convert error transform to standard ASP.NET format
-    /// </summary>
-    public static readonly Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>> DefaultErrorTransforms = (failure) => failure.GroupBy(p => p.PropertyName).ToDictionary(k => k.Key, v => v.Select(s => s.ErrorMessage).ToArray());
-
+    private readonly ServiceProviderMediator _mediator;
 
     /// <summary>
     /// 
@@ -50,267 +24,38 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
     /// <param name="provider"></param>
     /// <param name="validate">Enable command validation after execute associate handler.</param>
     /// <param name="useScope">Create scope to resolve element in DPI.</param>
+    /// <param name="errorText">Default text used to response in Inotify object when validation not success.</param>
     /// <param name="errorTransforms">Conver error to a Dictionary where key is a propertyName with an error and value is all error description.</param>
-    /// <param name="invalidArgumendText">Default text used to response in Inotify object when validation not success.</param>
-    /// <param name="preeDispatch">Before dispatch command flow call this action.</param>
-    /// <param name="logger"></param>
     public ServiceProviderCommandDispatcher(
         IServiceProvider provider, 
         bool validate = true,
-        bool useScope = true, 
-        Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>>? errorTransforms = null,
-        string? invalidArgumendText = null, 
-        Func<
-            IServiceProvider, 
-            ICommand, 
-            Func<IServiceProvider, ICommand, CancellationToken, ValueTask<ICommandResponse>>, 
-            CancellationToken, 
-            ValueTask<ICommandResponse>
-        >? preeDispatch = null, 
-        ILogger<ServiceProviderCommandDispatcher>? logger = null
+        bool useScope = true,
+        string? errorText = null,
+        Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>>? errorTransforms = null
     )
     {
-        _provider = provider;
-        _validate = validate;
-        _useScope = useScope;
-        _errorTransforms = errorTransforms;
-        _invalidArgumendText = invalidArgumendText;
-        _preeDispatch = preeDispatch;
-        _logger = logger;
-        _cache = new Dictionary<Type, CommandMetadata>();
+        var logger = provider.GetRequiredService<ILogger<ServiceProviderMediator>>();
+        _mediator = new ServiceProviderMediator(provider, validate, useScope, errorText, errorTransforms, logger);
     }
 
-    #region Public Methods
-
-    /// <inheritdoc />
-    public async ValueTask<ICommandResponse> DispatchAsync(ICommand command, CancellationToken ct = default)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="command"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    public ValueTask<IResponse> DispatchAsync(ICommand command, CancellationToken ct = default)
     {
-        if (!_useScope)
-            return await DispatchAsync(_provider, command, ct);
-
-        using var scope = _provider.CreateScope();
-        return await DispatchAsync(scope.ServiceProvider, command, ct);
+        throw new NotImplementedException();
     }
     /// <inheritdoc />
-    public async ValueTask<ICommandResponse> DispatchAsync(IServiceProvider provider, ICommand command, CancellationToken ct = default)
+    public ValueTask<Result<TResponse>> DispatchAsync<TResponse>(ICommand<TResponse> command, CancellationToken ct = default)
     {
-        if (_preeDispatch is null)
-            return await RunAsync(provider, command, ct);
-
-        return await _preeDispatch(provider, command, RunAsync, ct);
+        return _mediator.SendAsync(command, ct);
     }
-
-
-    #endregion
-
-    #region Static Methods
-    private async ValueTask<ICommandResponse> RunAsync(IServiceProvider provider, ICommand command, CancellationToken ct)
+    /// <inheritdoc />
+    public ValueTask<Result<TResponse>> DispatchAsync<TResponse>(IServiceProvider provider, ICommand<TResponse> command, CancellationToken ct = default)
     {
-        _logger?.ServiceProviderCommandDispatcher_ProcessCommand(command);
-
-        //
-        // Get handler and execute command.
-        var commandType = command.GetType();
-        _logger?.ServiceProviderCommandDispatcher_ExecuteCommandType(commandType);
-
-        ICommandResponse? response;
-        var handler = GetCommandHandler(provider, command.GetType(), out var metadata);
-        if (_validate)
-        {
-            response = await ValidationAsync(handler, command, commandType, metadata, ct);
-            if (response is not null)
-                return response;
-
-            response = await ComplianceAsync(handler, command, commandType, metadata, ct);
-            if (response is not null)
-                return response;
-        }
-        response = await HandlerAsync(handler, command, commandType, ct);
-
-        // Check if exist post operations
-        if (metadata.PostPipeline is null)
-            return response;
-        await PostPipelineHandlerAsync(provider, commandType, command, handler, response, metadata, ct);
-
-        return response;
+        return _mediator.SendAsync(provider, command, ct);
     }
-    /// <summary>
-    /// Get command handler and metadata asociate to a command.
-    /// </summary>
-    /// <param name="provider"></param>
-    /// <param name="commandType"></param>
-    /// <param name="metadata"></param>
-    /// <returns></returns>
-    private ICommandHandler GetCommandHandler(IServiceProvider provider, Type commandType, out CommandMetadata metadata)
-    {
-        if (_cache.TryGetValue(commandType, out metadata))
-            return (ICommandHandler)provider.GetRequiredService(metadata.CommandHandler);
-
-        lock (_cache)
-            if (!_cache.TryGetValue(commandType, out metadata))
-            {
-                metadata = new CommandMetadata();
-
-                // Handler
-                metadata.CommandHandler = typeof(ICommandHandler<>).MakeGenericType(commandType);
-                var handler = (ICommandHandler)provider.GetRequiredService(metadata.CommandHandler);
-
-                // Features implemented by this command
-                var handlerType = handler.GetType();
-                var interfaces = handlerType.GetInterfaces();
-
-                // Validator
-                var validationHandlerType = typeof(ICommandHandlerValidator<>).MakeGenericType(commandType);
-                if (interfaces.Any(type => type == validationHandlerType))
-                    metadata.ValidatorType = typeof(CommandValidator<>).MakeGenericType(commandType);
-
-                // Compliance
-                var complianceHandlerType = typeof(ICommandHandlerCompliance<>).MakeGenericType(commandType);
-                if (interfaces.Any(type => type == complianceHandlerType))
-                    metadata.HasCompliance = true;
-
-                var attrs = commandType.GetCustomAttributes(typeof(PostPipelineAttribute), true);
-                if (attrs?.Any() == true)
-                {
-                    metadata.PostPipeline = attrs
-                        .Cast<PostPipelineAttribute>()
-                        .SelectMany(attribute =>
-                        {
-                            var pipelineType = typeof(ICommandHandlerPostPipeline<,,>).MakeGenericType(commandType, handlerType, attribute.Pipeline);
-                            return attribute.Pipeline
-                                .GetInterfaces()
-                                .Where(p => p == pipelineType)
-                                .Select(s => (Type: pipelineType, attribute.Order));
-                        })
-                        .GroupBy(k => k.Order, s => s.Type)
-                        .OrderBy(k => k.Key)
-                        .Select(s => s.ToArray())
-                        .ToArray();
-                }
-
-                _cache.Add(commandType, metadata);
-                return handler;
-            }
-
-        // Resolve service
-        return (ICommandHandler)provider.GetRequiredService(metadata.CommandHandler);
-    }
-    /// <summary>
-    /// Execute command handler
-    /// </summary>
-    /// <param name="handler"></param>
-    /// <param name="command"></param>
-    /// <param name="commandType"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
-    private ValueTask<ICommandResponse> HandlerAsync(ICommandHandler handler, ICommand command, Type commandType, CancellationToken ct)
-    {
-        var method = CacheDispatcher.GetCommandHandler(commandType, handler);
-        return method(handler, command, ct);
-    }
-    /// <summary>
-    /// Execute command compliance
-    /// </summary>
-    /// <param name="handler"></param>
-    /// <param name="command"></param>
-    /// <param name="commandType"></param>
-    /// <param name="metadata"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
-    private async ValueTask<ICommandResponse?> ComplianceAsync(ICommandHandler handler, ICommand command, Type commandType, CommandMetadata metadata, CancellationToken ct)
-    {
-        if (!metadata.HasCompliance)
-        {
-            _logger?.ServiceProviderCommandDispatcher_CommandNotHandlerImplementCompliance(command);
-            return null;
-        }
-
-        _logger?.ServiceProviderCommandDispatcher_CommandNotHandlerImplementCompliance(command);
-
-        var method = CacheDispatcher.GetCommandCompliance(commandType, handler);
-        var response = await method(handler, command, ct);
-        if (!response.IsSuccess)
-            return response;
-
-        return null;
-    }
-    /// <summary>
-    /// Execute validator
-    /// </summary>
-    /// <param name="handler"></param>
-    /// <param name="command"></param>
-    /// <param name="commandType"></param>
-    /// <param name="metadata"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
-    private async ValueTask<ICommandResponse?> ValidationAsync(ICommandHandler handler, ICommand command, Type commandType, CommandMetadata metadata, CancellationToken ct)
-    {
-        if (metadata.ValidatorType is null)
-        {
-            _logger?.ServiceProviderCommandDispatcher_CommandNotHandlerImplementValidation(command);
-            return null;
-        }
-
-        _logger?.ServiceProviderCommandDispatcher_CommandHandlerImplementValidation(command);
-
-        var validator = (IValidator)Activator.CreateInstance(metadata.ValidatorType);
-        var method = CacheDispatcher.GetCommandValidator(commandType, metadata.ValidatorType, handler);
-
-        var response = await method(handler, command, validator, ct);
-        if (!response.IsSuccess)
-            return response;
-
-        var valContext = new ValidationContext<ICommand>(command);
-        var errors = await validator.ValidateAsync(valContext, ct);
-
-        _logger?.ServiceProviderCommandDispatcher_EvaluateValidatorProcessResultErrors(errors);
-        if (errors?.IsValid != false)
-            return null;
-
-        if (_errorTransforms is null)
-            return command.BadResponse(errors.Errors, _invalidArgumendText);
-        return command.BadResponse(_errorTransforms(errors.Errors), _invalidArgumendText);
-    }
-
-    /// <summary>
-    /// Handler post async operations
-    /// </summary>
-    /// <param name="provider"></param>
-    /// <param name="commandType"></param>
-    /// <param name="command"></param>
-    /// <param name="handler"></param>
-    /// <param name="response"></param>
-    /// <param name="metadata"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
-    private static async Task PostPipelineHandlerAsync(IServiceProvider provider, Type commandType, ICommand command, ICommandHandler handler, ICommandResponse response, CommandMetadata metadata, CancellationToken ct)
-    {
-        var commandHandlerType = handler.GetType();
-        foreach (var pipelineType in metadata.PostPipeline)
-        {
-            var tasks = new Task[pipelineType.Length];
-            for (var i = 0; i < pipelineType.Length; i++)
-            {
-                var pipelineHandler = (ICommandHandlerPostPipeline)provider.GetService(pipelineType[i]);
-                var method = CacheDispatcher.GetCommandPostPipeline(commandType, commandHandlerType, pipelineHandler);
-
-                tasks[i] = method(pipelineHandler, command, handler, response, ct);
-            }
-            await Task.WhenAll(tasks);
-        }
-    }
-    #endregion
-
-    #region Nested Classes
-    private sealed class CommandMetadata
-    {
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public Type ValidatorType;
-        public Type CommandHandler;
-        public bool HasCompliance;
-
-        public Type[][] PostPipeline;
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    }
-    #endregion
 }

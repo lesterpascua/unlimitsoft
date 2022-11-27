@@ -1,17 +1,17 @@
-﻿namespace UnlimitSoft.Security
+﻿namespace UnlimitSoft.Security;
+
+
+/// <summary>
+/// Allow get the service and worker identifier in the current service.
+/// </summary>
+public interface IServiceMetadata
 {
     /// <summary>
-    /// Allow get the service and worker identifier in the current service.
+    /// Service identifier.
     /// </summary>
-    public interface IServiceMetadata
-    {
-        /// <summary>
-        /// Service identifier.
-        /// </summary>
-        ushort ServiceId { get; }
-        /// <summary>
-        /// Worker identifier.
-        /// </summary>
-        string WorkerId { get; }
-    }
+    ushort ServiceId { get; }
+    /// <summary>
+    /// Worker identifier.
+    /// </summary>
+    string WorkerId { get; }
 }

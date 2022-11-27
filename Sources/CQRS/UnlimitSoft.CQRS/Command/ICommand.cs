@@ -1,10 +1,12 @@
-﻿namespace UnlimitSoft.CQRS.Command;
+﻿using UnlimitSoft.Mediator;
+
+namespace UnlimitSoft.CQRS.Command;
 
 
 /// <summary>
 /// Interface to define a Command 
 /// </summary>
-public interface ICommand
+public interface ICommand : IRequest
 {
     /// <summary>
     /// Return metadata props associate with the command.
@@ -19,4 +21,11 @@ public interface ICommand
     /// <param name="props"></param>
     /// <returns>Previous value</returns>
     void SetProps<T>(T? props) where T : CommandProps;
+}
+/// <summary>
+/// 
+/// </summary>
+/// <typeparam name="TResponse"></typeparam>
+public interface ICommand<out TResponse> : ICommand, IRequest<TResponse>
+{
 }

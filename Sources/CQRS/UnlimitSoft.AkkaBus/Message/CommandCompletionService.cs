@@ -4,6 +4,8 @@ using UnlimitSoft.CQRS.Message;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.Web.Client;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.AkkaBus.Message;
 
@@ -37,7 +39,7 @@ public class CommandCompletionService : ICommandCompletionService
     /// <param name="ex"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public Task<ICommandResponse> CompleteAsync(ICommand command, ICommandResponse response, Exception ex = null, CancellationToken ct = default)
+    public Task<IResponse> CompleteAsync(ICommand command, IResponse response, Exception ex = null, CancellationToken ct = default)
     {
         _commandCompletionActor.Tell(response);
         return Task.FromResult(response);
@@ -60,7 +62,7 @@ public class CommandCompletionService : ICommandCompletionService
         public DispatchActor(string actorPath)
         {
             _remoteActorRef = Context.ActorSelection(actorPath);
-            Receive<ICommandResponse>(response => _remoteActorRef.Tell(response));
+            Receive<IResponse>(response => _remoteActorRef.Tell(response));
         }
     }
 

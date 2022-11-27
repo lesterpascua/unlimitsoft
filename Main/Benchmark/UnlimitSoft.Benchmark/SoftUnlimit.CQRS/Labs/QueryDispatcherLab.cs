@@ -19,7 +19,7 @@ public class QueryDispatcherLab
     {
         var services = new ServiceCollection();
 
-        services.AddQueryHandler(typeof(IQueryHandler<,>), null, validate, typeof(Program).Assembly);
+        services.AddQueryHandler(typeof(IQueryHandler<,>), validate, typeof(Program).Assembly);
 
         _provider = services.BuildServiceProvider();
         _dispatcher = _provider.GetRequiredService<IQueryDispatcher>();

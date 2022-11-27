@@ -6,7 +6,7 @@ using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Net;
-using UnlimitSoft.Web.Client;
+using UnlimitSoft.Message;
 using UnlimitSoft.Web.Security.Claims;
 
 namespace UnlimitSoft.Web.AspNet.Filter;
@@ -60,7 +60,7 @@ public sealed class TransformResponseAttribute : ActionFilterAttribute
                 }
                 break;
             case ObjectResult result:
-                if (result.Value is IResponse response)
+                if (result.Value is IResponse response && !response.IsInmutable())
                     response.TraceIdentifier = context.HttpContext.TraceIdentifier;
                 break;
         }

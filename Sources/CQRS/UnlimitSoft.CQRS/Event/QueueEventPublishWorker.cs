@@ -135,8 +135,10 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
         if (loadEvent)
             await LoadEventAsync(ct);
 
+#pragma warning disable CA2016 // Forward the 'CancellationToken' parameter to methods
         // Create an independance task to publish all event in the event bus.
         Worker = Task.Run(PublishBackground);
+#pragma warning restore CA2016 // Forward the 'CancellationToken' parameter to methods
 
         _logger?.LogInformation("EventPublishWorker start");
     }
@@ -147,7 +149,11 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
             throw new ObjectDisposedException(GetType().FullName);
 
         _pending.TryAdd(id, new Bucket(null, DateTime.UtcNow));
+#if NETSTANDARD2_0
         return ValueTaskExtensions.CompletedTask;
+#else
+        return ValueTask.CompletedTask;
+#endif
     }
     /// <inheritdoc />
     public virtual ValueTask PublishAsync(IEnumerable<IEvent> events, CancellationToken ct = default)
@@ -163,7 +169,11 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
 
             _pending.TryAdd(@event.Id, new Bucket(scheduled, @event.Created));
         }
+#if NETSTANDARD2_0
         return ValueTaskExtensions.CompletedTask;
+#else
+        return ValueTask.CompletedTask;
+#endif
     }
     /// <inheritdoc />
     public ValueTask PublishAsync(IEnumerable<PublishEventInfo> events, CancellationToken ct = default)
@@ -173,7 +183,11 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
 
         foreach (var @event in events)
             _pending.TryAdd(@event.Id, new Bucket(@event.Scheduled, @event.Created));
+#if NETSTANDARD2_0
         return ValueTaskExtensions.CompletedTask;
+#else
+        return ValueTask.CompletedTask;
+#endif
     }
 
     #region Protected Methods
@@ -285,9 +299,9 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
         foreach (var @event in pending)
             _pending.TryAdd(@event.Id, new Bucket(@event.Scheduled, @event.Created));
     }
-    #endregion
+#endregion
 
-    #region Private Methods
+#region Private Methods
     private Func<KeyValuePair<Guid, Bucket>, bool> ScheduledCondition()
     {
         var now = DateTime.UtcNow;
@@ -312,9 +326,9 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
         await PublishPayloadAsync(repository, payload);
         return payload;
     }
-    #endregion
+#endregion
 
-    #region Nested Classes
+#region Nested Classes
     /// <summary>
     /// 
     /// </summary>
@@ -354,5 +368,5 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
             return 1;
         }
     }
-    #endregion
+#endregion
 }

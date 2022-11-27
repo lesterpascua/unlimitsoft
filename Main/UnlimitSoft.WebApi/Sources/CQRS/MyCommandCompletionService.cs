@@ -4,6 +4,7 @@ using UnlimitSoft.CQRS.Message;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.WebApi.Sources.CQRS;
 
@@ -16,7 +17,7 @@ public class MyCommandCompletionService : ICommandCompletionService
     {
         _logger = logger;
     }
-    public Task<ICommandResponse> CompleteAsync(ICommand command, ICommandResponse response, Exception ex = null, CancellationToken ct = default)
+    public Task<IResponse> CompleteAsync(ICommand command, IResponse response, Exception? ex = null, CancellationToken ct = default)
     {
         if (ex is null)
         {

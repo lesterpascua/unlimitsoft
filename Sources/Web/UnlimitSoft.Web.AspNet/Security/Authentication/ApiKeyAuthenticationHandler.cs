@@ -10,6 +10,7 @@ using System.Net;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Web.AspNet.Security.Authentication;
 
@@ -86,7 +87,7 @@ public class ApiKeyAuthenticationHandler<TOption> : AuthenticationHandler<TOptio
         Response.StatusCode = StatusCodes.Status401Unauthorized;
 
         var uiText = Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidAPIKey) ?? "Invalid API Key";
-        var problemDetails = new Response<object>(HttpStatusCode.Unauthorized, null, uiText, Context.TraceIdentifier);
+        var problemDetails = new Response<object?>(HttpStatusCode.Unauthorized, null, uiText, Context.TraceIdentifier);
 
         var value = JsonUtility.Serialize(problemDetails);
         if (value is not null)

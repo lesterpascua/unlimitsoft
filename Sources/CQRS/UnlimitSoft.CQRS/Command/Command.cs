@@ -8,7 +8,7 @@ namespace UnlimitSoft.CQRS.Command;
 /// <summary>
 /// Base class for all command.
 /// </summary>
-public abstract class Command<T> : ICommand
+public abstract class Command<TResponse, T> : ICommand<TResponse>
     where T : CommandProps 
 {
     /// <summary>

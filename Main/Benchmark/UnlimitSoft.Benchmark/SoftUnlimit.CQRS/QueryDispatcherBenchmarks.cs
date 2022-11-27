@@ -31,6 +31,6 @@ public class QueryBenchmark
     [Benchmark]
     public async Task UnlimitSoftCommand()
     {
-        await _unlimitSoftCommand.Dispatch();
+        await _unlimitSoftCommand.Dispatch1();
     }
 }

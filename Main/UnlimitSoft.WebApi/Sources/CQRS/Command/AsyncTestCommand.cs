@@ -1,19 +1,19 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Command;
-using UnlimitSoft.CQRS.Message;
 using UnlimitSoft.Web.Security;
 
 namespace UnlimitSoft.WebApi.Sources.CQRS.Command;
 
 
-public class AsyncTestCommand : MySchedulerCommand
+public class AsyncTestCommand : MySchedulerCommand<string>
 {
     /// <summary>
     /// Deserialization constructor.
     /// </summary>
-    [System.Text.Json.Serialization.JsonConstructor]
+    [JsonConstructor]
     public AsyncTestCommand() { }
     /// <summary>
     /// 
@@ -30,7 +30,7 @@ public class AsyncTestCommand : MySchedulerCommand
     /// </summary>
     public Guid Id { get; set; }
 }
-public class AsyncTestCommandHandler : IMyCommandHandler<AsyncTestCommand>
+public class AsyncTestCommandHandler : IMyCommandHandler<AsyncTestCommand, string>
 {
     private readonly ICommandBus _commandBus;
 
@@ -50,12 +50,12 @@ public class AsyncTestCommandHandler : IMyCommandHandler<AsyncTestCommand>
     /// <param name="command"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public async ValueTask<ICommandResponse> HandleAsync(AsyncTestCommand command, CancellationToken ct = default)
+    public async ValueTask<string> HandleV2Async(AsyncTestCommand command, CancellationToken ct = default)
     {
         command.Props!.Delay = TimeSpanUtility.DuplicateRetryTime(command.Props.Delay);
         await _commandBus.SendAsync(command, ct);
 
 
-        return command.OkResponse(body: $"AsyncTestCommand: {command.Props.JobId} => ok");
+        return $"AsyncTestCommand: {command.Props.JobId} => ok";
     }
 }

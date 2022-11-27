@@ -1,8 +1,8 @@
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
+using UnlimitSoft.Logger.AspNet;
 using UnlimitSoft.Logger.Configuration;
 using UnlimitSoft.Logger.DependencyInjection;
-using UnlimitSoft.Logger.Web;
 
 // ================================================================================================================================
 // In this example we add a logger and include a custom properties in every logger

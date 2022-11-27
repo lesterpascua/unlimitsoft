@@ -86,7 +86,11 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
             );
         _client = new ServiceBusClient(_endpoint);
 
+#if NETSTANDARD2_0
         return ValueTaskExtensions.CompletedTask;
+#else
+        return ValueTask.CompletedTask;
+#endif
     }
 
     /// <inheritdoc/>
@@ -134,7 +138,7 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
     /// <returns></returns>
     public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop, CancellationToken ct = default) => SendMessageAsync(graph, id, eventName, correlationId, useEnvelop, ct);
 
-    #region Private Method
+#region Private Method
     private async Task SendMessageAsync(object graph, Guid id, string eventName, string? correlationId, bool useEnvelop, CancellationToken ct)
     {
         if (graph is null)
@@ -190,5 +194,5 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
         await _retryPolicy.ExecuteAsync((cancelationToken) => sender.SendMessageAsync(message, cancelationToken), ct);
         _logger?.LogInformation("Publish to {Queue} event: {Event}", queue.Queue, json);
     }
-    #endregion
+#endregion
 }

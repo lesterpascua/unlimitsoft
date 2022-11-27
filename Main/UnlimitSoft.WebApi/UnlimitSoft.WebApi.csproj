@@ -28,6 +28,8 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.AutoMapper.DependencyInjection\UnlimitSoft.AutoMapper.DependencyInjection.csproj" />
 		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.AutoMapper\UnlimitSoft.AutoMapper.csproj" />
+		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.Logger.AspNet\UnlimitSoft.Logger.AspNet.csproj" />
+		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.Logger.DependencyInjection\UnlimitSoft.Logger.DependencyInjection.csproj" />
 		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.Logger\UnlimitSoft.Logger.csproj" />
 		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft\UnlimitSoft.csproj" />
 		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.AkkaBus\UnlimitSoft.AkkaBus.csproj" />

@@ -9,6 +9,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Command;
 using UnlimitSoft.CQRS.Message;
+using UnlimitSoft.Mediator;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Bus.Hangfire;
 
@@ -23,7 +25,7 @@ public class DefaultJobProcessor<TProps> : IJobProcessor
     private readonly ICommandDispatcher _dispatcher;
     private readonly Func<Exception, Task>? _onError;
     private readonly ICommandCompletionService? _completionService;
-    private readonly Func<IServiceProvider, ICommand, JobActivatorContext, Func<ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>>? _preeProcess;
+    private readonly Func<IServiceProvider, ICommand, JobActivatorContext, Func<ICommand, CancellationToken, Task<IResponse>>, CancellationToken, Task<IResponse>>? _preeProcess;
     private readonly ILogger<DefaultJobProcessor<TProps>>? _logger;
 
     private readonly string _errorCode;
@@ -34,7 +36,7 @@ public class DefaultJobProcessor<TProps> : IJobProcessor
     /// <summary>
     /// Default error code raice if exist a problem in the process.
     /// </summary>
-    public static string DefaultErrorCode = "-1";
+    public const string DefaultErrorCode = "-1";
 
 
     /// <summary>
@@ -57,7 +59,7 @@ public class DefaultJobProcessor<TProps> : IJobProcessor
     /// <param name="errorCode"></param>
     /// <param name="onError"></param>
     /// <param name="preeProcess">Allow to invoke some action before the command processing.</param>
-    /// <param name="completionService"> After finish some command processing will call the method <see cref="ICommandCompletionService.CompleteAsync(ICommand, ICommandResponse, Exception, CancellationToken)"/>
+    /// <param name="completionService"> After finish some command processing will call the method <see cref="ICommandCompletionService.CompleteAsync(ICommand, IResponse, Exception?, CancellationToken)"/>
     /// </param>
     /// <param name="logger"></param>
     public DefaultJobProcessor(
@@ -66,7 +68,7 @@ public class DefaultJobProcessor<TProps> : IJobProcessor
         string? errorCode = null,
         Func<Exception, Task>? onError = null,
         ICommandCompletionService? completionService = null,
-        Func<IServiceProvider, ICommand, JobActivatorContext, Func<ICommand, CancellationToken, Task<ICommandResponse>>, CancellationToken, Task<ICommandResponse>>? preeProcess = null,
+        Func<IServiceProvider, ICommand, JobActivatorContext, Func<ICommand, CancellationToken, Task<IResponse>>, CancellationToken, Task<IResponse>>? preeProcess = null,
         ILogger<DefaultJobProcessor<TProps>>? logger = null
     )
     {
@@ -87,7 +89,7 @@ public class DefaultJobProcessor<TProps> : IJobProcessor
     public JobActivatorContext Context { get; set; }
 
     /// <inheritdoc />
-    public async Task<ICommandResponse> ProcessAsync(string json, Type type)
+    public async Task<IResponse> ProcessAsync(string json, Type type)
     {
         var command = (ICommand)JsonSerializer.Deserialize(json, type, _deserializerJsonSettings)!;
         var props = Context.GetJobParameter<TProps>(HangfireCommandBus.PropsParam);
@@ -110,10 +112,10 @@ public class DefaultJobProcessor<TProps> : IJobProcessor
     /// </summary>
     private CancellationToken CancellationToken => Context?.CancellationToken.ShutdownToken ?? default;
 
-    private async Task<ICommandResponse> RunAsync(ICommand command, CancellationToken ct)
+    private async Task<IResponse> RunAsync(ICommand command, CancellationToken ct)
     {
         Exception? err = null;
-        ICommandResponse response;
+        IResponse response;
         var props = command.GetProps<CommandProps>();
 
         var meta = Context.BackgroundJob;
@@ -134,7 +136,7 @@ public class DefaultJobProcessor<TProps> : IJobProcessor
             response = command.ErrorResponse(_errorBody);
         }
 
-        if (_completionService is not null && (props?.Silent != true || !response.IsSuccess))
+        if (_completionService is not null)
             response = await _completionService.CompleteAsync(command, response, err, CancellationToken);
 
         _logger?.LogDebug(@"End process

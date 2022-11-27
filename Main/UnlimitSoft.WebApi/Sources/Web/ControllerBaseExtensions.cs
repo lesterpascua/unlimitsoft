@@ -1,11 +1,11 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using UnlimitSoft.Logger;
-using UnlimitSoft.Logger.Web;
-using UnlimitSoft.Web.Client;
-using UnlimitSoft.Web.Security;
-using UnlimitSoft.Web.Security.Claims;
 using System;
 using System.Linq;
+using UnlimitSoft.Logger.AspNet;
+using UnlimitSoft.Mediator;
+using UnlimitSoft.Message;
+using UnlimitSoft.Web.Security;
+using UnlimitSoft.Web.Security.Claims;
 
 namespace UnlimitSoft.WebApi.Sources.Web
 {
@@ -43,13 +43,26 @@ namespace UnlimitSoft.WebApi.Sources.Web
                 .Select(s => s.Value);
             var role = aux.Any() ? aux.Aggregate((a, b) => $"{a},{b}") : null;
 
-            string correlationId = @this.HttpContext.TraceIdentifier;
+            var correlationId = @this.HttpContext.TraceIdentifier;
             if (@this.HttpContext.Request.Headers.TryGetValue(LoggerMiddleware.CorrelationHeader, out var correlation))
                 correlationId = correlation.FirstOrDefault();
 
             return new IdentityInfo(id, role, scope, @this.HttpContext.TraceIdentifier, correlationId);
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="this"></param>
+        /// <param name="response"></param>
+        /// <returns></returns>
+        public static ObjectResult ToActionResult<TResponse>(this ControllerBase @this, Result<TResponse> response)
+        {
+            if (response.Error is not null)
+                @this.StatusCode((int)response.Error.Code, response.Error);
+            var value = new Response<TResponse>(System.Net.HttpStatusCode.OK, response.Value!, null, null);
+            return @this.Ok(value);
+        }
         /// <summary>
         /// 
         /// </summary>
