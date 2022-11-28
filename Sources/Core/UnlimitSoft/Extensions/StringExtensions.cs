@@ -41,11 +41,12 @@ public static class StringExtensions
     /// <summary>
     /// Asume the string is a separator , int representation
     /// </summary>
+    /// <typeparam name="TEnum"></typeparam>
     /// <param name="this"></param>
-    /// <param name="useInt"></param>
     /// <param name="separator"></param>
     /// <param name="ignoreError"></param>
     /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     public static TEnum[] ToEnumArray<TEnum>(this string @this, char separator = ',', bool ignoreError = true) where TEnum : struct, Enum
     {
         if (@this is null)

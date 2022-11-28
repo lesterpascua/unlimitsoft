@@ -35,7 +35,7 @@ public class ApiKeyAuthenticationHandler<TOption> : AuthenticationHandler<TOptio
     /// <param name="logger"></param>
     /// <param name="encoder"></param>
     /// <param name="clock"></param>
-    public ApiKeyAuthenticationHandler(IServiceProvider provider, IOptionsMonitor<TOption> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock)
+    public ApiKeyAuthenticationHandler(IServiceProvider provider, IOptionsMonitor<TOption> options, ILoggerFactory logger, UrlEncoder encoder, Microsoft.AspNetCore.Authentication.ISystemClock clock)
         : base(options, logger, encoder, clock)
     {
         _provider = provider;

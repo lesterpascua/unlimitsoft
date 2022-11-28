@@ -28,7 +28,7 @@ public class WeatherForecastController : ControllerBase
         _logger.LogInformation("Enter in Get");
         return Enumerable.Range(1, 5).Select(index => new WeatherForecast
         {
-            Date = DateTime.Now.AddDays(index),
+            Date = SysClock.GetUtcNow().AddDays(index),
             TemperatureC = Random.Shared.Next(-20, 55),
             Summary = Summaries[Random.Shared.Next(Summaries.Length)]
         })

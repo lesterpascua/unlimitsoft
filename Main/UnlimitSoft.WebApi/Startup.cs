@@ -27,6 +27,7 @@ using UnlimitSoft.Data.EntityFramework.DependencyInjection;
 using UnlimitSoft.Data.EntityFramework.Utility;
 using UnlimitSoft.DependencyInjections;
 using UnlimitSoft.EventBus.Azure.Configuration;
+using UnlimitSoft.Json;
 using UnlimitSoft.Logger.AspNet;
 using UnlimitSoft.Web;
 using UnlimitSoft.Web.AspNet.Filter;
@@ -157,8 +158,9 @@ public class Startup
         {
             var nameResolver = provider.GetRequiredService<IEventNameResolver>();
             var eventSourcedRepository = provider.GetRequiredService<IMyEventSourcedRepository>();
+            var serializer = provider.GetRequiredService<IJsonSerializer>();
 
-            return new MyMemento<Customer>(nameResolver, eventSourcedRepository, false);
+            return new MyMemento<Customer>(serializer, nameResolver, eventSourcedRepository, false);
         });
         #endregion
 
@@ -280,26 +282,26 @@ public class Startup
             publishWorker: hasEventBus,
             loadEvent: hasEventBus,
             logger: logger
-            //setup: async provider =>
-            //{
-            //    var memento = provider.GetService<IMemento<Customer>>();
-            //    var repository = provider.GetService<IMyEventSourcedRepository>();
+        //setup: async provider =>
+        //{
+        //    var memento = provider.GetService<IMemento<Customer>>();
+        //    var repository = provider.GetService<IMyEventSourcedRepository>();
 
-            //    var versionedEntity = await repository.GetAllSourceIdAsync();
-            //    if (versionedEntity.Any())
-            //    {
-            //        var history1 = await repository.GetHistoryAsync(versionedEntity[0].Id, 10);
-            //        var history2 = await repository.GetHistoryAsync(versionedEntity[0].Id, DateTime.UtcNow);
+        //    var versionedEntity = await repository.GetAllSourceIdAsync();
+        //    if (versionedEntity.Any())
+        //    {
+        //        var history1 = await repository.GetHistoryAsync(versionedEntity[0].Id, 10);
+        //        var history2 = await repository.GetHistoryAsync(versionedEntity[0].Id, SysClock.GetUtcNow());
 
-            //        var nonPublishes = await repository.GetNonPublishedEventsAsync();
-            //        var events = await repository.GetEventsAsync(nonPublishes.Select(s => s.Id).ToArray());
-            //        await repository.MarkEventsAsPublishedAsync(events);
+        //        var nonPublishes = await repository.GetNonPublishedEventsAsync();
+        //        var events = await repository.GetEventsAsync(nonPublishes.Select(s => s.Id).ToArray());
+        //        await repository.MarkEventsAsPublishedAsync(events);
 
-            //        var entity = await memento.FindByVersionAsync(versionedEntity[0].Id);
+        //        var entity = await memento.FindByVersionAsync(versionedEntity[0].Id);
 
-            //        Console.WriteLine(entity);
-            //    }
-            //}
+        //        Console.WriteLine(entity);
+        //    }
+        //}
         ).Wait();
 
         app.UseMiddleware<LoggerMiddleware>();

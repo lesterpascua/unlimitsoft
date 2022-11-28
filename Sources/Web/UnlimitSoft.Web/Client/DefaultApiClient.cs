@@ -19,6 +19,7 @@ namespace UnlimitSoft.Web.Client;
 public class DefaultApiClient : IApiClient
 {
     private readonly HttpClient _httpClient;
+    private readonly IJsonSerializer _serializer;
     private readonly ILogger<DefaultApiClient>? _logger;
 
 
@@ -26,11 +27,13 @@ public class DefaultApiClient : IApiClient
     /// 
     /// </summary>
     /// <param name="httpClient"></param>
+    /// <param name="serializer"></param>
     /// <param name="baseUrl"></param>
     /// <param name="logger"></param>
-    public DefaultApiClient(HttpClient httpClient, string? baseUrl = null, ILogger<DefaultApiClient>? logger = null)
+    public DefaultApiClient(HttpClient httpClient, IJsonSerializer serializer, string? baseUrl = null, ILogger<DefaultApiClient>? logger = null)
     {
         _httpClient = httpClient;
+        _serializer = serializer;
         _logger = logger;
         if (!string.IsNullOrEmpty(baseUrl))
         {
@@ -53,75 +56,68 @@ public class DefaultApiClient : IApiClient
     }
 
     /// <inheritdoc/>
-    public async Task<(TModel?, HttpStatusCode)> SendAsync<TModel>(Func<CancellationToken, Task<HttpResponseMessage>> request, CancellationToken ct = default)
+    public async Task<(TModel?, HttpStatusCode)> SendAsync<TModel>(Func<CancellationToken, Task<HttpResponseMessage>> request, IJsonSerializer? serializer = null, CancellationToken ct = default)
     {
         using var response = await request(ct);
 
         response.EnsureSuccessStatusCode();
-        string body = await response.Content.ReadAsStringAsync();
 
-        var result = JsonUtility.Deserialize<TModel>(body);
+#if NETSTANDARD2_0
+        string body = await response.Content.ReadAsStringAsync();
+#else
+        string body = await response.Content.ReadAsStringAsync(ct);
+#endif
+        var jsonSerialize = serializer ?? _serializer;
+        var result = jsonSerialize.Deserialize<TModel>(body);
         return (result, response.StatusCode);
     }
-
     /// <inheritdoc/>
-    public Task<(TModel?, HttpStatusCode)> SendAsync<TModel>(HttpMethod method, string uri, Action<HttpRequestMessage>? setup = null, object? model = null, CancellationToken ct = default)
+    public async Task<(TModel?, HttpStatusCode)> SendAsync<TModel>(HttpMethod method, string uri, Action<HttpRequestMessage>? setup = null, object? model = null, IJsonSerializer? serializer = null, CancellationToken ct = default)
     {
-        return InternalSendAsync(
-            method,
-            uri,
-            obj => JsonUtility.Serialize(obj),
-            json => JsonUtility.Deserialize<TModel>(json),
-            setup,
-            model,
-            ct
-        );
-    }
-    /// <inheritdoc />
-    public Task<(TModel?, HttpStatusCode)> SendAsync<TModel>(HttpMethod method, string uri, System.Text.Json.JsonSerializerOptions serializer, System.Text.Json.JsonSerializerOptions deserializer, Action<HttpRequestMessage>? setup = null, object? model = null, CancellationToken ct = default)
-    {
-        if (serializer is null)
-            throw new ArgumentNullException(nameof(serializer));
-        if (deserializer is null)
-            throw new ArgumentNullException(nameof(deserializer));
+        string completeUri = uri;
+        string? jsonContent = null;
+        var jsonSerialize = serializer ?? _serializer;
 
-        return InternalSendAsync(
-            method,
-            uri,
-            obj => System.Text.Json.JsonSerializer.Serialize(obj, serializer),
-            json => System.Text.Json.JsonSerializer.Deserialize<TModel>(json, deserializer),
-            setup,
-            model,
-            ct
-        );
-    }
-    /// <inheritdoc />
-    public Task<(TModel?, HttpStatusCode)> SendAsync<TModel>(HttpMethod method, string uri, Newtonsoft.Json.JsonSerializerSettings serializer, Newtonsoft.Json.JsonSerializerSettings deserializer, Action<HttpRequestMessage>? setup = null, object? model = null, CancellationToken ct = default)
-    {
-        if (serializer is null)
-            throw new ArgumentNullException(nameof(serializer));
-        if (deserializer is null)
-            throw new ArgumentNullException(nameof(deserializer));
+        if (model is not null)
+        {
+            if (HttpMethod.Get == method)
+            {
+                var qs = await ObjectUtils.ToQueryString(model);
+                completeUri = $"{completeUri}?{qs}";
+            }
+            else
+                jsonContent = jsonSerialize.Serialize(model);
+        }
+        HttpContent? httpContent = null;
+        try
+        {
+            _logger?.LogInformation("HttpRequest for {Url}, Body = {Json}", completeUri, jsonContent);
+            if (jsonContent is not null)
+                httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
-        return InternalSendAsync(
-            method, 
-            uri,
-            obj => Newtonsoft.Json.JsonConvert.SerializeObject(obj, serializer),
-            json => Newtonsoft.Json.JsonConvert.DeserializeObject<TModel>(json, deserializer), 
-            setup, 
-            model,
-            ct
-        );
+            var (json, code) = await SendWithContentAsync(method, completeUri, httpContent, setup, ct);
+
+            _logger?.LogInformation("HttpResponse for {Url}, Result = {Code}, Body = {Json}", completeUri, code, json);
+            var result = jsonSerialize.Deserialize<TModel>(json);
+
+            return (result, code);
+        }
+        finally
+        {
+            httpContent?.Dispose();
+        }
     }
 
     /// <inheritdoc/>
-    public async Task<(TModel?, HttpStatusCode)> UploadAsync<TModel>(HttpMethod method, string uri, string fileName, IEnumerable<Stream> streams, Action<HttpRequestMessage>? setup = null, object? qs = null, CancellationToken ct = default)
+    public async Task<(TModel?, HttpStatusCode)> UploadAsync<TModel>(HttpMethod method, string uri, string fileName, IEnumerable<Stream> streams, Action<HttpRequestMessage>? setup = null, object? qs = null, IJsonSerializer? serializer = null, CancellationToken ct = default)
     {
         if (method == HttpMethod.Get)
             throw new NotSupportedException("Get method don't allow upload image.");
 
         var completeUri = uri;
-        var content = new MultipartFormDataContent("Uploading... " + DateTime.Now.ToString(CultureInfo.InvariantCulture));
+        var now = SysClock.GetUtcNow();
+        var jsonSerialize = serializer ?? _serializer;
+        var content = new MultipartFormDataContent($"Uploading... {now.ToString(CultureInfo.InvariantCulture)}");
         foreach (var stream in streams)
             content.Add(new StreamContent(stream), fileName, fileName);
 
@@ -129,7 +125,7 @@ public class DefaultApiClient : IApiClient
             completeUri += string.Concat('?', await ObjectUtils.ToQueryString(qs));
 
         var (json, code) = await SendWithContentAsync(method, completeUri, content, setup, ct);
-        var result = JsonUtility.Deserialize<TModel>(json);
+        var result = jsonSerialize.Deserialize<TModel>(json);
 
         return (result, code);
     }
@@ -146,46 +142,15 @@ public class DefaultApiClient : IApiClient
         setup?.Invoke(message);
         using var response = await _httpClient.SendAsync(message, ct);
 
+#if NETSTANDARD2_0
         string body = await response.Content.ReadAsStringAsync();
+#else
+        string body = await response.Content.ReadAsStringAsync(ct);
+#endif
         if (!response.IsSuccessStatusCode)
             throw new HttpException(response.StatusCode, response.ToString(), body);
 
         return (body, response.StatusCode);
     }
-    private async Task<(TModel?, HttpStatusCode)> InternalSendAsync<TModel>(HttpMethod method, string uri, Func<object, string?> serializer, Func<string, TModel?> deserializer, Action<HttpRequestMessage>? setup, object? model, CancellationToken ct)
-    {
-        string completeUri = uri;
-        string? jsonContent = null;
-
-        if (model is not null)
-        {
-            if (HttpMethod.Get == method)
-            {
-                var qs = await ObjectUtils.ToQueryString(model);
-                completeUri = $"{completeUri}?{qs}";
-            }
-            else
-                jsonContent = serializer(model);
-        }
-        HttpContent? httpContent = null;
-        try
-        {
-            _logger?.LogInformation("HttpRequest for {Url}, Body = {Json}", completeUri, jsonContent);
-            if (jsonContent is not null)
-                httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
-
-            var (json, code) = await SendWithContentAsync(method, completeUri, httpContent, setup, ct);
-
-            _logger?.LogInformation("HttpResponse for {Url}, Result = {Code}, Body = {Json}", completeUri, code, json);
-            var result = deserializer(json);
-
-            return (result, code);
-        }
-        finally
-        {
-            if (httpContent is not null)
-                httpContent.Dispose();
-        }
-    }
-    #endregion
+#endregion
 }

@@ -6,6 +6,7 @@ using System;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using UnlimitSoft.Json;
 
 namespace UnlimitSoft.DependencyInjections;
 
@@ -44,7 +45,7 @@ public static class IServiceCollectionExtensions
         Func<Type, object>? resolver = null,
         Action<Assembly, HttpClient>? httpClientBuilder = null,
         Action<Assembly, IHttpClientBuilder>? httpBuilder = null,
-        Func<Type, HttpClient, IApiClient>? apiClientFactory = null,
+        Func<Type, HttpClient, IJsonSerializer, IApiClient>? apiClientFactory = null,
         params Assembly[] extraAssemblies
     )
     {
@@ -57,7 +58,7 @@ public static class IServiceCollectionExtensions
             if (baseUrl is null)
                 continue;
 
-            var key = assembly.GetName().Name;
+            var key = assembly.GetName().FullName!;
             var builder = services.AddHttpClient(key, c =>
             {
                 if (baseUrl != string.Empty)
@@ -105,19 +106,16 @@ public static class IServiceCollectionExtensions
                             apiClient = CreateApiClient(provider, apiClientFactory, key, typeInterface, factory);
                             service = serviceFactory(provider, typeInterface, apiClient);
                         }
-                        if (service is null)
-                        {
-                            service = serviceType.CreateInstance(
-                                provider,
-                                resolver: (parameter) =>
-                                {
-                                    if (parameter.ParameterType == typeof(IApiClient))
-                                        return apiClient ?? CreateApiClient(provider, apiClientFactory, key, typeInterface, factory);
+                        service ??= serviceType.CreateInstance(
+                            provider,
+                            resolver: (parameter) =>
+                            {
+                                if (parameter.ParameterType == typeof(IApiClient))
+                                    return apiClient ?? CreateApiClient(provider, apiClientFactory, key, typeInterface, factory);
 
-                                    return resolver?.Invoke(parameter.ParameterType);
-                                }
-                            );
-                        }
+                                return resolver?.Invoke(parameter.ParameterType);
+                            }
+                        );
 
                         return service;
                     },
@@ -130,11 +128,15 @@ public static class IServiceCollectionExtensions
     }
 
     #region Private Methods
-    private static IApiClient CreateApiClient(IServiceProvider provider, Func<Type, HttpClient, IApiClient>? apiClientFactory, string key, Type serviceType, IHttpClientFactory factory)
+    private static IApiClient CreateApiClient(IServiceProvider provider, Func<Type, HttpClient, IJsonSerializer, IApiClient>? apiClientFactory, string key, Type serviceType, IHttpClientFactory factory)
     {
         var httpClient = factory.CreateClient(key);
-        var apiClient = apiClientFactory?.Invoke(serviceType, httpClient) ?? new DefaultApiClient(httpClient, logger: provider.GetService<ILogger<DefaultApiClient>>());
-        return apiClient;
+        var jsonSerializer = provider.GetRequiredService<IJsonSerializer>();
+
+        if (apiClientFactory is null)
+            return new DefaultApiClient(httpClient, jsonSerializer, logger: provider.GetService<ILogger<DefaultApiClient>>());
+
+        return apiClientFactory(serviceType, httpClient, jsonSerializer);
     }
     #endregion
 }

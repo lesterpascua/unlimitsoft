@@ -22,6 +22,7 @@ public class EventController : ControllerBase
     private readonly IMyIdGenerator _gen;
     private readonly IEventDispatcher _dispatcher;
     private readonly IEventNameResolver _nameResolver;
+    private readonly IJsonSerializer _serializer;
 
 
     /// <summary>
@@ -29,11 +30,12 @@ public class EventController : ControllerBase
     /// </summary>
     /// <param name="dispatcher"></param>
     /// <param name="gen"></param>
-    public EventController(IMyIdGenerator gen, IEventDispatcher dispatcher, IEventNameResolver nameResolver)
+    public EventController(IMyIdGenerator gen, IEventDispatcher dispatcher, IEventNameResolver nameResolver, IJsonSerializer serializer)
     {
         _gen = gen;
         _dispatcher = dispatcher;
-        this._nameResolver = nameResolver;
+        _nameResolver = nameResolver;
+        _serializer = serializer;
     }
 
     [HttpPost]
@@ -41,12 +43,13 @@ public class EventController : ControllerBase
     {
         var body = new TestEventBody { Test = "Test Event" };
         var @event = new TestEvent(Guid.NewGuid(), _gen.GenerateId(), 1, 1, "w", "c", null, null, null, false, body);
-        var json = JsonUtility.Serialize(@event)!;
+        var json = _serializer.Serialize(@event)!;
 
         var envelop = new MessageEnvelop { Msg = json, MsgType = null, Type = MessageType.Json };
         var (response, err) = await EventUtility.ProcessAsync<IEvent>(
             typeof(TestEvent).FullName!, 
-            envelop, 
+            envelop,
+            _serializer,
             _dispatcher, 
             _nameResolver, 
             ct: ct

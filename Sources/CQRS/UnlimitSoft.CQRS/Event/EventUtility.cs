@@ -22,6 +22,7 @@ public static class EventUtility
     /// <typeparam name="TEvent"></typeparam>
     /// <param name="eventName"></param>
     /// <param name="envelop"></param>
+    /// <param name="serializer"></param>
     /// <param name="dispatcher"></param>
     /// <param name="resolver">Contains the map between name of the event and event type</param>
     /// <param name="beforeProcess"></param>
@@ -29,7 +30,17 @@ public static class EventUtility
     /// <param name="logger"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async Task<(IEventResponse?, Exception?)> ProcessAsync<TEvent>(string? eventName, MessageEnvelop envelop, IEventDispatcher dispatcher, IEventNameResolver resolver, Action<TEvent>? beforeProcess = null, Func<Exception, TEvent?, MessageEnvelop, CancellationToken, Task>? onError = null, ILogger? logger = null, CancellationToken ct = default)
+    public static async Task<(IEventResponse?, Exception?)> ProcessAsync<TEvent>(
+        string? eventName, 
+        MessageEnvelop envelop, 
+        IJsonSerializer serializer,
+        IEventDispatcher dispatcher, 
+        IEventNameResolver resolver, 
+        Action<TEvent>? beforeProcess = null, 
+        Func<Exception, TEvent?, MessageEnvelop, CancellationToken, Task>? onError = null, 
+        ILogger? logger = null, 
+        CancellationToken ct = default
+    )
         where TEvent : class, IEvent
     {
         TEvent? curr = null;
@@ -53,7 +64,7 @@ public static class EventUtility
             {
                 case MessageType.Json:
                     var json = envelop.Msg.ToString();
-                    if (JsonUtility.Deserialize(eventType, json) is not TEvent @event)
+                    if (serializer.Deserialize(eventType, json) is not TEvent @event)
                     {
                         logger?.SkipEventType(eventType, eventName!);
                         break;

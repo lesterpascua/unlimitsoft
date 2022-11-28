@@ -49,7 +49,7 @@ public class EventDispatcherLab
     {
         public Task<IEventResponse> HandleAsync(Event @event, CancellationToken ct = default)
         {
-            var result = $"{@event.Body} - {DateTime.UtcNow}";
+            var result = $"{@event.Body} - {SysClock.GetUtcNow()}";
             return Task.FromResult(@event.OkResponse(result));
         }
     }

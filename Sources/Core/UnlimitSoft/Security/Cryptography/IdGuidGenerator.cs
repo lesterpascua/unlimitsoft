@@ -126,7 +126,7 @@ public class IdGuidGenerator : IIdGenerator<Guid>
 
     #region Private Methods
 
-    private ulong CurrentTime => ((ulong)DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond) - _startEpoch;
+    private ulong CurrentTime => ((ulong)SysClock.GetUtcNow().Ticks / TimeSpan.TicksPerMillisecond) - _startEpoch;
 
     private Guid NextId()
     {

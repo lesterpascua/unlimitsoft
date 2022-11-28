@@ -4,17 +4,37 @@ namespace UnlimitSoft.Json;
 
 
 /// <summary>
-/// Allow serialize using json libraries
+/// Access to the default json serializer.
 /// </summary>
-public interface IJsonSerializer
+public static class JsonUtil
 {
+    private static IJsonSerializer? _default;
+
+    /// <summary>
+    /// Access to the default serializer in the system.
+    /// </summary>
+    public static IJsonSerializer Default
+    {
+        get => _default ?? throw new NullReferenceException("Default json serializer is not created");
+        set
+        {
+            if (_default is not null)
+            {
+                if (ReferenceEquals(value, _default))
+                    return;
+                throw new InvalidOperationException("Json serializer was already initialize");
+            }
+            _default = value;
+        }
+    }
+
     /// <summary>
     /// Serialize object into json. If set null the result will be a null string.
     /// </summary>
     /// <param name="data"></param>
     /// <param name="settings"></param>
     /// <returns></returns>
-    string? Serialize(object? data, object? settings = null);
+    public static string? Serialize(object? data, object? settings = null) => Default.Serialize(data, settings);
     /// <summary>
     /// Deserialize json payload. If set null will return default object.
     /// </summary>
@@ -22,7 +42,7 @@ public interface IJsonSerializer
     /// <param name="payload"></param>
     /// <param name="settings"></param>
     /// <returns></returns>
-    T? Deserialize<T>(string? payload, object? settings = null);
+    public static T? Deserialize<T>(string? payload, object? settings = null) => Default.Deserialize<T>(payload, settings);
     /// <summary>
     /// Deserialize json payload. If set null will return default object.
     /// </summary>
@@ -30,8 +50,7 @@ public interface IJsonSerializer
     /// <param name="payload"></param>
     /// <param name="settings"></param>
     /// <returns></returns>
-    object? Deserialize(Type type, string? payload, object? settings = null);
-
+    public static object? Deserialize(Type type, string? payload, object? settings = null) => Default.Deserialize(type, payload, settings);
     /// <summary>
     /// Verify if the object is of type T
     /// </summary>
@@ -39,13 +58,13 @@ public interface IJsonSerializer
     /// <param name="data"></param>
     /// <param name="settings"></param>
     /// <returns></returns>
-    T? Cast<T>(object? data, object? settings = null);
+    public static T? Cast<T>(object? data, object? settings = null) => Default.Cast<T>(data, settings);
     /// <summary>
     /// Get json token follow the specific path.
     /// </summary>
     /// <param name="data"></param>
     /// <param name="path"></param>
-    object? GetToken(object? data, params string[] path);
+    public static object? GetToken(object? data, params string[] path) => Default.GetToken(data, path);
     /// <summary>
     /// Add extra value
     /// </summary>
@@ -54,5 +73,5 @@ public interface IJsonSerializer
     /// <param name="value"></param>
     /// <param name="settings"></param>
     /// <returns></returns>
-    object AddNode(object? data, string name, object value, object? settings = null);
+    public static object AddNode(object? data, string name, object value, object? settings = null) => Default.AddNode(data, name, value, settings);
 }

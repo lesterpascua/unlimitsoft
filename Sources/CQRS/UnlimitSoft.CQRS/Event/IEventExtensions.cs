@@ -5,6 +5,7 @@ using System.Net;
 
 namespace UnlimitSoft.CQRS.Event;
 
+
 /// <summary>
 /// Helper methods for events.
 /// </summary>
@@ -17,8 +18,9 @@ public static class IEventExtensions
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="event"></param>
+    /// <param name="serializer"></param>
     /// <returns></returns>
-    public static T? GetBody<T>(this IEvent @event) => JsonUtility.Cast<T>(@event.GetBody());
+    public static T? GetBody<T>(this IEvent @event, IJsonSerializer serializer) => serializer.Cast<T>(@event.GetBody());
 
     /// <summary>
     /// Generate a success response using event data.

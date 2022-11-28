@@ -135,10 +135,8 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
         if (loadEvent)
             await LoadEventAsync(ct);
 
-#pragma warning disable CA2016 // Forward the 'CancellationToken' parameter to methods
         // Create an independance task to publish all event in the event bus.
         Worker = Task.Run(PublishBackground);
-#pragma warning restore CA2016 // Forward the 'CancellationToken' parameter to methods
 
         _logger?.LogInformation("EventPublishWorker start");
     }
@@ -148,7 +146,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
         if (_disposed)
             throw new ObjectDisposedException(GetType().FullName);
 
-        _pending.TryAdd(id, new Bucket(null, DateTime.UtcNow));
+        _pending.TryAdd(id, new Bucket(null, SysClock.GetUtcNow()));
 #if NETSTANDARD2_0
         return ValueTaskExtensions.CompletedTask;
 #else
@@ -224,7 +222,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
                 break;
 
             // Dispatch event throws the bus
-            _logger?.LogDebug("Start to publish events {Time}", DateTime.UtcNow);
+            _logger?.LogDebug("Start to publish events");
 
             TVersionedEventPayload? lastEvent = null;
             int count = Math.Min(_pending.Count, _bachSize);
@@ -286,10 +284,10 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
             if (x.Scheduled is null)
             {
                 if (y.Scheduled is not null)
-                    compare = DateTime.UtcNow.CompareTo(y.Scheduled.Value);
+                    compare = SysClock.GetUtcNow().CompareTo(y.Scheduled.Value);
             }
             else if (y.Scheduled is not null)
-                compare = x.Scheduled.Value.CompareTo(DateTime.UtcNow);
+                compare = x.Scheduled.Value.CompareTo(SysClock.GetUtcNow());
 
             if (compare != 0)
                 return compare;
@@ -304,7 +302,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
 #region Private Methods
     private Func<KeyValuePair<Guid, Bucket>, bool> ScheduledCondition()
     {
-        var now = DateTime.UtcNow;
+        var now = SysClock.GetUtcNow();
         return p => p.Value.Scheduled is null || p.Value.Scheduled.Value <= now;
     }
     private async Task PublishPayloadAsync(TEventSourcedRepository repository, TVersionedEventPayload payload)
@@ -359,9 +357,9 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
-        public int CompareTo(Bucket other)
+        public int CompareTo(Bucket? other)
         {
-            if (Scheduled is not null && other.Scheduled is not null)
+            if (Scheduled is not null && other!.Scheduled is not null)
                 return Created.CompareTo(other.Created);
             if (Scheduled is null)
                 return -1;

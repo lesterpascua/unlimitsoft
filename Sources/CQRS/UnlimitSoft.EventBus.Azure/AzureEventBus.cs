@@ -29,6 +29,7 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
     private readonly IEnumerable<QueueAlias<TAlias>> _queues;
     private readonly string _endpoint;
     private readonly IEventNameResolver _eventNameResolver;
+    private readonly IJsonSerializer _serializer;
     private readonly Func<TAlias, string, object, bool>? _filter;
     private readonly Func<TAlias, string, object, object>? _transform;
     private readonly Action<object, ServiceBusMessage>? _setup;
@@ -39,6 +40,7 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
     /// 
     /// </summary>
     /// <param name="eventNameResolver">Resolve real type of event using his name.</param>
+    /// <param name="serializer"></param>
     /// <param name="queues"></param>
     /// <param name="endpoint"></param>
     /// <param name="filter">Filter if this event able to sent to specifix queue, function (queueName, eventName) => bool</param>
@@ -49,6 +51,7 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
         string endpoint,
         IEnumerable<QueueAlias<TAlias>> queues,
         IEventNameResolver eventNameResolver,
+        IJsonSerializer serializer,
         Func<TAlias, string, object, bool>? filter = null,
         Func<TAlias, string, object, object>? transform = null,
         Action<object, ServiceBusMessage>? setup = null,
@@ -59,6 +62,7 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
         _filter = filter;
         _endpoint = endpoint;
         _eventNameResolver = eventNameResolver;
+        _serializer = serializer;
         _transform = transform;
         _setup = setup;
         _logger = logger;
@@ -113,7 +117,7 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
                     _logger?.LogWarning("Not found event {EventType}", eventPayload.EventName);
                     break;
                 }
-                var @event = JsonUtility.Deserialize(eventType, payload);
+                var @event = _serializer.Deserialize(eventType, payload);
                 if (@event is null)
                 {
                     _logger?.LogWarning("Skip event of {Type} because is null", eventType);
@@ -174,7 +178,7 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
             };
         }
 
-        var json = JsonUtility.Serialize(envelop);
+        var json = _serializer.Serialize(envelop)!;
         var raw = Encoding.UTF8.GetBytes(json);
 
         var message = new ServiceBusMessage(raw);

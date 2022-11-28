@@ -51,7 +51,7 @@ namespace UnlimitSoft.Benchmark.UnlimitSoft.CQRS.Labs
         {
             public Task<string> Handle(Command request, CancellationToken cancellationToken)
             {
-                return Task.FromResult($"{request.Name} - {DateTime.UtcNow}");
+                return Task.FromResult($"{request.Name} - {SysClock.GetUtcNow()}");
             }
         }
         #endregion

@@ -32,6 +32,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.Json;
 
 namespace UnlimitSoft.WebApi.DependencyInjection;
 
@@ -186,8 +187,9 @@ public static class IServiceCollectionExtensions
         {
             services.AddSingleton<IEventBus>(provider =>
             {
-                var logger = provider.GetService<ILogger<AzureEventBus<QueueIdentifier>>>();
-                var eventNameResolver = provider.GetService<IEventNameResolver>();
+                var logger = provider.GetRequiredService<ILogger<AzureEventBus<QueueIdentifier>>>();
+                var eventNameResolver = provider.GetRequiredService<IEventNameResolver>();
+                var serialize = provider.GetRequiredService<IJsonSerializer>();
 
                 Func<QueueIdentifier, string, object, bool> busFilter = null;
                 Func<QueueIdentifier, string, object, object> busTransform = null;
@@ -199,7 +201,8 @@ public static class IServiceCollectionExtensions
                 return new AzureEventBus<QueueIdentifier>(
                     options.Endpoint, 
                     publishs, 
-                    eventNameResolver, 
+                    eventNameResolver,
+                    serialize,
                     busFilter, 
                     busTransform,
                     setup: (graph, message) =>
@@ -231,8 +234,9 @@ public static class IServiceCollectionExtensions
             // register event listener
             services.AddSingleton<IEventListener>(provider =>
             {
-                var resolver = provider.GetService<IEventNameResolver>();
-                var eventDispatcher = provider.GetService<IEventDispatcher>();
+                var resolver = provider.GetRequiredService<IEventNameResolver>();
+                var eventDispatcher = provider.GetRequiredService<IEventDispatcher>();
+                var serializer = provider.GetRequiredService<IJsonSerializer>();
                 var logger = provider.GetRequiredService<ILogger<AzureEventListener<QueueIdentifier>>>();
 
                 Func<Exception, TEvent, MessageEnvelop, CancellationToken, Task> listenerOnError = null;
@@ -256,7 +260,17 @@ public static class IServiceCollectionExtensions
                         logger.LogDebug("Receive from {Queue}, event: {@Event}", args.Queue, args.Envelop);
                         try
                         {
-                            await ProcessorUtility.Default(eventDispatcher, resolver, args.Envelop, message, beforeProcess, listenerOnError, logger, ct);
+                            await ProcessorUtility.Default(
+                                eventDispatcher, 
+                                resolver, 
+                                serializer,
+                                args.Envelop, 
+                                message, 
+                                beforeProcess, 
+                                listenerOnError, 
+                                logger, 
+                                ct
+                            );
                             await args.Azure.CompleteMessageAsync(message, ct);
                         }
                         catch (Exception ex)

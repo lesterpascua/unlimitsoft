@@ -14,6 +14,7 @@ namespace UnlimitSoft.Json;
 /// <summary>
 /// 
 /// </summary>
+[Obsolete("Use JsonUtil or IJsonSerializer instead")]
 public static class JsonUtility
 {
     /// <summary>

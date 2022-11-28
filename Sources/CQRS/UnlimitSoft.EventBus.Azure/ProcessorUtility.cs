@@ -7,6 +7,7 @@ using UnlimitSoft.Event;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.Json;
 
 namespace UnlimitSoft.EventBus.Azure;
 
@@ -21,6 +22,7 @@ public static class ProcessorUtility
     /// </summary>
     /// <param name="dispatcher"></param>
     /// <param name="resolver"></param>
+    /// <param name="serializer"></param>
     /// <param name="envelop"></param>
     /// <param name="message"></param>
     /// <param name="logger"></param>
@@ -31,6 +33,7 @@ public static class ProcessorUtility
     public static async Task<(IEventResponse?, Exception?)> Default<TEvent>(
         IEventDispatcher dispatcher,
         IEventNameResolver resolver,
+        IJsonSerializer serializer,
         MessageEnvelop envelop,
         ServiceBusReceivedMessage message,
         Action<TEvent>? beforeProcess = null,
@@ -43,6 +46,16 @@ public static class ProcessorUtility
         message.ApplicationProperties.TryGetValue(BusProperty.EventName, out var eventName);
         message.ApplicationProperties.TryGetValue(BusProperty.MessageType, out var messageType);
 
-        return await EventUtility.ProcessAsync(eventName?.ToString(), envelop, dispatcher, resolver, beforeProcess, onError, logger, ct);
+        return await EventUtility.ProcessAsync(
+            eventName?.ToString(), 
+            envelop, 
+            serializer,
+            dispatcher, 
+            resolver, 
+            beforeProcess, 
+            onError, 
+            logger, 
+            ct
+        );
     }
 }
