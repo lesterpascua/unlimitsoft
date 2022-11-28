@@ -106,7 +106,7 @@ public abstract class Event<TKey, TBody> : IEvent
         IsDomainEvent = isDomain;
         Body = body;
 
-        Created = DateTime.UtcNow;
+        Created = SysClock.GetUtcNow();
     }
 
     /// <inheritdoc />

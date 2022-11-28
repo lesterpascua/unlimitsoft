@@ -69,7 +69,7 @@ public sealed class CommandDispatcherLab
     {
         public ValueTask<string> HandleV2Async(Command request, CancellationToken ct = default)
         {
-            var result = $"{request.Name} - {DateTime.UtcNow}";
+            var result = $"{request.Name} - {SysClock.GetUtcNow()}";
             return ValueTask.FromResult(result);
         }
         public ValueTask<IResponse> ValidatorV2Async(Command request, RequestValidator<Command> validator, CancellationToken ct = default)

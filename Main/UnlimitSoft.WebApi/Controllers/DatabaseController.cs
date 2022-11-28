@@ -74,12 +74,12 @@ namespace UnlimitSoft.WebApi.Controllers
             var lockObject = await lockRepository.FindAll().FirstOrDefaultAsync(cancellationToken: ct);
             if (lockObject == null)
             {
-                lockObject = new Lock { Id = 1, DateTime = DateTime.UtcNow };
+                lockObject = new Lock { Id = 1, DateTime = SysClock.GetUtcNow() };
                 await lockRepository.AddAsync(lockObject, ct);
             }
             else
             {
-                lockObject.DateTime = name == "t1" ? DateTime.UtcNow : DateTime.UtcNow.AddDays(1);
+                lockObject.DateTime = name == "t1" ? SysClock.GetUtcNow() : SysClock.GetUtcNow().AddDays(1);
                 lockRepository.Update(lockObject);
             }
             await unitOfWork.SaveChangesAsync(ct);

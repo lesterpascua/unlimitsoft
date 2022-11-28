@@ -19,8 +19,9 @@ public class JsonVersionedEventPayload : VersionedEventPayload<string>
     /// 
     /// </summary>
     /// <param name="event"></param>
-    public JsonVersionedEventPayload(IVersionedEvent @event)
-        : base(@event, JsonUtility.Serialize(@event)!)
+    /// <param name="serializer"></param>
+    public JsonVersionedEventPayload(IVersionedEvent @event, IJsonSerializer serializer)
+        : base(@event, serializer.Serialize(@event)!)
     {
     }
 }

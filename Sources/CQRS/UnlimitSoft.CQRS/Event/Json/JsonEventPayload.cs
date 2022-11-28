@@ -17,8 +17,9 @@ public class JsonEventPayload : EventPayload<string>
     /// 
     /// </summary>
     /// <param name="event"></param>
-    public JsonEventPayload(IEvent @event)
-        : base(@event, JsonUtility.Serialize(@event)!)
+    /// <param name="serializer"></param>
+    public JsonEventPayload(IEvent @event, IJsonSerializer serializer)
+        : base(@event, serializer.Serialize(@event)!)
     {
     }
 }

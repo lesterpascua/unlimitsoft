@@ -6,6 +6,7 @@ using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.EventBus.Azure;
 using UnlimitSoft.EventBus.Azure.Configuration;
+using UnlimitSoft.Json;
 using UnlimitSoft.Logger.Configuration;
 using UnlimitSoft.Logger.DependencyInjection;
 using UnlimitSoft.WebApi.EventBus.EventBus;
@@ -67,11 +68,13 @@ WebApplication ConfigureServices(IServiceCollection services)
 
         var logger = provider.GetRequiredService<ILogger<Program>>();
         var eventNameResolver = provider.GetRequiredService<IEventNameResolver>();
+        var serialize = provider.GetRequiredService<IJsonSerializer>();
 
         return new AzureEventBus<QueueIdentifier>(
            options.Endpoint,
            queues,
            eventNameResolver,
+           serialize,
            null,
            null,
            setup: (graph, message) =>

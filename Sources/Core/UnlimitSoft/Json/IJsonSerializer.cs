@@ -26,11 +26,11 @@ public interface IJsonSerializer
     /// <summary>
     /// Deserialize json payload. If set null will return default object.
     /// </summary>
-    /// <param name="eventType"></param>
+    /// <param name="type"></param>
     /// <param name="payload"></param>
     /// <param name="settings"></param>
     /// <returns></returns>
-    object? Deserialize(Type eventType, string? payload, object? settings = null);
+    object? Deserialize(Type type, string? payload, object? settings = null);
 
     /// <summary>
     /// Verify if the object is of type T

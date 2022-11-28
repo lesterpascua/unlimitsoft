@@ -32,7 +32,7 @@ public class Custom64BitGenerator : IIdGenerator<ulong>
         : this(new CustomGeneratorSettings {
             IdentifierBits = 10,
             SequenceBits = 12,
-            StartEpoch = DateTime.UtcNow.AddYears(-1)
+            StartEpoch = SysClock.GetUtcNow().AddYears(-1)
         }, identifier, sequence)
     {
     }
@@ -101,7 +101,7 @@ public class Custom64BitGenerator : IIdGenerator<ulong>
 
     private ulong CurrentTime
     {
-        get { return (ulong)(DateTime.UtcNow - _startEpoch).TotalMilliseconds; }
+        get { return (ulong)(SysClock.GetUtcNow() - _startEpoch).TotalMilliseconds; }
     }
 
     #endregion

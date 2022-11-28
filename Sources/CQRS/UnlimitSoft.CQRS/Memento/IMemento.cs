@@ -48,6 +48,7 @@ public abstract class Memento<TInterface, TEntity, TVersionedEventPayload, TPayl
     where TPayload : notnull
 {
     private readonly bool _snapshot;
+    private readonly IJsonSerializer _serializer;
     private readonly IEventNameResolver _nameResolver;
     private readonly IEventSourcedRepository<TVersionedEventPayload, TPayload> _eventSourcedRepository;
     private readonly Func<IReadOnlyCollection<IMementoEvent<TInterface>>, TEntity>? _factory;
@@ -55,12 +56,20 @@ public abstract class Memento<TInterface, TEntity, TVersionedEventPayload, TPayl
     /// <summary>
     /// 
     /// </summary>
+    /// <param name="serializer">Json serializer used to convert the event</param>
     /// <param name="nameResolver"></param>
     /// <param name="eventSourcedRepository"></param>
     /// <param name="factory">Allow personalice the wait you use to build the entity. By the fault the entity will build using the default ctor.</param>
     /// <param name="snapshot"></param>
-    public Memento(IEventNameResolver nameResolver,  IEventSourcedRepository<TVersionedEventPayload, TPayload> eventSourcedRepository,  Func<IReadOnlyCollection<IMementoEvent<TInterface>>, TEntity>? factory = null, bool snapshot = false)
+    public Memento(
+        IJsonSerializer serializer, 
+        IEventNameResolver nameResolver,
+        IEventSourcedRepository<TVersionedEventPayload, TPayload> eventSourcedRepository, 
+        Func<IReadOnlyCollection<IMementoEvent<TInterface>>, TEntity>? factory = null, 
+        bool snapshot = false
+    )
     {
+        _serializer = serializer;
         _nameResolver = nameResolver;
         _eventSourcedRepository = eventSourcedRepository;
         _factory = factory;
@@ -112,7 +121,7 @@ public abstract class Memento<TInterface, TEntity, TVersionedEventPayload, TPayl
     /// <param name="type"></param>
     /// <param name="payload"></param>
     /// <returns></returns>
-    protected virtual IMementoEvent<TInterface> FromEvent(Type type, TPayload payload) => (IMementoEvent<TInterface>)JsonUtility.Deserialize(type, payload.ToString())!;
+    protected virtual IMementoEvent<TInterface> FromEvent(Type type, TPayload payload) => (IMementoEvent<TInterface>)_serializer.Deserialize(type, payload.ToString())!;
 
 
     #region Nested Classes

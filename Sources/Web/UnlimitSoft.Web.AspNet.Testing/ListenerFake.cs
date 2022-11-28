@@ -7,84 +7,89 @@ using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.Json;
 
-namespace UnlimitSoft.Web.AspNet.Testing
+namespace UnlimitSoft.Web.AspNet.Testing;
+
+
+/// <summary>
+/// Fake listener.
+/// </summary>
+public class ListenerFake : IEventListener
 {
+    private readonly IJsonSerializer _serializer;
+    private readonly IEventDispatcher _eventDispatcher;
+    private readonly IEventNameResolver _nameResolver;
+
     /// <summary>
-    /// Fake listener.
+    /// 
     /// </summary>
-    public class ListenerFake : IEventListener
+    /// <param name="serializer"></param>
+    /// <param name="eventDispatcher"></param>
+    /// <param name="nameResolver"></param>
+    public ListenerFake(IJsonSerializer serializer, IEventDispatcher eventDispatcher, IEventNameResolver nameResolver)
     {
-        private readonly IEventDispatcher _eventDispatcher;
-        private readonly IEventNameResolver _nameResolver;
+        _serializer = serializer;
+        _eventDispatcher = eventDispatcher;
+        _nameResolver = nameResolver;
+    }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="eventDispatcher"></param>
-        /// <param name="nameResolver"></param>
-        public ListenerFake(IEventDispatcher eventDispatcher, IEventNameResolver nameResolver)
-        {
-            _eventDispatcher = eventDispatcher;
-            _nameResolver = nameResolver;
-        }
+    /// <inheritdoc />
+    public ValueTask ListenAsync(TimeSpan waitRetry, CancellationToken ct = default) => ValueTask.CompletedTask;
 
-        /// <inheritdoc />
-        public ValueTask ListenAsync(TimeSpan waitRetry, CancellationToken ct = default) => ValueTask.CompletedTask;
-
-        /// <summary>
-        /// Create event with some body.
-        /// </summary>
-        /// <typeparam name="TEvent"></typeparam>
-        /// <param name="serviceMetadata"></param>
-        /// <param name="body"></param>
-        /// <returns></returns>
-        public static TEvent CreateEvent<TEvent>(IServiceMetadata serviceMetadata, object body)
-            where TEvent : class, IVersionedEvent
+    /// <summary>
+    /// Create event with some body.
+    /// </summary>
+    /// <typeparam name="TEvent"></typeparam>
+    /// <param name="serviceMetadata"></param>
+    /// <param name="body"></param>
+    /// <returns></returns>
+    public static TEvent CreateEvent<TEvent>(IServiceMetadata serviceMetadata, object body)
+        where TEvent : class, IVersionedEvent
+    {
+        const long version = 0;
+        var @event = (TEvent)Activator.CreateInstance(typeof(TEvent),
+            Guid.NewGuid(), 
+            Guid.NewGuid(), 
+            version,
+            serviceMetadata.ServiceId,
+            serviceMetadata.WorkerId, 
+            Guid.NewGuid().ToString(), 
+            null, 
+            null, 
+            null, 
+            false, 
+            body
+        );
+        return @event;
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="TEvent"></typeparam>
+    /// <param name="event"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    public async Task<(IEventResponse, Exception)> SimulateReceiveAsync<TEvent>(TEvent @event, CancellationToken ct = default)
+        where TEvent : class, IVersionedEvent
+    {
+        var eventName = typeof(TEvent).FullName;
+        var envelop = new MessageEnvelop
         {
-            const long version = 0;
-            var @event = (TEvent)Activator.CreateInstance(typeof(TEvent),
-                Guid.NewGuid(), 
-                Guid.NewGuid(), 
-                version,
-                serviceMetadata.ServiceId,
-                serviceMetadata.WorkerId, 
-                Guid.NewGuid().ToString(), 
-                null, 
-                null, 
-                null, 
-                false, 
-                body
-            );
-            return @event;
-        }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <typeparam name="TEvent"></typeparam>
-        /// <param name="event"></param>
-        /// <param name="ct"></param>
-        /// <returns></returns>
-        public async Task<(IEventResponse, Exception)> SimulateReceiveAsync<TEvent>(TEvent @event, CancellationToken ct = default)
-            where TEvent : class, IVersionedEvent
-        {
-            var eventName = typeof(TEvent).FullName;
-            var envelop = new MessageEnvelop
-            {
-                Type = MessageType.Json,
-                MsgType = eventName,
-                Msg = JsonSerializer.Serialize(@event),
-            };
-            return await EventUtility.ProcessAsync<TEvent>(
-                eventName, 
-                envelop, 
-                _eventDispatcher, 
-                _nameResolver, 
-                null, 
-                null, 
-                null, 
-                ct
-            );
-        }
+            Type = MessageType.Json,
+            MsgType = eventName,
+            Msg = JsonSerializer.Serialize(@event),
+        };
+        return await EventUtility.ProcessAsync<TEvent>(
+            eventName, 
+            envelop,
+            _serializer,
+            _eventDispatcher, 
+            _nameResolver, 
+            null, 
+            null, 
+            null, 
+            ct
+        );
     }
 }

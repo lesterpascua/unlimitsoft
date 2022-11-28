@@ -130,7 +130,7 @@ public class MicroServiceGenerator : IIdGenerator<Guid>, IServiceMetadata
     /// <summary>
     /// Current amount of miliseconds from start epoch
     /// </summary>
-    private ulong CurrentTime => ((ulong)DateTime.UtcNow.Ticks / TimeSpan.TicksPerMillisecond) - _startEpoch;
+    private ulong CurrentTime => ((ulong)SysClock.GetUtcNow().Ticks / TimeSpan.TicksPerMillisecond) - _startEpoch;
     /// <summary>
     /// Get next identifier.
     /// </summary>

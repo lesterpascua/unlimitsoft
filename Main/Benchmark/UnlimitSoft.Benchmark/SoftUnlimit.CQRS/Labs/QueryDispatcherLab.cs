@@ -48,7 +48,7 @@ public class QueryDispatcherLab
     {
         public Task<string> HandleAsync(Query query, CancellationToken ct = default)
         {
-            var result = $"{query.Name} - {DateTime.UtcNow}";
+            var result = $"{query.Name} - {SysClock.GetUtcNow()}";
             return Task.FromResult(result);
         }
 

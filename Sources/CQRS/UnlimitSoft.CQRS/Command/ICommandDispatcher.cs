@@ -36,6 +36,7 @@ public static class ICommandDispatcherExtensions
     /// <summary>
     /// Send a command to his command handler. This operation must execute in new scope.
     /// </summary>
+    /// <param name="this"></param>
     /// <param name="command"></param>
     /// <param name="ct"></param>
     /// <returns></returns>

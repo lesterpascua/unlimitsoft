@@ -116,6 +116,7 @@ public static class IRequestExtensions
     /// Generate a not found response using command data.
     /// </summary>
     /// <param name="_"></param>
+    /// <param name="body"></param>
     /// <param name="uiText">Global information about message</param>
     /// <returns></returns>
     public static IResponse NotFoundResponse<T>(this IRequest _, T body, string? uiText = null) => new Response<T>(HttpStatusCode.NotFound, body, uiText ?? Resources.Response_NotFoundResponse, null);
