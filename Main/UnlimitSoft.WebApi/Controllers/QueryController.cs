@@ -35,8 +35,8 @@ public sealed class QueryController : ControllerBase
     public async Task<ActionResult<Response<Customer[]>>> Get()
     {
         var query = new TestQuery(this.GetIdentity());
-        var response = await _queryDispatcher.DispatchAsync(_provider, query);
+        var result = await _queryDispatcher.DispatchAsync(_provider, query);
 
-        return this.ToActionResult(response);
+        return this.ToActionResult(ref result);
     }
 }
