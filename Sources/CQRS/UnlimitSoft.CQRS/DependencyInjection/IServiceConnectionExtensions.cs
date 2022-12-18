@@ -1,19 +1,15 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using UnlimitSoft.CQRS.Command;
-using UnlimitSoft.CQRS.Command.Pipeline;
-using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.Event.Json;
-using UnlimitSoft.CQRS.Message;
-using UnlimitSoft.CQRS.Query;
-using UnlimitSoft.Event;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using UnlimitSoft.Message;
+using UnlimitSoft.CQRS.Command;
+using UnlimitSoft.CQRS.Command.Pipeline;
+using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.CQRS.Event.Json;
+using UnlimitSoft.CQRS.Query;
+using UnlimitSoft.Event;
 using UnlimitSoft.Mediator;
 
 namespace UnlimitSoft.CQRS.DependencyInjection;
@@ -85,7 +81,7 @@ public static class IServiceConnectionExtensions
     /// <param name="assemblies"></param>
     public static void AddQueryHandler(this IServiceCollection services, Type queryHandlerType, bool validate = true, params Assembly[] assemblies)
     {
-        services.AddScoped<IQueryDispatcher>((provider) =>
+        services.AddSingleton<IQueryDispatcher>((provider) =>
         {
             var logger = provider.GetService<ILogger<ServiceProviderQueryDispatcher>>();
             return new ServiceProviderQueryDispatcher(
@@ -103,17 +99,25 @@ public static class IServiceConnectionExtensions
         {
             var queryHandlerImplementedInterfaces = handlerImplementation
                 .GetInterfaces()
-                .Where(p => p.GetGenericArguments().Length == 2 && p.GetGenericTypeDefinition() == queryHandlerType);
+                .Where(p =>
+                {
+                    if (p.GetGenericArguments().Length != 2)
+                        return false;
+                    return p.GetGenericTypeDefinition() == queryHandlerType;
+                });
 
             foreach (var queryHandlerInterface in queryHandlerImplementedInterfaces)
             {
                 var argsTypes = queryHandlerInterface.GetGenericArguments();
                 var handlerInterface = typeof(IQueryHandler<,>).MakeGenericType(argsTypes);
+                var requestHandlerInterface = typeof(IRequestHandler<,>).MakeGenericType(argsTypes);
                 var currHandlerInterface = queryHandlerType.MakeGenericType(argsTypes);
 
                 services.AddScoped(handlerInterface, handlerImplementation);
                 if (currHandlerInterface != handlerInterface)
-                    services.AddScoped(currHandlerInterface, provider => provider.GetService(handlerInterface));
+                    services.AddScoped(currHandlerInterface, provider => provider.GetRequiredService(handlerInterface));
+                if (requestHandlerInterface != handlerInterface)
+                    services.AddScoped(requestHandlerInterface, provider => provider.GetRequiredService(handlerInterface));
             }
         }
         #endregion
@@ -173,9 +177,9 @@ public static class IServiceConnectionExtensions
 
                 services.AddScoped(handlerInterface, handlerImplementation);
                 if (currHandlerInterface != handlerInterface)
-                    services.AddScoped(currHandlerInterface, provider => provider.GetService(handlerInterface));
+                    services.AddScoped(currHandlerInterface, provider => provider.GetRequiredService(handlerInterface));
                 if (requestHandlerInterface != handlerInterface)
-                    services.AddScoped(requestHandlerInterface, provider => provider.GetService(handlerInterface));
+                    services.AddScoped(requestHandlerInterface, provider => provider.GetRequiredService(handlerInterface));
 
                 // Post Pipelines
                 var attrs = argsTypes[0].GetCustomAttributes(typeof(PostPipelineAttribute), true);

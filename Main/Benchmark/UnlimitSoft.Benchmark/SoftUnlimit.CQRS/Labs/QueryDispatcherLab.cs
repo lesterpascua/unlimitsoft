@@ -1,8 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using UnlimitSoft.CQRS.DependencyInjection;
-using UnlimitSoft.CQRS.Message;
 using UnlimitSoft.CQRS.Query;
-using UnlimitSoft.CQRS.Query.Validation;
+using UnlimitSoft.Mediator;
+using UnlimitSoft.Mediator.Validation;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Benchmark.UnlimitSoft.CQRS.Labs;
 
@@ -28,9 +29,9 @@ public class QueryDispatcherLab
     public async Task<string?> Dispatch()
     {
         var query = new Query { Name = "Lester Pastrana" };
-        var (_, body) = await query.ExecuteAsync(_dispatcher);
+        var response = await _dispatcher.DispatchAsync(_provider, query);
 
-        return body;
+        return response.Value;
     }
 
     #region Nested Classes
@@ -44,22 +45,22 @@ public class QueryDispatcherLab
         /// </summary>
         public string? Name { get; init; }
     }
-    public class QueryHandler : IQueryHandler<string, Query>, IQueryHandlerValidator<Query>, IQueryHandlerCompliance<Query>
+    public class QueryHandler : IQueryHandler<Query, string>, IQueryHandlerValidator<Query>, IQueryHandlerCompliance<Query>
     {
-        public Task<string> HandleAsync(Query query, CancellationToken ct = default)
+        public ValueTask<string> HandleV2Async(Query query, CancellationToken ct = default)
         {
             var result = $"{query.Name} - {SysClock.GetUtcNow()}";
-            return Task.FromResult(result);
+            return ValueTask.FromResult(result);
         }
 
-        public ValueTask<IQueryResponse> ComplianceAsync(Query query, CancellationToken ct = default)
+        public ValueTask<IResponse> ComplianceV2Async(Query query, CancellationToken ct = default)
         {
-            return ValueTask.FromResult(query.QuickOkResponse());
+            return ValueTask.FromResult(query.OkResponse());
         }
 
-        public ValueTask<IQueryResponse> ValidatorAsync(Query query, QueryValidator<Query> validator, CancellationToken ct = default)
+        public ValueTask<IResponse> ValidatorV2Async(Query query, RequestValidator<Query> validator, CancellationToken ct = default)
         {
-            return ValueTask.FromResult(query.QuickOkResponse());
+            return ValueTask.FromResult(query.OkResponse());
         }
     }
     #endregion

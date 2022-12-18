@@ -10,7 +10,7 @@ namespace UnlimitSoft.WebApi.Sources.CQRS.Query;
 /// <summary>
 /// Handler definitial (you can choose put all in the same file or separate using partial class)
 /// </summary>
-public partial class TestQueryHandler : IMyQueryHandler<Customer[], TestQuery>
+public partial class TestQueryHandler : IMyQueryHandler<TestQuery, Customer[]>
 {
     private readonly IMyQueryRepository<Customer> _customerQueryRepository;
 
@@ -19,9 +19,9 @@ public partial class TestQueryHandler : IMyQueryHandler<Customer[], TestQuery>
         _customerQueryRepository = customerQueryRepository;
     }
 
-    public async Task<Customer[]> HandleAsync(TestQuery query, CancellationToken ct = default)
+    public async ValueTask<Customer[]> HandleV2Async(TestQuery query, CancellationToken ct = default)
     {
-        var data = await _customerQueryRepository.FindAll().ToArrayAsync();
+        var data = await _customerQueryRepository.FindAll().ToArrayAsync(ct);
         return data;
     }
 }

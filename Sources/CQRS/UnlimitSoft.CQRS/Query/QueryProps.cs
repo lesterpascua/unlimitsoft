@@ -1,9 +1,9 @@
-﻿namespace UnlimitSoft.CQRS.Query
+﻿namespace UnlimitSoft.CQRS.Query;
+
+
+/// <summary>
+/// 
+/// </summary>
+public class QueryProps
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    public class QueryProps
-    {
-    }
 }

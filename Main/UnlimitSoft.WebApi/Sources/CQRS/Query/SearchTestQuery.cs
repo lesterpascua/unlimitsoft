@@ -15,21 +15,22 @@ namespace UnlimitSoft.WebApi.Sources.CQRS.Query;
 
 public class SearchTestQuery : MyQuery<SearchModel<Customer>>, IQuerySearch
 {
-    public SearchTestQuery(IdentityInfo? user = null) :
-        base(user)
+    public SearchTestQuery(IdentityInfo? identity = null) :
+        base(identity)
     {
+        Paging = new Paging();
     }
 
     public SearchCustomer.FilterVM? Filter { get; set; }
 
-    public Paging? Paging { get; init; }
-    public IReadOnlyList<ColumnName>? Order { get; init; }
+    public Paging Paging { get; init; }
+    public IReadOnlyList<ColumnName> Order { get; init; }
 }
 
 /// <summary>
 /// Query Handler.
 /// </summary>
-public class SearchTestQueryHandler : IMyQueryHandler<SearchModel<Customer>, SearchTestQuery>
+public class SearchTestQueryHandler : IMyQueryHandler<SearchTestQuery, SearchModel<Customer>>
 {
     private readonly IMyQueryRepository<Customer> _customerQueryRepository;
 
@@ -38,7 +39,7 @@ public class SearchTestQueryHandler : IMyQueryHandler<SearchModel<Customer>, Sea
         _customerQueryRepository = customerQueryRepository;
     }
 
-    public async Task<SearchModel<Customer>> HandleAsync(SearchTestQuery args, CancellationToken ct = default)
+    public async ValueTask<SearchModel<Customer>> HandleV2Async(SearchTestQuery args, CancellationToken ct = default)
     {
         var query = _customerQueryRepository.FindAll();
 

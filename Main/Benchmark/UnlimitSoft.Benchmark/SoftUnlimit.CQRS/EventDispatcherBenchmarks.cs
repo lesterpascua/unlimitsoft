@@ -1,13 +1,4 @@
 ﻿using BenchmarkDotNet.Attributes;
-using Microsoft.Extensions.DependencyInjection;
-using UnlimitSoft.CQRS.DependencyInjection;
-using UnlimitSoft.CQRS.Message;
-using UnlimitSoft.CQRS.Query;
-using UnlimitSoft.CQRS.Query.Validation;
-using UnlimitSoft.Web.Client;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using UnlimitSoft.Benchmark.UnlimitSoft.CQRS.Labs;
 
 namespace UnlimitSoft.Benchmark.UnlimitSoft.CQRS

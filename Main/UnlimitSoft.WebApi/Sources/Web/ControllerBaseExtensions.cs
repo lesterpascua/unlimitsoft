@@ -35,7 +35,7 @@ namespace UnlimitSoft.WebApi.Sources.Web
             var aux = @this.User.Claims
                 .Where(p => p.Type == Scope)
                 .Select(s => s.Value);
-            string scope = aux.Any() ? aux.Aggregate((a, b) => $"{a},{b}") : null;
+            var scope = aux.Any() ? aux.Aggregate((a, b) => $"{a},{b}") : null;
 
             // roles
             aux = @this.User.Claims
