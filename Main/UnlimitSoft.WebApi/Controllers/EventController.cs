@@ -1,16 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using UnlimitSoft.CQRS;
-using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.Event.Json;
-using UnlimitSoft.CQRS.EventSourcing.Json;
-using UnlimitSoft.Event;
-using UnlimitSoft.Json;
-using UnlimitSoft.WebApi.Sources.CQRS.Event;
-using UnlimitSoft.WebApi.Sources.Security.Cryptography;
-using UnlimitSoft.WebApi.Sources.Web;
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.CQRS.Event.Json;
+using UnlimitSoft.Event;
+using UnlimitSoft.Json;
+using UnlimitSoft.Message;
+using UnlimitSoft.WebApi.Sources.CQRS.Event;
+using UnlimitSoft.WebApi.Sources.Security.Cryptography;
 
 namespace UnlimitSoft.WebApi.Controllers;
 
@@ -46,7 +45,7 @@ public class EventController : ControllerBase
         var json = _serializer.Serialize(@event)!;
 
         var envelop = new MessageEnvelop { Msg = json, MsgType = null, Type = MessageType.Json };
-        var (response, err) = await EventUtility.ProcessAsync<IEvent>(
+        var (response, _) = await EventUtility.ProcessAsync<IEvent>(
             typeof(TestEvent).FullName!, 
             envelop,
             _serializer,
@@ -60,6 +59,9 @@ public class EventController : ControllerBase
 
         //var response = await _dispatcher.DispatchAsync(obj, ct);
 
-        return this.ToActionResult(response);
+        return ToActionResult(response);
     }
+
+
+    private ObjectResult ToActionResult(IResponse? response) => StatusCode((int)(response?.Code ?? HttpStatusCode.NotFound), response);
 }

@@ -7,5 +7,6 @@ using UnlimitSoft.Benchmark.UnlimitSoft.CQRS.Labs;
 //await lab.Dispatch1();
 
 //BenchmarkRunner.Run<CommandBenchmark>();
-BenchmarkRunner.Run<QueryBenchmark>();
+//BenchmarkRunner.Run<QueryBenchmark>();
+BenchmarkRunner.Run<EventDispatcherBenchmarks>();
 

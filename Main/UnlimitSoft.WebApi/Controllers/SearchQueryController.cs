@@ -42,8 +42,8 @@ public sealed class SearchQueryController : ControllerBase
             Order = vm.Order ?? _order,
             Paging = vm.Paging
         };
-        var response = await _queryDispatcher.DispatchAsync(_provider, query);
+        var result = await _queryDispatcher.DispatchAsync(_provider, query);
 
-        return this.ToActionResult(response);
+        return this.ToActionResult(ref result);
     }
 }
