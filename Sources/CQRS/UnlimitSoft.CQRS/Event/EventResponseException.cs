@@ -1,5 +1,5 @@
-﻿using UnlimitSoft.CQRS.Message;
-using System;
+﻿using System;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.CQRS.Event;
 
@@ -14,7 +14,7 @@ public class EventResponseException : Exception
     /// </summary>
     /// <param name="message"></param>
     /// <param name="response"></param>
-    public EventResponseException(string message, IEventResponse? response) : base(message)
+    public EventResponseException(string message, IResponse? response) : base(message)
     {
         Response = response;
     }
@@ -22,5 +22,5 @@ public class EventResponseException : Exception
     /// <summary>
     /// 
     /// </summary>
-    public IEventResponse? Response { get; }
+    public IResponse? Response { get; }
 }

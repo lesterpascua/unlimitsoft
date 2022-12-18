@@ -88,6 +88,7 @@ WebApplication ConfigureServices(IServiceCollection services)
     {
         var resolver = provider.GetRequiredService<IEventNameResolver>();
         var logger = provider.GetRequiredService<ILogger<AzureEventListener<QueueIdentifier>>>();
+        var serialize = provider.GetRequiredService<IJsonSerializer>();
         var options = provider.GetRequiredService<IOptions<EventBusOptions>>().Value;
 
         return new AzureEventListener<QueueIdentifier>(
@@ -117,6 +118,7 @@ WebApplication ConfigureServices(IServiceCollection services)
                     await args.Azure.CompleteMessageAsync(message, ct);
                 }
             },
+            serialize,
             1,
             logger
         );

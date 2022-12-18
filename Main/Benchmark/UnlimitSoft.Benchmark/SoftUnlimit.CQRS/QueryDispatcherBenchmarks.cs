@@ -4,6 +4,7 @@ using UnlimitSoft.Benchmark.UnlimitSoft.CQRS.Labs;
 
 namespace UnlimitSoft.Benchmark.UnlimitSoft.CQRS;
 
+
 [MemoryDiagnoser]
 public class QueryBenchmark
 {
@@ -31,6 +32,6 @@ public class QueryBenchmark
     [Benchmark]
     public async Task UnlimitSoftCommand()
     {
-        await _unlimitSoftCommand.Dispatch1();
+        await _unlimitSoftCommand.Dispatch();
     }
 }

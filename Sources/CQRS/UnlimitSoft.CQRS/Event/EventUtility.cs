@@ -1,12 +1,12 @@
 ﻿using Microsoft.Extensions.Logging;
-using UnlimitSoft.CQRS.Event.Json;
-using UnlimitSoft.CQRS.Message;
-using UnlimitSoft.Json;
-using UnlimitSoft.Event;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.CQRS.Logging;
+using UnlimitSoft.Event;
+using UnlimitSoft.Json;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.CQRS.Event;
 
@@ -30,7 +30,7 @@ public static class EventUtility
     /// <param name="logger"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async Task<(IEventResponse?, Exception?)> ProcessAsync<TEvent>(
+    public static async Task<(IResponse?, Exception?)> ProcessAsync<TEvent>(
         string? eventName, 
         MessageEnvelop envelop, 
         IJsonSerializer serializer,
@@ -45,7 +45,7 @@ public static class EventUtility
     {
         TEvent? curr = null;
         Exception? ex = null;
-        IEventResponse? responses = null;
+        IResponse? responses = null;
         try
         {
             Type? eventType = null;
@@ -95,13 +95,13 @@ public static class EventUtility
         return (responses, ex);
     }
 
-    private static async Task<IEventResponse> DispatchEvent(IEventDispatcher eventDispatcher, ILogger? logger, IEvent @event, CancellationToken ct)
+    private static async Task<IResponse?> DispatchEvent(IEventDispatcher eventDispatcher, ILogger? logger, IEvent @event, CancellationToken ct)
     {
-        var responses = await eventDispatcher.DispatchAsync(@event, ct);
+        var (responses, error) = await eventDispatcher.DispatchAsync(@event, ct);
         logger?.LogInformation(@"Procesed
 Event: {@Event} 
 Response: {@Response}", @event, responses);
 
-        return responses;
+        return error ?? responses;
     }
 }

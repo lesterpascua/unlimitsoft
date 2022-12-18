@@ -1,13 +1,13 @@
 ﻿using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Logging;
-using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.EventBus.Azure.Configuration;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Azure.Messaging.ServiceBus.Administration;
+using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.EventBus.Azure.Configuration;
+using UnlimitSoft.Json;
 
 namespace UnlimitSoft.EventBus.Azure;
 
@@ -21,6 +21,7 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
     private readonly string _endpoint;
     private readonly QueueAlias<TAlias>[] _queues;
     private readonly ProcessorCallback _processor;
+    private readonly IJsonSerializer _serializer;
     private readonly int _maxConcurrentCalls;
     private readonly ILogger? _logger;
 
@@ -28,19 +29,20 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
     private ServiceBusClient? _client;
     private ServiceBusProcessor[]? _busProcessors;
 
-
     /// <summary>
     /// 
     /// </summary>
     /// <param name="endpoint"></param>
     /// <param name="queues"></param>
-    /// <param name="processor">Processor used to process the event <see cref="ProcessorUtility.Default{TEvent}(IEventDispatcher, CQRS.Event.Json.IEventNameResolver, MessageEnvelop, ServiceBusReceivedMessage, Action{TEvent}, Func{Exception, TEvent, MessageEnvelop, CancellationToken, Task}, ILogger, CancellationToken)"/></param>
+    /// <param name="processor">Processor used to process the event, <see cref="ProcessorUtility.Default" /> is used by default</param>
+    /// <param name="serializer"></param>
     /// <param name="maxConcurrentCalls"></param>
     /// <param name="logger"></param>
     public AzureEventListener(
         string endpoint,
         IEnumerable<QueueAlias<TAlias>> queues,
         ProcessorCallback processor,
+        IJsonSerializer serializer,
         int maxConcurrentCalls = 1,
         ILogger? logger = null
     )
@@ -48,6 +50,7 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
         _endpoint = endpoint;
         _queues = queues.ToArray();
         _processor = processor;
+        _serializer = serializer;
         _maxConcurrentCalls = maxConcurrentCalls;
         _logger = logger;
     }
@@ -61,6 +64,8 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
         for (int i = 0; i < _busProcessors.Length; i++)
             await _busProcessors[i].StopProcessingAsync();
         await _client.DisposeAsync();
+
+        GC.SuppressFinalize(this);
     }
     /// <inheritdoc />
     public async ValueTask ListenAsync(TimeSpan waitRetry, CancellationToken ct = default)
@@ -130,7 +135,8 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
     }
     private async Task ProcessMessageAsync(string queue, ProcessMessageEventArgs args)
     {
-        var envelop = args.Message.Body?.ToObjectFromJson<MessageEnvelop>();
+        var json = args.Message.Body.ToString();
+        var envelop = _serializer.Deserialize<MessageEnvelop>(json);
         if (envelop is null)
         {
             _logger?.LogWarning("Invalid evelop for {MessageId}", args.Message.MessageId);

@@ -33,12 +33,12 @@ public sealed class ServiceProviderCommandDispatcher : ICommandDispatcher
         Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>>? errorTransforms = null
     )
     {
-        var logger = provider.GetRequiredService<ILogger<ServiceProviderMediator>>();
+        var logger = provider.GetService<ILogger<ServiceProviderMediator>>();
         _mediator = new ServiceProviderMediator(provider, validate, useScope, errorText, errorTransforms, logger);
     }
 
     /// <inheritdoc />
-    public async ValueTask<Result<TResponse>> DispatchAsync<TResponse>(ICommand<TResponse> command, CancellationToken ct = default) => await _mediator.SendAsync(command, ct);
+    public ValueTask<Result<TResponse>> DispatchAsync<TResponse>(ICommand<TResponse> command, CancellationToken ct = default) => _mediator.SendAsync(command, ct);
     /// <inheritdoc />
-    public async ValueTask<Result<TResponse>> DispatchAsync<TResponse>(IServiceProvider provider, ICommand<TResponse> command, CancellationToken ct = default) => await _mediator.SendAsync(provider, command, ct);
+    public ValueTask<Result<TResponse>> DispatchAsync<TResponse>(IServiceProvider provider, ICommand<TResponse> command, CancellationToken ct = default) => _mediator.SendAsync(provider, command, ct);
 }

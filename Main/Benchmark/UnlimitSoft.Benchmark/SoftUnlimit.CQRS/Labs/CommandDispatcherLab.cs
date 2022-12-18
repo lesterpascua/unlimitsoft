@@ -37,17 +37,10 @@ public sealed class CommandDispatcherLab
         _mediator = _provider.GetRequiredService<IMediator>();
     }
 
-    public async Task<string?> Dispatch1()
+    public async Task<string?> Dispatch()
     {
         var command = new Command { Name = "Lester Pastrana" };
-        var result = await _dispatcher.DispatchAsync(command);
-
-        return result.Value;
-    }
-    public async Task<string?> Dispatch2()
-    {
-        var command = new Command { Name = "Lester Pastrana" };
-        var result = await _mediator.SendAsync(command);
+        var result = await _dispatcher.DispatchAsync(_provider, command);
 
         return result.Value;
     }
