@@ -1,9 +1,9 @@
 ﻿using FluentValidation.Results;
 using Microsoft.Extensions.Logging;
-using UnlimitSoft.CQRS.Command;
-using UnlimitSoft.CQRS.Message;
-using UnlimitSoft.CQRS.Query;
 using System;
+using UnlimitSoft.CQRS.Command;
+using UnlimitSoft.CQRS.Query;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.CQRS.Logging;
 
@@ -14,7 +14,7 @@ namespace UnlimitSoft.CQRS.Logging;
 internal static partial class LoggerMessageDefinitions
 {
     #region EventUtility
-    private static readonly Action<ILogger, string?, string?, object, IEventResponse?, Exception?> __ErrorHandlingEvent = LoggerMessage.Define<string?, string?, object, IEventResponse?>(LogLevel.Error, 0, "Error handling event {Type}, {CorrelationId} payload: {Event}, {@Response}", new LogDefineOptions { SkipEnabledCheck = true });
+    private static readonly Action<ILogger, string?, string?, object, IResponse?, Exception?> __ErrorHandlingEvent = LoggerMessage.Define<string?, string?, object, IResponse?>(LogLevel.Error, 0, "Error handling event {Type}, {CorrelationId} payload: {Event}, {@Response}", new LogDefineOptions { SkipEnabledCheck = true });
 
     /// <summary>
     /// 
@@ -25,7 +25,7 @@ internal static partial class LoggerMessageDefinitions
     /// <param name="correlation"></param>
     /// <param name="msg"></param>
     /// <param name="response"></param>
-    public static void ErrorHandlingEvent(this ILogger logger, Exception ex, string? type, string? correlation, object msg, IEventResponse? response) => __ErrorHandlingEvent(logger, type, correlation, msg, response, ex);
+    public static void ErrorHandlingEvent(this ILogger logger, Exception ex, string? type, string? correlation, object msg, IResponse? response) => __ErrorHandlingEvent(logger, type, correlation, msg, response, ex);
     /// <summary>
     /// 
     /// </summary>

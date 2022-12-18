@@ -88,9 +88,9 @@ namespace UnlimitSoft.CQRS.EventSourcing
                 var dispatcher = EventDispatcher;
                 if (dispatcher is not null && (@event.IsDomainEvent || DirectlyDispatchNotDomainEvents))
                 {
-                    var response = await dispatcher.DispatchAsync(Provider, @event, ct);
-                    if (response?.IsSuccess == false)
-                        throw new AggregateException("Error when executed events", response.GetBody<Exception>());
+                    var (response, error) = await dispatcher.DispatchAsync(Provider, @event, ct);
+                    if (response?.IsSuccess == false || error is not null)
+                        throw new AggregateException("Error when executed events", response?.GetBody<Exception>());
                 }
             }
             var eventSourcedRepository = EventSourcedRepository;

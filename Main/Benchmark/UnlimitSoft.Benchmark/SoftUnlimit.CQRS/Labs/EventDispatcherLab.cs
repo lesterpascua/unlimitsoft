@@ -1,12 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 using UnlimitSoft.CQRS.DependencyInjection;
 using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.Message;
-using UnlimitSoft.CQRS.Query;
 using UnlimitSoft.Event;
+using UnlimitSoft.Mediator;
+using UnlimitSoft.Message;
 using UnlimitSoft.Web.Client;
 
 namespace UnlimitSoft.Benchmark.UnlimitSoft.CQRS.Labs;
@@ -33,9 +30,9 @@ public class EventDispatcherLab
     public async Task<string?> Dispatch()
     {
         var @event = new Event { Name = "Lester Pastrana" };
-        var response = await _dispatcher.DispatchAsync(@event);
+        var (response, _) = await _dispatcher.DispatchAsync(@event);
 
-        return response.GetBody<string>();
+        return response!.GetBody<string>();
     }
 
     #region Nested Classes
@@ -47,10 +44,10 @@ public class EventDispatcherLab
     }
     public class EventHandler : IEventHandler<Event>
     {
-        public Task<IEventResponse> HandleAsync(Event @event, CancellationToken ct = default)
+        public ValueTask<IResponse> HandleV2Async(Event @event, CancellationToken ct = default)
         {
             var result = $"{@event.Body} - {SysClock.GetUtcNow()}";
-            return Task.FromResult(@event.OkResponse(result));
+            return ValueTask.FromResult(@event.OkResponse(result));
         }
     }
     #endregion

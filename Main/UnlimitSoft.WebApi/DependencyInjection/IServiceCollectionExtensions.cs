@@ -298,6 +298,7 @@ public static class IServiceCollectionExtensions
                             await args.Azure.AbandonMessageAsync(message, new Dictionary<string, object> { { Retry, retry } }, cancellationToken: ct);
                         }
                     },
+                    serializer,
                     maxConcurrentCalls,
                     logger
                 );

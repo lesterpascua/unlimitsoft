@@ -28,4 +28,15 @@ public readonly struct Result<TResponse>
     /// Error asociate to the result
     /// </summary>
     public IResponse? Error { get; }
+
+    /// <summary>
+    /// Destructuring result
+    /// </summary>
+    /// <param name="value"></param>
+    /// <param name="error"></param>
+    public void Deconstruct(out TResponse? value, out IResponse? error)
+    {
+        value = Value;
+        error = Error;
+    }
 }

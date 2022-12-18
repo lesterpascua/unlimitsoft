@@ -31,10 +31,10 @@ public sealed class ServiceProviderQueryDispatcher : IQueryDispatcher
         Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>>? errorTransforms = null
     )
     {
-        var logger = provider.GetRequiredService<ILogger<ServiceProviderMediator>>();
+        var logger = provider.GetService<ILogger<ServiceProviderMediator>>();
         _mediator = new ServiceProviderMediator(provider, validate, false, errorText, errorTransforms, logger);
     }
 
     /// <inheritdoc />
-    public async ValueTask<Result<TResponse>> DispatchAsync<TResponse>(IServiceProvider provider, IQuery<TResponse> query, CancellationToken ct = default) => await _mediator.SendAsync(provider, query, ct);
+    public ValueTask<Result<TResponse>> DispatchAsync<TResponse>(IServiceProvider provider, IQuery<TResponse> query, CancellationToken ct = default) => _mediator.SendAsync(provider, query, ct);
 }

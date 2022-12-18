@@ -8,6 +8,7 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.Json;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Web.AspNet.Testing;
 
@@ -70,7 +71,7 @@ public class ListenerFake : IEventListener
     /// <param name="event"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public async Task<(IEventResponse, Exception)> SimulateReceiveAsync<TEvent>(TEvent @event, CancellationToken ct = default)
+    public async Task<(IResponse, Exception)> SimulateReceiveAsync<TEvent>(TEvent @event, CancellationToken ct = default)
         where TEvent : class, IVersionedEvent
     {
         var eventName = typeof(TEvent).FullName;

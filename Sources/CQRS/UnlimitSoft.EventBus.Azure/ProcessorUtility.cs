@@ -1,13 +1,13 @@
 ﻿using Azure.Messaging.ServiceBus;
 using Microsoft.Extensions.Logging;
-using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.Event.Json;
-using UnlimitSoft.CQRS.Message;
-using UnlimitSoft.Event;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.CQRS.Event.Json;
+using UnlimitSoft.Event;
 using UnlimitSoft.Json;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.EventBus.Azure;
 
@@ -30,7 +30,7 @@ public static class ProcessorUtility
     /// <param name="onError"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async Task<(IEventResponse?, Exception?)> Default<TEvent>(
+    public static async Task<(IResponse?, Exception?)> Default<TEvent>(
         IEventDispatcher dispatcher,
         IEventNameResolver resolver,
         IJsonSerializer serializer,

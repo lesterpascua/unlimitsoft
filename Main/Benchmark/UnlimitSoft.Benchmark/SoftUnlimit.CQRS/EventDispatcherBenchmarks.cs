@@ -30,7 +30,7 @@ namespace UnlimitSoft.Benchmark.UnlimitSoft.CQRS
         [Benchmark]
         public async Task UnlimitSoftCommand()
         {
-            await _unlimitSoftCommand.Dispatch1();
+            await _unlimitSoftCommand.Dispatch();
         }
     }
 }

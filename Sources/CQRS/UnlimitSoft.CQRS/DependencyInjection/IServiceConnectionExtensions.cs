@@ -11,6 +11,7 @@ using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.CQRS.Query;
 using UnlimitSoft.Event;
 using UnlimitSoft.Mediator;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.CQRS.DependencyInjection;
 
@@ -81,14 +82,7 @@ public static class IServiceConnectionExtensions
     /// <param name="assemblies"></param>
     public static void AddQueryHandler(this IServiceCollection services, Type queryHandlerType, bool validate = true, params Assembly[] assemblies)
     {
-        services.AddSingleton<IQueryDispatcher>((provider) =>
-        {
-            var logger = provider.GetService<ILogger<ServiceProviderQueryDispatcher>>();
-            return new ServiceProviderQueryDispatcher(
-                provider,
-                validate: validate
-            );
-        });
+        services.AddSingleton<IQueryDispatcher>((provider) => new ServiceProviderQueryDispatcher(provider, validate: validate));
 
         #region Assembly Scan
         var existHandler = assemblies
@@ -143,14 +137,7 @@ public static class IServiceConnectionExtensions
     /// <param name="assemblies"></param>
     public static IServiceCollection AddCommandHandler(this IServiceCollection services, Type commandHandlerType, bool validate = true, params Assembly[] assemblies)
     {
-        services.AddSingleton<ICommandDispatcher>((provider) =>
-        {
-            var logger = provider.GetService<ILogger<ServiceProviderCommandDispatcher>>();
-            return new ServiceProviderCommandDispatcher(
-                provider,
-                validate: validate
-            );
-        });
+        services.AddSingleton<ICommandDispatcher>((provider) => new ServiceProviderCommandDispatcher(provider, validate: validate));
 
         #region Assembly Scan
         var existHandler = assemblies
@@ -231,14 +218,7 @@ public static class IServiceConnectionExtensions
     /// <returns></returns>
     public static IServiceCollection AddEventHandler(this IServiceCollection services, Type eventHandlerType, params Assembly[] assemblies)
     {
-        services.AddSingleton<IEventDispatcher>((provider) =>
-        {
-            var logger = provider.GetRequiredService<ILogger<ServiceProviderEventDispatcher>>();
-            return new ServiceProviderEventDispatcher(
-                provider,
-                logger: logger
-            );
-        });
+        services.AddSingleton<IEventDispatcher>((provider) => new ServiceProviderEventDispatcher(provider, true));
 
         #region Assembly Scan
         var existHandler = assemblies
@@ -249,17 +229,25 @@ public static class IServiceConnectionExtensions
         {
             var eventHandlerImplementedInterfaces = handlerImplementation
                 .GetInterfaces()
-                .Where(p => p.GetGenericArguments().Length == 1 && p.GetGenericTypeDefinition() == eventHandlerType);
+                .Where(p =>
+                {
+                    if (p.GetGenericArguments().Length != 1)
+                        return false;
+                    return p.GetGenericTypeDefinition() == eventHandlerType;
+                });
 
             foreach (var eventHandlerInterface in eventHandlerImplementedInterfaces)
             {
-                var argsTypes = eventHandlerInterface.GetGenericArguments().Single();
+                var argsTypes = eventHandlerInterface.GetGenericArguments();
                 var handlerInterface = typeof(IEventHandler<>).MakeGenericType(argsTypes);
+                var requestHandlerInterface = typeof(IRequestHandler<,>).MakeGenericType(argsTypes[0], typeof(IResponse));
                 var currHandlerInterface = eventHandlerType.MakeGenericType(argsTypes);
 
                 services.AddScoped(handlerInterface, handlerImplementation);
                 if (currHandlerInterface != handlerInterface)
-                    services.AddScoped(currHandlerInterface, provider => provider.GetService(handlerInterface));
+                    services.AddScoped(currHandlerInterface, provider => provider.GetRequiredService(handlerInterface));
+                if (requestHandlerInterface != handlerInterface)
+                    services.AddScoped(requestHandlerInterface, provider => provider.GetRequiredService(handlerInterface));
             }
         }
         #endregion

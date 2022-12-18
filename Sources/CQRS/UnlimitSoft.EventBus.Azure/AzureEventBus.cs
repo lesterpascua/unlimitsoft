@@ -179,9 +179,8 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
         }
 
         var json = _serializer.Serialize(envelop)!;
-        var raw = Encoding.UTF8.GetBytes(json);
 
-        var message = new ServiceBusMessage(raw);
+        var message = new ServiceBusMessage(json);
         if (!string.IsNullOrEmpty(correlationId))
             message.CorrelationId = correlationId;
 

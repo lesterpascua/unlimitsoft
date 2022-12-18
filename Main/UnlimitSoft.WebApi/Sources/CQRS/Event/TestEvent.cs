@@ -1,13 +1,11 @@
-﻿using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.Memento;
-using UnlimitSoft.CQRS.Message;
-using UnlimitSoft.CQRS.Query;
-using UnlimitSoft.Event;
-using UnlimitSoft.WebApi.Sources.Data.Model;
-using System;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.Event;
 using UnlimitSoft.Json;
+using UnlimitSoft.Mediator;
+using UnlimitSoft.Message;
+using UnlimitSoft.WebApi.Sources.Data.Model;
 
 namespace UnlimitSoft.WebApi.Sources.CQRS.Event;
 
@@ -41,10 +39,10 @@ public class TestEventHandler : IMyEventHandler<TestEvent>
         _serializer = serializer;
     }
 
-    public Task<IEventResponse> HandleAsync(TestEvent @event, CancellationToken ct = default)
+    public ValueTask<IResponse> HandleV2Async(TestEvent @event, CancellationToken ct = default)
     {
         var body = @event.GetBody<TestEventBody>(_serializer);
 
-        return Task.FromResult(@event.QuickOkResponse());
+        return ValueTask.FromResult(@event.OkResponse());
     }
 }
