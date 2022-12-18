@@ -58,7 +58,7 @@ public static class ControllerBaseExtensions
     /// <param name="this"></param>
     /// <param name="result"></param>
     /// <returns></returns>
-    public static ObjectResult ToActionResult<TResponse>(this ControllerBase @this, ref Result<TResponse> result)
+    public static ObjectResult ToActionResult<TResponse>(this ControllerBase @this, in Result<TResponse> result)
     {
         if (result.Error is not null)
             @this.StatusCode((int)result.Error.Code, result.Error);

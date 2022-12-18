@@ -44,6 +44,6 @@ public sealed class SearchQueryController : ControllerBase
         };
         var result = await _queryDispatcher.DispatchAsync(_provider, query);
 
-        return this.ToActionResult(ref result);
+        return this.ToActionResult(in result);
     }
 }

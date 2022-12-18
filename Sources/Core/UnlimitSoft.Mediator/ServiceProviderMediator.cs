@@ -83,7 +83,7 @@ public sealed class ServiceProviderMediator : IMediator
         var responseType = typeof(TResponse);
         _logger?.LogDebug(12, "Execute request type {Request} with response {Response}", requestType, responseType);
 
-        var handler = ServiceProviderMediator.BuildHandlerMetadata(provider, requestType, responseType, out var metadata);
+        var handler = BuildHandlerMetadata(provider, requestType, responseType, out var metadata);
         if (_validate)
         {
             if (metadata.Validator is not null)
@@ -104,7 +104,7 @@ public sealed class ServiceProviderMediator : IMediator
             return new Result<TResponse>(response, null);
 
         // Run existing post operations
-        ServiceProviderMediator.PostPipelineHandlerAsync(provider, requestType, request, handler, response, metadata, ct);
+        PostPipelineHandlerAsync(provider, requestType, request, handler, response, metadata, ct);
         return new Result<TResponse>(response, null);
     }
 
@@ -271,7 +271,7 @@ public sealed class ServiceProviderMediator : IMediator
         _logger?.LogDebug("Request {Request} handler implement internal validation", request);
 
         var validator = (IValidator)Activator.CreateInstance(metadata.Validator!)!;
-        var method = ServiceProviderMediator.GetValidator(requestType, metadata);
+        var method = GetValidator(requestType, metadata);
 
         var response = await method(handler, request, validator, ct);
         if (!response.IsSuccess)
