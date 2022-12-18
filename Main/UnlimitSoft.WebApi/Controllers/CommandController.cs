@@ -36,6 +36,6 @@ public class CommandController : ControllerBase
         var command = new TestCommand(_gen.GenerateId(), this.GetIdentity());
         var result = await _dispatcher.DispatchAsync(command, ct);
 
-        return this.ToActionResult(ref result);
+        return this.ToActionResult(in result);
     }
 }

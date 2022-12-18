@@ -37,6 +37,6 @@ public sealed class QueryController : ControllerBase
         var query = new TestQuery(this.GetIdentity());
         var result = await _queryDispatcher.DispatchAsync(_provider, query);
 
-        return this.ToActionResult(ref result);
+        return this.ToActionResult(in result);
     }
 }
