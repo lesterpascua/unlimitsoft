@@ -1,14 +1,12 @@
-﻿using UnlimitSoft.CQRS.Message;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using UnlimitSoft.Mediator;
 
 namespace UnlimitSoft.CQRS.Query;
 
 
 /// <summary>
-/// 
+/// Interface to define a Query
 /// </summary>
-public interface IQuery
+public interface IQuery : IRequest
 {
     /// <summary>
     /// Return metadata props associate with the query.
@@ -20,14 +18,7 @@ public interface IQuery
 /// <summary>
 /// 
 /// </summary>
-/// <typeparam name="TResult"></typeparam>
-public interface IQuery<TResult> : IQuery
+/// <typeparam name="TResponse"></typeparam>
+public interface IQuery<out TResponse> : IQuery, IRequest<TResponse>
 {
-    /// <summary>
-    /// Dispath query using it self as argument.
-    /// </summary>
-    /// <param name="dispatcher"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
-    Task<(IQueryResponse, TResult?)> ExecuteAsync(IQueryDispatcher dispatcher, CancellationToken ct = default);
 }

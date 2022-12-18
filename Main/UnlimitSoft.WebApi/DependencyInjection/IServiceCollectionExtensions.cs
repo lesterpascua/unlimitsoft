@@ -33,6 +33,8 @@ using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.Json;
+using UnlimitSoft.Text.Json;
+using static BenchmarkDotNet.Attributes.MarkdownExporterAttribute;
 
 namespace UnlimitSoft.WebApi.DependencyInjection;
 
@@ -143,6 +145,8 @@ public static class IServiceCollectionExtensions
         var gen = new MyIdGenerator(serviceId);
         services.AddSingleton<IMyIdGenerator>(gen);
         services.AddSingleton<IServiceMetadata>(gen);
+
+        services.AddSingleton(JsonUtil.Default = new DefaultJsonSerializer());
 
         if (unitOfWorkSettings?.Any() == true)
             foreach (var unitOfWorkSetting in unitOfWorkSettings)

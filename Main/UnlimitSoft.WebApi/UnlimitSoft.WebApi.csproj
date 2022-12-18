@@ -31,6 +31,7 @@
 		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.Logger.AspNet\UnlimitSoft.Logger.AspNet.csproj" />
 		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.Logger.DependencyInjection\UnlimitSoft.Logger.DependencyInjection.csproj" />
 		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.Logger\UnlimitSoft.Logger.csproj" />
+		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.Text.Json\UnlimitSoft.Text.Json.csproj" />
 		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft\UnlimitSoft.csproj" />
 		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.AkkaBus\UnlimitSoft.AkkaBus.csproj" />
 		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.Bus.Hangfire\UnlimitSoft.Bus.Hangfire.csproj" />

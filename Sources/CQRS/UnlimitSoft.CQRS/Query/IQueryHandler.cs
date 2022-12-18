@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
+﻿using UnlimitSoft.Mediator;
 
 namespace UnlimitSoft.CQRS.Query;
 
@@ -7,22 +6,15 @@ namespace UnlimitSoft.CQRS.Query;
 /// <summary>
 /// 
 /// </summary>
-public interface IQueryHandler
+public interface IQueryHandler : IRequestHandler
 {
 }
 /// <summary>
-/// Base generic interface for all QueryHandler
+/// Query handle
 /// </summary>
-/// <typeparam name="TResult"></typeparam>
+/// <typeparam name="TResponse"></typeparam>
 /// <typeparam name="TQuery"></typeparam>
-public interface IQueryHandler<TResult, TQuery> : IQueryHandler
-    where TQuery : IQuery<TResult>
+public interface IQueryHandler<in TQuery, TResponse> : IQueryHandler, IRequestHandler<TQuery, TResponse>
+    where TQuery : IQuery<TResponse>
 {
-    /// <summary>
-    /// Handle query for specific type.
-    /// </summary>
-    /// <param name="query"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
-    Task<TResult> HandleAsync(TQuery query, CancellationToken ct = default);
 }

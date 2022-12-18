@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.Mediator;
-using UnlimitSoft.Message;
 
 namespace UnlimitSoft.CQRS.Command;
 
@@ -14,7 +13,7 @@ namespace UnlimitSoft.CQRS.Command;
 /// <summary>
 /// Implement a command dispatcher resolving all handler by a ServiceProvider.
 /// </summary>
-public class ServiceProviderCommandDispatcher : ICommandDispatcher
+public sealed class ServiceProviderCommandDispatcher : ICommandDispatcher
 {
     private readonly ServiceProviderMediator _mediator;
 
@@ -38,24 +37,8 @@ public class ServiceProviderCommandDispatcher : ICommandDispatcher
         _mediator = new ServiceProviderMediator(provider, validate, useScope, errorText, errorTransforms, logger);
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="command"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
-    public ValueTask<IResponse> DispatchAsync(ICommand command, CancellationToken ct = default)
-    {
-        throw new NotImplementedException();
-    }
     /// <inheritdoc />
-    public ValueTask<Result<TResponse>> DispatchAsync<TResponse>(ICommand<TResponse> command, CancellationToken ct = default)
-    {
-        return _mediator.SendAsync(command, ct);
-    }
+    public async ValueTask<Result<TResponse>> DispatchAsync<TResponse>(ICommand<TResponse> command, CancellationToken ct = default) => await _mediator.SendAsync(command, ct);
     /// <inheritdoc />
-    public ValueTask<Result<TResponse>> DispatchAsync<TResponse>(IServiceProvider provider, ICommand<TResponse> command, CancellationToken ct = default)
-    {
-        return _mediator.SendAsync(provider, command, ct);
-    }
+    public async ValueTask<Result<TResponse>> DispatchAsync<TResponse>(IServiceProvider provider, ICommand<TResponse> command, CancellationToken ct = default) => await _mediator.SendAsync(provider, command, ct);
 }
