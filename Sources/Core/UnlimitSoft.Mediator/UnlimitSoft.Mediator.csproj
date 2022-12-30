@@ -19,6 +19,7 @@
 		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
 		<Description>Library implement Mediator design pattern</Description>
 		<PackageLicenseFile>License.txt</PackageLicenseFile>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 	</PropertyGroup>
 
 	<ItemGroup>

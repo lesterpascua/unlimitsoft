@@ -99,9 +99,6 @@ WebApplication ConfigureServices(IServiceCollection services)
             },
             async (args, ct) =>
             {
-                if (args.Envelop.Type != MessageType.Json)
-                    args.Envelop.Type = MessageType.Json;
-
                 var message = args.Azure.Message;
                 if (!message.ApplicationProperties.TryGetValue("IdentityId", out var identityId))
                     identityId = null;

@@ -7,7 +7,7 @@ namespace UnlimitSoft.CQRS.Event.Json;
 /// <summary>
 /// Implement event and command name resolver using a fixed dictionary cache.
 /// </summary>
-public class DefaultEventCommandResolver : IEventNameResolver
+public sealed class DefaultEventCommandResolver : IEventNameResolver
 {
     private readonly IReadOnlyDictionary<string, Type> _typeResolverCache;
 

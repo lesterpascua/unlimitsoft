@@ -32,10 +32,10 @@ public static class IQueryDispatcherExtensions
     /// </summary>
     /// <param name="this"></param>
     /// <param name="provider"></param>
-    /// <param name="command"></param>
+    /// <param name="query"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static ValueTask<IResponse> DispatchAsync(this IQueryDispatcher @this, IServiceProvider provider, IQuery command, CancellationToken ct = default)
+    public static ValueTask<IResponse> DispatchAsync(this IQueryDispatcher @this, IServiceProvider provider, IQuery query, CancellationToken ct = default)
     {
         throw new NotImplementedException();
     }

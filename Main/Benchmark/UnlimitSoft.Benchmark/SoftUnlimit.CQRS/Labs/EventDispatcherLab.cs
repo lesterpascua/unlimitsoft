@@ -39,7 +39,7 @@ public class EventDispatcherLab
     /// <summary>
     /// 
     /// </summary>
-    public class Event : VersionedEvent<Guid, string>
+    public class Event : Event<string>
     {
     }
     public class EventHandler : IEventHandler<Event>

@@ -7,7 +7,7 @@ namespace UnlimitSoft.CQRS.Event.Json;
 /// <summary>
 /// 
 /// </summary>
-public class JsonEventPayload : EventPayload<string>
+public sealed class JsonEventPayload : EventPayload<string>
 {
     /// <summary>
     /// 

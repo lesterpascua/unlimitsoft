@@ -13,7 +13,7 @@ namespace UnlimitSoft.Text.Json;
 /// </summary>
 /// <typeparam name="TKey"></typeparam>
 /// <typeparam name="TValue"></typeparam>
-public class JsonNonStringKeyDictionaryConverter<TKey, TValue> : JsonConverter<IDictionary<TKey, TValue>>
+public class JsonNonStringKeyDictionaryConverter<TKey, TValue> : JsonConverter<IDictionary<TKey, TValue>> where TKey : notnull
 {
     /// <summary>
     /// 
@@ -28,25 +28,23 @@ public class JsonNonStringKeyDictionaryConverter<TKey, TValue> : JsonConverter<I
             .MakeGenericType(typeof(string), typeToConvert.GenericTypeArguments[1]);
 
         var stringKeyDictionary = JsonSerializer.Deserialize(ref reader, convertedType, options);
-        var instance = (Dictionary<TKey, TValue>)Activator.CreateInstance(typeToConvert);
+        var instance = (Dictionary<TKey, TValue>)Activator.CreateInstance(typeToConvert)!;
 
-        var enumerator = (IEnumerator)convertedType
-            .GetMethod(nameof(IDictionary.GetEnumerator))
-            .Invoke(stringKeyDictionary, null);
+        var enumerator = (IEnumerator)convertedType.GetMethod(nameof(IDictionary.GetEnumerator))!.Invoke(stringKeyDictionary, null)!;
 
         var keyType = typeof(TKey);
-        MethodInfo parser = !keyType.IsEnum ?
+        var parser = !keyType.IsEnum ?
             keyType.GetMethod(nameof(Enum.Parse), BindingFlags.Public | BindingFlags.Static, null, CallingConventions.Any, new Type[] { typeof(string) }, null) :
             typeof(Enum).GetMethod(nameof(Enum.Parse), BindingFlags.Public | BindingFlags.Static, null, CallingConventions.Any, new Type[] { typeof(Type), typeof(string) }, null);
 
-        if (parser == null)
+        if (parser is null)
             throw new NotSupportedException($"Type {keyType} not suport Parse method");
         while (enumerator.MoveNext())
         {
             var element = (KeyValuePair<string, TValue>)enumerator.Current;
             var parameters = keyType.IsEnum ? new object[] { keyType, element.Key } : new[] { element.Key };
 
-            instance.Add((TKey)parser.Invoke(null, parameters), element.Value);
+            instance.Add((TKey)parser.Invoke(null, parameters)!, element.Value);
         }
         return instance;
     }

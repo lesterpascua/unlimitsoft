@@ -38,7 +38,7 @@ public class TestCommandHandler : IMyCommandHandler<TestCommand, string>, IComma
     public async ValueTask<string> HandleV2Async(TestCommand command, CancellationToken ct = default)
     {
         var entity = new Customer { Id = Guid.NewGuid(), Name = Guid.NewGuid().ToString() };
-        entity.AddEvent(typeof(TestEvent), _gen, command.Props!.User!.CorrelationId, new TestEventBody { Test = "Test Body" });
+        entity.AddEvent<TestEvent, TestEventBody>(_gen, command.Props!.User!.CorrelationId, new TestEventBody { Test = "Test Body" });
 
         await _customerRepository.AddAsync(entity, ct);
         await _unitOfWork.SaveChangesAsync(ct);

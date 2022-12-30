@@ -22,11 +22,11 @@ namespace UnlimitSoft.CQRS.Event;
 /// publish the background process will read from the <see cref="IRepository{TEntity}"/> and publish in the event bus.
 /// </remarks>
 /// <typeparam name="TEventSourcedRepository"></typeparam>
-/// <typeparam name="TVersionedEventPayload"></typeparam>
+/// <typeparam name="TEventPayload"></typeparam>
 /// <typeparam name="TPayload"></typeparam>
-public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPayload, TPayload> : IEventPublishWorker
-    where TVersionedEventPayload : VersionedEventPayload<TPayload>
-    where TEventSourcedRepository : IEventSourcedRepository<TVersionedEventPayload, TPayload>
+public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPayload> : IEventPublishWorker
+    where TEventPayload : EventPayload<TPayload>
+    where TEventSourcedRepository : IEventSourcedRepository<TEventPayload, TPayload>
 {
     private readonly int _bachSize;
     private readonly bool _enableScheduled;
@@ -34,7 +34,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
     private readonly IServiceScopeFactory _factory;
     private readonly IEventBus _eventBus;
     private readonly MessageType _type;
-    private readonly Func<TVersionedEventPayload, Func<Task>, CancellationToken, Task>? _middleware;
+    private readonly Func<TEventPayload, Func<Task>, CancellationToken, Task>? _middleware;
     private readonly TimeSpan _startDelay, _errorDelay;
     private readonly ILogger? _logger;
     private readonly CancellationTokenSource _cts;
@@ -65,13 +65,13 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
         IServiceScopeFactory factory,
         IEventBus eventBus,
         MessageType type,
-        Func<TVersionedEventPayload, Func<Task>, CancellationToken, Task>? middleware = null,
+        Func<TEventPayload, Func<Task>, CancellationToken, Task>? middleware = null,
         TimeSpan? startDelay = null,
         TimeSpan? errorDelay = null,
         int bachSize = 10,
         bool enableScheduled = false,
         bool useEnvelop = true,
-        ILogger? logger = null)
+        ILogger<QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPayload>>? logger = null)
     {
         _disposed = false;
         _factory = factory ?? throw new ArgumentNullException(nameof(factory));
@@ -224,7 +224,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
             // Dispatch event throws the bus
             _logger?.LogDebug("Start to publish events");
 
-            TVersionedEventPayload? lastEvent = null;
+            TEventPayload? lastEvent = null;
             int count = Math.Min(_pending.Count, _bachSize);
 
             var orderedPending = _enableScheduled ? 
@@ -305,12 +305,12 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TVersionedEventPay
         var now = SysClock.GetUtcNow();
         return p => p.Value.Scheduled is null || p.Value.Scheduled.Value <= now;
     }
-    private async Task PublishPayloadAsync(TEventSourcedRepository repository, TVersionedEventPayload payload)
+    private async Task PublishPayloadAsync(TEventSourcedRepository repository, TEventPayload payload)
     {
         await _eventBus.PublishPayloadAsync(payload, _type, _useEnvelop, _cts.Token);
         await repository.MarkEventsAsPublishedAsync(payload, _cts.Token);
     }
-    private async Task<TVersionedEventPayload?> TryToPublishAsync(TEventSourcedRepository repository, TVersionedEventPayload payload)
+    private async Task<TEventPayload?> TryToPublishAsync(TEventSourcedRepository repository, TEventPayload payload)
     {
         if (payload.IsPubliched)
             return null;

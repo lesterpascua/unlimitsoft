@@ -23,7 +23,8 @@ public abstract class EventPayload
     protected EventPayload(IEvent @event)
     {
         Id = @event.Id;
-        SourceId = @event.GetSourceId()?.ToString();
+        SourceId = @event.SourceId;
+        Version = @event.Version;
         CorrelationId = @event.CorrelationId;
         EventName = @event.Name;
         Created = @event.Created;
@@ -39,7 +40,11 @@ public abstract class EventPayload
     /// <summary>
     /// 
     /// </summary>
-    public string? SourceId { get; set; }
+    public Guid SourceId { get; set; }
+    /// <summary>
+    /// 
+    /// </summary>
+    public long Version { get; set; }
     /// <summary>
     /// Event correlation identifier.
     /// </summary>
@@ -69,7 +74,7 @@ public abstract class EventPayload
     /// <inheritdoc />
     public override int GetHashCode() => Id.GetHashCode();
     /// <inheritdoc />
-    public override bool Equals(object obj) => (obj is EventPayload payload) && Id == payload.Id;
+    public override bool Equals(object? obj) => (obj is EventPayload payload) && Id == payload.Id;
 }
 /// <summary>
 /// 

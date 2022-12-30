@@ -11,7 +11,7 @@ namespace UnlimitSoft.Web.Client;
 /// <summary>
 /// 
 /// </summary>
-public class HttpException : Exception
+public sealed class HttpException : Exception
 {
     /// <summary>
     /// 
@@ -48,24 +48,9 @@ public class HttpException : Exception
             sb.AppendLine("Body: ").Append("   ").AppendLine(Body);
         return sb.ToString();
     }
-}
-
-/// <summary>
-/// 
-/// </summary>
-public static class HttpExceptionExtensions
-{
     /// <summary>
     /// Get standard response.
     /// </summary>
-    /// <exception cref="Exception">
-    /// If the respose don't have the specified scheme
-    /// </exception>
-    /// <param name="this"></param>
     /// <returns></returns>
-    public static Response<Dictionary<string, string[]>>? GetResponse(this HttpException @this)
-    {
-        var body = @this.Body;
-        return JsonUtility.Deserialize<Response<Dictionary<string, string[]>>>(body);
-    }
+    public Response<Dictionary<string, string[]>>? GetResponse() => JsonUtil.Deserialize<Response<Dictionary<string, string[]>>>(Body);
 }

@@ -33,6 +33,6 @@ public sealed class JsonNonStringKeyDictionaryFactory : JsonConverterFactory
         var converterType = typeof(JsonNonStringKeyDictionaryConverter<,>)
             .MakeGenericType(typeToConvert.GenericTypeArguments[0], typeToConvert.GenericTypeArguments[1]);
 
-        return (JsonConverter)Activator.CreateInstance(converterType);
+        return (JsonConverter)Activator.CreateInstance(converterType)!;
     }
 }

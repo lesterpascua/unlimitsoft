@@ -58,7 +58,7 @@ public static class IServiceConnectionExtensions
             return result;
         }
 
-        var register = GetTypesFromInterface<IEvent>(typeResolverCache).ToDictionary(k => transform?.Invoke(k) ?? k.FullName);
+        var register = GetTypesFromInterface<IEvent>(typeResolverCache).ToDictionary(k => transform?.Invoke(k) ?? k.FullName!);
         return services.AddSingleton<IEventNameResolver>(new DefaultEventCommandResolver(register));
     }
 

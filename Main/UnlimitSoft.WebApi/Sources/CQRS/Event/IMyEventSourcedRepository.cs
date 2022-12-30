@@ -1,19 +1,19 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Logging;
+using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.CQRS.EventSourcing;
 using UnlimitSoft.CQRS.EventSourcing.Json;
 using UnlimitSoft.WebApi.Sources.Data;
 
-namespace UnlimitSoft.WebApi.Sources.CQRS.Event
+namespace UnlimitSoft.WebApi.Sources.CQRS.Event;
+
+
+public interface IMyEventSourcedRepository : IEventSourcedRepository<JsonEventPayload, string>
 {
-    public interface IMyEventSourcedRepository : IEventSourcedRepository<JsonVersionedEventPayload, string>
+}
+public class MyEventSourcedRepository : DbContextJsonEventSourcedRepository, IMyEventSourcedRepository
+{
+    public MyEventSourcedRepository(DbContextWrite dbContext, ILogger<MyEventSourcedRepository> logger) : 
+        base(dbContext, logger)
     {
-    }
-    public class MyEventSourcedRepository : DbContextJsonEventSourcedRepository, IMyEventSourcedRepository
-    {
-        public MyEventSourcedRepository(DbContextWrite dbContext, ILogger<MyEventSourcedRepository> logger) : 
-            base(dbContext, logger)
-        {
-        }
     }
 }

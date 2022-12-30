@@ -1,14 +1,14 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.EventSourcing.Json;
 using System;
+using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.CQRS.Event.Json;
 
 namespace UnlimitSoft.WebApi.Sources.CQRS.Event;
 
 
 /// <inheritdoc />
-public class MyQueueEventPublishWorker : QueueEventPublishWorker<IMyEventSourcedRepository, JsonVersionedEventPayload, string>
+public class MyQueueEventPublishWorker : QueueEventPublishWorker<IMyEventSourcedRepository, JsonEventPayload, string>
 {
     /// <summary>
     /// 
@@ -20,7 +20,7 @@ public class MyQueueEventPublishWorker : QueueEventPublishWorker<IMyEventSourced
     /// <param name="errorDelay"></param>
     /// <param name="logger"></param>
     /// <param name="bachSize"></param>
-    public MyQueueEventPublishWorker(IServiceScopeFactory factory, IEventBus eventBus, MessageType type, TimeSpan? checkTime = null, TimeSpan? errorDelay = null, int bachSize = 10, ILogger<MyQueueEventPublishWorker> logger = null)
+    public MyQueueEventPublishWorker(IServiceScopeFactory factory, IEventBus eventBus, MessageType type, TimeSpan? checkTime = null, TimeSpan? errorDelay = null, int bachSize = 10, ILogger<MyQueueEventPublishWorker>? logger = null)
         : base(factory, eventBus, type, null, checkTime, errorDelay, bachSize, true, true, logger)
     {
     }
