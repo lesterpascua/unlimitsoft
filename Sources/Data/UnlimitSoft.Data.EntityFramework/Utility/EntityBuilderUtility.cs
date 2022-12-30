@@ -7,8 +7,8 @@ using System;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using UnlimitSoft.CQRS.EventSourcing;
-using UnlimitSoft.CQRS.EventSourcing.Json;
+using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Data.Seed;
 
 namespace UnlimitSoft.Data.EntityFramework.Utility;
@@ -26,18 +26,18 @@ public static class EntityBuilderUtility
     /// If the table groud to mush use index in IsPubliched, otherwise can affect the service restart process.
     /// </remarks>
     /// <typeparam name="TPayload">Type of the payload used as body of the event. The body is where save the data.</typeparam>
-    /// <typeparam name="TVersionedEvent"> Versioned event type. Example: <see cref="JsonVersionedEventPayload"/> or you can create your personalize.</typeparam>
+    /// <typeparam name="TEvent"> Versioned event type. Example: <see cref="JsonEventPayload"/> or you can create your personalize.</typeparam>
     /// <param name="builder"></param>
     /// <param name="useIndex">Add index for properties like Created and IsPubliched</param>
     /// <param name="payloadBuilder">Extra properties applied over payload.</param>
-    public static void ConfigureVersionedEvent<TVersionedEvent, TPayload>(EntityTypeBuilder<TVersionedEvent> builder, bool useIndex = true, Action<PropertyBuilder<TPayload>>? payloadBuilder = null)
-        where TVersionedEvent : VersionedEventPayload<TPayload>
+    public static void ConfigureEvent<TEvent, TPayload>(EntityTypeBuilder<TEvent> builder, bool useIndex = true, Action<PropertyBuilder<TPayload>>? payloadBuilder = null)
+        where TEvent : EventPayload<TPayload>
     {
         builder.ToTable("VersionedEvent");
         builder.HasKey(k => k.Id);
 
         builder.Property(p => p.Id).ValueGeneratedNever();                      // Guid
-        builder.Property(p => p.SourceId).IsRequired().HasMaxLength(36);        // Guid
+        builder.Property(p => p.SourceId);                                      // Guid
         builder.Property(p => p.EventName).IsRequired().HasMaxLength(255);
         builder.Property(p => p.Created).HasConversion(DateTimeUtcConverter.Instance);
 

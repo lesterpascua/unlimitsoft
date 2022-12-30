@@ -4,7 +4,7 @@
 /// <summary>
 /// 
 /// </summary>
-public interface IMementoEvent<TEntity> : IVersionedEvent
+public interface IMementoEvent<TEntity> : IEvent
 {
     /// <summary>
     /// Build the entity using the event data. This will use when the event save an snapshot of the entity.

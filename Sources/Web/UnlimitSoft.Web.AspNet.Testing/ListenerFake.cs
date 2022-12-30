@@ -46,7 +46,7 @@ public class ListenerFake : IEventListener
     /// <param name="body"></param>
     /// <returns></returns>
     public static TEvent CreateEvent<TEvent>(IServiceMetadata serviceMetadata, object body)
-        where TEvent : class, IVersionedEvent
+        where TEvent : class, IEvent
     {
         const long version = 0;
         var @event = (TEvent)Activator.CreateInstance(typeof(TEvent),
@@ -72,15 +72,10 @@ public class ListenerFake : IEventListener
     /// <param name="ct"></param>
     /// <returns></returns>
     public async Task<(IResponse, Exception)> SimulateReceiveAsync<TEvent>(TEvent @event, CancellationToken ct = default)
-        where TEvent : class, IVersionedEvent
+        where TEvent : class, IEvent
     {
         var eventName = typeof(TEvent).FullName;
-        var envelop = new MessageEnvelop
-        {
-            Type = MessageType.Json,
-            MsgType = eventName,
-            Msg = JsonSerializer.Serialize(@event),
-        };
+        var envelop = new MessageEnvelop(MessageType.Json, JsonSerializer.Serialize(@event), eventName);
         return await EventUtility.ProcessAsync<TEvent>(
             eventName, 
             envelop,

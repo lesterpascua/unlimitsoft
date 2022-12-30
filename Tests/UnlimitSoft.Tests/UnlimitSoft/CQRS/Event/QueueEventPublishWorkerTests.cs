@@ -1,16 +1,16 @@
 ﻿using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
-using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.EventSourcing;
-using UnlimitSoft.CQRS.EventSourcing.Json;
-using UnlimitSoft.Data;
-using UnlimitSoft.Web.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.CQRS.Event.Json;
+using UnlimitSoft.CQRS.EventSourcing;
+using UnlimitSoft.Data;
+using UnlimitSoft.Web.Model;
 using Xunit;
 
 namespace UnlimitSoft.Tests.UnlimitSoft.CQRS.Event;
@@ -20,28 +20,28 @@ public class QueueEventPublishWorkerTests
 {
     private readonly IEventBus _eventBus;
     private readonly IServiceScopeFactory _factory;
-    private readonly JsonVersionedEventPayload[] _data;
-    private readonly List<JsonVersionedEventPayload> _publish;
+    private readonly JsonEventPayload[] _data;
+    private readonly List<JsonEventPayload> _publish;
 
     public QueueEventPublishWorkerTests()
     {
-        _publish = new List<JsonVersionedEventPayload>();
-        _data = new JsonVersionedEventPayload[] {
-            new JsonVersionedEventPayload{ Id = Guid.NewGuid(), Created = new DateTime(1, 12, 31), IsPubliched = true, Scheduled = new DateTime(9999, 12, 31) },
-            new JsonVersionedEventPayload{ Id = Guid.NewGuid(), Created = new DateTime(2021, 10, 10), Scheduled = new DateTime(2021, 10, 12) },
-            new JsonVersionedEventPayload{ Id = Guid.NewGuid(), Created = new DateTime(2021, 10, 11), Scheduled = null },
+        _publish = new List<JsonEventPayload>();
+        _data = new JsonEventPayload[] {
+            new JsonEventPayload{ Id = Guid.NewGuid(), Created = new DateTime(1, 12, 31), IsPubliched = true, Scheduled = new DateTime(9999, 12, 31) },
+            new JsonEventPayload{ Id = Guid.NewGuid(), Created = new DateTime(2021, 10, 10), Scheduled = new DateTime(2021, 10, 12) },
+            new JsonEventPayload{ Id = Guid.NewGuid(), Created = new DateTime(2021, 10, 11), Scheduled = null },
         };
 
         _eventBus = Substitute.For<IEventBus>();
         _eventBus
-            .PublishPayloadAsync(Arg.Any<JsonVersionedEventPayload>(), MessageType.Event, Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .PublishPayloadAsync(Arg.Any<JsonEventPayload>(), MessageType.Event, Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(args =>
             {
-                _publish.Add(args.ArgAt<JsonVersionedEventPayload>(0));
+                _publish.Add(args.ArgAt<JsonEventPayload>(0));
                 return Task.CompletedTask;
             });
 
-        var repository = Substitute.For<IEventSourcedRepository<JsonVersionedEventPayload, string>>();
+        var repository = Substitute.For<IEventSourcedRepository<JsonEventPayload, string>>();
         repository.GetNonPublishedEventsAsync(Arg.Any<Paging>(), Arg.Any<CancellationToken>())
             .Returns(x =>
             {
@@ -71,7 +71,7 @@ public class QueueEventPublishWorkerTests
             {
                 if (info.ArgAt<Type>(0) == typeof(IUnitOfWork))
                     return Substitute.For<IUnitOfWork>();
-                if (info.ArgAt<Type>(0) == typeof(IEventSourcedRepository<JsonVersionedEventPayload, string>))
+                if (info.ArgAt<Type>(0) == typeof(IEventSourcedRepository<JsonEventPayload, string>))
                     return repository;
 
                 throw new NotSupportedException();
@@ -88,7 +88,7 @@ public class QueueEventPublishWorkerTests
     public async Task StartLoadingPendingEvent_Load3EventOnly2SchedulerInTime_ShouldPublish2EventInEventBus()
     {
         // Arrange
-        using var publishWorker = new QueueEventPublishWorker<IEventSourcedRepository<JsonVersionedEventPayload, string>, JsonVersionedEventPayload, string>(
+        using var publishWorker = new QueueEventPublishWorker<IEventSourcedRepository<JsonEventPayload, string>, JsonEventPayload, string>(
             _factory, 
             _eventBus, 
             MessageType.Event, 

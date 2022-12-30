@@ -27,7 +27,7 @@ namespace UnlimitSoft.Data.Seed
         /// <param name="resolver">Allow resolver customer parameter not register in the DPI.</param>
         /// <param name="ct"></param>
         public static async Task SeedAsync(IServiceProvider provider, IUnitOfWork unitOfWork, Assembly[] assemblies,
-            Func<IUnitOfWork, CancellationToken, Task> migrateCallback = null, Func<Type, bool> condition = null, Func<ParameterInfo, object> resolver = null, CancellationToken ct = default)
+            Func<IUnitOfWork, CancellationToken, Task>? migrateCallback = null, Func<Type, bool>? condition = null, Func<ParameterInfo, object>? resolver = null, CancellationToken ct = default)
         {
             if (migrateCallback != null)
                 await migrateCallback(unitOfWork, ct);

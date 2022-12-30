@@ -169,14 +169,7 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
 
         var envelop = transformed;
         if (useEnvelop)
-        {
-            envelop = new MessageEnvelop
-            {
-                Msg = transformed,
-                Type = MessageType.Json,
-                MsgType = transformed.GetType().FullName
-            };
-        }
+            envelop = new MessageEnvelop(MessageType.Json, transformed, transformed.GetType().FullName);
 
         var json = _serializer.Serialize(envelop)!;
 

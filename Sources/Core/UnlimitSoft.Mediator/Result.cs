@@ -39,4 +39,7 @@ public readonly struct Result<TResponse>
         value = Value;
         error = Error;
     }
+
+    /// <inheritdoc />
+    public override string ToString() => $"Value: {Value}, Error: {Error}";
 }

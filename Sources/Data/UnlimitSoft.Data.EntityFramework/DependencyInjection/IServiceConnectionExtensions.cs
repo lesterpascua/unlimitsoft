@@ -140,8 +140,8 @@ public static class IServiceConnectionExtensions
         #endregion
 
 
-        if (settings.MediatorDispatchEventSourced is not null && settings.IMediatorDispatchEventSourced is not null)
-            services.AddScoped(settings.IMediatorDispatchEventSourced, settings.MediatorDispatchEventSourced);
+        if (settings.MediatorDispatchEvent is not null && settings.IMediatorDispatchEvent is not null)
+            services.AddScoped(settings.IMediatorDispatchEvent, settings.MediatorDispatchEvent);
 
         #region Versioned Repository
         if (settings.IEventSourcedRepository is not null && settings.EventSourcedRepository is not null)

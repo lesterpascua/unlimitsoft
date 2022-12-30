@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using UnlimitSoft.Web.Model;
 
 namespace UnlimitSoft.CQRS.EventSourcing;
 
@@ -20,33 +21,23 @@ public interface IEventSourced : IAggregateRoot
     long Version { get; }
 
     /// <summary>
-    /// Remove all pending event asociate to the entity.
+    /// Gets the collection of all events used to build the entity. This is all operation over this entity until the curr moment.
     /// </summary>
-    void ClearVersionedEvents();
-    /// <summary>
-    /// Gets the collection of new events since the entity was loaded, as a consequence of command handling.
-    /// </summary>
+    /// <param name="paging">Allow paging event, null to retrieve all</param>
     /// <returns></returns>
-    IReadOnlyCollection<IVersionedEvent> GetVersionedEvents();
-
-    /// <summary>
-    /// Gets the collection of old events used to build the entity.
-    /// </summary>
-    /// <returns></returns>
-    IReadOnlyCollection<IVersionedEvent>? GetOldVersionedEvents();
+    IReadOnlyCollection<IEvent>? GetHistoricalEvents(Paging? paging = null);
 }
 /// <summary>
 /// Base class for event sourced entities that implements <see cref="IEventSourced"/>. 
 /// </summary>
 /// <remarks>
-/// <see cref="IEventSourced"/> entities do not require the use of <see cref="EventSourced{TKey}"/>, but this class contains some common 
+/// <see cref="IEventSourced"/> entities do not require the use of <see cref="EventSourced"/>, but this class contains some common 
 /// useful functionality related to versions and rehydration from past events.
 /// </remarks>
-public abstract class EventSourced<TKey> : AggregateRoot<TKey>, IEventSourced
+public abstract class EventSourced : AggregateRoot, IEventSourced
 {
     private long _version;
-    private readonly List<IVersionedEvent> _versionedEvents;
-    private readonly IReadOnlyCollection<IVersionedEvent>? _oldEvents;
+    private readonly IReadOnlyCollection<IEvent>? _historicalEvents;
 
 
     /// <summary>
@@ -55,20 +46,19 @@ public abstract class EventSourced<TKey> : AggregateRoot<TKey>, IEventSourced
     protected EventSourced()
     {
         _version = -1;
-        _oldEvents = null;
-        _versionedEvents = new List<IVersionedEvent>();
+        _historicalEvents = null;
     }
     /// <summary>
     /// Create a Event Sourced initial amount of event
     /// </summary>
-    /// <param name="oldEvents">List of event asociate to the entity at this moment.</param>
-    protected EventSourced(IReadOnlyCollection<IVersionedEvent> oldEvents) 
+    /// <param name="historicalEvents">List of event asociate to the entity at this moment.</param>
+    protected EventSourced(IReadOnlyCollection<IEvent>? historicalEvents)
         : this()
     {
-        if (oldEvents?.Any() == true)
+        if (historicalEvents?.Any() == true)
         {
-            _oldEvents = oldEvents;
-            _version = oldEvents.Max(p => p.Version);
+            _historicalEvents = historicalEvents;
+            _version = historicalEvents.Max(p => p.Version);
         }
     }
 
@@ -79,65 +69,134 @@ public abstract class EventSourced<TKey> : AggregateRoot<TKey>, IEventSourced
     /// </summary>
     public long Version { get => _version; set => _version = value; }
 
-
     /// <inheritdoc />
-    public void ClearVersionedEvents() => _versionedEvents.Clear();
-    /// <inheritdoc />
-    public IReadOnlyCollection<IVersionedEvent> GetVersionedEvents() => _versionedEvents;
-
-    /// <inheritdoc />
-    public IReadOnlyCollection<IVersionedEvent>? GetOldVersionedEvents() => _oldEvents;
+    public IReadOnlyCollection<IEvent>? GetHistoricalEvents(Paging? paging)
+    {
+        if (paging is null || _historicalEvents is null)
+            return _historicalEvents;
+        return _historicalEvents.Skip(paging.Page * paging.PageSize).Take(paging.PageSize).ToArray();
+    }
 
     /// <summary>
     /// Attach the event to the entity
     /// </summary>
     /// <param name="event"></param>
-    protected void AddVersionedEvent(IVersionedEvent @event) => _versionedEvents.Add(@event);
+    protected void AddEvent(IEvent @event) => _events.Add(@event);
     /// <summary>
     /// Create event of the type specified and attach the event to the entity
     /// </summary>
-    /// <param name="eventType"></param>
     /// <param name="eventId"></param>
     /// <param name="serviceId"></param>
     /// <param name="workerId">Worker identifier. Can't be null.</param>
     /// <param name="correlationId">Correlation identifier to trace the events.</param>
+    /// <param name="creator"></param>
+    /// <param name="prevState"></param>
+    /// <param name="currState"></param>
     /// <param name="body"></param>
-    protected IVersionedEvent AddVersionedEvent(Type eventType, Guid eventId, ushort serviceId, string workerId, string correlationId, object body)
+    protected IEvent AddEvent<TEvent, TBody>(Guid eventId, ushort serviceId, string? workerId, string? correlationId, ICommand? creator, object? prevState, object? currState, TBody body) where TEvent : Event<TBody>
     {
-        var tmp = EventFactory(
-            eventType,
-            eventId,
-            Id,
-            Interlocked.Increment(ref _version),
-            serviceId,
-            workerId,
-            correlationId,
-            null,
-            null,
-            null,
-            false,
-            body
-        );
-        AddVersionedEvent(tmp);
-        return tmp;
+        var args = new EventFactoryArgs<TBody> {
+            EventType = typeof(TEvent),
+            EventId = eventId,
+            SourceId = Id,
+            Version = Interlocked.Increment(ref _version),
+            ServiceId = serviceId,
+            WorkerId = workerId,
+            CorrelationId = correlationId,
+            Creator = creator,
+            PrevState = prevState,
+            CurrState = currState,
+            IsDomain = false,
+            Body = body
+        };
+        var @event = EventFactory(in args);
+
+        AddEvent(@event);
+        return @event;
     }
+
     /// <summary>
     /// Create versioned event factory
     /// </summary>
-    /// <param name="eventType"></param>
-    /// <param name="eventId"></param>
-    /// <param name="sourceId"></param>
-    /// <param name="version"></param>
-    /// <param name="creator"></param>
-    /// <param name="serviceId"></param>
-    /// <param name="workerId"></param>
-    /// <param name="correlationId"></param>
-    /// <param name="currState">Actual entity snapshot.</param>
-    /// <param name="isDomain"></param>
-    /// <param name="prevState">Previous entity snapshot.</param>
-    /// <param name="body"></param>
+    /// <param name="args"></param>
     /// <returns></returns>
-    protected virtual IVersionedEvent EventFactory(Type eventType, Guid eventId, TKey sourceId, long version, ushort serviceId, string workerId, string? correlationId, ICommand? creator, object? prevState, object? currState, bool isDomain, object? body) => (IVersionedEvent)Activator.CreateInstance(eventType, eventId, sourceId, version, serviceId, workerId, correlationId, creator, prevState, currState, isDomain, body);
+    protected virtual IEvent EventFactory<TBody>(in EventFactoryArgs<TBody> args)
+    {
+        var @event = Activator.CreateInstance(
+            args.EventType, 
+            args.EventId, 
+            args.SourceId, 
+            args.Version, 
+            args.ServiceId, 
+            args.WorkerId, 
+            args.CorrelationId, 
+            args.Creator, 
+            args.PrevState, 
+            args.CurrState, 
+            args.IsDomain,
+            args.Body
+        );
+        if (@event is null)
+            throw new InvalidOperationException("Not able to build event of type");
+        return (IEvent)@event;
+    }
 
+    #endregion
+
+    #region Nested Classes
+    /// <summary>
+    /// 
+    /// </summary>
+    public readonly struct EventFactoryArgs<TBody>
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public Type EventType { get; init; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public Guid EventId { get; init; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public Guid SourceId { get; init; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public long Version { get; init; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public ushort ServiceId { get; init; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public string? WorkerId { get; init; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public string? CorrelationId { get; init; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public ICommand? Creator { get; init; }
+        /// <summary>
+        /// Previous entity snapshot
+        /// </summary>
+        public object? PrevState { get; init; }
+        /// <summary>
+        /// Actual entity snapshot
+        /// </summary>
+        public object? CurrState { get; init; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool IsDomain { get; init; }
+        /// <summary>
+        /// 
+        /// </summary>
+        public TBody Body { get; init; }
+    }
     #endregion
 }

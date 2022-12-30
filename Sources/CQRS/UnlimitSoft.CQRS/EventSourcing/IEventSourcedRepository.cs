@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using UnlimitSoft.CQRS.EventSourcing.Json;
+using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Web.Model;
 
 namespace UnlimitSoft.CQRS.EventSourcing;
@@ -11,36 +12,31 @@ namespace UnlimitSoft.CQRS.EventSourcing;
 /// <summary>
 /// Provide an abstraction to access to the event source storage
 /// </summary>
-public interface IEventSourcedRepository<TVersionedEventPayload, TPayload>
-    where TVersionedEventPayload : VersionedEventPayload<TPayload>
+public interface IEventSourcedRepository<TEventPayload, TPayload>
+    where TEventPayload : EventPayload<TPayload>
 {
-    /// <summary>
-    /// Get all events non publish
-    /// </summary>
-    /// <param name="ct"></param>
-    /// <returns></returns>
-    Task<NonPublishVersionedEventPayload[]> GetNonPublishedEventsAsync(CancellationToken ct = default);
     /// <summary>
     /// Get all event non publish and allow paging
     /// </summary>
     /// <param name="paging"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<NonPublishVersionedEventPayload[]> GetNonPublishedEventsAsync(Paging paging, CancellationToken ct = default);
+    Task<NonPublishVersionedEventPayload[]> GetNonPublishedEventsAsync(Paging? paging = null, CancellationToken ct = default);
+
     /// <summary>
     /// 
     /// </summary>
     /// <param name="event"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task MarkEventsAsPublishedAsync(TVersionedEventPayload @event, CancellationToken ct = default);
+    Task MarkEventsAsPublishedAsync(TEventPayload @event, CancellationToken ct = default);
     /// <summary>
     /// 
     /// </summary>
     /// <param name="events"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task MarkEventsAsPublishedAsync(IEnumerable<TVersionedEventPayload> events, CancellationToken ct = default);
+    Task MarkEventsAsPublishedAsync(IEnumerable<TEventPayload> events, CancellationToken ct = default);
 
     /// <summary>
     /// 
@@ -48,14 +44,14 @@ public interface IEventSourcedRepository<TVersionedEventPayload, TPayload>
     /// <param name="id"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<TVersionedEventPayload?> GetEventAsync(Guid id, CancellationToken ct = default);
+    Task<TEventPayload?> GetEventAsync(Guid id, CancellationToken ct = default);
     /// <summary>
     /// 
     /// </summary>
     /// <param name="ids"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<TVersionedEventPayload[]> GetEventsAsync(Guid[] ids, CancellationToken ct = default);
+    Task<TEventPayload[]> GetEventsAsync(Guid[] ids, CancellationToken ct = default);
 
     /// <summary>
     /// 
@@ -63,7 +59,7 @@ public interface IEventSourcedRepository<TVersionedEventPayload, TPayload>
     /// <param name="page"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<VersionedEntity[]> GetAllSourceIdAsync(Paging? page = null, CancellationToken ct = default);
+    Task<SourceIdWithVersion[]> GetAllSourceIdAsync(Paging? page = null, CancellationToken ct = default);
 
     /// <summary>
     /// Get the serialized event in some version
@@ -72,7 +68,7 @@ public interface IEventSourcedRepository<TVersionedEventPayload, TPayload>
     /// <param name="version">If is null get the last saved</param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<TVersionedEventPayload?> GetAsync(string sourceId, long? version = null, CancellationToken ct = default);
+    Task<TEventPayload?> GetAsync(Guid sourceId, long? version = null, CancellationToken ct = default);
     /// <summary>
     /// Get the serialized event in some date
     /// </summary>
@@ -80,7 +76,7 @@ public interface IEventSourcedRepository<TVersionedEventPayload, TPayload>
     /// <param name="dateTime">If is null get the last saved</param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<TVersionedEventPayload?> GetAsync(string sourceId, DateTime? dateTime = null, CancellationToken ct = default);
+    Task<TEventPayload?> GetAsync(Guid sourceId, DateTime? dateTime = null, CancellationToken ct = default);
 
     /// <summary>
     /// Get history of operation asociate to some entity
@@ -89,7 +85,7 @@ public interface IEventSourcedRepository<TVersionedEventPayload, TPayload>
     /// <param name="version"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<TVersionedEventPayload[]> GetHistoryAsync(string sourceId, long version, CancellationToken ct = default);
+    Task<TEventPayload[]> GetHistoryAsync(Guid sourceId, long version, CancellationToken ct = default);
     /// <summary>
     /// Get history of operation asociate to some entity
     /// </summary>
@@ -97,7 +93,7 @@ public interface IEventSourcedRepository<TVersionedEventPayload, TPayload>
     /// <param name="dateTime"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<TVersionedEventPayload[]> GetHistoryAsync(string sourceId, DateTime dateTime, CancellationToken ct = default);
+    Task<TEventPayload[]> GetHistoryAsync(Guid sourceId, DateTime dateTime, CancellationToken ct = default);
 
     /// <summary>
     /// Save all pending versiones events.
@@ -112,7 +108,7 @@ public interface IEventSourcedRepository<TVersionedEventPayload, TPayload>
     /// <param name="forceSave">Indicate the save should happend in this moment.</param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    ValueTask<JsonVersionedEventPayload> CreateAsync(JsonVersionedEventPayload eventPayload, bool forceSave = false, CancellationToken ct = default);
+    ValueTask<JsonEventPayload> CreateAsync(JsonEventPayload eventPayload, bool forceSave = false, CancellationToken ct = default);
     /// <summary>
     /// Create multiples versioned event to the storage
     /// </summary>
@@ -120,5 +116,5 @@ public interface IEventSourcedRepository<TVersionedEventPayload, TPayload>
     /// <param name="forceSave">Indicate the save should happend in this moment.</param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<IEnumerable<TVersionedEventPayload>> CreateAsync(IEnumerable<TVersionedEventPayload> eventPayloads, bool forceSave = false, CancellationToken ct = default);
+    Task<IEnumerable<TEventPayload>> CreateAsync(IEnumerable<TEventPayload> eventPayloads, bool forceSave = false, CancellationToken ct = default);
 }

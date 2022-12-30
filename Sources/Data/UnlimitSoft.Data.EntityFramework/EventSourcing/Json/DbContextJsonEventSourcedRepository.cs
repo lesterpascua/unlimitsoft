@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.CQRS.Query;
 using UnlimitSoft.Web.Model;
 
@@ -14,11 +15,11 @@ namespace UnlimitSoft.CQRS.EventSourcing.Json;
 /// <summary>
 /// 
 /// </summary>
-public class DbContextJsonEventSourcedRepository : IEventSourcedRepository<JsonVersionedEventPayload, string>
+public class DbContextJsonEventSourcedRepository : IEventSourcedRepository<JsonEventPayload, string>
 {
     private readonly ILogger _logger;
     private readonly DbContext _dbContext;
-    private readonly DbSet<JsonVersionedEventPayload> _repository;
+    private readonly DbSet<JsonEventPayload> _repository;
 
     /// <summary>
     /// 
@@ -30,33 +31,27 @@ public class DbContextJsonEventSourcedRepository : IEventSourcedRepository<JsonV
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-        _repository = _dbContext.Set<JsonVersionedEventPayload>();
+        _repository = _dbContext.Set<JsonEventPayload>();
     }
 
 
     /// <inheritdoc />
-    public virtual async Task<NonPublishVersionedEventPayload[]> GetNonPublishedEventsAsync(CancellationToken ct = default)
+    public virtual async Task<NonPublishVersionedEventPayload[]> GetNonPublishedEventsAsync(Paging? paging = null, CancellationToken ct = default)
     {
-        return await _repository
+        IQueryable<JsonEventPayload> query = _repository
             .Where(p => !p.IsPubliched)
-            .OrderBy(p => p.Id)
-            .Select(s => new NonPublishVersionedEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
-            .ToArrayAsync(ct);
-    }
-    /// <inheritdoc />
-    public virtual async Task<NonPublishVersionedEventPayload[]> GetNonPublishedEventsAsync(Paging paging, CancellationToken ct = default)
-    {
-        var data = await _repository
-            .Where(p => !p.IsPubliched)
-            .OrderBy(p => p.Id)
-            .ApplyPagging(paging.Page, paging.PageSize)
+            .OrderBy(p => p.Id);
+        if (paging is not null)
+            query = query.ApplyPagging(paging.Page, paging.PageSize);
+
+        var data = await query
             .Select(s => new NonPublishVersionedEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
             .ToArrayAsync(ct);
         return data ?? Array.Empty<NonPublishVersionedEventPayload>();
     }
 
     /// <inheritdoc />
-    public virtual async Task MarkEventsAsPublishedAsync(JsonVersionedEventPayload @event, CancellationToken ct = default)
+    public virtual async Task MarkEventsAsPublishedAsync(JsonEventPayload @event, CancellationToken ct = default)
     {
         @event.MarkEventAsPublished();
         _dbContext.Update(@event);
@@ -65,7 +60,7 @@ public class DbContextJsonEventSourcedRepository : IEventSourcedRepository<JsonV
         _logger.LogDebug("MarkEventsAsPublishedAsync {Amount} passed {@Event}", amount, @event);
     }
     /// <inheritdoc />
-    public virtual async Task MarkEventsAsPublishedAsync(IEnumerable<JsonVersionedEventPayload> events, CancellationToken ct = default)
+    public virtual async Task MarkEventsAsPublishedAsync(IEnumerable<JsonEventPayload> events, CancellationToken ct = default)
     {
         foreach (var @event in events)
         {
@@ -78,16 +73,16 @@ public class DbContextJsonEventSourcedRepository : IEventSourcedRepository<JsonV
     }
 
     /// <inheritdoc />
-    public virtual Task<JsonVersionedEventPayload?> GetEventAsync(Guid id, CancellationToken ct = default) => _repository.FirstOrDefaultAsync(p => p.Id == id, ct);
+    public virtual Task<JsonEventPayload?> GetEventAsync(Guid id, CancellationToken ct = default) => _repository.FirstOrDefaultAsync(p => p.Id == id, ct);
     /// <inheritdoc />
-    public virtual Task<JsonVersionedEventPayload[]> GetEventsAsync(Guid[] ids, CancellationToken ct = default) => _repository.Where(p => ids.Contains(p.Id)).OrderBy(k => k.Created).ToArrayAsync(ct);
+    public virtual Task<JsonEventPayload[]> GetEventsAsync(Guid[] ids, CancellationToken ct = default) => _repository.Where(p => ids.Contains(p.Id)).OrderBy(k => k.Created).ToArrayAsync(ct);
 
     /// <inheritdoc />
-    public virtual async Task<VersionedEntity[]> GetAllSourceIdAsync(Paging? page, CancellationToken ct = default)
+    public virtual async Task<SourceIdWithVersion[]> GetAllSourceIdAsync(Paging? page, CancellationToken ct = default)
     {
         var query = from versionedEvent in _repository
                     group versionedEvent by versionedEvent.SourceId into versionedEventGroup
-                    select new VersionedEntity(versionedEventGroup.Key, versionedEventGroup.Max(k => k.Version));
+                    select new SourceIdWithVersion(versionedEventGroup.Key, versionedEventGroup.Max(k => k.Version));
         if (page is not null)
             query = query.OrderBy(k => k.Id).ApplyPagging(page.Page, page.PageSize);
 
@@ -95,7 +90,7 @@ public class DbContextJsonEventSourcedRepository : IEventSourcedRepository<JsonV
     }
 
     /// <inheritdoc />
-    public virtual async Task<JsonVersionedEventPayload?> GetAsync(string sourceId, long? version = null, CancellationToken ct = default)
+    public virtual async Task<JsonEventPayload?> GetAsync(Guid sourceId, long? version = null, CancellationToken ct = default)
     {
         var query = version.HasValue ? 
             _repository.Where(p => p.SourceId == sourceId && p.Version == version.Value) :
@@ -104,7 +99,7 @@ public class DbContextJsonEventSourcedRepository : IEventSourcedRepository<JsonV
         return await query.FirstOrDefaultAsync(ct);
     }
     /// <inheritdoc />
-    public virtual async Task<JsonVersionedEventPayload?> GetAsync(string sourceId, DateTime? dateTime = null, CancellationToken ct = default)
+    public virtual async Task<JsonEventPayload?> GetAsync(Guid sourceId, DateTime? dateTime = null, CancellationToken ct = default)
     {
         var query = dateTime.HasValue ?
             _repository.Where(p => p.SourceId == sourceId && p.Created <= dateTime.Value) :
@@ -114,7 +109,7 @@ public class DbContextJsonEventSourcedRepository : IEventSourcedRepository<JsonV
     }
 
     /// <inheritdoc />
-    public virtual async Task<JsonVersionedEventPayload[]> GetHistoryAsync(string sourceId, long version, CancellationToken ct = default)
+    public virtual async Task<JsonEventPayload[]> GetHistoryAsync(Guid sourceId, long version, CancellationToken ct = default)
     {
         var query = _repository
             .Where(p => p.SourceId == sourceId && p.Version <= version)
@@ -123,7 +118,7 @@ public class DbContextJsonEventSourcedRepository : IEventSourcedRepository<JsonV
         return await query.ToArrayAsync(ct);
     }
     /// <inheritdoc />
-    public virtual async Task<JsonVersionedEventPayload[]> GetHistoryAsync(string sourceId, DateTime dateTime, CancellationToken ct = default)
+    public virtual async Task<JsonEventPayload[]> GetHistoryAsync(Guid sourceId, DateTime dateTime, CancellationToken ct = default)
     {
         var query = _repository
             .Where(p => p.SourceId == sourceId && p.Created <= dateTime)
@@ -139,7 +134,7 @@ public class DbContextJsonEventSourcedRepository : IEventSourcedRepository<JsonV
         _logger.LogDebug("SavePendingCangesAsync {Amount} JsonVersionedEventPayload", amount);
     }
     /// <inheritdoc />
-    public virtual async ValueTask<JsonVersionedEventPayload> CreateAsync(JsonVersionedEventPayload eventPayload, bool forceSave = false, CancellationToken ct = default)
+    public virtual async ValueTask<JsonEventPayload> CreateAsync(JsonEventPayload eventPayload, bool forceSave = false, CancellationToken ct = default)
     {
         await _repository.AddAsync(eventPayload, ct);
         if (forceSave)
@@ -149,7 +144,7 @@ public class DbContextJsonEventSourcedRepository : IEventSourcedRepository<JsonV
         return eventPayload;
     }
     /// <inheritdoc />
-    public virtual async Task<IEnumerable<JsonVersionedEventPayload>> CreateAsync(IEnumerable<JsonVersionedEventPayload> eventPayloads, bool forceSave = false, CancellationToken ct = default)
+    public virtual async Task<IEnumerable<JsonEventPayload>> CreateAsync(IEnumerable<JsonEventPayload> eventPayloads, bool forceSave = false, CancellationToken ct = default)
     {
         await _repository.AddRangeAsync(eventPayloads, ct);
         if (forceSave)

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Event;
 
 namespace UnlimitSoft.CQRS.Memento;
 
@@ -25,7 +26,7 @@ public interface IMemento<TEntity>
     /// <param name="version">Version of the entity.</param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<TEntity?> FindByVersionAsync(string id, long? version = null, CancellationToken ct = default);
+    Task<TEntity?> FindByVersionAsync(Guid id, long? version = null, CancellationToken ct = default);
     /// <summary>
     /// Build entity in the moment of the date supplied.
     /// </summary>
@@ -33,7 +34,7 @@ public interface IMemento<TEntity>
     /// <param name="dateTime">Date where we need to check the entity.</param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<TEntity?> FindByCreateAsync(string id, DateTime? dateTime = null, CancellationToken ct = default);
+    Task<TEntity?> FindByCreateAsync(Guid id, DateTime? dateTime = null, CancellationToken ct = default);
 }
 /// <summary>
 /// Load the entity in some moment of the system history.
@@ -44,7 +45,7 @@ public interface IMemento<TEntity>
 /// <typeparam name="TPayload"></typeparam>
 public abstract class Memento<TInterface, TEntity, TVersionedEventPayload, TPayload> : IMemento<TInterface>
     where TEntity : class, TInterface, IEventSourced, new()
-    where TVersionedEventPayload : VersionedEventPayload<TPayload>
+    where TVersionedEventPayload : EventPayload<TPayload>
     where TPayload : notnull
 {
     private readonly bool _snapshot;
@@ -77,7 +78,7 @@ public abstract class Memento<TInterface, TEntity, TVersionedEventPayload, TPayl
     }
 
     /// <inheritdoc />
-    public async Task<TInterface?> FindByVersionAsync(string sourceId, long? version = null, CancellationToken ct = default)
+    public async Task<TInterface?> FindByVersionAsync(Guid sourceId, long? version = null, CancellationToken ct = default)
     {
         if (_snapshot)
         {
@@ -94,7 +95,7 @@ public abstract class Memento<TInterface, TEntity, TVersionedEventPayload, TPayl
         return LoadEntityFromHistory(eventsPayload);
     }
     /// <inheritdoc />
-    public async Task<TInterface?> FindByCreateAsync(string sourceId, DateTime? dateTime = null, CancellationToken ct = default)
+    public async Task<TInterface?> FindByCreateAsync(Guid sourceId, DateTime? dateTime = null, CancellationToken ct = default)
     {
         if (_snapshot)
         {

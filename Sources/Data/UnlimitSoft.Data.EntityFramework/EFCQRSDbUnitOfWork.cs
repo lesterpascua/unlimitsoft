@@ -25,17 +25,14 @@ public abstract class EFCQRSDbUnitOfWork<TDbContext> : EFDbUnitOfWork<TDbContext
     /// 
     /// </summary>
     /// <param name="dbContext"></param>
-    /// <param name="eventMediator"></param>
     /// <param name="eventSourcedMediator"></param>
     protected EFCQRSDbUnitOfWork(
         TDbContext dbContext, 
-        IMediatorDispatchEvent? eventMediator = null, 
-        IMediatorDispatchEventSourced? eventSourcedMediator = null
+        IMediatorDispatchEvent? eventSourcedMediator = null
     )
         : base(dbContext)
     {
-        EventMediator = eventMediator;
-        EventSourcedMediator = eventSourcedMediator;
+        EventMediator = eventSourcedMediator;
     }
 
 
@@ -43,10 +40,6 @@ public abstract class EFCQRSDbUnitOfWork<TDbContext> : EFDbUnitOfWork<TDbContext
     /// 
     /// </summary>
     public IMediatorDispatchEvent? EventMediator { get; }
-    /// <summary>
-    /// 
-    /// </summary>
-    public IMediatorDispatchEventSourced? EventSourcedMediator { get; }
 
     /// <summary>
     /// 
@@ -61,7 +54,7 @@ public abstract class EFCQRSDbUnitOfWork<TDbContext> : EFDbUnitOfWork<TDbContext
     /// <returns></returns>
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
     {
-        if (EventMediator is null && EventSourcedMediator is null)
+        if (EventMediator is null)
             return await DbContext.SaveChangesAsync(cancellationToken);
 
         var transaction = DbContext.Database.CurrentTransaction;
@@ -102,15 +95,13 @@ public abstract class EFCQRSDbUnitOfWork<TDbContext> : EFDbUnitOfWork<TDbContext
                 .Select(s => s.Entity)
                 .ToArray();
             changes = await DbContext.SaveChangesAsync(ct);
-            var (count, events, versionedEvents) = await PublishEvents(changedEntities, ct);
+            var (count, versionedEvents) = await PublishEvents(changedEntities, ct);
 
             if (isTransactionOwner)
                 await transaction!.CommitAsync(ct);
 
-            if (events?.Any() == true && EventMediator != null)
-                await EventMediator.EventsDispatchedAsync(events, ct);
-            if (versionedEvents?.Any() == true && EventSourcedMediator != null)
-                await EventSourcedMediator.EventsDispatchedAsync(versionedEvents, ct);
+            if (versionedEvents?.Any() == true && EventMediator is not null)
+                await EventMediator.EventsDispatchedAsync(versionedEvents, ct);
         }
         finally
         {
@@ -119,55 +110,30 @@ public abstract class EFCQRSDbUnitOfWork<TDbContext> : EFDbUnitOfWork<TDbContext
         }
         return changes;
     }
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <returns></returns>
-    private Task PublishEvents(object[] changedEntities, List<IEvent> events, CancellationToken ct)
-    {
-        // Publish regular events
-        var eventMediator = EventMediator;
-        if (eventMediator is null)
-            return Task.CompletedTask;
-
-        foreach (var entity in changedEntities.OfType<IAggregateRoot>())
-        {
-            events.AddRange(entity.GetEvents());
-            entity.ClearEvents();
-        }
-        if (events.Any())
-            return eventMediator.DispatchEventsAsync(events, ct);
-        return Task.CompletedTask;
-    }
-    private Task PublishEventSourced(object[] changedEntities, List<IVersionedEvent> versionedEvents, CancellationToken ct)
+    private Task PublishEventSourced(object[] changedEntities, List<IEvent> versionedEvents, CancellationToken ct)
     {
         // Publish event sourced
-        var eventSourcedMediator = EventSourcedMediator;
+        var eventSourcedMediator = EventMediator;
         if (eventSourcedMediator is null)
             return Task.CompletedTask;
 
         foreach (var entity in changedEntities.OfType<IEventSourced>())
         {
-            versionedEvents.AddRange(entity.GetVersionedEvents());
-            entity.ClearVersionedEvents();
+            versionedEvents.AddRange(entity.GetEvents());
+            entity.ClearEvents();
         }
         if (versionedEvents.Any())
             return eventSourcedMediator.DispatchEventsAsync(versionedEvents, false, ct);
         return Task.CompletedTask;
     }
-    private async Task<(int, IEnumerable<IEvent>, IEnumerable<IVersionedEvent>)> PublishEvents(object[] changedEntities, CancellationToken ct)
+    private async Task<(int, IEnumerable<IEvent>)> PublishEvents(object[] changedEntities, CancellationToken ct)
     {
-        var tasks = new Task[2];
-        var events = new List<IEvent>();
-        var versionedEvents = new List<IVersionedEvent>();
+        var versionedEvents = new List<IEvent>();
 
-        tasks[0] = PublishEvents(changedEntities, events, ct);
-        tasks[1] = PublishEventSourced(changedEntities, versionedEvents, ct);
-
-        Task.WaitAll(tasks, ct);
+        await PublishEventSourced(changedEntities, versionedEvents, ct);
         int saved = await DbContext.SaveChangesAsync(ct);
 
-        return (saved, events, versionedEvents);
+        return (saved, versionedEvents);
     }
     #endregion
 }

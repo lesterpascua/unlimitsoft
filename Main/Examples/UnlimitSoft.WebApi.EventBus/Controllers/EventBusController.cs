@@ -21,7 +21,7 @@ public class EventBusController : ControllerBase
     [HttpPost]
     public async Task<ActionResult> GenerateEvent(CancellationToken ct = default)
     {
-        var @event = new CreateEvent(Guid.NewGuid(), 1);
+        var @event = new CreateEvent(Guid.NewGuid(), Guid.NewGuid());
         await _eventBus.PublishAsync(@event, ct: ct);
 
         _logger.LogInformation("Call");

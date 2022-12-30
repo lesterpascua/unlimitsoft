@@ -96,7 +96,7 @@ public static class IServiceCollectionExtensions
     /// <param name="services"></param>
     /// <param name="environment"></param>
     /// <returns></returns>
-    public static IServiceCollection AddLogger(this IServiceCollection services, string environment = null)
+    public static IServiceCollection AddLogger(this IServiceCollection services, string environment)
     {
         const string OutputTemplate = "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}";
 
@@ -221,9 +221,9 @@ public static class IServiceCollectionExtensions
             });
             services.AddSingleton<IEventPublishWorker>(provider =>
             {
-                var eventBus = provider.GetService<IEventBus>();
+                var eventBus = provider.GetRequiredService<IEventBus>();
                 var logger = provider.GetService<ILogger<MyQueueEventPublishWorker>>();
-                return new MyQueueEventPublishWorker(provider.GetService<IServiceScopeFactory>(), eventBus, MessageType.Event, logger: logger);
+                return new MyQueueEventPublishWorker(provider.GetRequiredService<IServiceScopeFactory>(), eventBus, MessageType.Event, logger: logger);
             });
         }
         #endregion

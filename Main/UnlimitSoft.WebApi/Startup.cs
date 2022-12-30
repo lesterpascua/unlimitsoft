@@ -18,6 +18,7 @@ using UnlimitSoft.AutoMapper.DependencyInjection;
 using UnlimitSoft.Bus.Hangfire;
 using UnlimitSoft.Bus.Hangfire.DependencyInjection;
 using UnlimitSoft.CQRS.DependencyInjection;
+using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.CQRS.EventSourcing;
 using UnlimitSoft.CQRS.Memento;
@@ -142,8 +143,8 @@ public class Startup
                     
                     IEventSourcedRepository = typeof(IMyEventSourcedRepository),
                     EventSourcedRepository = typeof(MyEventSourcedRepository),
-                    MediatorDispatchEventSourced = typeof(MyMediatorDispatchEventSourced),
-                    IMediatorDispatchEventSourced = typeof(IMediatorDispatchEventSourced),
+                    MediatorDispatchEvent = typeof(MyMediatorDispatchEventSourced),
+                    IMediatorDispatchEvent = typeof(IMediatorDispatchEvent),
                 }
             },
             new CQRSSettings

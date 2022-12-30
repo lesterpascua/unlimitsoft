@@ -1,5 +1,4 @@
 ﻿using System;
-using UnlimitSoft.Json;
 using UnlimitSoft.Mediator;
 using UnlimitSoft.Message;
 
@@ -7,14 +6,23 @@ namespace UnlimitSoft.Event;
 
 
 /// <summary>
-/// 
+/// Interface of the events in the systems
 /// </summary>
 public interface IEvent : IRequest<IResponse>
 {
     /// <summary>
-    /// Command creator identifier.
+    /// Unique identifier of the event.
     /// </summary>
     Guid Id { get; set; }
+    /// <summary>
+    /// Gets or set the identifier of the source originating the event.
+    /// </summary>
+    Guid SourceId { get; set; }
+    /// <summary>
+    /// Gets the version or order of the event in the stream. Este valor lo asigna la entidad que lo genero y 
+    /// es el que ella poseia en el instante en que fue generado el evento. 
+    /// </summary>
+    long Version { get; set; }
     /// <summary>
     /// Identifier of service where event is created
     /// </summary>
@@ -57,19 +65,11 @@ public interface IEvent : IRequest<IResponse>
     /// </summary>
     /// <returns></returns>
     object? GetBody();
-    /// <summary>
-    /// Gets the identifier of the source originating the event.
-    /// </summary>
-    object? GetSourceId();
-    /// <summary>
-    /// Gets the identifier of the source originating the event.
-    /// </summary>
-    void SetSourceId(object value);
 }
 /// <summary>
 /// Represents an event message.
 /// </summary>
-public abstract class Event<TKey, TBody> : IEvent
+public abstract class Event<TBody> : IEvent
 {
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     /// <summary>
@@ -85,6 +85,7 @@ public abstract class Event<TKey, TBody> : IEvent
     /// </summary>
     /// <param name="id"></param>
     /// <param name="sourceId"></param>
+    /// <param name="version"></param>
     /// <param name="serviceId"></param>
     /// <param name="workerId"></param>
     /// <param name="correlationId"></param>
@@ -93,10 +94,11 @@ public abstract class Event<TKey, TBody> : IEvent
     /// <param name="currState"></param>
     /// <param name="isDomain"></param>
     /// <param name="body"></param>
-    protected Event(Guid id, TKey sourceId, ushort serviceId, string? workerId, string? correlationId, object? command, object? prevState, object? currState, bool isDomain, TBody? body)
+    protected Event(Guid id, Guid sourceId, long version, ushort serviceId, string? workerId, string? correlationId, object? command, object? prevState, object? currState, bool isDomain, TBody? body)
     {
         Id = id;
         SourceId = sourceId;
+        Version = version;
         ServiceId = serviceId;
         WorkerId = workerId;
         CorrelationId = correlationId;
@@ -114,10 +116,10 @@ public abstract class Event<TKey, TBody> : IEvent
 
     /// <inheritdoc />
     public Guid Id { get; set; }
-    /// <summary>
-    /// Gets the identifier of the source originating the event.
-    /// </summary>
-    public TKey SourceId { get; set; }
+    /// <inheritdoc />
+    public Guid SourceId { get; set; }
+    /// <inheritdoc />
+    public long Version { get; set; }
     /// <inheritdoc />
     public ushort ServiceId { get; set; }
     /// <inheritdoc />
@@ -145,25 +147,7 @@ public abstract class Event<TKey, TBody> : IEvent
 
     /// <inheritdoc />
     public object? GetBody() => Body;
-    /// <inheritdoc />
-    public object? GetSourceId() => SourceId;
-    /// <inheritdoc />
-    public void SetSourceId(object value) => SourceId = (TKey)value;
 
     /// <inheritdoc />
     public override string ToString() => Name;
-}
-/// <summary>
-/// 
-/// </summary>
-public static class IEventExtensions
-{
-    /// <summary>
-    /// Get body asociate to the event.
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="event"></param>
-    /// <param name="serializer"></param>
-    /// <returns></returns>
-    public static T? GetBody<T>(this IEvent @event, IJsonSerializer serializer) => serializer.Cast<T>(@event.GetBody());
 }

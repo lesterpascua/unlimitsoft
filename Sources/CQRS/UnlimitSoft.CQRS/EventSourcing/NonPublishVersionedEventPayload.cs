@@ -12,4 +12,4 @@ namespace UnlimitSoft.CQRS.EventSourcing;
 /// <param name="Version"></param>
 /// <param name="Created"></param>
 /// <param name="Scheduled"></param>
-public record NonPublishVersionedEventPayload(Guid Id, string? SourceId, long Version, DateTime Created, DateTime? Scheduled);
+public record NonPublishVersionedEventPayload(Guid Id, Guid SourceId, long Version, DateTime Created, DateTime? Scheduled);

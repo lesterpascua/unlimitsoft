@@ -106,11 +106,11 @@ public sealed class UnitOfWorkOptions
     public Type? EventSourcedRepository { get; set; }
 
     /// <summary>
-    /// Interface type derived of <see cref="CQRS.EventSourcing.IMediatorDispatchEventSourced"/> interface. 
+    /// Interface type derived of <see cref="CQRS.Event.IMediatorDispatchEvent"/> interface. 
     /// </summary>
-    public Type? IMediatorDispatchEventSourced { get; set; }
+    public Type? IMediatorDispatchEvent { get; set; }
     /// <summary>
-    /// Materialized type derived of <see cref="CQRS.EventSourcing.IMediatorDispatchEventSourced"/> interface. 
+    /// Materialized type derived of <see cref="CQRS.Event.IMediatorDispatchEvent"/> interface. 
     /// </summary>
-    public Type? MediatorDispatchEventSourced { get; set; }
+    public Type? MediatorDispatchEvent { get; set; }
 }

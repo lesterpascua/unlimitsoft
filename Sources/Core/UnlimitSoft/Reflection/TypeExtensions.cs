@@ -49,7 +49,10 @@ public static class TypeExtensions
         var ctor = constructors.FirstOrDefault();
         args = GetArgs(provider, resolver, ctor);
 
-        return Activator.CreateInstance(type, args);
+        var instance = Activator.CreateInstance(type, args);
+        if (instance is null)
+            throw new InvalidOperationException($"Error creating instance of type {type}");
+        return instance;
 
         // ==============================================================================================================
         static object?[] GetArgs(IServiceProvider provider, Func<ParameterInfo, object?>? resolver, ConstructorInfo? ctor)

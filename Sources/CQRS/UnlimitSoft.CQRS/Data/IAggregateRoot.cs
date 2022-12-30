@@ -1,54 +1,43 @@
-﻿using UnlimitSoft.Data;
-using UnlimitSoft.Event;
+﻿using System;
 using System.Collections.Generic;
+using UnlimitSoft.Data;
+using UnlimitSoft.Event;
 
-namespace UnlimitSoft.CQRS.Data
+namespace UnlimitSoft.CQRS.Data;
+
+
+/// <summary>
+/// Represents an identifiable entity root in the CQRS system.
+/// </summary>
+public interface IAggregateRoot : IEntity
 {
     /// <summary>
-    /// Represents an identifiable entity root in the CQRS system.
+    /// Remove all pending event asociate to the entity.
     /// </summary>
-    public interface IAggregateRoot : IEntity
-    {
-        /// <summary>
-        /// Clear event 
-        /// </summary>
-        void ClearEvents();
-        /// <summary>
-        /// Get a agregate events.
-        /// </summary>
-        /// <returns></returns>
-        IReadOnlyCollection<IEvent> GetEvents();
-    }
+    void ClearEvents();
     /// <summary>
-    /// Implement and aggregate Root
+    /// Gets the collection of new events since the entity was loaded, as a consequence of command handling.
     /// </summary>
-    public abstract class AggregateRoot<TKey> : Entity<TKey>, IAggregateRoot
+    /// <returns></returns>
+    IReadOnlyCollection<IEvent> GetEvents();
+}
+/// <summary>
+/// Implement and aggregate Root
+/// </summary>
+public abstract class AggregateRoot : Entity<Guid>, IAggregateRoot
+{
+    internal readonly List<IEvent> _events;
+
+    /// <summary>
+    /// 
+    /// </summary>
+    protected AggregateRoot()
     {
-        private readonly List<IEvent> _events;
-
-
-        /// <summary>
-        /// 
-        /// </summary>
-        protected AggregateRoot()
-        {
-            this._events = new List<IEvent>();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public void ClearEvents() => this._events.Clear();
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <returns></returns>
-        public IReadOnlyCollection<IEvent> GetEvents() => this._events;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="event"></param>
-        protected void AddEvent(IEvent @event) => this._events.Add(@event);
+        _events = new List<IEvent>();
     }
+
+    /// <inheritdoc />
+    public void ClearEvents() => _events.Clear();
+    /// <inheritdoc />
+    public IReadOnlyCollection<IEvent> GetEvents() => _events;
 }
