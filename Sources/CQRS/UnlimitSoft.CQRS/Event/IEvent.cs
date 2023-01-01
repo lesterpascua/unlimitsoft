@@ -44,18 +44,6 @@ public interface IEvent : IRequest<IResponse>
     /// </summary>
     string Name { get; set; }
     /// <summary>
-    /// Command where event is originate (fullname).
-    /// </summary>
-    object? Command { get; set; }
-    /// <summary>
-    /// Previous snapshot in json representation.
-    /// </summary>
-    object? PrevState { get; set; }
-    /// <summary>
-    /// Currenct snapshot in json representation
-    /// </summary>
-    object? CurrState { get; set; }
-    /// <summary>
     /// Specify if an event belown to domain. This have optimization propouse.
     /// </summary>
     bool IsDomainEvent { get; set; }
@@ -94,7 +82,7 @@ public abstract class Event<TBody> : IEvent
     /// <param name="currState"></param>
     /// <param name="isDomain"></param>
     /// <param name="body"></param>
-    protected Event(Guid id, Guid sourceId, long version, ushort serviceId, string? workerId, string? correlationId, object? command, object? prevState, object? currState, bool isDomain, TBody? body)
+    protected Event(Guid id, Guid sourceId, long version, ushort serviceId, string? workerId, string? correlationId, bool isDomain, TBody body)
     {
         Id = id;
         SourceId = sourceId;
@@ -103,10 +91,6 @@ public abstract class Event<TBody> : IEvent
         WorkerId = workerId;
         CorrelationId = correlationId;
         Name = GetType().FullName!;
-
-        Command = command;
-        PrevState = prevState;
-        CurrState = currState;
 
         IsDomainEvent = isDomain;
         Body = body;
@@ -132,16 +116,9 @@ public abstract class Event<TBody> : IEvent
     public string Name { get; set; }
 
     /// <inheritdoc />
-    public object? Command { get; set; }
-    /// <inheritdoc />
-    public object? PrevState { get; set; }
-    /// <inheritdoc />
-    public object? CurrState { get; set; }
-
-    /// <inheritdoc />
     public bool IsDomainEvent { get; set; }
     /// <inheritdoc />
-    public TBody? Body { get; set; }
+    public TBody Body { get; set; }
     /// <inheritdoc />
     public string? CorrelationId { get; set; }
 

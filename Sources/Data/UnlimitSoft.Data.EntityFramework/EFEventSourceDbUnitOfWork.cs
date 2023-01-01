@@ -14,14 +14,14 @@ namespace UnlimitSoft.Data.EntityFramework;
 public abstract class EFEventSourceDbUnitOfWork<TDbContext> : EFDbUnitOfWork<TDbContext>
     where TDbContext : DbContext
 {
-    private readonly IEventPublishWorker _publishWorker;
+    private readonly IEventPublishWorker? _publishWorker;
 
     /// <summary>
     /// 
     /// </summary>
     /// <param name="dbContext"></param>
     /// <param name="publishWorker"></param>
-    protected EFEventSourceDbUnitOfWork(TDbContext dbContext, IEventPublishWorker publishWorker)
+    protected EFEventSourceDbUnitOfWork(TDbContext dbContext, IEventPublishWorker? publishWorker)
         : base(dbContext)
     {
         _publishWorker = publishWorker;

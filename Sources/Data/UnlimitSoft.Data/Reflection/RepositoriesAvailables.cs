@@ -15,7 +15,7 @@ public sealed class RepositoriesAvailables
     /// <param name="serviceQueryType">Interface reference to not mutable repository</param>
     /// <param name="implementationType">Type to implement the mutable and not mutable repository. If can't mutate the entity this value is null.</param>
     /// <param name="implementationQueryType">Type to implement the mutable and not mutable query repository</param>
-    public RepositoriesAvailables(Type? serviceType, Type serviceQueryType, Type? implementationType, Type implementationQueryType)
+    public RepositoriesAvailables(Type? serviceType, Type? serviceQueryType, Type? implementationType, Type? implementationQueryType)
     {
         ServiceType = serviceType;
         ServiceQueryType = serviceQueryType;
@@ -30,7 +30,7 @@ public sealed class RepositoriesAvailables
     /// <summary>
     /// Interface reference to not mutable repository
     /// </summary>
-    public Type ServiceQueryType { get; }
+    public Type? ServiceQueryType { get; }
     /// <summary>
     /// Type to implement the mutable and not mutable repository. If can't mutate the entity this value is null.
     /// </summary>
@@ -38,5 +38,5 @@ public sealed class RepositoriesAvailables
     /// <summary>
     /// Type to implement the mutable and not mutable query repository
     /// </summary>
-    public Type ImplementationQueryType { get; }
+    public Type? ImplementationQueryType { get; }
 }

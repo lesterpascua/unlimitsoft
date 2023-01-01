@@ -43,7 +43,7 @@ public static class DefaultProcessor
     /// <param name="logger"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async ValueTask ProcessAsync<TAlias>(ProcessMessageArgs<TAlias, IIncomingMessage> args, ILogger<MemoryEventListener<QueueIdentifier>> logger, CancellationToken ct)
+    public static ValueTask ProcessAsync<TAlias>(ProcessMessageArgs<TAlias, IIncomingMessage> args, ILogger<MemoryEventListener<QueueIdentifier>> logger, CancellationToken ct)
         where TAlias : struct, Enum
     {
         var message = args.Message.MessageData;
@@ -59,5 +59,6 @@ public static class DefaultProcessor
             logger.LogError(ex, "Event: {@Args}", args);
             //await args.Message.CompleteMessageAsync(message, ct);
         }
+        return ValueTask.CompletedTask;
     }
 }

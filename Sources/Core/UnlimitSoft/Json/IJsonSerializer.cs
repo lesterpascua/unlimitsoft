@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 
 namespace UnlimitSoft.Json;
 
@@ -40,12 +42,20 @@ public interface IJsonSerializer
     /// <param name="settings"></param>
     /// <returns></returns>
     T? Cast<T>(object? data, object? settings = null);
+
     /// <summary>
     /// Get json token follow the specific path.
     /// </summary>
     /// <param name="data"></param>
     /// <param name="path"></param>
     object? GetToken(object? data, params string[] path);
+    /// <summary>
+    /// Convert objeto to a dictionary key value folow the asp.net binding method..
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <param name="prefix"></param>
+    /// <returns></returns>
+    IDictionary<string, string?>? ToKeyValue(object obj, string? prefix = null);
     /// <summary>
     /// Add extra value
     /// </summary>

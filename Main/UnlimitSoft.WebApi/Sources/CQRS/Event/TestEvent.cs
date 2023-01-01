@@ -19,8 +19,8 @@ public class TestEventBody
 }
 public class TestEvent : MyEvent<TestEventBody>, IMementoEvent<Customer>
 {
-    public TestEvent(Guid id, Guid sourceId, long version, ushort serviceId, string? workerId, string? correlationId, object? command, object? prevState, object? currState, bool isDomainEvent, TestEventBody body)
-        : base(id, sourceId, version, serviceId, workerId, correlationId, command, prevState, currState, isDomainEvent, body)
+    public TestEvent(Guid id, Guid sourceId, long version, ushort serviceId, string? workerId, string? correlationId, bool isDomainEvent, TestEventBody body)
+        : base(id, sourceId, version, serviceId, workerId, correlationId, isDomainEvent, body)
     {
     }
 

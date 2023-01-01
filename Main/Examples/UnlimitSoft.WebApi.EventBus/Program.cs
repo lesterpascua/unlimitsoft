@@ -14,16 +14,16 @@ using UnlimitSoft.WebApi.EventBus.EventBus;
 using UnlimitSoft.WebApi.EventBus.Processors;
 
 // ================================================================================================================================
-// In this example we add a logger and include a custom properties in every logger
+// In this example we add a event bus and comunicate events between sender and listener
 // Steps
-//  - Inject AddUnlimitSofLogger this will inject a couple of serilog features
-//      * LoggerContextEnricher: to add the custom properties
-//      * ILoggerContextAccessor:  
-//      * LoggerMiddleware: to set the trace and correlation properties
-//      * Add custom attribute to register the IdentityId
+//  - Inject AddUnlimitSoftEventNameResolver 
+//  - IEventBus
+//  - IEventListener
+//      
 // ================================================================================================================================
 
 // Entry Point
+JsonUtil.Default = new DefaultJsonSerializer();
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog();
 
@@ -64,7 +64,7 @@ WebApplication ConfigureServices(IServiceCollection services, EventBusType busTy
     );
     #endregion
 
-    services.AddSingleton(JsonUtil.Default = new DefaultJsonSerializer());
+    services.AddSingleton(JsonUtil.Default);
 
     #region Event Bus
     services.AddUnlimitSoftEventNameResolver(new [] { typeof(Program).Assembly });

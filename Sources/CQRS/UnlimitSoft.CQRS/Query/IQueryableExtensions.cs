@@ -35,12 +35,11 @@ public static class IQueryableExtensions
     /// <returns></returns>
     public static IQueryable<TEntity> ApplyOrdered<TEntity>(this IQueryable<TEntity> @this, IEnumerable<ColumnName> ordered)
     {
-        bool first = true;
         IOrderedQueryable<TEntity>? orderedQuery = null;
         foreach (var entry in ordered)
         {
             var expression = GetExpression<TEntity>(entry.Name);
-            if (!first)
+            if (orderedQuery is not null)
             {
                 if (entry.Asc)
                 {
@@ -49,8 +48,6 @@ public static class IQueryableExtensions
                     orderedQuery = orderedQuery.ThenByDescending(expression);
             } else
                 orderedQuery = entry.Asc ? @this.OrderBy(expression) : @this.OrderByDescending(expression);
-
-            first = false;
         }
         if (orderedQuery is not null)
             @this = orderedQuery;

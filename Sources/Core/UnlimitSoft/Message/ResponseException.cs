@@ -2,13 +2,13 @@
 using System.Collections.Generic;
 using System.Net;
 
-namespace UnlimitSoft.Web;
+namespace UnlimitSoft.Message;
 
 
 /// <summary>
 /// Indicate special exception in the response.
 /// </summary>
-public class ResponseException : Exception
+public sealed class ResponseException : Exception
 {
     /// <summary>
     /// 
@@ -51,5 +51,5 @@ public class ResponseException : Exception
     /// <summary>
     /// Exception body.
     /// </summary>
-    public IDictionary<string, string[]> Body { get; }
+    public IDictionary<string, string[]> Body { get; init; }
 }

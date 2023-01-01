@@ -2,14 +2,13 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using UnlimitSoft.Json;
-using UnlimitSoft.Web.Client;
 using System;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
+using UnlimitSoft.Json;
 using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Web.AspNet.Security.Authentication;
@@ -23,7 +22,7 @@ public class ApiKeyAuthenticationHandler<TOption> : AuthenticationHandler<TOptio
     where TOption : ApiKeyAuthenticationOptions, new()
 {
     private readonly IServiceProvider _provider;
-
+    private readonly IJsonSerializer _serializer;
     private const string ContentType = "application/json";
 
 
@@ -32,13 +31,15 @@ public class ApiKeyAuthenticationHandler<TOption> : AuthenticationHandler<TOptio
     /// </summary>
     /// <param name="provider"></param>
     /// <param name="options"></param>
+    /// <param name="serializer"></param>
     /// <param name="logger"></param>
     /// <param name="encoder"></param>
     /// <param name="clock"></param>
-    public ApiKeyAuthenticationHandler(IServiceProvider provider, IOptionsMonitor<TOption> options, ILoggerFactory logger, UrlEncoder encoder, Microsoft.AspNetCore.Authentication.ISystemClock clock)
+    public ApiKeyAuthenticationHandler(IServiceProvider provider, IOptionsMonitor<TOption> options, IJsonSerializer serializer, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock)
         : base(options, logger, encoder, clock)
     {
         _provider = provider;
+        _serializer = serializer;
     }
 
 
@@ -89,7 +90,7 @@ public class ApiKeyAuthenticationHandler<TOption> : AuthenticationHandler<TOptio
         var uiText = Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidAPIKey) ?? "Invalid API Key";
         var problemDetails = new Response<object?>(HttpStatusCode.Unauthorized, null, uiText, Context.TraceIdentifier);
 
-        var value = JsonUtility.Serialize(problemDetails);
+        var value = _serializer.Serialize(problemDetails);
         if (value is not null)
             await Response.WriteAsync(value);
     }
@@ -103,13 +104,13 @@ public class ApiKeyAuthenticationHandler<TOption> : AuthenticationHandler<TOptio
         Response.ContentType = ContentType;
         Response.StatusCode = StatusCodes.Status403Forbidden;
 
-        var problemDetails = new Response<object>(
+        var problemDetails = new Response<object?>(
             HttpStatusCode.Forbidden,
             null,
             Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidUserPermission) ?? "User no have permission for the operation",
             Context.TraceIdentifier
         );
-        var value = JsonUtility.Serialize(problemDetails);
+        var value = _serializer.Serialize(problemDetails);
         if (value is not null)
             await Response.WriteAsync(value);
     }
