@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.EventBus.Azure.Configuration;
+using UnlimitSoft.EventBus.Configuration;
 using UnlimitSoft.Json;
 
 namespace UnlimitSoft.EventBus.Azure;
@@ -16,14 +16,14 @@ namespace UnlimitSoft.EventBus.Azure;
 /// Create a bus to listener message from the queue.
 /// </summary>
 public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
-    where TAlias : Enum
+    where TAlias : struct, Enum
 {
     private readonly string _endpoint;
     private readonly QueueAlias<TAlias>[] _queues;
-    private readonly ProcessorCallback _processor;
+    private readonly ProcessorCallback<TAlias, ProcessMessageEventArgs> _processor;
     private readonly IJsonSerializer _serializer;
     private readonly int _maxConcurrentCalls;
-    private readonly ILogger? _logger;
+    private readonly ILogger<AzureEventListener<TAlias>>? _logger;
 
     private TimeSpan _waitRetry;
     private ServiceBusClient? _client;
@@ -32,23 +32,23 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="endpoint"></param>
-    /// <param name="queues"></param>
+    /// <param name="endpoint">Connection string to azure event bus. Endpoint=sb://my.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=supersecretsharedkey</param>
+    /// <param name="queues">Queues where the lister will connect to listener diferent events</param>
     /// <param name="processor">Processor used to process the event, <see cref="ProcessorUtility.Default" /> is used by default</param>
-    /// <param name="serializer"></param>
-    /// <param name="maxConcurrentCalls"></param>
-    /// <param name="logger"></param>
+    /// <param name="serializer">Json serializer used to serializer the event</param>
+    /// <param name="maxConcurrentCalls">Maximun number of concurrence event to process.</param>
+    /// <param name="logger">Logger used to register process data</param>
     public AzureEventListener(
         string endpoint,
         IEnumerable<QueueAlias<TAlias>> queues,
-        ProcessorCallback processor,
+        ProcessorCallback<TAlias, ProcessMessageEventArgs> processor,
         IJsonSerializer serializer,
         int maxConcurrentCalls = 1,
-        ILogger? logger = null
+        ILogger<AzureEventListener<TAlias>>? logger = null
     )
     {
         _endpoint = endpoint;
-        _queues = queues.ToArray();
+        _queues = queues.Where(x => x.Active == true).ToArray();
         _processor = processor;
         _serializer = serializer;
         _maxConcurrentCalls = maxConcurrentCalls;
@@ -75,41 +75,37 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
             throw new ArgumentException("Retry time greather the the allowed", nameof(waitRetry));
 
         _waitRetry = waitRetry;
-        _client = new ServiceBusClient(_endpoint);
+        _client = CreateClient();
         _busProcessors = new ServiceBusProcessor[_queues.Length];
 
         for (int i = 0; i < _queues.Length; i++)
         {
-            var entry = _queues[i];
-            var busProcessor = _busProcessors[i] = CreateProcessorAsync(entry);
+            var queue = _queues[i];
+            var busProcessor = _busProcessors[i] = CreateProcessorAsync(queue);
 
-            busProcessor.ProcessErrorAsync += args => ProcessErrorAsync(entry.Queue, args);
-            busProcessor.ProcessMessageAsync += args => ProcessMessageAsync(entry.Queue, args);
+            busProcessor.ProcessErrorAsync += args => ProcessErrorAsync(queue.Queue, args);
+            busProcessor.ProcessMessageAsync += args => ProcessMessageAsync(queue, args);
 
             await busProcessor.StartProcessingAsync(ct);
         }
     }
 
     #region Private Methods
-    //private Task CreateIfNotExistAsync(QueueAlias<TAlias> entry, CancellationToken ct)
-    //{
-    //    return Task.CompletedTask;
-    //    //var administrationClient = new ServiceBusAdministrationClient(_endpoint);
-    //    //var topics = administrationClient.GetTopicsAsync();
-    //    //var asyncEnumerable = topics.AsPages();
-
-    //    //var topics = _queues.Where(p => p.Subscription);
-
-    //    //var enumerator = asyncEnumerable.GetAsyncEnumerator();
-    //    //while (await enumerator.MoveNextAsync())
-    //    //{
-    //    //    var topic = enumerator.Current;
-    //    //    var t = topic.Values.FirstOrDefault(p => p.Name == );
-
-    //    //    Console.WriteLine(t);
-    //    //}
-    //}
-    private ServiceBusProcessor CreateProcessorAsync(QueueAlias<TAlias> entry)
+    /// <summary>
+    /// Create instance of the service bus client
+    /// </summary>
+    /// <returns></returns>
+    protected virtual ServiceBusClient CreateClient()
+    {
+        return new ServiceBusClient(_endpoint);
+    }
+    /// <summary>
+    /// Create processor for every queue
+    /// </summary>
+    /// <param name="entry"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    protected virtual ServiceBusProcessor CreateProcessorAsync(QueueAlias<TAlias> entry)
     {
         if (_busProcessors is null || _client is null)
             throw new InvalidOperationException("Call ListenAsync first");
@@ -128,12 +124,24 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
         );
     }
 
-    private Task ProcessErrorAsync(string queue, ProcessErrorEventArgs arg)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="queue"></param>
+    /// <param name="arg"></param>
+    /// <returns></returns>
+    protected virtual Task ProcessErrorAsync(string queue, ProcessErrorEventArgs arg)
     {
         _logger?.LogError(arg.Exception, "Error from {Queue} in entity: {Entity}", queue, arg.EntityPath);
         return Task.CompletedTask;
     }
-    private async Task ProcessMessageAsync(string queue, ProcessMessageEventArgs args)
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="queue"></param>
+    /// <param name="args"></param>
+    /// <returns></returns>
+    protected virtual async Task ProcessMessageAsync(QueueAlias<TAlias> queue, ProcessMessageEventArgs args)
     {
         var json = args.Message.Body.ToString();
         var envelop = _serializer.Deserialize<MessageEnvelop>(json);
@@ -143,8 +151,29 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
             return;
         }
 
-        var message = new ProcessMessageArgs(queue, envelop, args, _waitRetry, _logger);
+        var message = new ProcessMessageArgs<TAlias, ProcessMessageEventArgs>(queue, envelop, args, _waitRetry);
         await _processor(message, args.CancellationToken);
     }
     #endregion
 }
+
+
+
+//private Task CreateIfNotExistAsync(QueueAlias<TAlias> entry, CancellationToken ct)
+//{
+//    return Task.CompletedTask;
+//    //var administrationClient = new ServiceBusAdministrationClient(_endpoint);
+//    //var topics = administrationClient.GetTopicsAsync();
+//    //var asyncEnumerable = topics.AsPages();
+
+//    //var topics = _queues.Where(p => p.Subscription);
+
+//    //var enumerator = asyncEnumerable.GetAsyncEnumerator();
+//    //while (await enumerator.MoveNextAsync())
+//    //{
+//    //    var topic = enumerator.Current;
+//    //    var t = topic.Values.FirstOrDefault(p => p.Name == );
+
+//    //    Console.WriteLine(t);
+//    //}
+//}

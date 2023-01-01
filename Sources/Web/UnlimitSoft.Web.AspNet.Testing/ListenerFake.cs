@@ -1,14 +1,12 @@
-﻿using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.Event.Json;
-using UnlimitSoft.CQRS.Message;
-using UnlimitSoft.Event;
-using UnlimitSoft.Security;
-using System;
+﻿using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.Event;
 using UnlimitSoft.Json;
 using UnlimitSoft.Message;
+using UnlimitSoft.Security;
 
 namespace UnlimitSoft.Web.AspNet.Testing;
 
@@ -16,7 +14,7 @@ namespace UnlimitSoft.Web.AspNet.Testing;
 /// <summary>
 /// Fake listener.
 /// </summary>
-public class ListenerFake : IEventListener
+public sealed class ListenerFake : IEventListener
 {
     private readonly IJsonSerializer _serializer;
     private readonly IEventDispatcher _eventDispatcher;
@@ -71,7 +69,7 @@ public class ListenerFake : IEventListener
     /// <param name="event"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public async Task<(IResponse, Exception)> SimulateReceiveAsync<TEvent>(TEvent @event, CancellationToken ct = default)
+    public async Task<IResponse> SimulateReceiveAsync<TEvent>(TEvent @event, CancellationToken ct = default)
         where TEvent : class, IEvent
     {
         var eventName = typeof(TEvent).FullName;

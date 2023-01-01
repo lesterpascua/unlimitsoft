@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace UnlimitSoft.CQRS.Event.Json;
+namespace UnlimitSoft.CQRS.Event;
 
 
 /// <summary>

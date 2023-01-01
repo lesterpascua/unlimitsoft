@@ -2,7 +2,6 @@
 using Microsoft.EntityFrameworkCore.Storage;
 using UnlimitSoft.CQRS.Data;
 using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.EventSourcing;
 using UnlimitSoft.Event;
 using System.Collections.Generic;
 using System.Data;

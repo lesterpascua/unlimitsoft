@@ -2,7 +2,6 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.CQRS.Logging;
 using UnlimitSoft.Event;
 using UnlimitSoft.Json;
@@ -30,21 +29,20 @@ public static class EventUtility
     /// <param name="logger"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async Task<(IResponse?, Exception?)> ProcessAsync<TEvent>(
+    public static async ValueTask<IResponse?> ProcessAsync<TEvent>(
         string? eventName, 
         MessageEnvelop envelop, 
         IJsonSerializer serializer,
         IEventDispatcher dispatcher, 
         IEventNameResolver resolver, 
         Action<TEvent>? beforeProcess = null, 
-        Func<Exception, TEvent?, MessageEnvelop, CancellationToken, Task>? onError = null, 
+        Func<Exception, TEvent?, MessageEnvelop, CancellationToken, ValueTask>? onError = null, 
         ILogger? logger = null, 
         CancellationToken ct = default
     )
         where TEvent : class, IEvent
     {
         TEvent? curr = null;
-        Exception? ex = null;
         IResponse? responses = null;
         try
         {
@@ -57,7 +55,7 @@ public static class EventUtility
             if (eventType is null)
             {
                 logger?.NoTypeForTheEvent(eventName!);
-                return (responses, ex);
+                return responses;
             }
 
             switch (envelop.Type)
@@ -84,18 +82,17 @@ public static class EventUtility
             if (responses?.IsSuccess != true)
                 throw new EventResponseException("Some event process has error see responses", responses);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            ex = e;
             logger?.ErrorHandlingEvent(ex, envelop.MsgType, curr?.CorrelationId, envelop.Msg, responses);
 
             if (onError is not null)
                 await onError(ex, curr, envelop, ct);
         }
-        return (responses, ex);
+        return responses;
     }
 
-    private static async Task<IResponse?> DispatchEvent(IEventDispatcher eventDispatcher, ILogger? logger, IEvent @event, CancellationToken ct)
+    private static async ValueTask<IResponse?> DispatchEvent(IEventDispatcher eventDispatcher, ILogger? logger, IEvent @event, CancellationToken ct)
     {
         var (responses, error) = await eventDispatcher.DispatchAsync(@event, ct);
         logger?.LogInformation(@"Procesed

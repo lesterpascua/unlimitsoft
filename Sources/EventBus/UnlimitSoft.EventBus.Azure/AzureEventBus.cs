@@ -2,17 +2,15 @@
 using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.Retry;
-using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.Event.Json;
-using UnlimitSoft.EventBus.Azure.Configuration;
-using UnlimitSoft.Json;
-using UnlimitSoft.Event;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.Event;
+using UnlimitSoft.EventBus.Configuration;
+using UnlimitSoft.Json;
 
 namespace UnlimitSoft.EventBus.Azure;
 
@@ -21,7 +19,7 @@ namespace UnlimitSoft.EventBus.Azure;
 /// Implement a bus to send message using azure resources.
 /// </summary>
 public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
-    where TAlias : Enum
+    where TAlias : struct, Enum
 {
     private ServiceBusClient? _client;
     private AsyncRetryPolicy? _retryPolicy;
@@ -33,20 +31,20 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
     private readonly Func<TAlias, string, object, bool>? _filter;
     private readonly Func<TAlias, string, object, object>? _transform;
     private readonly Action<object, ServiceBusMessage>? _setup;
-    private readonly ILogger? _logger;
+    private readonly ILogger<AzureEventBus<TAlias>>? _logger;
 
 
     /// <summary>
-    /// 
+    /// initialize new instance of the azure event bus.
     /// </summary>
+    /// <param name="endpoint">Connection string to azure event bus. Endpoint=sb://my.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=supersecretsharedkey</param>
+    /// <param name="queues">Queues where the current bus can publish events. This is a collection of all availables queue later the system can select the queue to publish every specific event using filter argument</param>
     /// <param name="eventNameResolver">Resolve real type of event using his name.</param>
-    /// <param name="serializer"></param>
-    /// <param name="queues"></param>
-    /// <param name="endpoint"></param>
-    /// <param name="filter">Filter if this event able to sent to specifix queue, function (queueName, eventName) => bool</param>
-    /// <param name="transform">Transform event into a diferent event (queueName, eventName, event) => event</param>
+    /// <param name="serializer">Json serializer used to serializer the event</param>
+    /// <param name="filter">Filter if this event able to sent to specifix queue, function (alias, eventName, event) => bool</param>
+    /// <param name="transform">Transform event into a diferent event (alias, eventName, event) => event</param>
     /// <param name="setup">Allow custom setup message before send to the bus</param>
-    /// <param name="logger"></param>
+    /// <param name="logger">Logger used to register process data</param>
     public AzureEventBus(
         string endpoint,
         IEnumerable<QueueAlias<TAlias>> queues,
@@ -55,10 +53,10 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
         Func<TAlias, string, object, bool>? filter = null,
         Func<TAlias, string, object, object>? transform = null,
         Action<object, ServiceBusMessage>? setup = null,
-        ILogger? logger = null
+        ILogger<AzureEventBus<TAlias>>? logger = null
     )
     {
-        _queues = queues.Where(p => p.Active == true).ToArray();
+        _queues = queues.Where(x => x.Active == true).ToArray();
         _filter = filter;
         _endpoint = endpoint;
         _eventNameResolver = eventNameResolver;
@@ -88,7 +86,7 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
                 retryAttempt => waitRetry,
                 (ex, time) => _logger?.LogWarning(ex, "Retry {Time} publish in EventBus, error: {Message}", time, ex.Message)
             );
-        _client = new ServiceBusClient(_endpoint);
+        _client = CreateClient();
 
 #if NETSTANDARD2_0
         return ValueTaskExtensions.CompletedTask;
@@ -142,7 +140,16 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
     /// <returns></returns>
     public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop, CancellationToken ct = default) => SendMessageAsync(graph, id, eventName, correlationId, useEnvelop, ct);
 
-#region Private Method
+    /// <summary>
+    /// Create instance of the service bus client
+    /// </summary>
+    /// <returns></returns>
+    protected virtual ServiceBusClient CreateClient()
+    {
+        return new ServiceBusClient(_endpoint);
+    }
+
+    #region Private Method
     private async Task SendMessageAsync(object graph, Guid id, string eventName, string? correlationId, bool useEnvelop, CancellationToken ct)
     {
         if (graph is null)
@@ -190,5 +197,5 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
         await _retryPolicy.ExecuteAsync((cancelationToken) => sender.SendMessageAsync(message, cancelationToken), ct);
         _logger?.LogInformation("Publish to {Queue} event: {Event}", queue.Queue, json);
     }
-#endregion
+    #endregion
 }

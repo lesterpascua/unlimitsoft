@@ -4,7 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
-using UnlimitSoft.CQRS.EventSourcing;
+using UnlimitSoft.CQRS.Data;
 
 namespace UnlimitSoft.CQRS.Event;
 
@@ -67,7 +67,7 @@ public abstract class MediatorDispatchEvent<TEventPayload, TPayload> : IMediator
     /// <summary>
     /// 
     /// </summary>
-    protected abstract IEventSourcedRepository<TEventPayload, TPayload>? EventSourcedRepository { get; }
+    protected abstract IEventRepository<TEventPayload, TPayload>? EventRepository { get; }
 
 
     /// <summary>
@@ -86,22 +86,22 @@ public abstract class MediatorDispatchEvent<TEventPayload, TPayload> : IMediator
             var payload = Create(@event);
             eventsPayload.Add(payload);
 
-            var dispatcher = EventDispatcher;
-            if (dispatcher is not null && (@event.IsDomainEvent || DirectlyDispatchNotDomainEvents))
-            {
-                var (response, error) = await dispatcher.DispatchAsync(Provider, @event, ct);
-                if (response?.IsSuccess == false || error is not null)
-                {
-                    var ex = response?.GetBody<Exception>();
-                    if (ex is null)
-                        throw new InvalidOperationException("Error when executed events");
-                    throw new AggregateException("Error when executed events", ex);
-                }
-            }
+            var eventDispatcher = EventDispatcher;
+            if (eventDispatcher is null || !@event.IsDomainEvent && !DirectlyDispatchNotDomainEvents)
+                continue;
+
+            var (response, error) = await eventDispatcher.DispatchAsync(Provider, @event, ct);
+            if (error is null)
+                continue;
+
+            var ex = error.GetBody<Exception>();
+            if (ex is null)
+                throw new InvalidOperationException("Error when executed events");
+            throw new AggregateException("Error when executed events", ex);
         }
-        var eventSourcedRepository = EventSourcedRepository;
-        if (eventSourcedRepository is not null)
-            await eventSourcedRepository.CreateAsync(eventsPayload, forceSave, ct);
+        var eventRepository = EventRepository;
+        if (eventRepository is not null)
+            await eventRepository.CreateAsync(eventsPayload, forceSave, ct);
     }
     /// <summary>
     /// Indicated all event already dispatchers.
@@ -111,12 +111,12 @@ public abstract class MediatorDispatchEvent<TEventPayload, TPayload> : IMediator
     /// <returns></returns>
     public virtual async ValueTask EventsDispatchedAsync(IEnumerable<IEvent> events, CancellationToken ct)
     {
-        var eventSourcedRepository = EventSourcedRepository;
-        if (eventSourcedRepository is not null)
-            await eventSourcedRepository.SavePendingCangesAsync(ct);
+        var eventRepository = EventRepository;
+        if (eventRepository is not null)
+            await eventRepository.SavePendingCangesAsync(ct);
 
-        var publish = EventPublishWorker;
-        if (publish is not null)
-            await publish.PublishAsync(events, ct);
+        var publishWorker = EventPublishWorker;
+        if (publishWorker is not null)
+            await publishWorker.PublishAsync(events, ct);
     }
 }

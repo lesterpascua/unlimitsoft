@@ -4,7 +4,6 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Event;
 using UnlimitSoft.Json;
 using UnlimitSoft.Message;
@@ -30,14 +29,14 @@ public static class ProcessorUtility
     /// <param name="onError"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async Task<(IResponse?, Exception?)> Default<TEvent>(
+    public static async ValueTask<IResponse?> Default<TEvent>(
         IEventDispatcher dispatcher,
         IEventNameResolver resolver,
         IJsonSerializer serializer,
         MessageEnvelop envelop,
         ServiceBusReceivedMessage message,
         Action<TEvent>? beforeProcess = null,
-        Func<Exception, TEvent?, MessageEnvelop, CancellationToken, Task>? onError = null,
+        Func<Exception, TEvent?, MessageEnvelop, CancellationToken, ValueTask>? onError = null,
         ILogger? logger = null,
         CancellationToken ct = default
     )

@@ -19,15 +19,13 @@ using UnlimitSoft.Bus.Hangfire;
 using UnlimitSoft.Bus.Hangfire.DependencyInjection;
 using UnlimitSoft.CQRS.DependencyInjection;
 using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.Event.Json;
-using UnlimitSoft.CQRS.EventSourcing;
 using UnlimitSoft.CQRS.Memento;
 using UnlimitSoft.CQRS.Message;
 using UnlimitSoft.Data.EntityFramework.Configuration;
 using UnlimitSoft.Data.EntityFramework.DependencyInjection;
 using UnlimitSoft.Data.EntityFramework.Utility;
 using UnlimitSoft.DependencyInjections;
-using UnlimitSoft.EventBus.Azure.Configuration;
+using UnlimitSoft.EventBus.Configuration;
 using UnlimitSoft.Json;
 using UnlimitSoft.Logger.AspNet;
 using UnlimitSoft.Web;
@@ -81,16 +79,16 @@ public class Startup
             out TransformResponseAttributeOptions transformResponseOptions);
 
         // bus config by code.
-        var eventBusOptions = new AzureEventBusOptions<QueueIdentifier>(endpoint);
+        var eventBusOptions = new EventBus.Azure.Configuration.EventBusOptions<QueueIdentifier>();
         eventBusOptions.ListenQueues ??= new QueueAlias<QueueIdentifier>[] {
             new QueueAlias<QueueIdentifier> {
                 Active = true,
                 Alias = QueueIdentifier.MyQueue, Queue = QueueIdentifier.MyQueue.ToPrettyString()
             }
         };
-        eventBusOptions.ActivateQueues(true, QueueIdentifier.MyQueue);
+        eventBusOptions.ActivatePublishAlias(true, QueueIdentifier.MyQueue);
 
-        services.Configure<AzureEventBusOptions<QueueIdentifier>>(setup =>
+        services.Configure<EventBus.Azure.Configuration.EventBusOptions<QueueIdentifier>>(setup =>
         {
             setup.Endpoint = eventBusOptions.Endpoint;
             setup.PublishQueues = eventBusOptions.PublishQueues;
@@ -263,7 +261,7 @@ public class Startup
         IApplicationBuilder app, 
         IWebHostEnvironment env, 
         IServiceScopeFactory factory,
-        IOptions<AzureEventBusOptions<QueueIdentifier>> eventBusOption, 
+        IOptions<EventBusOptions<QueueIdentifier>> eventBusOption, 
         ILogger<Startup> logger
     )
     {

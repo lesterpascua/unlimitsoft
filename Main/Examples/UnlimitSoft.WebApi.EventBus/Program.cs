@@ -3,13 +3,15 @@ using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 using UnlimitSoft.CQRS.DependencyInjection;
 using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.EventBus.Azure;
-using UnlimitSoft.EventBus.Azure.Configuration;
+using UnlimitSoft.EventBus.DotNetMQ;
 using UnlimitSoft.Json;
 using UnlimitSoft.Logger.Configuration;
 using UnlimitSoft.Logger.DependencyInjection;
+using UnlimitSoft.Text.Json;
+using UnlimitSoft.WebApi.EventBus;
 using UnlimitSoft.WebApi.EventBus.EventBus;
+using UnlimitSoft.WebApi.EventBus.Processors;
 
 // ================================================================================================================================
 // In this example we add a logger and include a custom properties in every logger
@@ -25,14 +27,20 @@ using UnlimitSoft.WebApi.EventBus.EventBus;
 var builder = WebApplication.CreateBuilder(args);
 builder.Host.UseSerilog();
 
-var app = ConfigureServices(builder.Services);
+var app = ConfigureServices(builder.Services, EventBusType.Azure);
 await Configure(app);
 
 
-WebApplication ConfigureServices(IServiceCollection services)
+WebApplication ConfigureServices(IServiceCollection services, EventBusType busType)
 {
     #region Config
-    services.Configure<EventBusOptions>(builder.Configuration.GetSection("EventBus"));
+    var section = busType switch
+    {
+        EventBusType.Azure => "AzureEventBus",
+        EventBusType.DotNetMQ => "DotNetMQEventBus",
+        _ => throw new NotSupportedException()
+    };
+    services.Configure<EventBusOptions>(builder.Configuration.GetSection(section));
     #endregion
 
     // Add services to the container.
@@ -56,70 +64,21 @@ WebApplication ConfigureServices(IServiceCollection services)
     );
     #endregion
 
+    services.AddSingleton(JsonUtil.Default = new DefaultJsonSerializer());
 
     #region Event Bus
     services.AddUnlimitSoftEventNameResolver(new [] { typeof(Program).Assembly });
-    services.AddSingleton<IEventBus>(provider =>
+    switch (busType)
     {
-        var options = provider.GetRequiredService<IOptions<EventBusOptions>>().Value;
-        var queues = new[] { 
-            new QueueAlias<QueueIdentifier> { Active = true, Alias = QueueIdentifier.Test, Queue = options.QueueOrTopic }
-        };
-
-        var logger = provider.GetRequiredService<ILogger<Program>>();
-        var eventNameResolver = provider.GetRequiredService<IEventNameResolver>();
-        var serialize = provider.GetRequiredService<IJsonSerializer>();
-
-        return new AzureEventBus<QueueIdentifier>(
-           options.Endpoint,
-           queues,
-           eventNameResolver,
-           serialize,
-           null,
-           null,
-           setup: (graph, message) =>
-           {
-               message.ApplicationProperties["IdentityId"] = "Me";       // Set identity as custom property in the event
-           },
-           logger
-        );
-    });
-    services.AddSingleton<IEventListener>(provider =>
-    {
-        var resolver = provider.GetRequiredService<IEventNameResolver>();
-        var logger = provider.GetRequiredService<ILogger<AzureEventListener<QueueIdentifier>>>();
-        var serialize = provider.GetRequiredService<IJsonSerializer>();
-        var options = provider.GetRequiredService<IOptions<EventBusOptions>>().Value;
-
-        return new AzureEventListener<QueueIdentifier>(
-            options.Endpoint,
-            new[] { 
-                new QueueAlias<QueueIdentifier> { Active = true, Alias = QueueIdentifier.TestService1, Queue = options.Queue1 },
-                new QueueAlias<QueueIdentifier> { Active = true, Alias = QueueIdentifier.TestService2, Queue = options.Queue2 }
-            },
-            async (args, ct) =>
-            {
-                var message = args.Azure.Message;
-                if (!message.ApplicationProperties.TryGetValue("IdentityId", out var identityId))
-                    identityId = null;
-
-                logger.LogDebug("Receive from {Queue}, event: {@Event}", args.Queue, args.Envelop);
-                try
-                {
-                    logger.LogInformation("Event: {@Args}", args);
-                    await args.Azure.CompleteMessageAsync(message, ct);
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, "Event: {@Args}", args);
-                    await args.Azure.CompleteMessageAsync(message, ct);
-                }
-            },
-            serialize,
-            1,
-            logger
-        );
-    });
+        case EventBusType.Azure:
+            AddAzureEventBus(services);
+            break;
+        case EventBusType.DotNetMQ:
+            AddDotNetMQEventBus(services);
+            break;
+        default:
+            throw new NotSupportedException("Data is not supported");
+    }
     #endregion
 
     services.AddControllers();
@@ -157,4 +116,85 @@ async Task Configure(WebApplication app)
     app.MapControllers();
 
     app.Run();
+}
+
+IServiceCollection AddAzureEventBus(IServiceCollection services)
+{
+    services.AddSingleton<IEventBus>(provider =>
+    {
+        var options = provider.GetRequiredService<IOptions<EventBusOptions>>().Value;
+        var logger = provider.GetRequiredService<ILogger<AzureEventBus<QueueIdentifier>>>();
+        var eventNameResolver = provider.GetRequiredService<IEventNameResolver>();
+        var serialize = provider.GetRequiredService<IJsonSerializer>();
+
+        return new AzureEventBus<QueueIdentifier>(
+           options.Endpoint,
+           options.PublishQueues,
+           eventNameResolver,
+           serialize,
+           null,
+           null,
+           setup: (graph, message) =>
+           {
+               message.ApplicationProperties["IdentityId"] = "Me";       // Set identity as custom property in the event
+           },
+           logger
+        );
+    });
+    services.AddSingleton<IEventListener>(provider =>
+    {
+        var serialize = provider.GetRequiredService<IJsonSerializer>();
+        var resolver = provider.GetRequiredService<IEventNameResolver>();
+        var options = provider.GetRequiredService<IOptions<EventBusOptions>>().Value;
+        var logger = provider.GetRequiredService<ILogger<AzureEventListener<QueueIdentifier>>>();
+
+        return new AzureEventListener<QueueIdentifier>(
+            options.Endpoint,
+            options.ListenQueues!,
+            (arg, ct) => DefaultProcessor.ProcessAsync(arg, logger, ct),
+            serialize,
+            1,
+            logger
+        );
+    });
+    return services;
+}
+IServiceCollection AddDotNetMQEventBus(IServiceCollection services)
+{
+    services.AddSingleton<IEventBus>(provider =>
+    {
+        var options = provider.GetRequiredService<IOptions<EventBusOptions>>().Value;
+        var logger = provider.GetRequiredService<ILogger<MemoryEventBus<QueueIdentifier>>>();
+        var eventNameResolver = provider.GetRequiredService<IEventNameResolver>();
+        var serialize = provider.GetRequiredService<IJsonSerializer>();
+
+        return new MemoryEventBus<QueueIdentifier>(
+           "Sender",
+           options.PublishQueues,
+           eventNameResolver,
+           serialize,
+           null,
+           null,
+           setup: (graph, message) =>
+           {
+               //message.ApplicationProperties["IdentityId"] = "Me";       // Set identity as custom property in the event
+           },
+           logger
+        );
+    });
+    services.AddSingleton<IEventListener>(provider =>
+    {
+        var serialize = provider.GetRequiredService<IJsonSerializer>();
+        var resolver = provider.GetRequiredService<IEventNameResolver>();
+        var options = provider.GetRequiredService<IOptions<EventBusOptions>>().Value;
+        var logger = provider.GetRequiredService<ILogger<MemoryEventListener<QueueIdentifier>>>();
+
+        return new MemoryEventListener<QueueIdentifier>(
+            options.ListenQueues!,
+            (arg, ct) => DefaultProcessor.ProcessAsync(arg, logger, ct),
+            serialize,
+            logger
+        );
+    });
+    return services;
 }

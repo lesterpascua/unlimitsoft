@@ -7,18 +7,25 @@ using Microsoft.Extensions.Logging;
 using Serilog;
 using Serilog.Context;
 using Serilog.Sinks.SystemConsole.Themes;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json.Serialization;
+using System.Threading;
+using System.Threading.Tasks;
 using UnlimitSoft.CQRS.DependencyInjection;
 using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Data;
 using UnlimitSoft.Data.EntityFramework.Configuration;
 using UnlimitSoft.Data.EntityFramework.DependencyInjection;
 using UnlimitSoft.Event;
 using UnlimitSoft.EventBus.Azure;
 using UnlimitSoft.EventBus.Azure.Configuration;
+using UnlimitSoft.Json;
 using UnlimitSoft.Logger.Configuration;
 using UnlimitSoft.Logger.DependencyInjection;
 using UnlimitSoft.Security;
+using UnlimitSoft.Text.Json;
 using UnlimitSoft.Web.AspNet.Filter;
 using UnlimitSoft.Web.AspNet.Security;
 using UnlimitSoft.Web.AspNet.Security.Authentication;
@@ -26,15 +33,6 @@ using UnlimitSoft.WebApi.Sources.CQRS.Bus;
 using UnlimitSoft.WebApi.Sources.CQRS.Event;
 using UnlimitSoft.WebApi.Sources.Security;
 using UnlimitSoft.WebApi.Sources.Security.Cryptography;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.Json.Serialization;
-using System.Threading;
-using System.Threading.Tasks;
-using UnlimitSoft.Json;
-using UnlimitSoft.Text.Json;
-using static BenchmarkDotNet.Attributes.MarkdownExporterAttribute;
 
 namespace UnlimitSoft.WebApi.DependencyInjection;
 
@@ -172,11 +170,11 @@ public static class IServiceCollectionExtensions
     /// <param name="maxConcurrentCalls">Maximun thread for process events.</param>
     /// <returns></returns>
     public static IServiceCollection AddAzureEventBus<TUnitOfWork, TEvent>(this IServiceCollection services,
-        AzureEventBusOptions<QueueIdentifier> options,
+        EventBusOptions<QueueIdentifier> options,
         Func<IServiceProvider, QueueIdentifier, string, object, bool> filter,
         Func<IServiceProvider, QueueIdentifier, string, object, object> transform,
         Action<TEvent>? beforeProcess = null,
-        Func<IServiceProvider, Exception, TEvent, MessageEnvelop, CancellationToken, Task>? onError = null,
+        Func<IServiceProvider, Exception, TEvent?, MessageEnvelop, CancellationToken, Task>? onError = null,
         int maxConcurrentCalls = 1
     )
         where TUnitOfWork : IUnitOfWork
@@ -243,8 +241,8 @@ public static class IServiceCollectionExtensions
                 var serializer = provider.GetRequiredService<IJsonSerializer>();
                 var logger = provider.GetRequiredService<ILogger<AzureEventListener<QueueIdentifier>>>();
 
-                Func<Exception, TEvent, MessageEnvelop, CancellationToken, Task> listenerOnError = null;
-                if (onError != null)
+                Func<Exception, TEvent?, MessageEnvelop, CancellationToken, ValueTask>? listenerOnError = null;
+                if (onError is not null)
                     listenerOnError = async (ex, @event, messageEnvelop, ct) => await onError(provider, ex, @event, messageEnvelop, ct);
 
                 return new AzureEventListener<QueueIdentifier>(
@@ -254,7 +252,7 @@ public static class IServiceCollectionExtensions
                     {
                         const string Retry = "Retry";
 
-                        var message = args.Azure.Message;
+                        var message = args.Message.Message;
                         var identityId = message.ApplicationProperties["IdentityId"];
 
                         using var _1 = LogContext.PushProperty("IdentityId", identityId);
@@ -275,18 +273,18 @@ public static class IServiceCollectionExtensions
                                 logger, 
                                 ct
                             );
-                            await args.Azure.CompleteMessageAsync(message, ct);
+                            await args.Message.CompleteMessageAsync(message, ct);
                         }
                         catch (Exception ex)
                         {
                             int retry = 0;
-                            if (args.Azure.Message.ApplicationProperties.TryGetValue(Retry, out var tmp))
+                            if (args.Message.Message.ApplicationProperties.TryGetValue(Retry, out var tmp))
                                 retry = Convert.ToInt32(tmp);
 
                             if (retry >= 3)
                             {
                                 logger.LogWarning(ex, "Error processing event: {Event}", args.Envelop.Msg);
-                                await args.Azure.CompleteMessageAsync(message, cancellationToken: ct);
+                                await args.Message.CompleteMessageAsync(message, cancellationToken: ct);
                                 //await args.Azure.DeadLetterMessageAsync(message, new Dictionary<string, object> { { "Error", ex.Message } }, cancellationToken: ct);
                                 return;
                             }
@@ -295,7 +293,7 @@ public static class IServiceCollectionExtensions
                             logger.LogWarning(ex, "Error processing event: {Event}, Retry: {Attempt}", args.Envelop.Msg, retry);
 
                             await Task.Delay(args.WaitRetry, ct);
-                            await args.Azure.AbandonMessageAsync(message, new Dictionary<string, object> { { Retry, retry } }, cancellationToken: ct);
+                            await args.Message.AbandonMessageAsync(message, new Dictionary<string, object> { { Retry, retry } }, cancellationToken: ct);
                         }
                     },
                     serializer,

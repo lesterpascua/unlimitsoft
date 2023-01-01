@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
+using UnlimitSoft.CQRS.Data;
 using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.CQRS.Event.Json;
-using UnlimitSoft.CQRS.EventSourcing;
 using UnlimitSoft.Json;
 
 namespace UnlimitSoft.WebApi.Sources.CQRS.Event;
@@ -26,5 +26,5 @@ public sealed class MyMediatorDispatchEventSourced : JsonMediatorDispatchEvent
     /// <inheritdoc />
     protected override IEventPublishWorker? EventPublishWorker => Provider.GetService<IEventPublishWorker>();
     /// <inheritdoc />
-    protected override IEventSourcedRepository<JsonEventPayload, string>? EventSourcedRepository => Provider.GetService<IMyEventSourcedRepository>();
+    protected override IEventRepository<JsonEventPayload, string>? EventRepository => Provider.GetService<IMyEventSourcedRepository>();
 }

@@ -36,9 +36,9 @@
 		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.AkkaBus\UnlimitSoft.AkkaBus.csproj" />
 		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.Bus.Hangfire\UnlimitSoft.Bus.Hangfire.csproj" />
 		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.CQRS\UnlimitSoft.CQRS.csproj" />
-		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.EventBus.Azure\UnlimitSoft.EventBus.Azure.csproj" />
 		<ProjectReference Include="..\..\Sources\Data\UnlimitSoft.Data.EntityFramework\UnlimitSoft.Data.EntityFramework.csproj" />
 		<ProjectReference Include="..\..\Sources\Data\UnlimitSoft.Data\UnlimitSoft.Data.csproj" />
+		<ProjectReference Include="..\..\Sources\EventBus\UnlimitSoft.EventBus.Azure\UnlimitSoft.EventBus.Azure.csproj" />
 		<ProjectReference Include="..\..\Sources\Web\UnlimitSoft.Web.AspNet\UnlimitSoft.Web.AspNet.csproj" />
 		<ProjectReference Include="..\..\Sources\Web\UnlimitSoft.Web\UnlimitSoft.Web.csproj" />
 	</ItemGroup>

@@ -7,7 +7,6 @@ using System.Reflection;
 using UnlimitSoft.CQRS.Command;
 using UnlimitSoft.CQRS.Command.Pipeline;
 using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.CQRS.Query;
 using UnlimitSoft.Event;
 using UnlimitSoft.Mediator;
@@ -41,6 +40,10 @@ public static class IServiceConnectionExtensions
     /// <returns></returns>
     public static IServiceCollection AddUnlimitSoftEventNameResolver(this IServiceCollection services, Assembly[] typeResolverCache, Func<Type, string>? transform = null)
     {
+        var register = GetTypesFromInterface<IEvent>(typeResolverCache).ToDictionary(k => transform?.Invoke(k) ?? k.FullName!);
+        return services.AddSingleton<IEventNameResolver>(new DefaultEventCommandResolver(register));
+
+        // =================================================================================================================================
         static IEnumerable<Type> GetTypesFromInterface<T>(params Assembly[] assemblies) where T : class
         {
             if (!typeof(T).IsInterface)
@@ -57,9 +60,6 @@ public static class IServiceConnectionExtensions
             }
             return result;
         }
-
-        var register = GetTypesFromInterface<IEvent>(typeResolverCache).ToDictionary(k => transform?.Invoke(k) ?? k.FullName!);
-        return services.AddSingleton<IEventNameResolver>(new DefaultEventCommandResolver(register));
     }
 
 
