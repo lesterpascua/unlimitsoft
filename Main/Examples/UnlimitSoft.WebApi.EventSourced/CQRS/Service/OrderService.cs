@@ -29,6 +29,10 @@ public sealed class OrderService
         _logger = logger;
     }
 
+    public async Task<Order?> GetByIdAsync(Guid id, CancellationToken ct)
+    {
+        return (Order?)await _memento.FindByVersionAsync(id, ct: ct);
+    }
     public async Task<JsonEventPayload[]> HistoryAsync(Guid id, CancellationToken ct)
     {
         var history = await _eventRepository.GetHistoryAsync(id, long.MaxValue, ct);
