@@ -4,7 +4,6 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Event;
 using UnlimitSoft.Json;
 using UnlimitSoft.Message;
@@ -45,7 +44,7 @@ public class EventController : ControllerBase
         var json = _serializer.Serialize(@event)!;
 
         var envelop = new MessageEnvelop(MessageType.Json, json, null);
-        var (response, _) = await EventUtility.ProcessAsync<IEvent>(
+        var response = await EventUtility.ProcessAsync<IEvent>(
             typeof(TestEvent).FullName!, 
             envelop,
             _serializer,

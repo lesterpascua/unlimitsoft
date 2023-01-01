@@ -1,6 +1,4 @@
-﻿using UnlimitSoft.CQRS.Event.Json;
-using UnlimitSoft.CQRS.EventSourcing;
-using UnlimitSoft.Event;
+﻿using UnlimitSoft.Event;
 using UnlimitSoft.Json;
 using System;
 using System.Collections.Generic;
@@ -8,6 +6,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.CQRS.Data;
 
 namespace UnlimitSoft.CQRS.Memento;
 
@@ -41,17 +40,17 @@ public interface IMemento<TEntity>
 /// </summary>
 /// <typeparam name="TInterface"></typeparam>
 /// <typeparam name="TEntity"></typeparam>
-/// <typeparam name="TVersionedEventPayload"></typeparam>
+/// <typeparam name="TEventPayload"></typeparam>
 /// <typeparam name="TPayload"></typeparam>
-public abstract class Memento<TInterface, TEntity, TVersionedEventPayload, TPayload> : IMemento<TInterface>
+public abstract class Memento<TInterface, TEntity, TEventPayload, TPayload> : IMemento<TInterface>
     where TEntity : class, TInterface, IEventSourced, new()
-    where TVersionedEventPayload : EventPayload<TPayload>
+    where TEventPayload : EventPayload<TPayload>
     where TPayload : notnull
 {
     private readonly bool _snapshot;
     private readonly IJsonSerializer _serializer;
     private readonly IEventNameResolver _nameResolver;
-    private readonly IEventSourcedRepository<TVersionedEventPayload, TPayload> _eventSourcedRepository;
+    private readonly IEventRepository<TEventPayload, TPayload> _eventSourcedRepository;
     private readonly Func<IReadOnlyCollection<IMementoEvent<TInterface>>, TEntity>? _factory;
 
     /// <summary>
@@ -65,7 +64,7 @@ public abstract class Memento<TInterface, TEntity, TVersionedEventPayload, TPayl
     public Memento(
         IJsonSerializer serializer, 
         IEventNameResolver nameResolver,
-        IEventSourcedRepository<TVersionedEventPayload, TPayload> eventSourcedRepository, 
+        IEventRepository<TEventPayload, TPayload> eventSourcedRepository, 
         Func<IReadOnlyCollection<IMementoEvent<TInterface>>, TEntity>? factory = null, 
         bool snapshot = false
     )
@@ -126,7 +125,7 @@ public abstract class Memento<TInterface, TEntity, TVersionedEventPayload, TPayl
 
 
     #region Nested Classes
-    private TInterface LoadEntityFromSnapshot(TVersionedEventPayload eventPayload)
+    private TInterface LoadEntityFromSnapshot(TEventPayload eventPayload)
     {
         var eventType = _nameResolver.Resolver(eventPayload.EventName);
         if (eventType is null)
@@ -135,7 +134,7 @@ public abstract class Memento<TInterface, TEntity, TVersionedEventPayload, TPayl
 
         return @event.GetEntity();
     }
-    private TEntity LoadEntityFromHistory(TVersionedEventPayload[] eventsPayload)
+    private TEntity LoadEntityFromHistory(TEventPayload[] eventsPayload)
     {
         var oldEvents = new IMementoEvent<TInterface>[eventsPayload.Length];
         for (var i = 0; i < eventsPayload.Length; i++)

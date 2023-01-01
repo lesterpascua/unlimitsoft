@@ -10,7 +10,7 @@
 	<PropertyGroup>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<SignAssembly>true</SignAssembly>
-		<AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+		<!--<AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>-->
 		<Authors>Lester Pastrana</Authors>
 		<Company>Private</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
@@ -44,12 +44,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Azure.Messaging.ServiceBus" Version="7.11.1" />
-		<PackageReference Include="Polly" Version="7.2.3" />
+	  <ProjectReference Include="..\..\CQRS\UnlimitSoft.CQRS\UnlimitSoft.CQRS.csproj" />
 	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\UnlimitSoft.CQRS\UnlimitSoft.CQRS.csproj" />
-	</ItemGroup>
-
 </Project>

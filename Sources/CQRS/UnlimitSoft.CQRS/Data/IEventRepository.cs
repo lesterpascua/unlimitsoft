@@ -2,17 +2,18 @@
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Web.Model;
 
-namespace UnlimitSoft.CQRS.EventSourcing;
+namespace UnlimitSoft.CQRS.Data;
 
 
 /// <summary>
 /// Provide an abstraction to access to the event source storage
 /// </summary>
-public interface IEventSourcedRepository<TEventPayload, TPayload>
+public interface IEventRepository<TEventPayload, TPayload>
     where TEventPayload : EventPayload<TPayload>
 {
     /// <summary>
@@ -21,7 +22,7 @@ public interface IEventSourcedRepository<TEventPayload, TPayload>
     /// <param name="paging"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<NonPublishVersionedEventPayload[]> GetNonPublishedEventsAsync(Paging? paging = null, CancellationToken ct = default);
+    Task<NonPublishEventPayload[]> GetNonPublishedEventsAsync(Paging? paging = null, CancellationToken ct = default);
 
     /// <summary>
     /// 

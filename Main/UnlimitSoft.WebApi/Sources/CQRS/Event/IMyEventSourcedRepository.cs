@@ -1,13 +1,13 @@
 ﻿using Microsoft.Extensions.Logging;
+using UnlimitSoft.CQRS.Data;
 using UnlimitSoft.CQRS.Event.Json;
-using UnlimitSoft.CQRS.EventSourcing;
 using UnlimitSoft.CQRS.EventSourcing.Json;
 using UnlimitSoft.WebApi.Sources.Data;
 
 namespace UnlimitSoft.WebApi.Sources.CQRS.Event;
 
 
-public interface IMyEventSourcedRepository : IEventSourcedRepository<JsonEventPayload, string>
+public interface IMyEventSourcedRepository : IEventRepository<JsonEventPayload, string>
 {
 }
 public class MyEventSourcedRepository : DbContextJsonEventSourcedRepository, IMyEventSourcedRepository

@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace UnlimitSoft.CQRS.EventSourcing;
+namespace UnlimitSoft.CQRS.Data.Dto;
 
 
 /// <summary>

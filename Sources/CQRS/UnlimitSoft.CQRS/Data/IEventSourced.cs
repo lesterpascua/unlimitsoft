@@ -1,5 +1,4 @@
 ﻿using UnlimitSoft.CQRS.Command;
-using UnlimitSoft.CQRS.Data;
 using UnlimitSoft.Event;
 using System;
 using System.Collections.Generic;
@@ -7,7 +6,7 @@ using System.Linq;
 using System.Threading;
 using UnlimitSoft.Web.Model;
 
-namespace UnlimitSoft.CQRS.EventSourcing;
+namespace UnlimitSoft.CQRS.Data;
 
 
 /// <summary>
@@ -95,7 +94,8 @@ public abstract class EventSourced : AggregateRoot, IEventSourced
     /// <param name="body"></param>
     protected IEvent AddEvent<TEvent, TBody>(Guid eventId, ushort serviceId, string? workerId, string? correlationId, ICommand? creator, object? prevState, object? currState, TBody body) where TEvent : Event<TBody>
     {
-        var args = new EventFactoryArgs<TBody> {
+        var args = new EventFactoryArgs<TBody>
+        {
             EventType = typeof(TEvent),
             EventId = eventId,
             SourceId = Id,
@@ -123,16 +123,16 @@ public abstract class EventSourced : AggregateRoot, IEventSourced
     protected virtual IEvent EventFactory<TBody>(in EventFactoryArgs<TBody> args)
     {
         var @event = Activator.CreateInstance(
-            args.EventType, 
-            args.EventId, 
-            args.SourceId, 
-            args.Version, 
-            args.ServiceId, 
-            args.WorkerId, 
-            args.CorrelationId, 
-            args.Creator, 
-            args.PrevState, 
-            args.CurrState, 
+            args.EventType,
+            args.EventId,
+            args.SourceId,
+            args.Version,
+            args.ServiceId,
+            args.WorkerId,
+            args.CorrelationId,
+            args.Creator,
+            args.PrevState,
+            args.CurrState,
             args.IsDomain,
             args.Body
         );

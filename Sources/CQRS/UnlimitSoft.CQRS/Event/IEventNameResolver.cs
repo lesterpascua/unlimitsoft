@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace UnlimitSoft.CQRS.Event.Json;
+namespace UnlimitSoft.CQRS.Event;
 
 
 /// <summary>

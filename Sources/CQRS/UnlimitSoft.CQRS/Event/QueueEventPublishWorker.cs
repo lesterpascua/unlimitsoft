@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using UnlimitSoft.CQRS.EventSourcing;
 using UnlimitSoft.Data;
 using UnlimitSoft.Event;
 using UnlimitSoft.Web.Model;
@@ -10,6 +9,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Data;
+using UnlimitSoft.CQRS.Data.Dto;
 
 namespace UnlimitSoft.CQRS.Event;
 
@@ -26,7 +27,7 @@ namespace UnlimitSoft.CQRS.Event;
 /// <typeparam name="TPayload"></typeparam>
 public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPayload> : IEventPublishWorker
     where TEventPayload : EventPayload<TPayload>
-    where TEventSourcedRepository : IEventSourcedRepository<TEventPayload, TPayload>
+    where TEventSourcedRepository : IEventRepository<TEventPayload, TPayload>
 {
     private readonly int _bachSize;
     private readonly bool _enableScheduled;
@@ -269,8 +270,8 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
         var eventSourcedRepository = scope.ServiceProvider.GetRequiredService<TEventSourcedRepository>();
 
         int page = 0;
-        NonPublishVersionedEventPayload[] nonPublishEvents;
-        var pending = new List<NonPublishVersionedEventPayload>();
+        NonPublishEventPayload[] nonPublishEvents;
+        var pending = new List<NonPublishEventPayload>();
         do
         {
             var paging = new Paging { Page = page++, PageSize = PageSize };

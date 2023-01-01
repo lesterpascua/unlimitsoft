@@ -16,7 +16,9 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\..\Sources\Core\UnlimitSoft.Logger.DependencyInjection\UnlimitSoft.Logger.DependencyInjection.csproj" />
 		<ProjectReference Include="..\..\..\Sources\Core\UnlimitSoft.Logger\UnlimitSoft.Logger.csproj" />
-		<ProjectReference Include="..\..\..\Sources\CQRS\UnlimitSoft.EventBus.Azure\UnlimitSoft.EventBus.Azure.csproj" />
+		<ProjectReference Include="..\..\..\Sources\Core\UnlimitSoft.Text.Json\UnlimitSoft.Text.Json.csproj" />
+		<ProjectReference Include="..\..\..\Sources\EventBus\UnlimitSoft.EventBus.Azure\UnlimitSoft.EventBus.Azure.csproj" />
+		<ProjectReference Include="..\..\..\Sources\EventBus\UnlimitSoft.EventBus.DotNetMQ\UnlimitSoft.EventBus.DotNetMQ.csproj" />
 	</ItemGroup>
 
 </Project>

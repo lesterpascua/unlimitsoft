@@ -6,9 +6,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Data;
+using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.CQRS.Event.Json;
-using UnlimitSoft.CQRS.EventSourcing;
 using UnlimitSoft.Data;
 using UnlimitSoft.Web.Model;
 using Xunit;
@@ -41,7 +42,7 @@ public class QueueEventPublishWorkerTests
                 return Task.CompletedTask;
             });
 
-        var repository = Substitute.For<IEventSourcedRepository<JsonEventPayload, string>>();
+        var repository = Substitute.For<IEventRepository<JsonEventPayload, string>>();
         repository.GetNonPublishedEventsAsync(Arg.Any<Paging>(), Arg.Any<CancellationToken>())
             .Returns(x =>
             {
@@ -51,7 +52,7 @@ public class QueueEventPublishWorkerTests
                     .Where(p => p.IsPubliched == false)
                     .Skip(paging.Page * paging.PageSize)
                     .Take(paging.PageSize)
-                    .Select(s => new NonPublishVersionedEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
+                    .Select(s => new NonPublishEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
                     .ToArray();
             });
         repository.GetEventsAsync(Arg.Any<Guid[]>(), Arg.Any<CancellationToken>())
@@ -71,7 +72,7 @@ public class QueueEventPublishWorkerTests
             {
                 if (info.ArgAt<Type>(0) == typeof(IUnitOfWork))
                     return Substitute.For<IUnitOfWork>();
-                if (info.ArgAt<Type>(0) == typeof(IEventSourcedRepository<JsonEventPayload, string>))
+                if (info.ArgAt<Type>(0) == typeof(IEventRepository<JsonEventPayload, string>))
                     return repository;
 
                 throw new NotSupportedException();
@@ -88,7 +89,7 @@ public class QueueEventPublishWorkerTests
     public async Task StartLoadingPendingEvent_Load3EventOnly2SchedulerInTime_ShouldPublish2EventInEventBus()
     {
         // Arrange
-        using var publishWorker = new QueueEventPublishWorker<IEventSourcedRepository<JsonEventPayload, string>, JsonEventPayload, string>(
+        using var publishWorker = new QueueEventPublishWorker<IEventRepository<JsonEventPayload, string>, JsonEventPayload, string>(
             _factory, 
             _eventBus, 
             MessageType.Event, 

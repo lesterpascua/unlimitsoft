@@ -12,7 +12,10 @@ namespace UnlimitSoft.WebApi.Sources.CQRS.Event;
 
 public class TestEventBody
 {
-    public string Test { get; set; }
+    /// <summary>
+    /// 
+    /// </summary>
+    public string Test { get; set; } = default!;
 }
 public class TestEvent : MyEvent<TestEventBody>, IMementoEvent<Customer>
 {

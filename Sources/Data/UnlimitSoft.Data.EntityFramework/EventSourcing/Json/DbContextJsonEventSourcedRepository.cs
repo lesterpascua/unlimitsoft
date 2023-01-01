@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Data;
+using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.CQRS.Query;
 using UnlimitSoft.Web.Model;
@@ -15,7 +17,7 @@ namespace UnlimitSoft.CQRS.EventSourcing.Json;
 /// <summary>
 /// 
 /// </summary>
-public class DbContextJsonEventSourcedRepository : IEventSourcedRepository<JsonEventPayload, string>
+public class DbContextJsonEventSourcedRepository : IEventRepository<JsonEventPayload, string>
 {
     private readonly ILogger _logger;
     private readonly DbContext _dbContext;
@@ -36,7 +38,7 @@ public class DbContextJsonEventSourcedRepository : IEventSourcedRepository<JsonE
 
 
     /// <inheritdoc />
-    public virtual async Task<NonPublishVersionedEventPayload[]> GetNonPublishedEventsAsync(Paging? paging = null, CancellationToken ct = default)
+    public virtual async Task<NonPublishEventPayload[]> GetNonPublishedEventsAsync(Paging? paging = null, CancellationToken ct = default)
     {
         IQueryable<JsonEventPayload> query = _repository
             .Where(p => !p.IsPubliched)
@@ -45,9 +47,9 @@ public class DbContextJsonEventSourcedRepository : IEventSourcedRepository<JsonE
             query = query.ApplyPagging(paging.Page, paging.PageSize);
 
         var data = await query
-            .Select(s => new NonPublishVersionedEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
+            .Select(s => new NonPublishEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
             .ToArrayAsync(ct);
-        return data ?? Array.Empty<NonPublishVersionedEventPayload>();
+        return data ?? Array.Empty<NonPublishEventPayload>();
     }
 
     /// <inheritdoc />
