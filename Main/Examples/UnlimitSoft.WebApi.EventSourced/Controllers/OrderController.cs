@@ -22,6 +22,15 @@ public sealed class OrderController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult> Get([FromRoute] Guid id, CancellationToken ct = default)
     {
+        var order = await _service.GetByIdAsync(id, ct);
+        if (order is null)
+            return NotFound();
+
+        return Ok(order);
+    }
+    [HttpGet("{id}/history")]
+    public async Task<ActionResult> GetHistory([FromRoute] Guid id, CancellationToken ct = default)
+    {
         var order = await _service.HistoryAsync(id, ct);
         if (order is null)
             return NotFound();
