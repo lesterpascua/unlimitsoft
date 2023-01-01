@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+
+	<PropertyGroup>
+		<TargetFramework>net7.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<UserSecretsId>ed892879-5492-43e7-b16e-6fc057707212</UserSecretsId>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Bogus" Version="34.0.2" />
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.1" />
+		<PackageReference Include="Serilog.AspNetCore" Version="6.0.1" />
+		<PackageReference Include="Serilog.Sinks.Console" Version="4.1.0" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.4.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\..\Sources\Core\UnlimitSoft.Logger.DependencyInjection\UnlimitSoft.Logger.DependencyInjection.csproj" />
+		<ProjectReference Include="..\..\..\Sources\Core\UnlimitSoft.Logger\UnlimitSoft.Logger.csproj" />
+		<ProjectReference Include="..\..\..\Sources\Core\UnlimitSoft.Text.Json\UnlimitSoft.Text.Json.csproj" />
+		<ProjectReference Include="..\..\..\Sources\Data\UnlimitSoft.Data.EntityFramework\UnlimitSoft.Data.EntityFramework.csproj" />
+	</ItemGroup>
+
+</Project>

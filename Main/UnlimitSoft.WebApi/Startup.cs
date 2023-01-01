@@ -80,12 +80,7 @@ public class Startup
 
         // bus config by code.
         var eventBusOptions = new EventBus.Azure.Configuration.EventBusOptions<QueueIdentifier>();
-        eventBusOptions.ListenQueues ??= new QueueAlias<QueueIdentifier>[] {
-            new QueueAlias<QueueIdentifier> {
-                Active = true,
-                Alias = QueueIdentifier.MyQueue, Queue = QueueIdentifier.MyQueue.ToPrettyString()
-            }
-        };
+        eventBusOptions.ActivateListenAlias(true, QueueIdentifier.MyQueue);
         eventBusOptions.ActivatePublishAlias(true, QueueIdentifier.MyQueue);
 
         services.Configure<EventBus.Azure.Configuration.EventBusOptions<QueueIdentifier>>(setup =>
@@ -159,7 +154,7 @@ public class Startup
             var eventSourcedRepository = provider.GetRequiredService<IMyEventSourcedRepository>();
             var serializer = provider.GetRequiredService<IJsonSerializer>();
 
-            return new MyMemento<Customer>(serializer, nameResolver, eventSourcedRepository, false);
+            return new MyMemento<Customer>(serializer, nameResolver, eventSourcedRepository);
         });
         #endregion
 

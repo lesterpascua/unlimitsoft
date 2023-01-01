@@ -88,11 +88,8 @@ public abstract class EventSourced : AggregateRoot, IEventSourced
     /// <param name="serviceId"></param>
     /// <param name="workerId">Worker identifier. Can't be null.</param>
     /// <param name="correlationId">Correlation identifier to trace the events.</param>
-    /// <param name="creator"></param>
-    /// <param name="prevState"></param>
-    /// <param name="currState"></param>
     /// <param name="body"></param>
-    protected IEvent AddEvent<TEvent, TBody>(Guid eventId, ushort serviceId, string? workerId, string? correlationId, ICommand? creator, object? prevState, object? currState, TBody body) where TEvent : Event<TBody>
+    protected IEvent AddEvent<TEvent, TBody>(Guid eventId, ushort serviceId, string? workerId, string? correlationId, TBody body) where TEvent : Event<TBody>
     {
         var args = new EventFactoryArgs<TBody>
         {
@@ -103,9 +100,6 @@ public abstract class EventSourced : AggregateRoot, IEventSourced
             ServiceId = serviceId,
             WorkerId = workerId,
             CorrelationId = correlationId,
-            Creator = creator,
-            PrevState = prevState,
-            CurrState = currState,
             IsDomain = false,
             Body = body
         };
@@ -130,9 +124,6 @@ public abstract class EventSourced : AggregateRoot, IEventSourced
             args.ServiceId,
             args.WorkerId,
             args.CorrelationId,
-            args.Creator,
-            args.PrevState,
-            args.CurrState,
             args.IsDomain,
             args.Body
         );
@@ -177,18 +168,6 @@ public abstract class EventSourced : AggregateRoot, IEventSourced
         /// 
         /// </summary>
         public string? CorrelationId { get; init; }
-        /// <summary>
-        /// 
-        /// </summary>
-        public ICommand? Creator { get; init; }
-        /// <summary>
-        /// Previous entity snapshot
-        /// </summary>
-        public object? PrevState { get; init; }
-        /// <summary>
-        /// Actual entity snapshot
-        /// </summary>
-        public object? CurrState { get; init; }
         /// <summary>
         /// 
         /// </summary>

@@ -18,9 +18,6 @@ public class Customer : EventSourced
             gen.ServiceId, 
             gen.WorkerId, 
             correlationId, 
-            null, 
-            null,
-            null,
             body
         );
     }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -73,7 +74,6 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
 
         return data switch
         {
-            //JObject body => body.ToObject<T>(),                                   // This is for Newtonsoft
             string body => Deserialize<T>(body, settings),
             JsonElement body => Deserialize<T>(body.GetRawText(), settings),
             JsonProperty body => Deserialize<T>(body.Value.GetRawText(), settings),
@@ -130,5 +130,53 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
         if (settings is not null)
             options = (JsonSerializerOptions)settings;
         return JsonSerializer.Serialize(data, options);
+    }
+
+    /// <inheritdoc />
+    public IDictionary<string, string?>? ToKeyValue(object? obj, string? prefix = null)
+    {
+        if (obj is null)
+            return null;
+
+        if (obj is not JsonElement token)
+        {
+            var element = JsonSerializer.Serialize(obj);
+            obj = JsonSerializer.Deserialize<object>(element);
+            return ToKeyValue(obj, prefix);
+        }
+
+
+        var data = new Dictionary<string, string?>();
+        switch (token.ValueKind)
+        {
+            case JsonValueKind.Object:
+                foreach (var child in token.EnumerateObject())
+                {
+                    prefix = string.IsNullOrEmpty(prefix) ? child.Name : $"{prefix}.{child.Name}";
+                    var childContent = ToKeyValue(child.Value, prefix);
+                    if (childContent != null)
+                        data = data.Concat(childContent).ToDictionary(k => k.Key, v => v.Value);
+                }
+
+                return data;
+            case JsonValueKind.Array:
+                int index = 0;
+                var array = token.EnumerateArray();
+                foreach (var child in array)
+                {
+                    prefix = string.IsNullOrEmpty(prefix) ? $"[{index}]" : $"{prefix}[{index}]";
+                    var childContent = ToKeyValue(child, prefix);
+                    if (childContent != null)
+                        data = data.Concat(childContent).ToDictionary(k => k.Key, v => v.Value);
+
+                    index++;
+                }
+                return data;
+        }
+        if (prefix is null)
+            return data;
+
+        data[prefix] = token.ToString();
+        return data;
     }
 }

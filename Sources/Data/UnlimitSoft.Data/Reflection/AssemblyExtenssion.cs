@@ -42,8 +42,14 @@ public static class AssemblyExtenssion
                 serviceType = interfaceRepositoryType.MakeGenericType(entity);
                 implementationType = repositoryType.MakeGenericType(entity);
             }
-            var serviceQueryType = interfaceQueryRepositoryType.MakeGenericType(entity);
-            var implementationQueryType = repositoryQueryType.MakeGenericType(entity);
+            Type? serviceQueryType = null, implementationQueryType = null;
+            if (interfaceQueryRepositoryType is not null)
+            {
+                serviceQueryType = interfaceQueryRepositoryType.MakeGenericType(entity);
+                implementationQueryType = repositoryQueryType.MakeGenericType(entity);
+            }
+            if (serviceQueryType is null && serviceType is null)
+                continue;
 
             yield return new RepositoriesAvailables(serviceType, serviceQueryType, implementationType, implementationQueryType);
         }

@@ -82,7 +82,7 @@ public class DefaultApiClient : IApiClient
         {
             if (HttpMethod.Get == method)
             {
-                var qs = await ObjectUtils.ToQueryString(model);
+                var qs = await ObjectUtils.ToQueryString(_serializer, model);
                 completeUri = $"{completeUri}?{qs}";
             }
             else
@@ -122,7 +122,7 @@ public class DefaultApiClient : IApiClient
             content.Add(new StreamContent(stream), fileName, fileName);
 
         if (qs != null)
-            completeUri += string.Concat('?', await ObjectUtils.ToQueryString(qs));
+            completeUri += string.Concat('?', await ObjectUtils.ToQueryString(_serializer, qs));
 
         var (json, code) = await SendWithContentAsync(method, completeUri, content, setup, ct);
         var result = jsonSerialize.Deserialize<TModel>(json);

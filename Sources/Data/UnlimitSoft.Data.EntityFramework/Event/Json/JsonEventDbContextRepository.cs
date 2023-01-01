@@ -7,21 +7,20 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Data;
 using UnlimitSoft.CQRS.Data.Dto;
-using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.CQRS.Query;
 using UnlimitSoft.Web.Model;
 
-namespace UnlimitSoft.CQRS.EventSourcing.Json;
+namespace UnlimitSoft.CQRS.Event.Json;
 
 
 /// <summary>
 /// 
 /// </summary>
-public class DbContextJsonEventSourcedRepository : IEventRepository<JsonEventPayload, string>
+public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, string>
 {
-    private readonly ILogger _logger;
     private readonly DbContext _dbContext;
     private readonly DbSet<JsonEventPayload> _repository;
+    private readonly ILogger<JsonEventDbContextRepository> _logger;
 
     /// <summary>
     /// 
@@ -29,11 +28,11 @@ public class DbContextJsonEventSourcedRepository : IEventRepository<JsonEventPay
     /// <param name="dbContext"></param>
     /// <param name="logger"></param>
     /// <exception cref="ArgumentNullException"></exception>
-    public DbContextJsonEventSourcedRepository(DbContext dbContext, ILogger logger)
+    public JsonEventDbContextRepository(DbContext dbContext, ILogger<JsonEventDbContextRepository> logger)
     {
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _repository = _dbContext.Set<JsonEventPayload>();
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
 

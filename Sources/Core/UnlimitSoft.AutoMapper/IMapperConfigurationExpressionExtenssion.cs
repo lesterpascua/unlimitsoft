@@ -158,7 +158,7 @@ public static class IMapperConfigurationExpressionExtenssion
                     return false;
                 }).ToArray();
             } else
-                srcTypeInterfaces = new Type[] { typeof(IEnumerable<>).MakeGenericType(source.GetElementType()) };
+                srcTypeInterfaces = new Type[] { typeof(IEnumerable<>).MakeGenericType(source.GetElementType()!) };
             if (!destination.IsArray)
             {
                 destTypeInterfaces = destination.GetGenericTypeDefinition() == typeof(IEnumerable<>) ? new Type[] { destination } : destination.GetInterfaces().Where(p => {
@@ -167,7 +167,7 @@ public static class IMapperConfigurationExpressionExtenssion
                     return false;
                 }).ToArray();
             } else
-                destTypeInterfaces = new Type[] { typeof(IEnumerable<>).MakeGenericType(destination.GetElementType()) };
+                destTypeInterfaces = new Type[] { typeof(IEnumerable<>).MakeGenericType(destination.GetElementType()!) };
 
             if (srcTypeInterfaces.Length == destTypeInterfaces.Length)
             {

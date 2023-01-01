@@ -1,27 +1,26 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Text;
 
-namespace UnlimitSoft.Web
+namespace UnlimitSoft.Web;
+
+
+/// <summary>
+/// Allow stablish a prety name for enumerator
+/// </summary>
+[AttributeUsage(AttributeTargets.Field)]
+[Obsolete("use specifx attibute")]
+public class PrettyNameAttribute : Attribute
 {
     /// <summary>
-    /// Allow stablish a prety name for enumerator
+    /// 
     /// </summary>
-    [AttributeUsage(AttributeTargets.Field)]
-    public class PrettyNameAttribute : Attribute
+    /// <param name="name"></param>
+    public PrettyNameAttribute(string name)
     {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="name"></param>
-        public PrettyNameAttribute(string name)
-        {
-            Name = name;
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        public string Name { get; }
+        Name = name;
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    public string Name { get; }
 }

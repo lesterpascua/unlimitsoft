@@ -40,7 +40,7 @@ public class EventController : ControllerBase
     public async Task<ActionResult<int>> Post(CancellationToken ct)
     {
         var body = new TestEventBody { Test = "Test Event" };
-        var @event = new TestEvent(Guid.NewGuid(), _gen.GenerateId(), 1, 1, "w", "c", null, null, null, false, body);
+        var @event = new TestEvent(Guid.NewGuid(), _gen.GenerateId(), 1, 1, "w", "c", false, body);
         var json = _serializer.Serialize(@event)!;
 
         var envelop = new MessageEnvelop(MessageType.Json, json, null);

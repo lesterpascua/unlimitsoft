@@ -1,10 +1,10 @@
-﻿using UnlimitSoft.Web;
+﻿using UnlimitSoft.EventBus;
 
-namespace UnlimitSoft.WebApi.Sources.CQRS.Bus
+namespace UnlimitSoft.WebApi.Sources.CQRS.Bus;
+
+
+public enum QueueIdentifier
 {
-    public enum QueueIdentifier
-    {
-        [PrettyName("account-lester")]
-        MyQueue = 1
-    }
+    [QueueOrTopicName("account-lester")]
+    MyQueue = 1
 }
