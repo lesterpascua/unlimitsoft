@@ -25,6 +25,7 @@ public sealed class TenantBuilder
     {
         _services = services;
         _services.TryAddSingleton<ITenantContextAccessor, TenantContextAccessor>();
+        _services.TryAddSingleton<ITenantAccessService, TenantAccessService>();
     }
 
     /// <summary>
@@ -43,20 +44,48 @@ public sealed class TenantBuilder
     public TenantBuilder WithResolutionStrategy<V>() where V : class, ITenantResolutionStrategy
     {
         _services.AddSingleton<ITenantResolutionStrategy, V>();
-        _services.AddSingleton<ITenantAccessService, TenantAccessService>();
 
         return this;
     }
     /// <summary>
-    /// Register the tenant store implementation
+    /// Register the tenant resolver implementation
     /// </summary>
     /// <remarks>
+    /// Register: <see cref="ITenantResolutionStrategy"/> and <see cref="ITenantAccessService"/>
+    /// </remarks>
+    /// <typeparam name="V"></typeparam>
+    /// <returns></returns>
+    public TenantBuilder WithResolutionStrategy<V>(Func<IServiceProvider, V> implementationFactory) where V : class, ITenantResolutionStrategy
+    {
+        _services.AddSingleton<ITenantResolutionStrategy>(implementationFactory);
+
+        return this;
+    }
+
+    /// <summary>
+    /// Register the tenant store implementation.
+    /// </summary>
+    /// <remarks>
+    /// Store is the place where all tenant will be resolve base of some string identifier.
     /// </remarks>
     /// <typeparam name="V">Store type to register.</typeparam>
     /// <returns></returns>
     public TenantBuilder WithStore<V>() where V : class, ITenantStore
     {
         _services.AddSingleton<ITenantStore, V>();
+        return this;
+    }
+    /// <summary>
+    /// Register the tenant store implementation.
+    /// </summary>
+    /// <remarks>
+    /// Store is the place where all tenant will be resolve base of some string identifier.
+    /// </remarks>
+    /// <typeparam name="V">Store type to register.</typeparam>
+    /// <returns></returns>
+    public TenantBuilder WithStore<V>(Func<IServiceProvider, V> implementationFactory) where V : class, ITenantStore
+    {
+        _services.AddSingleton<ITenantStore>(implementationFactory);
         return this;
     }
     /// <summary>

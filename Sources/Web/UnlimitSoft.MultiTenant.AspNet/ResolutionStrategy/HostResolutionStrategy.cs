@@ -6,7 +6,7 @@ namespace UnlimitSoft.MultiTenant.ResolutionStrategy;
 /// <summary>
 /// Resolve the host to a tenant identifier
 /// </summary>
-public class HostResolutionStrategy : ITenantResolutionStrategy
+public sealed class HostResolutionStrategy : ITenantResolutionStrategy
 {
     private readonly ITenantContextAccessor _accessor;
 

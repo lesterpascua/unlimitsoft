@@ -18,7 +18,7 @@ public interface ITenantAccessService
 /// <summary>
 /// Tenant access service
 /// </summary>
-public class TenantAccessService : ITenantAccessService
+public sealed class TenantAccessService : ITenantAccessService
 {
     private readonly ITenantStore _store;
     private readonly ITenantResolutionStrategy _resolutionStrategy;

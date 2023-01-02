@@ -7,7 +7,7 @@ namespace UnlimitSoft.MultiTenant.Store;
 /// <summary>
 /// In memory store. If the tenant not found use the <see cref="String.Empty"/> value
 /// </summary>
-public class InMemoryTenantStore : ITenantStore
+public sealed class InMemoryTenantStore : ITenantStore
 {
     private readonly IDictionary<string, Tenant> _tenants;
 
@@ -17,11 +17,9 @@ public class InMemoryTenantStore : ITenantStore
     /// <param name="tenants"></param>
     public InMemoryTenantStore(IEnumerable<Tenant> tenants)
     {
-#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
         _tenants = tenants
             .Where(p => p.Key is not null)
-            .ToDictionary(k => k.Key);
-#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
+            .ToDictionary(k => k.Key!);
     }
 
     /// <summary>

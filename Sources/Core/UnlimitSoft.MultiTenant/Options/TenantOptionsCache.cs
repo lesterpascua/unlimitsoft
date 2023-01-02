@@ -7,7 +7,7 @@ namespace UnlimitSoft.MultiTenant.Options;
 /// Tenant aware options cache
 /// </summary>
 /// <typeparam name="TOptions"></typeparam>
-public class TenantOptionsCache<TOptions> : IOptionsMonitorCache<TOptions>
+public sealed class TenantOptionsCache<TOptions> : IOptionsMonitorCache<TOptions>
     where TOptions : class
 {
     private readonly TimeSpan _timeLive;
@@ -30,26 +30,36 @@ public class TenantOptionsCache<TOptions> : IOptionsMonitorCache<TOptions>
     public void Clear()
     {
         var tenant = GetTenant();
-        _tenantSpecificOptionsCache.Get(tenant.Id).Clear();
+        if (tenant is not null)
+            _tenantSpecificOptionsCache.Get(tenant.Id).Clear();
     }
     /// <inheritdoc />
-    public TOptions GetOrAdd(string name, Func<TOptions> createOptions)
+    public TOptions GetOrAdd(string? name, Func<TOptions> createOptions)
     {
         var tenant = GetTenant();
+        if (tenant is null)
+            return createOptions();
+
         return _tenantSpecificOptionsCache.Get(tenant.Id).GetOrAdd(name, createOptions);
     }
     /// <inheritdoc />
-    public bool TryAdd(string name, TOptions options)
+    public bool TryAdd(string? name, TOptions options)
     {
         var tenant = GetTenant();
-        return _tenantSpecificOptionsCache.Get(tenant.Id).TryAdd(name, options);
+        if (tenant is not null)
+            return _tenantSpecificOptionsCache.Get(tenant.Id).TryAdd(name, options);
+
+        return false;
     }
     /// <inheritdoc />
-    public bool TryRemove(string name)
+    public bool TryRemove(string? name)
     {
         var tenant = GetTenant();
-        return _tenantSpecificOptionsCache.Get(tenant.Id).TryRemove(name);
+        if (tenant is not null)
+            return _tenantSpecificOptionsCache.Get(tenant.Id).TryRemove(name);
+
+        return false;
     }
 
-    private Tenant GetTenant() => _tenantAccessor.GetTenant() ?? throw new InvalidProgramException("Invalid tenant");
+    private Tenant? GetTenant() => _tenantAccessor.GetTenant();
 }

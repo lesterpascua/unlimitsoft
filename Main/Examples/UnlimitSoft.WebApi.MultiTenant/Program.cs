@@ -3,8 +3,10 @@ using Serilog.Sinks.SystemConsole.Themes;
 using UnlimitSoft.Json;
 using UnlimitSoft.Logger.Configuration;
 using UnlimitSoft.Logger.DependencyInjection;
+using UnlimitSoft.MultiTenant;
 using UnlimitSoft.MultiTenant.AspNet;
 using UnlimitSoft.MultiTenant.DependencyInjection;
+using UnlimitSoft.MultiTenant.ResolutionStrategy;
 using UnlimitSoft.Text.Json;
 using UnlimitSoft.WebApi.MultiTenant.Sources.Configuration;
 using UnlimitSoft.WebApi.MultiTenant.Sources.MultiTenant;
@@ -74,11 +76,11 @@ WebApplication ConfigureServices(IServiceCollection services)
     // Register this at the end of all other registration this tenant will clone the common services register to adapt inside of the tenant
     services
         .AddMultiTenancy<MyTenantConfigureServices>()
-        .WithResolutionStrategy<MyResolutionStrategy>()
+        .WithResolutionStrategy(p => new QSResolutionStrategy(p.GetRequiredService<ITenantContextAccessor>()))
         .WithStore<MyTenantStorage>()
         .WithTenantConfigure<ServiceOptions>(TimeSpan.MaxValue, (provider, options, tenant) =>
         {
-            Console.WriteLine(tenant);
+            options.Client = tenant.Key!;
             //var configService = provider.GetService<IConfigApiService>();
             //var configWrapper = configService.GetAsJson<MicroserviceOptionsWrapper>();
             //if (configWrapper?.HasChange != true || configWrapper?.Data?.Microservice is null)
@@ -102,7 +104,6 @@ void Configure(WebApplication app)
         .GetRequiredService<ILogger<Program>>()
         .LogInformation("Starting, ENV: {Environment}, COMPILER: {Compilation} ...", app.Environment.EnvironmentName, compilation);
 
-    app.UseMultiTenancy();
 
     // Configure the HTTP request pipeline.
     if (app.Environment.IsDevelopment())
@@ -113,6 +114,9 @@ void Configure(WebApplication app)
 
     app.UseHttpsRedirection();
     app.UseAuthorization();
+    
+    app.UseMultiTenancy();
+
     app.MapControllers();
 
     app.Run();

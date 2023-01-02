@@ -1,14 +1,15 @@
 ﻿using UnlimitSoft.MultiTenant.AspNet;
-using System;
 
 namespace UnlimitSoft.MultiTenant.ResolutionStrategy;
+
 
 /// <summary>
 /// Resolve using query string url tenant=identifier
 /// </summary>
-public class QSResolutionStrategy : ITenantResolutionStrategy
+public sealed class QSResolutionStrategy : ITenantResolutionStrategy
 {
     private readonly ITenantContextAccessor _accessor;
+    private readonly string _qsKey;
 
     /// <summary>
     /// Key in the query string to search
@@ -19,9 +20,11 @@ public class QSResolutionStrategy : ITenantResolutionStrategy
     /// 
     /// </summary>
     /// <param name="accessor"></param>
-    public QSResolutionStrategy(ITenantContextAccessor accessor)
+    /// <param name="qsKey">Query string key where the tenant info will be get.</param>
+    public QSResolutionStrategy(ITenantContextAccessor accessor, string qsKey = QSKey)
     {
         _accessor = accessor;
+        _qsKey = qsKey;
     }
 
     /// <summary>
@@ -33,6 +36,6 @@ public class QSResolutionStrategy : ITenantResolutionStrategy
     {
         tenant = null;
         var context = _accessor.GetContext() as TenantHttpContext;
-        return context?.Context?.Request.Query[QSKey];
+        return context?.Context?.Request.Query[_qsKey];
     }
 }
