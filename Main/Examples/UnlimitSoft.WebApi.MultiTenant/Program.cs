@@ -13,7 +13,7 @@ using UnlimitSoft.WebApi.MultiTenant.Sources.MultiTenant;
 using UnlimitSoft.WebApi.MultiTenant.Sources.MultiTenants;
 
 // ================================================================================================================================
-// In this example we add a event bus and comunicate events between sender and listener
+// In this example we add a multi tenant support
 // Steps
 //  - Inject AddUnlimitSoftEventNameResolver 
 //  - IEventBus
@@ -80,13 +80,7 @@ WebApplication ConfigureServices(IServiceCollection services)
         .WithStore<MyTenantStorage>()
         .WithTenantConfigure<ServiceOptions>(TimeSpan.MaxValue, (provider, options, tenant) =>
         {
-            options.Client = tenant.Key!;
-            //var configService = provider.GetService<IConfigApiService>();
-            //var configWrapper = configService.GetAsJson<MicroserviceOptionsWrapper>();
-            //if (configWrapper?.HasChange != true || configWrapper?.Data?.Microservice is null)
-            //    return;
-
-            //var config = configWrapper.Data.Microservice;
+            options.Client = tenant.Key;
         });
     #endregion
 
