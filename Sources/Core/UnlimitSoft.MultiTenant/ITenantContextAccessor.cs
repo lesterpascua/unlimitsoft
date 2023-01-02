@@ -4,7 +4,7 @@ namespace UnlimitSoft.MultiTenant;
 
 
 /// <summary>
-/// Contain information to build a tenant. This information is attach to the executing thread.
+/// Contain information to build a tenant. This information is attached to the executing thread.
 /// </summary>
 public interface ITenantContextAccessor
 {
@@ -16,7 +16,7 @@ public interface ITenantContextAccessor
 /// <summary>
 /// Default implementation of <see cref="ITenantContextAccessor"/>
 /// </summary>
-public class TenantContextAccessor : ITenantContextAccessor
+public sealed class TenantContextAccessor : ITenantContextAccessor
 {
     private static readonly AsyncLocal<ContextHolder> _current = new();
 
@@ -28,7 +28,7 @@ public class TenantContextAccessor : ITenantContextAccessor
     /// 
     /// </summary>
     /// <param name="value"></param>
-    public virtual void SetContext(TenantContext value)
+    public void SetContext(TenantContext value)
     {
         var holder = _current.Value;
         // Clear current HttpContext trapped in the AsyncLocals, as its done.

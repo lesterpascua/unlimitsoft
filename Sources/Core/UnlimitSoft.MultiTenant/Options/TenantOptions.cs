@@ -3,10 +3,11 @@ using System.Threading;
 
 namespace UnlimitSoft.MultiTenant.Options;
 
+
 /// <summary>
 /// Make IOptions tenant aware
 /// </summary>
-public class TenantOptions<TOptions> : IOptions<TOptions>, IOptionsSnapshot<TOptions> where TOptions : class, new()
+public sealed class TenantOptions<TOptions> : IOptions<TOptions>, IOptionsSnapshot<TOptions> where TOptions : class, new()
 {
     private TOptions? _options;
     private readonly IOptionsFactory<TOptions> _factory;
@@ -27,7 +28,7 @@ public class TenantOptions<TOptions> : IOptions<TOptions>, IOptionsSnapshot<TOpt
     public TOptions Value => Get(Microsoft.Extensions.Options.Options.DefaultName);
 
     /// <inheritdoc />
-    public TOptions Get(string name)
+    public TOptions Get(string? name)
     {
         if (_options is null)
             Interlocked.CompareExchange(ref _options, _cache.GetOrAdd(name, () => _factory.Create(name)), null);
