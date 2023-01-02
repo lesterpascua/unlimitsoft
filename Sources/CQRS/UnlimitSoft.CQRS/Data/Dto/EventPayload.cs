@@ -1,11 +1,23 @@
 ﻿using UnlimitSoft.Event;
-using System;
 
-namespace UnlimitSoft.CQRS.Event;
+/* Unmerged change from project 'UnlimitSoft.CQRS (net7.0)'
+Before:
+using System;
+After:
+using System;
+using UnlimitSoft;
+using UnlimitSoft.CQRS;
+using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.CQRS.Data.Dto;
+*/
+using System;
+using UnlimitSoft.CQRS.Event;
+
+namespace UnlimitSoft.CQRS.Data.Dto;
 
 
 /// <summary>
-/// 
+/// Dto to represent an event in an storage
 /// </summary>
 public abstract class EventPayload
 {
@@ -15,7 +27,7 @@ public abstract class EventPayload
     /// </summary>
     protected EventPayload() { }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    
+
     /// <summary>
     /// 
     /// </summary>
@@ -74,13 +86,13 @@ public abstract class EventPayload
     /// <inheritdoc />
     public override int GetHashCode() => Id.GetHashCode();
     /// <inheritdoc />
-    public override bool Equals(object? obj) => (obj is EventPayload payload) && Id == payload.Id;
+    public override bool Equals(object? obj) => obj is EventPayload payload && Id == payload.Id;
 }
 /// <summary>
 /// 
 /// </summary>
-/// <typeparam name="TPayload"></typeparam>
-public abstract class EventPayload<TPayload> : EventPayload
+/// <typeparam name="TBody"></typeparam>
+public abstract class EventPayload<TBody> : EventPayload
 {
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     /// <summary>
@@ -92,17 +104,17 @@ public abstract class EventPayload<TPayload> : EventPayload
     /// 
     /// </summary>
     /// <param name="event"></param>
-    /// <param name="payload"></param>
-    protected EventPayload(IEvent @event, TPayload payload)
+    /// <param name="body"></param>
+    protected EventPayload(IEvent @event, TBody body)
         : base(@event)
     {
-        Payload = payload;
+        Body = body;
     }
 
     /// <summary>
     /// Event Type.
     /// </summary>
-    public TPayload Payload { get; set; }
+    public TBody Body { get; set; }
 
     /// <summary>
     /// Get event name inside the payload.

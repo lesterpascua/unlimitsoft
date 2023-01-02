@@ -3,6 +3,7 @@ using UnlimitSoft.Event;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Data.Dto;
 
 namespace UnlimitSoft.Web.AspNet.Testing;
 
@@ -23,7 +24,7 @@ public class EventBusFake : IEventBus
     /// <inheritdoc />
     public Task PublishPayloadAsync<T>(EventPayload<T> @event, MessageType type, bool useEnvelop = true, CancellationToken ct = default)
     {
-        Action?.Invoke(@event.Id, @event.EventName, @event.Payload, @event.CorrelationId, ++EventArrive);
+        Action?.Invoke(@event.Id, @event.EventName, @event.Body, @event.CorrelationId, ++EventArrive);
         return Task.CompletedTask;
     }
     /// <inheritdoc />

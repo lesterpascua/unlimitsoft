@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.Event;
 using UnlimitSoft.EventBus.Configuration;
@@ -106,7 +107,7 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
                 await SendMessageAsync(eventPayload, eventPayload.Id, eventPayload.EventName, eventPayload.CorrelationId, useEnvelop, ct);
                 break;
             case MessageType.Event:
-                if (eventPayload.Payload is not string payload)
+                if (eventPayload.Body is not string payload)
                     throw new NotSupportedException("Only allow json payload");
 
                 var eventType = _eventNameResolver.Resolver(eventPayload.EventName);

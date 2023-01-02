@@ -3,6 +3,7 @@ using UnlimitSoft.CQRS.Event;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Data.Dto;
 
 namespace UnlimitSoft.Data.EntityFramework;
 
