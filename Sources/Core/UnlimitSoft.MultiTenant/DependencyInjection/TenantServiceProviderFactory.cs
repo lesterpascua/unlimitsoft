@@ -9,6 +9,7 @@ namespace UnlimitSoft.MultiTenant.DependencyInjection;
 public class TenantServiceProviderFactory : IServiceProviderFactory<IServiceCollection>
 {
     private readonly ServiceProviderOptions _options;
+    public static IServiceProvider? Root;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="DefaultServiceProviderFactory"/> class
@@ -35,9 +36,9 @@ public class TenantServiceProviderFactory : IServiceProviderFactory<IServiceColl
         TenantServiceProvider? provider = null;
 
         var providerAccessor = () => provider;
-        containerBuilder.AddSingleton(providerAccessor);
+        containerBuilder.AddSingleton<Func<TenantServiceProvider>>(providerAccessor);
 
-        provider = new TenantServiceProvider(containerBuilder, _options);
+        Root = provider = new TenantServiceProvider(containerBuilder, _options);
         return provider;
     }
 }

@@ -2,6 +2,7 @@
 
 namespace UnlimitSoft.MultiTenant;
 
+
 /// <summary>
 /// Base class for tenant information.
 /// </summary>

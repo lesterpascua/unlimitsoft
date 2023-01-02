@@ -22,7 +22,7 @@ public static class AssemblyExtenssion
     /// <param name="repositoryQueryType"></param>
     /// <param name="checkContrains">Extra check used to validate the entity can used to create repository of this.</param>
     /// <returns></returns>
-    public static IEnumerable<RepositoriesAvailables> FindAllRepositories(this Assembly assembly, Type entityTypeBuilder, Type interfaceRepositoryType, Type interfaceQueryRepositoryType, Type repositoryType, Type repositoryQueryType, Func<Type, bool>? checkContrains = null)
+    public static IEnumerable<RepositoriesAvailables> FindAllRepositories(this Assembly assembly, Type? entityTypeBuilder, Type? interfaceRepositoryType, Type? interfaceQueryRepositoryType, Type? repositoryType, Type? repositoryQueryType, Func<Type, bool>? checkContrains = null)
     {
         var typesToRegister =
             from type in assembly.GetTypes()
@@ -37,13 +37,13 @@ public static class AssemblyExtenssion
             var entity = type.BaseType!.GetGenericArguments().Single();
 
             Type? serviceType = null, implementationType = null;
-            if (checkContrains is null || checkContrains(entity))
+            if (interfaceRepositoryType is not null && repositoryType is not null && (checkContrains is null || checkContrains(entity)))
             {
                 serviceType = interfaceRepositoryType.MakeGenericType(entity);
                 implementationType = repositoryType.MakeGenericType(entity);
             }
             Type? serviceQueryType = null, implementationQueryType = null;
-            if (interfaceQueryRepositoryType is not null)
+            if (interfaceQueryRepositoryType is not null && repositoryQueryType is not null)
             {
                 serviceQueryType = interfaceQueryRepositoryType.MakeGenericType(entity);
                 implementationQueryType = repositoryQueryType.MakeGenericType(entity);

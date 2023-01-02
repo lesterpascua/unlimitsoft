@@ -1,5 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.CQRS.Event.Json;
+using UnlimitSoft.Json;
 using UnlimitSoft.WebApi.EventBus.EventBus;
 
 namespace UnlimitSoft.WebApi.EventBus.Controllers;
@@ -18,13 +20,24 @@ public class EventBusController : ControllerBase
         _logger = logger;
     }
 
-    [HttpPost]
-    public async Task<ActionResult> GenerateEvent(CancellationToken ct = default)
+    [HttpPost("event")]
+    public async Task<ActionResult> Event(CancellationToken ct = default)
     {
-        var @event = new CreateEvent(Guid.NewGuid(), Guid.NewGuid());
+        var @event = new CreateEvent(Guid.NewGuid(), Guid.NewGuid(), body: "This is a body");
         await _eventBus.PublishAsync(@event, ct: ct);
 
-        _logger.LogInformation("Call");
+        _logger.LogInformation("Publish event {@event}", @event);
+        return Ok();
+    }
+
+    [HttpPost("payload")]
+    public async Task<ActionResult> Payload(CancellationToken ct = default)
+    {
+        var @event = new CreateEvent(Guid.NewGuid(), Guid.NewGuid(), body: "This is a body");
+        var payload = new JsonEventPayload(@event, JsonUtil.Default);
+        await _eventBus.PublishPayloadAsync(payload, ct: ct);
+
+        _logger.LogInformation("Publish payload {@event}", payload);
         return Ok();
     }
 }

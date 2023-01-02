@@ -14,29 +14,29 @@ public sealed class UnitOfWorkOptions
     /// <summary>
     /// 
     /// </summary>
-    public string WriteConnString { get; set; } = null!;
+    public string? WriteConnString { get; set; }
     /// <summary>
     /// 
     /// </summary>
-    public string[] ReadConnString { get; set; } = null!;
+    public string[]? ReadConnString { get; set; }
     /// <summary>
     /// 
     /// </summary>
-    public DatabaseOptions Database { get; set; } = null!;
+    public DatabaseOptions? Database { get; set; }
 
     /// <summary>
     /// Type of the interface used as Unit of Work
     /// </summary>
-    public Type IUnitOfWork { get; set; } = null!;
+    public Type IUnitOfWork { get; set; } = default!;
     /// <summary>
     /// Unit of work implementation type.
     /// </summary>
-    public Type UnitOfWork { get; set; } = null!;
+    public Type UnitOfWork { get; set; } = default!;
 
     /// <summary>
     /// Db context for read operations
     /// </summary>
-    public Type DbContextRead { get; set; } = null!;
+    public Type? DbContextRead { get; set; }
     /// <summary>
     /// Pool size for read DbContext
     /// </summary>
@@ -44,7 +44,7 @@ public sealed class UnitOfWorkOptions
     /// <summary>
     /// Db context for write operations
     /// </summary>
-    public Type DbContextWrite { get; set; } = null!;
+    public Type? DbContextWrite { get; set; }
     /// <summary>
     /// Pool size for write DbContext
     /// </summary>
@@ -53,23 +53,23 @@ public sealed class UnitOfWorkOptions
     /// <summary>
     /// Type of base entity builder class
     /// </summary>
-    public Type EntityTypeBuilder { get; set; } = null!;
+    public Type EntityTypeBuilder { get; set; } = default!;
     /// <summary>
     /// Type for repository interface
     /// </summary>
-    public Type IRepository { get; set; } = null!;
+    public Type? IRepository { get; set; }
     /// <summary>
     /// Materialized repository
     /// </summary>
-    public Type Repository { get; set; } = null!;
+    public Type? Repository { get; set; }
     /// <summary>
     /// Type for query repository interface
     /// </summary>
-    public Type IQueryRepository { get; set; } = null!;
+    public Type? IQueryRepository { get; set; }
     /// <summary>
     /// Materialized query repository
     /// </summary>
-    public Type QueryRepository { get; set; } = null!;
+    public Type? QueryRepository { get; set; }
     /// <summary>
     /// Extra check used to validate the entity can used to create repository of this. By Default only create repository of IEventSourced Entities.
     /// </summary>
@@ -78,14 +78,14 @@ public sealed class UnitOfWorkOptions
     /// <summary>
     /// Map current DbContext. 
     /// </summary>
-    public Action<UnitOfWorkOptions, DbContextOptionsBuilder, string> ReadBuilder { get; set; } = null!;
+    public Action<UnitOfWorkOptions, DbContextOptionsBuilder, string>? ReadBuilder { get; set; }
     /// <summary>
     /// Map current DbContext. 
     /// </summary>
     /// <example>
     /// options.UseNpgsql(connString);
     /// </example>
-    public Action<UnitOfWorkOptions, DbContextOptionsBuilder, string> WriteBuilder { get; set; } = null!;
+    public Action<UnitOfWorkOptions, DbContextOptionsBuilder, string>? WriteBuilder { get; set; }
 
     /// <summary>
     /// Custom register read DbContext
@@ -110,7 +110,7 @@ public sealed class UnitOfWorkOptions
     /// </summary>
     public Type? IMediatorDispatchEvent { get; set; }
     /// <summary>
-    /// Materialized type derived of <see cref="CQRS.Event.IMediatorDispatchEvent"/> interface. 
+    /// Materialized type derived of <see cref="CQRS.Event.Json.JsonMediatorDispatchEvent"/> interface. 
     /// </summary>
     public Type? MediatorDispatchEvent { get; set; }
 }

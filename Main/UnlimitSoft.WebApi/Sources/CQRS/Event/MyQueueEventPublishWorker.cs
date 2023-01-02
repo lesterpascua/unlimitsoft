@@ -15,13 +15,12 @@ public class MyQueueEventPublishWorker : QueueEventPublishWorker<IMyEventSourced
     /// </summary>
     /// <param name="factory"></param>
     /// <param name="eventBus"></param>
-    /// <param name="type"></param>
     /// <param name="checkTime"></param>
     /// <param name="errorDelay"></param>
     /// <param name="logger"></param>
     /// <param name="bachSize"></param>
-    public MyQueueEventPublishWorker(IServiceScopeFactory factory, IEventBus eventBus, MessageType type, TimeSpan? checkTime = null, TimeSpan? errorDelay = null, int bachSize = 10, ILogger<MyQueueEventPublishWorker>? logger = null)
-        : base(factory, eventBus, type, null, checkTime, errorDelay, bachSize, true, true, logger)
+    public MyQueueEventPublishWorker(IServiceScopeFactory factory, IEventBus eventBus, TimeSpan? checkTime = null, TimeSpan? errorDelay = null, int bachSize = 10, ILogger<MyQueueEventPublishWorker>? logger = null)
+        : base(factory, eventBus, null, checkTime, errorDelay, bachSize, true, true, logger)
     {
     }
 }

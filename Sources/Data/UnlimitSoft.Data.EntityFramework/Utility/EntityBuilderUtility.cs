@@ -41,7 +41,7 @@ public static class EntityBuilderUtility
         builder.Property(p => p.EventName).IsRequired().HasMaxLength(255);
         builder.Property(p => p.Created).HasConversion(DateTimeUtcConverter.Instance);
 
-        var payloadPropertyBuilder = builder.Property(p => p.Body).IsRequired();
+        var payloadPropertyBuilder = builder.Property(p => p.Payload).IsRequired();
         payloadBuilder?.Invoke(payloadPropertyBuilder);
 
         if (useIndex)

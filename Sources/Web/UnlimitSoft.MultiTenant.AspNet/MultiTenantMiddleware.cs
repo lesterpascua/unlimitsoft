@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 
 namespace UnlimitSoft.MultiTenant.AspNet;
 
+
 /// <summary>
 /// <list>
 ///     <item>Populate the <see cref="Constants.HttpContextTenantKey"/> with the current tenant.</item>
@@ -33,8 +34,10 @@ public class MultiTenantMiddleware<T> where T : Tenant
     /// <param name="multiTenantContainerAccessor"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    public async Task Invoke(HttpContext context, Func<TenantServiceProvider> multiTenantContainerAccessor)
+    public async Task Invoke(HttpContext context, IServiceProvider provider, Func<TenantServiceProvider> multiTenantContainerAccessor)
     {
+        var bo = object.ReferenceEquals(provider, TenantServiceProviderFactory.Root);
+
         var tenant = PopulateAccessor(context);
         await NextUsingTenantScope(context, multiTenantContainerAccessor, tenant);
     }

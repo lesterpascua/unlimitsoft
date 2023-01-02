@@ -103,7 +103,7 @@ public class MemoryEventBus<TAlias> : IEventBus, IAsyncDisposable
     /// <inheritdoc />
     public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop = true, CancellationToken ct = default) => SendMessageAsync(graph, id, eventName, correlationId, useEnvelop, ct);
     /// <inheritdoc />
-    public Task PublishPayloadAsync<T>(EventPayload<T> @event, MessageType type, bool useEnvelop = true, CancellationToken ct = default)
+    public Task PublishPayloadAsync<T>(EventPayload<T> @event, bool useEnvelop = true, CancellationToken ct = default)
     {
         throw new NotImplementedException();
     }
@@ -150,7 +150,7 @@ public class MemoryEventBus<TAlias> : IEventBus, IAsyncDisposable
 
         var envelop = transformed;
         if (useEnvelop)
-            envelop = new MessageEnvelop(MessageType.Json, transformed, transformed.GetType().FullName);
+            envelop = new MessageEnvelop(transformed, transformed.GetType().FullName);
 
         var json = _serializer.Serialize(envelop)!;
         message.MessageData = Encoding.UTF8.GetBytes(json);

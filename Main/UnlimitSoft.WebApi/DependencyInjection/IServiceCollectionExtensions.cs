@@ -221,7 +221,7 @@ public static class IServiceCollectionExtensions
             {
                 var eventBus = provider.GetRequiredService<IEventBus>();
                 var logger = provider.GetService<ILogger<MyQueueEventPublishWorker>>();
-                return new MyQueueEventPublishWorker(provider.GetRequiredService<IServiceScopeFactory>(), eventBus, MessageType.Event, logger: logger);
+                return new MyQueueEventPublishWorker(provider.GetRequiredService<IServiceScopeFactory>(), eventBus, logger: logger);
             });
         }
         #endregion

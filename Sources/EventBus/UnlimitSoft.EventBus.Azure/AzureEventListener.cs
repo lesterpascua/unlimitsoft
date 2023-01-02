@@ -90,7 +90,7 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
         }
     }
 
-    #region Private Methods
+    #region Protected Methods
     /// <summary>
     /// Create instance of the service bus client
     /// </summary>

@@ -43,7 +43,7 @@ public class EventController : ControllerBase
         var @event = new TestEvent(Guid.NewGuid(), _gen.GenerateId(), 1, 1, "w", "c", false, body);
         var json = _serializer.Serialize(@event)!;
 
-        var envelop = new MessageEnvelop(MessageType.Json, json, null);
+        var envelop = new MessageEnvelop(json, null);
         var response = await EventUtility.ProcessAsync<IEvent>(
             typeof(TestEvent).FullName!, 
             envelop,

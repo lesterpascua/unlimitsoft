@@ -28,14 +28,14 @@ public class QueueEventPublishWorkerTests
     {
         _publish = new List<JsonEventPayload>();
         _data = new JsonEventPayload[] {
-            new JsonEventPayload{ Id = Guid.NewGuid(), Created = new DateTime(1, 12, 31), IsPubliched = true, Scheduled = new DateTime(9999, 12, 31) },
+            new JsonEventPayload{ Id = Guid.NewGuid(), Created = new DateTime(1, 12, 31), IsPubliched = true, Scheduled = DateTime.MaxValue },
             new JsonEventPayload{ Id = Guid.NewGuid(), Created = new DateTime(2021, 10, 10), Scheduled = new DateTime(2021, 10, 12) },
             new JsonEventPayload{ Id = Guid.NewGuid(), Created = new DateTime(2021, 10, 11), Scheduled = null },
         };
 
         _eventBus = Substitute.For<IEventBus>();
         _eventBus
-            .PublishPayloadAsync(Arg.Any<JsonEventPayload>(), MessageType.Event, Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .PublishPayloadAsync(Arg.Any<JsonEventPayload>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(args =>
             {
                 _publish.Add(args.ArgAt<JsonEventPayload>(0));
@@ -92,7 +92,6 @@ public class QueueEventPublishWorkerTests
         using var publishWorker = new QueueEventPublishWorker<IEventRepository<JsonEventPayload, string>, JsonEventPayload, string>(
             _factory, 
             _eventBus, 
-            MessageType.Event, 
             null, 
             TimeSpan.Zero, 
             TimeSpan.Zero, 

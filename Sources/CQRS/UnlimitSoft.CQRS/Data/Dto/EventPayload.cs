@@ -1,17 +1,7 @@
-﻿using UnlimitSoft.Event;
-
-/* Unmerged change from project 'UnlimitSoft.CQRS (net7.0)'
-Before:
-using System;
-After:
-using System;
-using UnlimitSoft;
-using UnlimitSoft.CQRS;
+﻿using System;
 using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.Data.Dto;
-*/
-using System;
-using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.CQRS.Event.Json;
+using UnlimitSoft.Event;
 
 namespace UnlimitSoft.CQRS.Data.Dto;
 
@@ -50,11 +40,12 @@ public abstract class EventPayload
     /// </summary>
     public Guid Id { get; set; }
     /// <summary>
-    /// 
+    /// Gets or set the identifier of the source originating the event.
     /// </summary>
     public Guid SourceId { get; set; }
     /// <summary>
-    /// 
+    /// Gets the version or order of the event in the stream. Este valor lo asigna la entidad que lo genero y 
+    /// es el que ella poseia en el instante en que fue generado el evento. 
     /// </summary>
     public long Version { get; set; }
     /// <summary>
@@ -89,10 +80,11 @@ public abstract class EventPayload
     public override bool Equals(object? obj) => obj is EventPayload payload && Id == payload.Id;
 }
 /// <summary>
-/// 
+/// Dto to represent an event in an storage with a generic body depending of the serialization algorithm this value could change. 
+/// See <see cref="JsonEventPayload"/> to visualize a body using json string
 /// </summary>
-/// <typeparam name="TBody"></typeparam>
-public abstract class EventPayload<TBody> : EventPayload
+/// <typeparam name="TPayload"></typeparam>
+public abstract class EventPayload<TPayload> : EventPayload
 {
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     /// <summary>
@@ -104,17 +96,17 @@ public abstract class EventPayload<TBody> : EventPayload
     /// 
     /// </summary>
     /// <param name="event"></param>
-    /// <param name="body"></param>
-    protected EventPayload(IEvent @event, TBody body)
+    /// <param name="payload"></param>
+    protected EventPayload(IEvent @event, TPayload payload)
         : base(@event)
     {
-        Body = body;
+        Payload = payload;
     }
 
     /// <summary>
-    /// Event Type.
+    /// Complete event serialized in a payload. Serialization depends of the user approach could be json or binary
     /// </summary>
-    public TBody Body { get; set; }
+    public TPayload Payload { get; set; }
 
     /// <summary>
     /// Get event name inside the payload.

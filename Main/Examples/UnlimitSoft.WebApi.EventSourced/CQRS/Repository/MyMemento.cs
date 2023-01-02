@@ -19,10 +19,10 @@ public sealed class MyMemento<TInterface, TEntity> : JsonMemento<TInterface, TEn
     /// <summary>
     /// 
     /// </summary>
+    /// <param name="serializer"></param>
     /// <param name="nameResolver"></param>
     /// <param name="eventSourcedRepository"></param>
     /// <param name="factory"></param>
-    /// <param name="snapshot"></param>
     public MyMemento(IJsonSerializer serializer, IEventNameResolver nameResolver, IMyEventRepository eventSourcedRepository, Func<IReadOnlyCollection<IMementoEvent<TInterface>>, TEntity> factory)
         : base(serializer, nameResolver, eventSourcedRepository, factory)
     {
