@@ -34,7 +34,6 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
     private readonly bool _useEnvelop;
     private readonly IServiceScopeFactory _factory;
     private readonly IEventBus _eventBus;
-    private readonly MessageType _type;
     private readonly Func<TEventPayload, Func<Task>, CancellationToken, Task>? _middleware;
     private readonly TimeSpan _startDelay, _errorDelay;
     private readonly ILogger? _logger;
@@ -54,7 +53,6 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
     /// </list>
     /// </param>
     /// <param name="eventBus"></param>
-    /// <param name="type"></param>
     /// <param name="middleware">Is is not null will call this function instead the action funcion, delegating the responsabilite to call the action for the middleware</param>
     /// <param name="startDelay">Wait time before start the listener.</param>
     /// <param name="errorDelay">Wait time if some error happened in the bus, 20 second default time.</param>
@@ -65,7 +63,6 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
     public QueueEventPublishWorker(
         IServiceScopeFactory factory,
         IEventBus eventBus,
-        MessageType type,
         Func<TEventPayload, Func<Task>, CancellationToken, Task>? middleware = null,
         TimeSpan? startDelay = null,
         TimeSpan? errorDelay = null,
@@ -78,7 +75,6 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
         _factory = factory ?? throw new ArgumentNullException(nameof(factory));
         _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
 
-        _type = type;
         _middleware = middleware;
         _startDelay = startDelay ?? TimeSpan.FromSeconds(5);
         _errorDelay = errorDelay ?? TimeSpan.FromSeconds(20);
@@ -231,13 +227,13 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
             var orderedPending = _enableScheduled ? 
                 _pending.Where(ScheduledCondition()).OrderBy(k => k.Value) : _pending.OrderBy(k => k.Value.Created);
 
-            var buffer = orderedPending.Select(s => s.Key).Take(count).ToArray();
+            var eventIds = orderedPending.Select(s => s.Key).Take(count).ToArray();
             try
             {
                 using var scope = _factory.CreateScope();
                 var eventSourcedRepository = scope.ServiceProvider.GetRequiredService<TEventSourcedRepository>();
 
-                var eventsPayload = await eventSourcedRepository.GetEventsAsync(buffer, _cts.Token);
+                var eventsPayload = await eventSourcedRepository.GetEventsAsync(eventIds, _cts.Token);
                 foreach (var payload in eventsPayload)
                 {
                     var aux = await TryToPublishAsync(eventSourcedRepository, payload);
@@ -269,14 +265,15 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
         using var scope = _factory.CreateScope();
         var eventSourcedRepository = scope.ServiceProvider.GetRequiredService<TEventSourcedRepository>();
 
-        int page = 0;
         NonPublishEventPayload[] nonPublishEvents;
         var pending = new List<NonPublishEventPayload>();
+        var paging = new Paging { Page = 0, PageSize = PageSize };
         do
         {
-            var paging = new Paging { Page = page++, PageSize = PageSize };
             nonPublishEvents = await eventSourcedRepository.GetNonPublishedEventsAsync(paging, ct);
             pending.AddRange(nonPublishEvents);
+
+            paging.Page++;
         } while (nonPublishEvents.Length == PageSize);
 
         pending.Sort((x, y) =>
@@ -308,7 +305,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
     }
     private async Task PublishPayloadAsync(TEventSourcedRepository repository, TEventPayload payload)
     {
-        await _eventBus.PublishPayloadAsync(payload, _type, _useEnvelop, _cts.Token);
+        await _eventBus.PublishPayloadAsync(payload, _useEnvelop, _cts.Token);
         await repository.MarkEventsAsPublishedAsync(payload, _cts.Token);
     }
     private async Task<TEventPayload?> TryToPublishAsync(TEventSourcedRepository repository, TEventPayload payload)

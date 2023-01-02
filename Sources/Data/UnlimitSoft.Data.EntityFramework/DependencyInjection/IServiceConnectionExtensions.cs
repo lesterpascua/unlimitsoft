@@ -48,6 +48,9 @@ public static class IServiceConnectionExtensions
         {
             if (settings.DbContextRead is not null)
             {
+                if (settings.ReadConnString?.Any() != true)
+                    throw new InvalidOperationException("Read connection string need to be not null");
+
                 int connIndex = 0;
                 Action<DbContextOptionsBuilder> action = options =>
                 {
@@ -55,7 +58,8 @@ public static class IServiceConnectionExtensions
 
                     if (settings.Database?.EnableSensitiveDataLogging == true)
                         options.EnableSensitiveDataLogging();
-                    settings.ReadBuilder(settings, options, settings.ReadConnString[currConn]);
+                    if (settings.ReadBuilder is not null)
+                        settings.ReadBuilder(settings, options, settings.ReadConnString[currConn]);
                 };
 
                 if (settings.PoolSizeForRead == 0)
@@ -81,24 +85,20 @@ public static class IServiceConnectionExtensions
         {
             if (settings.DbContextWrite is not null)
             {
+                if (settings.WriteConnString is null)
+                    throw new InvalidOperationException("Write connection string need to be not null");
+
                 if (settings.PoolSizeForWrite == 0)
                 {
                     addDbContextMethod
                         .MakeGenericMethod(settings.DbContextWrite)
-                        .Invoke(null, new object[] {
-                        services,
-                        (Action<DbContextOptionsBuilder>)(options => WriteOptionAction(settings, options))
-                        });
+                        .Invoke(null, new object[] { services, (Action<DbContextOptionsBuilder>)(options => WriteOptionAction(settings, options)) });
                 }
                 else
                 {
                     addDbContextPoolMethod
                         .MakeGenericMethod(settings.DbContextWrite)
-                        .Invoke(null, new object[] {
-                        services,
-                        (Action<DbContextOptionsBuilder>)(options => WriteOptionAction(settings, options)),
-                        settings.PoolSizeForWrite
-                        });
+                        .Invoke(null, new object[] { services, (Action<DbContextOptionsBuilder>)(options => WriteOptionAction(settings, options)), settings.PoolSizeForWrite });
                 }
             }
         }
@@ -139,7 +139,7 @@ public static class IServiceConnectionExtensions
                 .GetInterfaces()
                 .Any(i => i.GetGenericTypeDefinition() == typeof(IEventRepository<,>));
             if (!constraints)
-                throw new InvalidOperationException("IVersionedEventRepository don't implement IEventSourcedRepository<TVersionedEventPayload, TPayload>");
+                throw new InvalidOperationException("IEventRepository don't implement IEventRepository<TEventPayload, TPayload>");
 
             services.AddScoped(settings.IEventSourcedRepository, settings.EventSourcedRepository);
         }
@@ -152,7 +152,8 @@ public static class IServiceConnectionExtensions
         {
             if (settings.Database?.EnableSensitiveDataLogging == true)
                 options.EnableSensitiveDataLogging();
-            settings.WriteBuilder(settings, options, settings.WriteConnString);
+            if (settings.WriteBuilder is not null)
+                settings.WriteBuilder(settings, options, settings.WriteConnString!);
         }
         static bool IsEventSourceContrain(Type entityType) => entityType.GetInterfaces().Any(p => p == typeof(IEventSourced));
     }

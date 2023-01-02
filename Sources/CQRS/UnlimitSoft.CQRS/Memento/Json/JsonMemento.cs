@@ -86,7 +86,7 @@ public abstract class JsonMemento<TInterface, TEntity> : IMemento<TInterface>
             if (eventType is null)
                 throw new KeyNotFoundException($"Event name={eventPayload.EventName} can't resolve");
 
-            history[i] = FromEvent(eventType, eventPayload.Body);
+            history[i] = FromEvent(eventType, eventPayload.Payload);
         }
 
         var entity = _factory?.Invoke(history) ?? new TEntity();

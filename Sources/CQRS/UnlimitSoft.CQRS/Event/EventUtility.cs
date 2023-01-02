@@ -58,23 +58,15 @@ public static class EventUtility
                 return responses;
             }
 
-            switch (envelop.Type)
+            // This is alwais deserialized as Json object them convert string a deserialized based of the type
+            var json = envelop.Msg.ToString();
+            if (serializer.Deserialize(eventType, json) is not TEvent @event)
             {
-                case MessageType.Json:
-                    var json = envelop.Msg.ToString();
-                    if (serializer.Deserialize(eventType, json) is not TEvent @event)
-                    {
-                        logger?.SkipEventType(eventType, eventName!);
-                        break;
-                    }
-                    curr = @event;
-                    break;
-                case MessageType.Event:
-                    curr = (TEvent)envelop.Msg;
-                    break;
-                default:
-                    throw new NotSupportedException($"Message type {envelop.Type} is not suported");
+                logger?.SkipEventType(eventType, eventName!);
+                return responses;
             }
+
+            curr = @event;
             beforeProcess?.Invoke(curr!);
             responses = await DispatchEvent(dispatcher, logger, curr!, ct);
 

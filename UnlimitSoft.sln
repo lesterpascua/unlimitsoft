@@ -87,6 +87,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.EventBus.Azure"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.WebApi.EventSourced", "Main\Examples\UnlimitSoft.WebApi.EventSourced\UnlimitSoft.WebApi.EventSourced.csproj", "{B61B5C88-18EE-4479-9E1A-4E4CF0A0E9BC}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.WebApi.MultiTenant", "Main\Examples\UnlimitSoft.WebApi.MultiTenant\UnlimitSoft.WebApi.MultiTenant.csproj", "{44496D0A-7D3C-4127-96EE-C53F9FCDDCEB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -201,6 +203,10 @@ Global
 		{B61B5C88-18EE-4479-9E1A-4E4CF0A0E9BC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B61B5C88-18EE-4479-9E1A-4E4CF0A0E9BC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B61B5C88-18EE-4479-9E1A-4E4CF0A0E9BC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{44496D0A-7D3C-4127-96EE-C53F9FCDDCEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{44496D0A-7D3C-4127-96EE-C53F9FCDDCEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{44496D0A-7D3C-4127-96EE-C53F9FCDDCEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{44496D0A-7D3C-4127-96EE-C53F9FCDDCEB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -245,6 +251,7 @@ Global
 		{25AB6B68-47F0-4A73-88E1-7C2F39EFB269} = {7A2BF6D2-4C6A-4DF2-96F7-0BBF0764FE4B}
 		{67D7EDCA-CEA0-4296-8CDF-7CC90FE23B9D} = {7A2BF6D2-4C6A-4DF2-96F7-0BBF0764FE4B}
 		{B61B5C88-18EE-4479-9E1A-4E4CF0A0E9BC} = {1E2F4303-FEFD-488D-AAEF-B55AEAC1F43F}
+		{44496D0A-7D3C-4127-96EE-C53F9FCDDCEB} = {1E2F4303-FEFD-488D-AAEF-B55AEAC1F43F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9B9451D6-06A9-4FE7-BD5A-062F758B8538}

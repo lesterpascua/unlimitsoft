@@ -9,10 +9,11 @@ using System.Collections.Generic;
 
 namespace UnlimitSoft.MultiTenant.DependencyInjection;
 
+
 /// <summary>
 /// Configure tenant services
 /// </summary>
-public class TenantBuilder
+public sealed class TenantBuilder
 {
     private readonly IServiceCollection _services;
 

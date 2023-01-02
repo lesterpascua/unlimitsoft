@@ -1,14 +1,10 @@
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 using System.Reflection;
-using UnlimitSoft.CQRS.Data;
 using UnlimitSoft.CQRS.DependencyInjection;
 using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.CQRS.Memento;
-using UnlimitSoft.CQRS.Memento.Json;
 using UnlimitSoft.Data.EntityFramework.DependencyInjection;
-using UnlimitSoft.Event;
 using UnlimitSoft.Json;
 using UnlimitSoft.Logger.Configuration;
 using UnlimitSoft.Logger.DependencyInjection;
@@ -28,6 +24,8 @@ using UnlimitSoft.WebApi.EventSourced.CQRS.Repository;
 // Steps
 //  - Inject IMyIdGenerator to generate unique key for the services
 //  - Inject AddUnlimitSoftDefaultFrameworkUnitOfWork this will register entities event source repository and all entity framework dependency
+//      * IMyUnitOfWork (necesary to save events but not requiere the IEventRepository has and argument to force the save of the operation)
+//      * IMyEventRepository (necesary for a memento)
 //  - Inject IMemento<IOrder> to access order entity
 //  - Inject AddUnlimitSoftEventNameResolver to resolve event type from event name
 // ================================================================================================================================

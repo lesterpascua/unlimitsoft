@@ -1,6 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿namespace UnlimitSoft.MultiTenant.Store;
 
-namespace UnlimitSoft.MultiTenant.Store;
 
 /// <summary>
 /// Provide a way to access to a tenant store.
@@ -12,5 +11,5 @@ public interface ITenantStore
     /// </summary>
     /// <param name="identifier"></param>
     /// <returns></returns>
-    Tenant GetTenant(string identifier);
+    Tenant? GetTenant(string identifier);
 }

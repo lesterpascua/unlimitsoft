@@ -99,34 +99,21 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
     /// <inheritdoc/>
     public Task PublishAsync(IEvent @event, bool useEnvelop = true, CancellationToken ct = default) => SendMessageAsync(@event, @event.Id, @event.Name, @event.CorrelationId, useEnvelop, ct);
     /// <inheritdoc/>
-    public async Task PublishPayloadAsync<T>(EventPayload<T> eventPayload, MessageType type, bool useEnvelop = true, CancellationToken ct = default)
+    public Task PublishPayloadAsync<T>(EventPayload<T> eventPayload, bool useEnvelop = true, CancellationToken ct = default)
     {
-        switch (type)
+        var eventType = _eventNameResolver.Resolver(eventPayload.EventName);
+        if (eventType is null)
         {
-            case MessageType.Json:
-                await SendMessageAsync(eventPayload, eventPayload.Id, eventPayload.EventName, eventPayload.CorrelationId, useEnvelop, ct);
-                break;
-            case MessageType.Event:
-                if (eventPayload.Body is not string payload)
-                    throw new NotSupportedException("Only allow json payload");
-
-                var eventType = _eventNameResolver.Resolver(eventPayload.EventName);
-                if (eventType is null)
-                {
-                    _logger?.LogWarning("Not found event {EventType}", eventPayload.EventName);
-                    break;
-                }
-                var @event = _serializer.Deserialize(eventType, payload);
-                if (@event is null)
-                {
-                    _logger?.LogWarning("Skip event of {Type} because is null", eventType);
-                    break;
-                }
-                await SendMessageAsync(@event, eventPayload.Id, eventPayload.EventName, eventPayload.CorrelationId, useEnvelop, ct);
-                break;
-            default:
-                throw new NotSupportedException();
+            _logger?.LogWarning("Not found event {EventType}", eventPayload.EventName);
+            return Task.CompletedTask;
         }
+        var @event = LoadFromPayload(eventType, eventPayload.Payload);
+        if (@event is null)
+        {
+            _logger?.LogWarning("Skip event of {Type} because is null", eventType);
+            return Task.CompletedTask;
+        }
+        return SendMessageAsync(@event, eventPayload.Id, eventPayload.EventName, eventPayload.CorrelationId, useEnvelop, ct);
     }
 
     /// <summary>
@@ -142,12 +129,41 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
     public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop, CancellationToken ct = default) => SendMessageAsync(graph, id, eventName, correlationId, useEnvelop, ct);
 
     /// <summary>
+    /// Load event from payload
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="eventType"></param>
+    /// <param name="payload"></param>
+    /// <returns></returns>
+    /// <exception cref="NotSupportedException"></exception>
+    protected virtual object? LoadFromPayload<T>(Type eventType, T payload)
+    {
+        if (payload is not string json)
+            throw new NotSupportedException("Only allow json payload");
+
+        return _serializer.Deserialize(eventType, json);
+    }
+    /// <summary>
     /// Create instance of the service bus client
     /// </summary>
     /// <returns></returns>
     protected virtual ServiceBusClient CreateClient()
     {
         return new ServiceBusClient(_endpoint);
+    }
+    /// <summary>
+    /// Create an bus message based of a some content
+    /// </summary>
+    /// <param name="content"></param>
+    /// <param name="contentType"></param>
+    /// <param name="body"></param>
+    /// <returns></returns>
+    protected virtual ServiceBusMessage CreateBusMessage(object content, out string contentType, out object body)
+    {
+        var json = _serializer.Serialize(content)!;
+        body = json;
+        contentType = "application/json";
+        return new ServiceBusMessage(json);
     }
 
     #region Private Method
@@ -173,30 +189,28 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
             throw new InvalidOperationException("Bus is not started");
 
         await using var sender = _client.CreateSender(queue.Queue);
-        var transformed = _transform?.Invoke(queue.Alias, eventName, graph) ?? graph;
+        var content = _transform?.Invoke(queue.Alias, eventName, graph) ?? graph;
 
-        var envelop = transformed;
+        var envelop = content;
         if (useEnvelop)
-            envelop = new MessageEnvelop(MessageType.Json, transformed, transformed.GetType().FullName);
+            envelop = new MessageEnvelop(content, content.GetType().FullName);
 
-        var json = _serializer.Serialize(envelop)!;
-
-        var message = new ServiceBusMessage(json);
+        var message = CreateBusMessage(envelop, out var contentType, out var body);
         if (!string.IsNullOrEmpty(correlationId))
             message.CorrelationId = correlationId;
 
         message.MessageId = id.ToString();
-        message.ContentType = "application/json";
+        message.ContentType = contentType;
 
         if (graph is IDelayEvent delayEvent && delayEvent.Scheduled.HasValue)
             message.ScheduledEnqueueTime = delayEvent.Scheduled.Value;
 
         message.ApplicationProperties[BusProperty.EventName] = eventName;
-        message.ApplicationProperties[BusProperty.MessageType] = transformed.GetType().AssemblyQualifiedName;
+        message.ApplicationProperties[BusProperty.MessageType] = content.GetType().AssemblyQualifiedName;
         _setup?.Invoke(graph, message);
 
         await _retryPolicy.ExecuteAsync((cancelationToken) => sender.SendMessageAsync(message, cancelationToken), ct);
-        _logger?.LogInformation("Publish to {Queue} event: {Event}", queue.Queue, json);
+        _logger?.LogInformation("Publish to {Queue} body: {@Body}", queue.Queue, body);
     }
     #endregion
 }
