@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Data.Dto;
-using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Web.Model;
 

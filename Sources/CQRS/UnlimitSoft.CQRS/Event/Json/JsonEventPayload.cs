@@ -1,4 +1,5 @@
-﻿using UnlimitSoft.Event;
+﻿using UnlimitSoft.CQRS.Data.Dto;
+using UnlimitSoft.Event;
 using UnlimitSoft.Json;
 
 namespace UnlimitSoft.CQRS.Event.Json;

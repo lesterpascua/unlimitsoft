@@ -2,6 +2,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Data.Dto;
 
 namespace UnlimitSoft.CQRS.Event;
 

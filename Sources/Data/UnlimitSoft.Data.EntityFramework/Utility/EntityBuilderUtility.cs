@@ -7,7 +7,7 @@ using System;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Data.Seed;
 
@@ -41,7 +41,7 @@ public static class EntityBuilderUtility
         builder.Property(p => p.EventName).IsRequired().HasMaxLength(255);
         builder.Property(p => p.Created).HasConversion(DateTimeUtcConverter.Instance);
 
-        var payloadPropertyBuilder = builder.Property(p => p.Payload).IsRequired();
+        var payloadPropertyBuilder = builder.Property(p => p.Body).IsRequired();
         payloadBuilder?.Invoke(payloadPropertyBuilder);
 
         if (useIndex)

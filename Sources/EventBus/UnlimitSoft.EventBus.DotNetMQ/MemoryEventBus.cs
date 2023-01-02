@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.Event;
 using UnlimitSoft.EventBus.Configuration;

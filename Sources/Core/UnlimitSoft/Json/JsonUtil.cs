@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace UnlimitSoft.Json;
 
@@ -11,7 +12,7 @@ public static class JsonUtil
     private static IJsonSerializer? _default;
 
     /// <summary>
-    /// Access to the default serializer in the system.
+    /// Access to the default serializer in the system. This value only can be assign one time
     /// </summary>
     public static IJsonSerializer Default
     {
@@ -74,4 +75,11 @@ public static class JsonUtil
     /// <param name="settings"></param>
     /// <returns></returns>
     public static object AddNode(object? data, string name, object value, object? settings = null) => Default.AddNode(data, name, value, settings);
+    /// <summary>
+    /// Convert objeto to a dictionary key value folow the asp.net binding method..
+    /// </summary>
+    /// <param name="obj"></param>
+    /// <param name="prefix"></param>
+    /// <returns></returns>
+    public static IDictionary<string, string?>? ToKeyValue(object obj, string? prefix = null) => Default.ToKeyValue(obj, prefix);
 }
