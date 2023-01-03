@@ -28,10 +28,7 @@ public sealed class DbContextWrite : DbContext
         _tenantId = GetTenantFromAccessor(options);
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="builder"></param>
+    /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -64,10 +61,20 @@ public sealed class DbContextWrite : DbContext
             }
         }
     }
+    /// <summary>
+    /// Applied default tenant filter to all entity (this is an implementation use same db to hold diferent tenant)
+    /// </summary>
+    /// <param name="builder"></param>
     private void ApplyFilterToTenant(ModelBuilder builder)
     {
         builder.Entity<Customer>().HasQueryFilter(e => e.TenantId == _tenantId);
     }
+    /// <summary>
+    /// Get accessor in the currect asynchonous process and extrat tenant information from there.
+    /// </summary>
+    /// <param name="options"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
     private static Guid GetTenantFromAccessor(DbContextOptions<DbContextWrite> options)
     {
         var coreOptions = options.Extensions.OfType<CoreOptionsExtension>().SingleOrDefault();

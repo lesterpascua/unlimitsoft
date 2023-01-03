@@ -31,6 +31,7 @@ public sealed class CustomerController : ControllerBase
         IOptions<OtherOptions> otherOptions, 
         IMyUnitOfWork unitOfWork,
         IMyRepository<Customer> customerRepository,
+        IMyQueryRepository<Customer> customerQueryRepository,
         ILogger<CustomerController> logger
     )
     {
