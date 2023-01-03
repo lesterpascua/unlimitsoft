@@ -142,11 +142,11 @@ public static class IServiceConnectionExtensions
         foreach (var entry in collection)
         {
             // Write Context
-            if (settings.DbContextWrite is not null && entry.ServiceType is not null && entry.ImplementationType is not null)
+            if (entry.ServiceType is not null && entry.ImplementationType is not null)
                 services.AddScoped(entry.ServiceType, provider => entry.ImplementationType.CreateInstance(provider));
 
             // Read Context
-            if (settings.DbContextRead is not null && entry.ServiceQueryType is not null && entry.ImplementationQueryType is not null)
+            if (entry.ServiceQueryType is not null && entry.ImplementationQueryType is not null)
                 services.AddScoped(entry.ServiceQueryType, provider => entry.ImplementationQueryType.CreateInstance(provider));
         }
         #endregion
