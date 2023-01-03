@@ -15,9 +15,15 @@ using UnlimitSoft.WebApi.MultiTenant.Sources.MultiTenants;
 // ================================================================================================================================
 // In this example we add a multi tenant support
 // Steps
-//  - Inject AddUnlimitSoftEventNameResolver 
-//  - IEventBus
-//  - IEventListener
+//  - Inject some options (test pupose)
+//  - AddMultiTenancy (TryAddSingleton ITenantContextAccessor, ITenantAccessService)
+//      * To override ITenantContextAccessor or ITenantAccessService just register the correct version before run this method.
+//  - WithResolutionStrategy (AddSingleton ITenantResolutionStrategy)
+//  - WithStore (AddSingleton ITenantStore)
+//  - WithTenantConfigure (IOptionsMonitorCache<TOptions>, IOptionsFactory<TOptions>, IOptionsSnapshot<TOptions>, IOptions<TOptions>)
+//  - Use EntityFramework to access db
+//      * In this case we use Hybrid approach have some tenant in an independant db and other coexisting in the same db
+//      * 
 //      
 // ================================================================================================================================
 
@@ -38,9 +44,9 @@ WebApplication ConfigureServices(IServiceCollection services)
     //
     // Load default configuration in case of tenant not set any seettings
     services.Configure<ServiceOptions>(builder.Configuration.GetSection("Service"));
+    services.Configure<OtherOptions>(opt => opt.Name = "default name");
     #endregion
 
-    // Add services to the container.
     #region Logger
     services.AddUnlimitSofLogger(
         new LoggerOption
@@ -78,8 +84,9 @@ WebApplication ConfigureServices(IServiceCollection services)
         .AddMultiTenancy<MyTenantConfigureServices>()
         .WithResolutionStrategy(p => new QSResolutionStrategy(p.GetRequiredService<ITenantContextAccessor>()))
         .WithStore<MyTenantStorage>()
-        .WithTenantConfigure<ServiceOptions>(TimeSpan.MaxValue, (provider, options, tenant) =>
+        .WithTenantConfigure<ServiceOptions>(TimeSpan.MaxValue, (provider, tenant, options) =>
         {
+            // Use this zone to 
             options.Client = tenant.Key;
         });
     #endregion

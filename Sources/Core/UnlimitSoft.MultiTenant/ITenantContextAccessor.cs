@@ -4,7 +4,7 @@ namespace UnlimitSoft.MultiTenant;
 
 
 /// <summary>
-/// Contain information to build a tenant. This information is attached to the executing thread.
+/// Containt information to build a tenant. This information is attached to the executing thread.
 /// </summary>
 public interface ITenantContextAccessor
 {

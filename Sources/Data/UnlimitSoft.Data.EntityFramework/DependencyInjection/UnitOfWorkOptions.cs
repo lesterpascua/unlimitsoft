@@ -40,7 +40,7 @@ public sealed class UnitOfWorkOptions
     /// <summary>
     /// Pool size for read DbContext
     /// </summary>
-    public ushort PoolSizeForRead { get; set; }
+    public int PoolSizeForRead { get; set; }
     /// <summary>
     /// Db context for write operations
     /// </summary>
@@ -48,7 +48,7 @@ public sealed class UnitOfWorkOptions
     /// <summary>
     /// Pool size for write DbContext
     /// </summary>
-    public ushort PoolSizeForWrite { get; set; }
+    public int PoolSizeForWrite { get; set; }
 
     /// <summary>
     /// Type of base entity builder class

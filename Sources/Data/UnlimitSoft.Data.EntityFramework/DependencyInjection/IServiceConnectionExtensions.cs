@@ -7,6 +7,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using UnlimitSoft.CQRS.Data;
+using Microsoft.EntityFrameworkCore.Storage;
 
 namespace UnlimitSoft.Data.EntityFramework.DependencyInjection;
 
@@ -23,25 +24,45 @@ public static class IServiceConnectionExtensions
     /// <param name="settings"></param>
     public static IServiceCollection AddUnlimitSoftDefaultFrameworkUnitOfWork(this IServiceCollection services, UnitOfWorkOptions settings)
     {
+        // Find EntityFrameworkServiceCollectionExtensions.AddDbContext(serviceCollection, optionsAction, contextLifetime, optionsLifetime)
         var addDbContextMethod = typeof(EntityFrameworkServiceCollectionExtensions)
             .GetMethods(BindingFlags.Public | BindingFlags.Static)
             .Where(p =>
             {
-                if (p.Name == nameof(EntityFrameworkServiceCollectionExtensions.AddDbContext))
-                    return p.GetGenericArguments().Length == 1 && p.GetParameters().Length == 3;
-                return false;
+                if (p.Name != nameof(EntityFrameworkServiceCollectionExtensions.AddDbContext))
+                    return false;
+
+                var args = p.GetParameters();
+                if (p.GetGenericArguments().Length != 1 || args.Length != 4)
+                    return false;
+                if (args[0].ParameterType != typeof(IServiceCollection) || args[1].ParameterType != typeof(Action<DbContextOptionsBuilder>))
+                    return false;
+                if (args[2].ParameterType != typeof(ServiceLifetime) || args[3].ParameterType != typeof(ServiceLifetime))
+                    return false;
+
+                return true;
             })
-            .Single();
+            .First();
+
+        // Find EntityFrameworkServiceCollectionExtensions.AddDbContextPool(serviceCollection, optionsAction, poolSize)
         var addDbContextPoolMethod = typeof(EntityFrameworkServiceCollectionExtensions)
             .GetMethods(BindingFlags.Public | BindingFlags.Static)
             .Where(p =>
             {
-                var arguments = p.GetParameters();
-                if (p.Name == nameof(EntityFrameworkServiceCollectionExtensions.AddDbContextPool) && p.GetGenericArguments().Length == 1 && arguments.Length == 3)
-                    return arguments[1].ParameterType == typeof(Action<DbContextOptionsBuilder>);
-                return false;
+                if (p.Name != nameof(EntityFrameworkServiceCollectionExtensions.AddDbContextPool))
+                    return false;
+
+                var args = p.GetParameters();
+                if (p.GetGenericArguments().Length != 1 || args.Length != 3)
+                    return false;
+                if (args[0].ParameterType != typeof(IServiceCollection) || args[1].ParameterType != typeof(Action<DbContextOptionsBuilder>))
+                    return false;
+                if (args[2].ParameterType != typeof(int))
+                    return false;
+
+                return true;
             })
-            .Single();
+            .First();
 
         #region Read Context
         if (settings.ReadCustomRegister is null)
@@ -66,7 +87,7 @@ public static class IServiceConnectionExtensions
                 {
                     addDbContextMethod
                         .MakeGenericMethod(settings.DbContextRead)
-                        .Invoke(null, new object[] { services, action });
+                        .Invoke(null, new object[] { services, action, ServiceLifetime.Scoped, ServiceLifetime.Scoped });
                 }
                 else
                 {
@@ -88,17 +109,19 @@ public static class IServiceConnectionExtensions
                 if (settings.WriteConnString is null)
                     throw new InvalidOperationException("Write connection string need to be not null");
 
+                Action<DbContextOptionsBuilder> action = options => WriteOptionAction(settings, options);
+
                 if (settings.PoolSizeForWrite == 0)
                 {
                     addDbContextMethod
                         .MakeGenericMethod(settings.DbContextWrite)
-                        .Invoke(null, new object[] { services, (Action<DbContextOptionsBuilder>)(options => WriteOptionAction(settings, options)) });
+                        .Invoke(null, new object[] { services, action, ServiceLifetime.Scoped, ServiceLifetime.Scoped });
                 }
                 else
                 {
                     addDbContextPoolMethod
                         .MakeGenericMethod(settings.DbContextWrite)
-                        .Invoke(null, new object[] { services, (Action<DbContextOptionsBuilder>)(options => WriteOptionAction(settings, options)), settings.PoolSizeForWrite });
+                        .Invoke(null, new object[] { services, action, settings.PoolSizeForWrite });
                 }
             }
         }
