@@ -10,7 +10,7 @@
 	<PropertyGroup>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<SignAssembly>true</SignAssembly>
-		<!--<AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>-->
+		<AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
 		<Authors>Lester Pastrana</Authors>
 		<Company>Private</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
