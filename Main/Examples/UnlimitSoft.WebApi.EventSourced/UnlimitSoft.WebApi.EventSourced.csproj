@@ -21,6 +21,7 @@
 		<ProjectReference Include="..\..\..\Sources\Core\UnlimitSoft.Logger\UnlimitSoft.Logger.csproj" />
 		<ProjectReference Include="..\..\..\Sources\Core\UnlimitSoft.Text.Json\UnlimitSoft.Text.Json.csproj" />
 		<ProjectReference Include="..\..\..\Sources\Data\UnlimitSoft.Data.EntityFramework\UnlimitSoft.Data.EntityFramework.csproj" />
+		<ProjectReference Include="..\..\..\Sources\Json\UnlimitSoft.Text.Json\UnlimitSoft.Text.Json.csproj" />
 	</ItemGroup>
 
 </Project>

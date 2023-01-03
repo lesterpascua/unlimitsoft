@@ -9,7 +9,7 @@
 	<PropertyGroup>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<SignAssembly>true</SignAssembly>
-		<AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+		<!--<AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>-->
 		<Authors>Lester Pastrana</Authors>
 		<Company>Private</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
@@ -27,12 +27,12 @@
 		</None>
 	</ItemGroup>
 
-	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-		<PackageReference Include="System.Text.Json" Version="7.0.0" />
+	<ItemGroup>
+	  <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\UnlimitSoft\UnlimitSoft.csproj" />
+	  <ProjectReference Include="..\..\Core\UnlimitSoft\UnlimitSoft.csproj" />
 	</ItemGroup>
 
 </Project>
