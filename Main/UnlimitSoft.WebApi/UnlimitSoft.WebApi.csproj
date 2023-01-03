@@ -39,6 +39,7 @@
 		<ProjectReference Include="..\..\Sources\Data\UnlimitSoft.Data.EntityFramework\UnlimitSoft.Data.EntityFramework.csproj" />
 		<ProjectReference Include="..\..\Sources\Data\UnlimitSoft.Data\UnlimitSoft.Data.csproj" />
 		<ProjectReference Include="..\..\Sources\EventBus\UnlimitSoft.EventBus.Azure\UnlimitSoft.EventBus.Azure.csproj" />
+		<ProjectReference Include="..\..\Sources\Json\UnlimitSoft.Text.Json\UnlimitSoft.Text.Json.csproj" />
 		<ProjectReference Include="..\..\Sources\Web\UnlimitSoft.Web.AspNet\UnlimitSoft.Web.AspNet.csproj" />
 		<ProjectReference Include="..\..\Sources\Web\UnlimitSoft.Web\UnlimitSoft.Web.csproj" />
 	</ItemGroup>
