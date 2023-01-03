@@ -12,14 +12,14 @@ namespace UnlimitSoft.MultiTenant.Options;
 internal class TenantOptionsFactory<TOptions> : IOptionsFactory<TOptions>
     where TOptions : class, new()
 {
-    private readonly Action<TOptions, Tenant> _setup;
+    private readonly Action<Tenant, TOptions> _setup;
     private readonly ITenantAccessService _tenantService;
     private readonly IEnumerable<IConfigureOptions<TOptions>> _setups;
     private readonly IEnumerable<IPostConfigureOptions<TOptions>> _postConfigures;
     private readonly ILogger<TenantOptionsFactory<TOptions>> _logger;
 
     public TenantOptionsFactory(
-        Action<TOptions, Tenant> setup,
+        Action<Tenant, TOptions> setup,
         ITenantAccessService tenantService,
         IEnumerable<IConfigureOptions<TOptions>> setups,
         IEnumerable<IPostConfigureOptions<TOptions>> postConfigures,
@@ -49,7 +49,7 @@ internal class TenantOptionsFactory<TOptions> : IOptionsFactory<TOptions>
         // Apply tenant specifc configuration (to both named and non-named options)
         var tenant = _tenantService.GetTenant();
         if (tenant is not null)
-            _setup(options, tenant);
+            _setup(tenant, options);
 
         _logger.LogInformation("Create {Options} for {Tenant}", typeof(TOptions).Name, tenant?.Id);
 

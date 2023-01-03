@@ -1,0 +1,21 @@
+﻿using UnlimitSoft.Data.EntityFramework;
+
+namespace UnlimitSoft.WebApi.MultiTenant.Sources.Data;
+
+
+/// <summary>
+/// 
+/// </summary>
+/// <typeparam name="TEntity"></typeparam>
+public sealed class MyRepository<TEntity> : EFRepository<TEntity>, IMyRepository<TEntity>
+    where TEntity : class
+{
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="dbContext"></param>
+    public MyRepository(DbContextWrite dbContext)
+        : base(dbContext)
+    {
+    }
+}
