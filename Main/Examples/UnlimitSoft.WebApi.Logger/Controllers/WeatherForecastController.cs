@@ -5,7 +5,7 @@ namespace UnlimitSoft.WebApi.Logger.Controllers;
 
 
 [ApiController]
-[Route("[controller]")]
+[Route("[controller]/[action]")]
 public class WeatherForecastController : ControllerBase
 {
     private static readonly string[] Summaries = new[]
@@ -33,5 +33,13 @@ public class WeatherForecastController : ControllerBase
             Summary = Summaries[Random.Shared.Next(Summaries.Length)]
         })
         .ToArray();
+    }
+
+    [HttpGet(Name = "SysCall")]
+    public string SysCall()
+    {
+        _logger.LogInformation("Took correlation from header");
+
+        return "Took correlation from header";
     }
 }

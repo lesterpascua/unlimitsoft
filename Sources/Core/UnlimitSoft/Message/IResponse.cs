@@ -10,20 +10,17 @@ namespace UnlimitSoft.Message;
 public interface IResponse
 {
     /// <summary>
-    /// Http response code for execution of command.
-    /// </summary>
-    HttpStatusCode Code { get; }
-    /// <summary>
-    /// Message diplayed to the user. With generic information.
-    /// </summary>
-    string? UIText { get; }
-    /// <summary>
     /// Indicate if event is success. This is only when code beteen 200 and 299.
     /// </summary>
     bool IsSuccess { get; }
     /// <summary>
+    /// Http response code for execution of command.
+    /// </summary>
+    HttpStatusCode Code { get; }
+    /// <summary>
     /// Trace operation identifier.
     /// </summary>
+    [Obsolete("Response don't need trace identifier keep only for backward compatibility")]
     string? TraceIdentifier { get; set; }
 
     /// <summary>

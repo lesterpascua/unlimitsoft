@@ -39,7 +39,7 @@ public class SearchTestQueryHandler : IMyQueryHandler<SearchTestQuery, SearchMod
         _customerQueryRepository = customerQueryRepository;
     }
 
-    public async ValueTask<SearchModel<Customer>> HandleV2Async(SearchTestQuery args, CancellationToken ct = default)
+    public async ValueTask<SearchModel<Customer>> HandleAsync(SearchTestQuery args, CancellationToken ct = default)
     {
         var query = _customerQueryRepository.FindAll();
 

@@ -77,9 +77,6 @@ public abstract class Event<TBody> : IEvent
     /// <param name="serviceId"></param>
     /// <param name="workerId"></param>
     /// <param name="correlationId"></param>
-    /// <param name="command"></param>
-    /// <param name="prevState"></param>
-    /// <param name="currState"></param>
     /// <param name="isDomain"></param>
     /// <param name="body"></param>
     protected Event(Guid id, Guid sourceId, long version, ushort serviceId, string? workerId, string? correlationId, bool isDomain, TBody body)

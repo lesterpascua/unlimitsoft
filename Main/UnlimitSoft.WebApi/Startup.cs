@@ -1,3 +1,4 @@
+using Akka.Actor.Setup;
 using Hangfire;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Builder;
@@ -25,10 +26,9 @@ using UnlimitSoft.Data.EntityFramework.Configuration;
 using UnlimitSoft.Data.EntityFramework.DependencyInjection;
 using UnlimitSoft.Data.EntityFramework.Utility;
 using UnlimitSoft.DependencyInjections;
-using UnlimitSoft.EventBus.Configuration;
+using UnlimitSoft.EventBus.Azure.Configuration;
 using UnlimitSoft.Json;
 using UnlimitSoft.Logger.AspNet;
-using UnlimitSoft.Web;
 using UnlimitSoft.Web.AspNet.Filter;
 using UnlimitSoft.WebApi.DependencyInjection;
 using UnlimitSoft.WebApi.Sources.CQRS;
@@ -79,13 +79,12 @@ public class Startup
             out TransformResponseAttributeOptions transformResponseOptions);
 
         // bus config by code.
-        var eventBusOptions = new EventBus.Azure.Configuration.EventBusOptions<QueueIdentifier>();
+        var eventBusOptions = new EventBusOptions<QueueIdentifier>() { Endpoint = endpoint };
         eventBusOptions.ActivateListenAlias(true, QueueIdentifier.MyQueue);
         eventBusOptions.ActivatePublishAlias(true, QueueIdentifier.MyQueue);
 
-        services.Configure<EventBus.Azure.Configuration.EventBusOptions<QueueIdentifier>>(setup =>
+        services.Configure<EventBusOptions<QueueIdentifier>>(setup =>
         {
-            setup.Endpoint = eventBusOptions.Endpoint;
             setup.PublishQueues = eventBusOptions.PublishQueues;
             setup.ListenQueues = eventBusOptions.ListenQueues;
         });
@@ -183,16 +182,14 @@ public class Startup
             preeProcessCommand: async (provider, command, context, next, ct) =>
             {
                 var meta = context.BackgroundJob;
-                string? traceId = null, correlationId = null;
+                string? correlationId = null;
 
                 if (command is IMyCommand cmd)
                 {
-                    traceId = cmd.Props.User?.TraceId;
                     correlationId = cmd.Props.User?.CorrelationId;
                 }
 
-                using var _1 = LogContext.PushProperty("TraceId", traceId);
-                using var _2 = LogContext.PushProperty("CorrelationId", correlationId);
+                using var _1 = LogContext.PushProperty(SysContants.LogContextCorrelationId, correlationId);
                 return await next(command, ct);
             },
             setup: config =>

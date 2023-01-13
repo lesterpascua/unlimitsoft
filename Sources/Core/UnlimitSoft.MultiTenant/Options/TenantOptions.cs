@@ -31,7 +31,10 @@ public sealed class TenantOptions<TOptions> : IOptions<TOptions>, IOptionsSnapsh
     public TOptions Get(string? name)
     {
         if (_options is null)
+        {
+            name ??= string.Empty;
             Interlocked.CompareExchange(ref _options, _cache.GetOrAdd(name, () => _factory.Create(name)), null);
+        }
         return _options;
     }
 }

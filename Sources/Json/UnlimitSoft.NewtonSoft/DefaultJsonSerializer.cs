@@ -103,7 +103,7 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
         if (data is null)
             return null;
 
-        var options = DeserializerSettings;
+        var options = SerializerSettings;
         if (settings is not null)
             options = (JsonSerializerSettings)settings;
         return JsonConvert.SerializeObject(data, options);

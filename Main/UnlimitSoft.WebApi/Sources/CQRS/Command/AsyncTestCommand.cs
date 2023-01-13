@@ -50,7 +50,7 @@ public class AsyncTestCommandHandler : IMyCommandHandler<AsyncTestCommand, strin
     /// <param name="command"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public async ValueTask<string> HandleV2Async(AsyncTestCommand command, CancellationToken ct = default)
+    public async ValueTask<string> HandleAsync(AsyncTestCommand command, CancellationToken ct = default)
     {
         command.Props!.Delay = TimeSpanUtility.DuplicateRetryTime(command.Props.Delay);
         await _commandBus.SendAsync(command, ct);

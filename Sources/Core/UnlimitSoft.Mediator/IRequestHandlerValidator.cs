@@ -19,5 +19,5 @@ public interface IRequestHandlerValidator<TRequest> : IRequestHandler
     /// <param name="validator"></param>
     /// <param name="ct"></param>
     /// <returns>Allow return custome response before the validation process.</returns>
-    ValueTask<IResponse> ValidatorV2Async(TRequest command, RequestValidator<TRequest> validator, CancellationToken ct = default);
+    ValueTask<IResponse> ValidatorAsync(TRequest command, RequestValidator<TRequest> validator, CancellationToken ct = default);
 }

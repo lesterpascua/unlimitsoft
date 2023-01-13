@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Security.Claims;
@@ -87,10 +88,11 @@ public class ApiKeyAuthenticationHandler<TOption> : AuthenticationHandler<TOptio
         Response.ContentType = ContentType;
         Response.StatusCode = StatusCodes.Status401Unauthorized;
 
-        var uiText = Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidAPIKey) ?? "Invalid API Key";
-        var problemDetails = new Response<object?>(HttpStatusCode.Unauthorized, null, uiText, Context.TraceIdentifier);
-
-        var value = _serializer.Serialize(problemDetails);
+        var response = ResponseUtil.GetError(
+            string.Empty, 
+            Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidAPIKey) ?? "Invalid API Key"
+        );
+        var value = _serializer.Serialize(response);
         if (value is not null)
             await Response.WriteAsync(value);
     }
@@ -104,13 +106,11 @@ public class ApiKeyAuthenticationHandler<TOption> : AuthenticationHandler<TOptio
         Response.ContentType = ContentType;
         Response.StatusCode = StatusCodes.Status403Forbidden;
 
-        var problemDetails = new Response<object?>(
-            HttpStatusCode.Forbidden,
-            null,
-            Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidUserPermission) ?? "User no have permission for the operation",
-            Context.TraceIdentifier
+        var response = ResponseUtil.GetError(
+            string.Empty, 
+            Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidUserPermission) ?? "User no have permission for the operation"
         );
-        var value = _serializer.Serialize(problemDetails);
+        var value = _serializer.Serialize(response);
         if (value is not null)
             await Response.WriteAsync(value);
     }

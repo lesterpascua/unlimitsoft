@@ -14,7 +14,7 @@ namespace UnlimitSoft.WebApi.Sources.CQRS.Query;
 /// </summary>
 public partial class TestQueryHandler : IQueryHandlerValidator<TestQuery>
 {
-    public ValueTask<IResponse> ValidatorV2Async(TestQuery query, RequestValidator<TestQuery> validator, CancellationToken ct = default)
+    public ValueTask<IResponse> ValidatorAsync(TestQuery query, RequestValidator<TestQuery> validator, CancellationToken ct = default)
     {
         validator.RuleFor(p => p.Name)
             .Must(name =>

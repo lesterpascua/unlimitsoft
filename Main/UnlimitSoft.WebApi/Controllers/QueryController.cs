@@ -1,12 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Query;
-using UnlimitSoft.Message;
+using UnlimitSoft.Web.Model;
 using UnlimitSoft.WebApi.Sources.CQRS.Query;
 using UnlimitSoft.WebApi.Sources.Data.Model;
 using UnlimitSoft.WebApi.Sources.Web;
-using System.Threading.Tasks;
-using System;
 
 namespace UnlimitSoft.WebApi.Controllers;
 
@@ -32,7 +32,7 @@ public sealed class QueryController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<Response<Customer[]>>> Get()
+    public async Task<ActionResult<SearchModel<Customer>>> Get()
     {
         var query = new TestQuery(this.GetIdentity());
         var result = await _queryDispatcher.DispatchAsync(_provider, query);

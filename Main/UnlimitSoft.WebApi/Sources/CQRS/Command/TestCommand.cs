@@ -35,7 +35,7 @@ public class TestCommandHandler : IMyCommandHandler<TestCommand, string>, IComma
     }
 
 
-    public async ValueTask<string> HandleV2Async(TestCommand command, CancellationToken ct = default)
+    public async ValueTask<string> HandleAsync(TestCommand command, CancellationToken ct = default)
     {
         var entity = new Customer { Id = Guid.NewGuid(), Name = Guid.NewGuid().ToString() };
         entity.AddEvent<TestEvent, TestEventBody>(_gen, command.Props!.User!.CorrelationId, new TestEventBody { Test = "Test Body" });
@@ -46,11 +46,11 @@ public class TestCommandHandler : IMyCommandHandler<TestCommand, string>, IComma
         return "Command ok";
     }
 
-    public ValueTask<IResponse> ComplianceV2Async(TestCommand command, CancellationToken ct = default)
+    public ValueTask<IResponse> ComplianceAsync(TestCommand command, CancellationToken ct = default)
     {
         return ValueTask.FromResult(command.OkResponse());
     }
-    public ValueTask<IResponse> ValidatorV2Async(TestCommand command, RequestValidator<TestCommand> validator, CancellationToken ct = default)
+    public ValueTask<IResponse> ValidatorAsync(TestCommand command, RequestValidator<TestCommand> validator, CancellationToken ct = default)
     {
         return ValueTask.FromResult(command.OkResponse());
     }

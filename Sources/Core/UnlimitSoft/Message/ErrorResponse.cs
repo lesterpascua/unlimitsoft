@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Net;
 
 namespace UnlimitSoft.Message;
@@ -18,9 +19,18 @@ public sealed class ErrorResponse : Response<IDictionary<string, string[]>?>
     /// </summary>
     /// <param name="code"></param>
     /// <param name="body"></param>
-    /// <param name="uiText"></param>
+    public ErrorResponse(HttpStatusCode code, IDictionary<string, string[]>? body) : base(code, body)
+    {
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="code"></param>
+    /// <param name="body"></param>
     /// <param name="traceId"></param>
-    public ErrorResponse(HttpStatusCode code, IDictionary<string, string[]>? body, string? uiText, string? traceId) : base(code, body, uiText, traceId)
+    [Obsolete("Response don't need trace identifier keep only for backward compatibility")]
+    public ErrorResponse(HttpStatusCode code, IDictionary<string, string[]>? body, string? traceId) : base(code, body, traceId)
     {
     }
 }
