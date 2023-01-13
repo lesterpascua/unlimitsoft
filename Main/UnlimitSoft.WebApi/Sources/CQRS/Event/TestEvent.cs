@@ -42,7 +42,7 @@ public class TestEventHandler : IMyEventHandler<TestEvent>
         _serializer = serializer;
     }
 
-    public ValueTask<IResponse> HandleV2Async(TestEvent @event, CancellationToken ct = default)
+    public ValueTask<IResponse> HandleAsync(TestEvent @event, CancellationToken ct = default)
     {
         var body = @event.GetBody<TestEventBody>(_serializer);
 

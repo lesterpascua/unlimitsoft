@@ -21,9 +21,8 @@ public class IdentityInfo
     /// <param name="id"></param>
     /// <param name="role"></param>
     /// <param name="scope"></param>
-    /// <param name="traceId"></param>
     /// <param name="correlationId"></param>
-    public IdentityInfo(Guid id, string? role = null, string? scope = null, string? traceId = null, string? correlationId = null) => (Id, Role, Scope, TraceId, CorrelationId) = (id, role, scope, traceId, correlationId);
+    public IdentityInfo(Guid id, string? role = null, string? scope = null, string? correlationId = null) => (Id, Role, Scope, CorrelationId) = (id, role, scope, correlationId);
 
     /// <summary>
     /// User identifier
@@ -37,10 +36,6 @@ public class IdentityInfo
     /// Stope separate by coma of the identitty
     /// </summary>
     public string? Scope { get; set; }
-    /// <summary>
-    /// Operation trace identifier.
-    /// </summary>
-    public string? TraceId { get; set; }
     /// <summary>
     /// Correlation trace identifier.
     /// </summary>

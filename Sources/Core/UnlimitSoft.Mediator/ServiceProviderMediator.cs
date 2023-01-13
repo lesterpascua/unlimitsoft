@@ -20,21 +20,14 @@ namespace UnlimitSoft.Mediator;
 /// </summary>
 public sealed class ServiceProviderMediator : IMediator
 {
-    private readonly IServiceProvider _provider;
     private readonly bool _validate, _useScope;
-
-    private readonly string? _errorText;
+    private readonly IServiceProvider _provider;
     private readonly Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>> _errorTransforms;
 
     private readonly ILogger<ServiceProviderMediator>? _logger;
 
     private static Dictionary<Type, RequestMetadata>? _cache;
-    private const string HandleAsyncMethod = "HandleV2Async", ValidatorAsyncMethod = "ValidatorV2Async", ComplianceAsyncMethod = "ComplianceV2Async", PostPipelineAsyncMethod = "HandleV2Async";
-
-    /// <summary>
-    /// Default function used to convert error transform to standard ASP.NET format
-    /// </summary>
-    public static readonly Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>> DefaultErrorTransforms = (failure) => failure.GroupBy(p => p.PropertyName).ToDictionary(k => k.Key, v => v.Select(s => s.ErrorMessage).ToArray());
+    private const string HandleMethod = "HandleAsync", ValidatorMethod = "ValidatorAsync", ComplianceMethod = "ComplianceAsync", PostPipelineMethod = "HandleAsync";
 
 
     /// <summary>
@@ -50,7 +43,6 @@ public sealed class ServiceProviderMediator : IMediator
         IServiceProvider provider,
         bool validate = true,
         bool useScope = true,
-        string? errorText = null,
         Func<IEnumerable<ValidationFailure>, IDictionary<string, string[]>>? errorTransforms = null,
         ILogger<ServiceProviderMediator>? logger = null
     )
@@ -59,7 +51,6 @@ public sealed class ServiceProviderMediator : IMediator
         _validate = validate;
         _useScope = useScope;
         _errorTransforms = errorTransforms ?? DefaultErrorTransforms;
-        _errorText = errorText;
         _logger = logger;
     }
 
@@ -106,6 +97,26 @@ public sealed class ServiceProviderMediator : IMediator
         // Run existing post operations
         PostPipelineHandlerAsync(provider, requestType, request, handler, response, metadata, ct);
         return new Result<TResponse>(response, null);
+    }
+
+    /// <summary>
+    /// Default function used to convert error transform to standard ASP.NET format
+    /// </summary>
+    public static IDictionary<string, string[]> DefaultErrorTransforms(IEnumerable<ValidationFailure> failure)
+    {
+        var aux = new Dictionary<string, List<string>>();
+        foreach (var fail in failure)
+        {
+            if (!aux.TryGetValue(fail.PropertyName, out var list))
+                aux.Add(fail.PropertyName, list = new List<string>());
+            list.Add(fail.ErrorMessage);
+        }
+
+        var result = new Dictionary<string, string[]>();
+        foreach (var item in aux)
+            result.Add(item.Key, item.Value.ToArray());
+
+        return result;
     }
 
     #region Private Methods
@@ -199,9 +210,12 @@ public sealed class ServiceProviderMediator : IMediator
             {
                 var method = metadata
                     .HandlerImplementType
-                    .GetMethod(HandleAsyncMethod, new Type[] { requestType, typeof(CancellationToken) });
+                    .GetMethod(HandleMethod, new Type[] { requestType, typeof(CancellationToken) });
+                if (method is null)
+                    throw new MissingMethodException($"Can't find {HandleMethod} in {requestType}");
+
                 var tmp = Emit<Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>>
-                    .NewDynamicMethod($"{HandleAsyncMethod}_{requestType.FullName}")
+                    .NewDynamicMethod($"{HandleMethod}_{requestType.FullName}")
                     .LoadArgument(0).CastClass(metadata.HandlerImplementType)
                     .LoadArgument(1).CastClass(requestType)
                     .LoadArgument(2)
@@ -238,9 +252,12 @@ public sealed class ServiceProviderMediator : IMediator
 
                 var method = metadata
                     .HandlerImplementType
-                    .GetMethod(ValidatorAsyncMethod, new Type[] { requestType, validatorType, typeof(CancellationToken) });
+                    .GetMethod(ValidatorMethod, new Type[] { requestType, validatorType, typeof(CancellationToken) });
+                if (method is null)
+                    throw new MissingMethodException($"Can't find {ValidatorMethod} in {requestType}");
+
                 var tmp = Emit<Func<IRequestHandler, IRequest, IValidator, CancellationToken, ValueTask<IResponse>>>
-                    .NewDynamicMethod($"{ValidatorAsyncMethod}_{requestType.FullName}")
+                    .NewDynamicMethod($"{ValidatorMethod}_{requestType.FullName}")
                     .LoadArgument(0).CastClass(metadata.HandlerImplementType)
                     .LoadArgument(1).CastClass(requestType)
                     .LoadArgument(2).CastClass(validatorType)
@@ -285,7 +302,7 @@ public sealed class ServiceProviderMediator : IMediator
             return null;
 
         var aux = _errorTransforms(errors.Errors);
-        return request.BadResponse(aux, _errorText);
+        return request.BadResponse(aux);
     }
 
     private static Func<IRequestHandler, IRequest, CancellationToken, ValueTask<IResponse>> GetCompliance(Type requestType, RequestMetadata metadata)
@@ -301,9 +318,12 @@ public sealed class ServiceProviderMediator : IMediator
             {
                 var method = metadata
                     .HandlerImplementType
-                    .GetMethod(ComplianceAsyncMethod, new Type[] { requestType, typeof(CancellationToken) });
+                    .GetMethod(ComplianceMethod, new Type[] { requestType, typeof(CancellationToken) });
+                if (method is null)
+                    throw new MissingMethodException($"Can't find {ComplianceMethod} in {requestType}");
+
                 var tmp = Emit<Func<IRequestHandler, IRequest, CancellationToken, ValueTask<IResponse>>>
-                    .NewDynamicMethod($"{ComplianceAsyncMethod}_{requestType.FullName}")
+                    .NewDynamicMethod($"{ComplianceMethod}_{requestType.FullName}")
                     .LoadArgument(0).CastClass(metadata.HandlerImplementType)
                     .LoadArgument(1).CastClass(requestType)
                     .LoadArgument(2)
@@ -385,10 +405,10 @@ public sealed class ServiceProviderMediator : IMediator
                 var postPipelineType = postPipelineMetadata.ImplementType!;
 
                 var method = postPipelineType
-                    .GetMethod(PostPipelineAsyncMethod, new Type[] { requestType, handlerType, typeof(TResponse), typeof(CancellationToken) });
+                    .GetMethod(PostPipelineMethod, new Type[] { requestType, handlerType, typeof(TResponse), typeof(CancellationToken) });
 
                 var tmp = Emit<Func<IRequestHandlerPostPipeline, IRequest, IRequestHandler, TResponse, CancellationToken, Task>>
-                    .NewDynamicMethod($"{PostPipelineAsyncMethod}_{handlerType.FullName}")
+                    .NewDynamicMethod($"{PostPipelineMethod}_{handlerType.FullName}")
                     .LoadArgument(0).CastClass(postPipelineType)
                     .LoadArgument(1).CastClass(requestType)
                     .LoadArgument(2).CastClass(handlerType)

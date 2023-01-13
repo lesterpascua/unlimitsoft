@@ -46,10 +46,10 @@ public static class ControllerBaseExtensions
         var role = aux.Any() ? aux.Aggregate((a, b) => $"{a},{b}") : null;
 
         var correlationId = @this.HttpContext.TraceIdentifier;
-        if (@this.HttpContext.Request.Headers.TryGetValue(LoggerMiddleware.CorrelationHeader, out var correlation))
+        if (@this.HttpContext.Request.Headers.TryGetValue(SysContants.HeaderCorrelation, out var correlation))
             correlationId = correlation.FirstOrDefault();
 
-        return new IdentityInfo(id, role, scope, @this.HttpContext.TraceIdentifier, correlationId);
+        return new IdentityInfo(id, role, scope, correlationId);
     }
 
     /// <summary>
@@ -60,9 +60,10 @@ public static class ControllerBaseExtensions
     /// <returns></returns>
     public static ObjectResult ToActionResult<TResponse>(this ControllerBase @this, in Result<TResponse> result)
     {
-        if (result.Error is not null)
-            @this.StatusCode((int)result.Error.Code, result.Error);
-        var value = new Response<TResponse?>(HttpStatusCode.OK, result.Value, null, null);
-        return @this.Ok(value);
+        var err = result.Error;
+        if (err is not null)
+            return @this.StatusCode((int)err.Code, err.GetBody());
+
+        return @this.Ok(result.Value);
     }
 }

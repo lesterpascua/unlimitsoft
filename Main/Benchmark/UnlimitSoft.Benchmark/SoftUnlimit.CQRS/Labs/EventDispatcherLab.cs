@@ -44,7 +44,7 @@ public class EventDispatcherLab
     }
     public class EventHandler : IEventHandler<Event>
     {
-        public ValueTask<IResponse> HandleV2Async(Event @event, CancellationToken ct = default)
+        public ValueTask<IResponse> HandleAsync(Event @event, CancellationToken ct = default)
         {
             var result = $"{@event.Body} - {SysClock.GetUtcNow()}";
             return ValueTask.FromResult(@event.OkResponse(result));

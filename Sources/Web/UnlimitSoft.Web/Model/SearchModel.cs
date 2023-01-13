@@ -1,31 +1,21 @@
 ﻿using System.Collections.Generic;
 
-namespace UnlimitSoft.Web.Model
-{
-    /// <summary>
-    /// Result for all search operations
-    /// </summary>
-    /// <typeparam name="TModel"></typeparam>
-    public class SearchModel<TModel>
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="total"></param>
-        /// <param name="data"></param>
-        public SearchModel(long total, IEnumerable<TModel> data)
-        {
-            Data = data;
-            Total = total;
-        }
+namespace UnlimitSoft.Web.Model;
 
-        /// <summary>
-        /// Total of elements.
-        /// </summary>
-        public long Total { get; set; }
-        /// <summary>
-        /// Data resulting of search.
-        /// </summary>
-        public IEnumerable<TModel> Data { get; set; }
-    }
-}
+
+/// <summary>
+/// Result for all search operations
+/// </summary>
+/// <typeparam name="TModel"></typeparam>
+/// <param name="Total">Total amount of element in the query</param>
+/// <param name="Data">Paginated data</param>
+public record SearchModel<TModel>(long Total, IEnumerable<TModel> Data);
+/// <summary>
+/// Result for all search operations
+/// </summary>
+/// <typeparam name="TModel"></typeparam>
+/// <param name="Total">Total amount of element in the query</param>
+/// <param name="Page">Page resulting of the search</param>
+/// <param name="PageSize">Page size resulting of the search</param>
+/// <param name="Data">Paginated data</param>
+public record SearchXModel<TModel>(long Total, int Page, int PageSize, IEnumerable<TModel> Data);

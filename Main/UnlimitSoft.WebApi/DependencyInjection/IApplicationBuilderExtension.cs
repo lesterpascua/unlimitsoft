@@ -22,7 +22,7 @@ public static class IApplicationBuilderExtension
     public static IApplicationBuilder UseWrapperDevelopment(this IApplicationBuilder app,
         bool showExceptionDetails,
         //bool useSerilogRequestLogging = false,
-        Func<HttpContext, Dictionary<string, string[]>> errorBody = null,
+        Func<HttpContext, Dictionary<string, string[]>>? errorBody = null,
         params IExceptionHandler[] handlers)
     {
         var handlerException = new ToResponseExceptionHandlerOptions(JsonUtil.Default, showExceptionDetails, handlers: handlers, errorBody: errorBody);

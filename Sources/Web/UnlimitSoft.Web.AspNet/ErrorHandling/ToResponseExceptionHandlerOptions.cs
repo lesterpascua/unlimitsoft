@@ -34,7 +34,6 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
     /// <param name="showExceptionInfo"></param>
     /// <param name="handlers"></param>
     /// <param name="fatalErrorCode"></param>
-    /// <param name="errText"></param>
     /// <param name="errorBody"></param>
     /// <param name="logger"></param>
     public ToResponseExceptionHandlerOptions(
@@ -42,7 +41,6 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
         bool showExceptionInfo = true,
         IEnumerable<IExceptionHandler>? handlers = null,
         int fatalErrorCode = -1,
-        string? errText = null,
         Func<HttpContext, Dictionary<string, string[]>>? errorBody = null,
         ILogger<ToResponseExceptionHandlerOptions>? logger = null)
     {
@@ -50,7 +48,6 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
         _showExceptionInfo = showExceptionInfo;
         _logger = logger;
         _handlers = handlers;
-        _errText = errText;
         _defaultErrorBody = new Dictionary<string, string[]> { { string.Empty, new string[] { fatalErrorCode.ToString() } } };
         _errorBody = errorBody;
         ExceptionHandler = (context) => ExceptionHandlerInternal(context);
@@ -78,7 +75,6 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
         var response = new Response<object>(
             HttpStatusCode.InternalServerError, 
             body, 
-            _errText ?? "An error occurred while processing your request. Submit this bug and we'll fix it.",
             context.TraceIdentifier
         );
 

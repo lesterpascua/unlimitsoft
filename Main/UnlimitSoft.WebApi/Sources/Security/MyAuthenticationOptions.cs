@@ -1,14 +1,14 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Primitives;
-using UnlimitSoft.Json;
-using UnlimitSoft.Web.AspNet.Security.Authentication;
-using UnlimitSoft.Web.Security;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Claims;
 using System.Text;
 using System.Threading.Tasks;
+using UnlimitSoft.Json;
+using UnlimitSoft.Web.AspNet.Security.Authentication;
+using UnlimitSoft.Web.Security;
 
 namespace UnlimitSoft.WebApi.Sources.Security;
 
@@ -19,9 +19,8 @@ public class MyAuthenticationOptions : ApiKeyAuthenticationOptions
     /// 
     /// </summary>
     public const string AuthorizationHeader = "Authorization";
-    private readonly IJsonSerializer _serializer;
 
-
+    /// <inheritdoc />
     protected override ValueTask<IEnumerable<Claim>?> CreateClaims(IServiceProvider provider, HttpRequest httpRequest, string apiKey)
     {
         if (!httpRequest.Headers.TryGetValue(AuthorizationHeader, out StringValues value))

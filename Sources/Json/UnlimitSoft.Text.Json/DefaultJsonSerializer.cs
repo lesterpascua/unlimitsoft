@@ -32,7 +32,7 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
             WriteIndented = false,
             PropertyNameCaseInsensitive = true,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         };
     }
 
@@ -126,7 +126,7 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
         if (data is null)
             return null;
 
-        var options = DeserializerSettings;
+        var options = SerializerSettings;
         if (settings is not null)
             options = (JsonSerializerOptions)settings;
         return JsonSerializer.Serialize(data, options);

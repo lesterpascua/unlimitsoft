@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Net;
 using System.Runtime.CompilerServices;
 
@@ -30,12 +32,24 @@ public class Response<T> : IResponse
     /// <param name="code"></param>
     /// <param name="body"></param>
     /// <param name="uiText"></param>
-    /// <param name="traceId"></param>
-    public Response(HttpStatusCode code, T body, string? uiText, string? traceId)
+    public Response(HttpStatusCode code, T body)
     {
         Code = code;
         Body = body;
-        UIText = uiText;
+    }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="code"></param>
+    /// <param name="body"></param>
+    /// <param name="uiText"></param>
+    /// <param name="traceId"></param>
+    [Obsolete("Response don't need trace identifier keep only for backward compatibility")]
+    public Response(HttpStatusCode code, T body, string? traceId)
+    {
+        Code = code;
+        Body = body;
         TraceIdentifier = traceId;
     }
 
@@ -46,8 +60,7 @@ public class Response<T> : IResponse
     /// <inheritdoc />
     public HttpStatusCode Code { get; set; }
     /// <inheritdoc />
-    public string? UIText { get; set; }
-    /// <inheritdoc />
+    [Obsolete("Response don't need trace identifier keep only for backward compatibility")]
     public string? TraceIdentifier { get; set; }
     /// <inheritdoc />
     public bool IsSuccess => HttpStatusCode.OK <= Code && Code < HttpStatusCode.Ambiguous;

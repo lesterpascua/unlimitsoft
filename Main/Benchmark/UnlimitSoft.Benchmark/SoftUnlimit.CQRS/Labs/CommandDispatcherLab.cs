@@ -67,16 +67,16 @@ public sealed class CommandDispatcherLab
     }
     public class CommandHandler : ICommandHandler<Command, string>, ICommandHandlerValidator<Command>, ICommandHandlerCompliance<Command>
     {
-        public ValueTask<string> HandleV2Async(Command request, CancellationToken ct = default)
+        public ValueTask<string> HandleAsync(Command request, CancellationToken ct = default)
         {
             var result = $"{request.Name} - {SysClock.GetUtcNow()}";
             return ValueTask.FromResult(result);
         }
-        public ValueTask<IResponse> ValidatorV2Async(Command request, RequestValidator<Command> validator, CancellationToken ct = default)
+        public ValueTask<IResponse> ValidatorAsync(Command request, RequestValidator<Command> validator, CancellationToken ct = default)
         {
             return ValueTask.FromResult(request.OkResponse());
         }
-        public ValueTask<IResponse> ComplianceV2Async(Command request, CancellationToken ct = default)
+        public ValueTask<IResponse> ComplianceAsync(Command request, CancellationToken ct = default)
         {
             return ValueTask.FromResult(request.OkResponse());
         }
@@ -85,14 +85,14 @@ public sealed class CommandDispatcherLab
 
     public sealed class CommandHandlerPipeline1 : IRequestHandlerPostPipeline<Command, CommandHandler, string, CommandHandlerPipeline1>
     {
-        public Task HandleV2Async(Command command, CommandHandler handler, string response, CancellationToken ct)
+        public Task HandleAsync(Command command, CommandHandler handler, string response, CancellationToken ct)
         {
             return Task.CompletedTask;
         }
     }
     public sealed class CommandHandlerPipeline2 : IRequestHandlerPostPipeline<Command, CommandHandler, string, CommandHandlerPipeline2>
     {
-        public Task HandleV2Async(Command command, CommandHandler handler, string response, CancellationToken ct)
+        public Task HandleAsync(Command command, CommandHandler handler, string response, CancellationToken ct)
         {
             return Task.CompletedTask;
         }

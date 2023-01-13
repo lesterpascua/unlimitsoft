@@ -22,5 +22,5 @@ public interface IRequestHandler<in TRequest, TResponse> : IRequestHandler
     /// <param name="command"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    ValueTask<TResponse> HandleV2Async(TRequest command, CancellationToken ct = default);
+    ValueTask<TResponse> HandleAsync(TRequest command, CancellationToken ct = default);
 }

@@ -47,18 +47,18 @@ public class QueryDispatcherLab
     }
     public class QueryHandler : IQueryHandler<Query, string>, IQueryHandlerValidator<Query>, IQueryHandlerCompliance<Query>
     {
-        public ValueTask<string> HandleV2Async(Query query, CancellationToken ct = default)
+        public ValueTask<string> HandleAsync(Query query, CancellationToken ct = default)
         {
             var result = $"{query.Name} - {SysClock.GetUtcNow()}";
             return ValueTask.FromResult(result);
         }
 
-        public ValueTask<IResponse> ComplianceV2Async(Query query, CancellationToken ct = default)
+        public ValueTask<IResponse> ComplianceAsync(Query query, CancellationToken ct = default)
         {
             return ValueTask.FromResult(query.OkResponse());
         }
 
-        public ValueTask<IResponse> ValidatorV2Async(Query query, RequestValidator<Query> validator, CancellationToken ct = default)
+        public ValueTask<IResponse> ValidatorAsync(Query query, RequestValidator<Query> validator, CancellationToken ct = default)
         {
             return ValueTask.FromResult(query.OkResponse());
         }

@@ -3,6 +3,7 @@ using Serilog.Sinks.SystemConsole.Themes;
 using UnlimitSoft.Logger.AspNet;
 using UnlimitSoft.Logger.Configuration;
 using UnlimitSoft.Logger.DependencyInjection;
+using UnlimitSoft.WebApi.Logger.Logger;
 
 // ================================================================================================================================
 // In this example we add a logger and include a custom properties in every logger
@@ -42,8 +43,8 @@ WebApplication ConfigureServices(IServiceCollection services)
             );
         }
     );
+    services.AddSingleton<ICorrelationTrusted, SysCallCorrelationTrusted>();
     #endregion
-
 
     services.AddControllers();
 

@@ -9,7 +9,7 @@ namespace UnlimitSoft.Mediator.Pipeline;
 /// </summary>
 public interface IRequestHandlerPostPipeline { }
 /// <summary>
-/// 
+/// Allow add diferent operation after execution of the handler
 /// </summary>
 /// <typeparam name="TRequest"></typeparam>
 /// <typeparam name="THandler"></typeparam>
@@ -28,5 +28,5 @@ public interface IRequestHandlerPostPipeline<in TRequest, in THandler, TResponse
     /// <param name="response"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public Task HandleV2Async(TRequest command, THandler handler, TResponse response, CancellationToken ct);
+    public Task HandleAsync(TRequest command, THandler handler, TResponse response, CancellationToken ct);
 }

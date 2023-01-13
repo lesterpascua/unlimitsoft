@@ -3,6 +3,7 @@ using UnlimitSoft.WebApi.Sources.Data;
 using UnlimitSoft.WebApi.Sources.Data.Model;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.Web.Model;
 
 namespace UnlimitSoft.WebApi.Sources.CQRS.Query;
 
@@ -10,7 +11,7 @@ namespace UnlimitSoft.WebApi.Sources.CQRS.Query;
 /// <summary>
 /// Handler definitial (you can choose put all in the same file or separate using partial class)
 /// </summary>
-public partial class TestQueryHandler : IMyQueryHandler<TestQuery, Customer[]>
+public partial class TestQueryHandler : IMyQueryHandler<TestQuery, SearchModel<Customer>>
 {
     private readonly IMyQueryRepository<Customer> _customerQueryRepository;
 
@@ -19,9 +20,10 @@ public partial class TestQueryHandler : IMyQueryHandler<TestQuery, Customer[]>
         _customerQueryRepository = customerQueryRepository;
     }
 
-    public async ValueTask<Customer[]> HandleV2Async(TestQuery query, CancellationToken ct = default)
+    public async ValueTask<SearchModel<Customer>> HandleAsync(TestQuery query, CancellationToken ct = default)
     {
         var data = await _customerQueryRepository.FindAll().ToArrayAsync(ct);
-        return data;
+        var model = new SearchModel<Customer>(data.Length, data);
+        return model;
     }
 }

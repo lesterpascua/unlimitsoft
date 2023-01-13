@@ -20,6 +20,11 @@ public sealed class TransformResponseAttribute : ActionFilterAttribute
     private readonly TransformResponseAttributeOptions _options;
     private readonly ILogger<TransformResponseAttribute>? _logger;
 
+    /// <summary>
+    /// Header used to sent the identifier of the operation
+    /// </summary>
+    public const string XTraceId = "X-TraceId";
+
 
     /// <summary>
     /// 
@@ -53,10 +58,9 @@ public sealed class TransformResponseAttribute : ActionFilterAttribute
                     result.Value = new ErrorResponse(
                         code,
                         validationProblem.Errors,
-                        _options.InvalidArgumentText,
                         context.HttpContext.TraceIdentifier
                     );
-                    _options.BadRequestLogger?.Invoke(_logger, context.HttpContext, result.Value, _options.InvalidArgumentText);
+                    _options.BadRequestLogger?.Invoke(_logger, context.HttpContext, result.Value, "InvalidArgument");
                 }
                 break;
             case ObjectResult result:
@@ -75,10 +79,6 @@ public class TransformResponseAttributeOptions
     /// 
     /// </summary>
     public string ServerErrorText { get; set; } = "An error occurred while processing your request. Submit this bug and we'll fix it.";
-    /// <summary>
-    /// 
-    /// </summary>
-    public string InvalidArgumentText { get; set; } = "Invalid Argument";
     /// <summary>
     /// Indicate if the filter should log exception request.
     /// </summary>
@@ -103,12 +103,13 @@ public class TransformResponseAttributeOptions
     /// <summary>
     /// Log bad request exception
     /// </summary>
-    public Action<ILogger?, HttpContext, object, string> BadRequestLogger { get; set; } = (logger, httpContext, response, message) => logger?.LogInformation("Code: {Code}, User: {User}, Message: {Message}, Response: {@Response}",
-        StatusCodes.Status400BadRequest,
-        httpContext.User.GetSubjectId(),
-        message,
-        response
-    );
+    public Action<ILogger?, HttpContext, object, string> BadRequestLogger { get; set; } = (logger, httpContext, response, message) => 
+        logger?.LogInformation("Code: {Code}, User: {User}, Message: {Message}, Response: {@Response}",
+            StatusCodes.Status400BadRequest,
+            httpContext.User.GetSubjectId(),
+            message,
+            response
+        );
     /// <summary>
     /// Log error exception
     /// </summary>

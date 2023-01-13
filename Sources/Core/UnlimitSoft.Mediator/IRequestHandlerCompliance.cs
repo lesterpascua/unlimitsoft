@@ -17,5 +17,5 @@ public interface IRequestHandlerCompliance<TRequest> : IRequestHandler
     /// <param name="command"></param>
     /// <param name="ct"></param>
     /// <returns>Allow return custome response before the validation process.</returns>
-    ValueTask<IResponse> ComplianceV2Async(TRequest command, CancellationToken ct = default);
+    ValueTask<IResponse> ComplianceAsync(TRequest command, CancellationToken ct = default);
 }

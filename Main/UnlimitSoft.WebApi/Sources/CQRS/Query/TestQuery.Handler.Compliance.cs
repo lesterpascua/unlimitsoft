@@ -11,7 +11,7 @@ namespace UnlimitSoft.WebApi.Sources.CQRS.Query;
 /// </summary>
 public partial class TestQueryHandler : IQueryHandlerCompliance<TestQuery>
 {
-    public ValueTask<IResponse> ComplianceV2Async(TestQuery query, CancellationToken ct = default)
+    public ValueTask<IResponse> ComplianceAsync(TestQuery query, CancellationToken ct = default)
     {
         return ValueTask.FromResult(query.OkResponse());
     }
