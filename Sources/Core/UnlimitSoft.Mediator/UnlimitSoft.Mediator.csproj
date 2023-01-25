@@ -19,9 +19,15 @@
 		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
 		<Description>Library implement Mediator design pattern</Description>
 		<PackageLicenseFile>License.txt</PackageLicenseFile>
-		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
 	</PropertyGroup>
 
+	<ItemGroup>
+		<None Include="License.txt">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+	
 	<ItemGroup>
 		<PackageReference Include="FluentValidation" Version="11.4.0" />
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
