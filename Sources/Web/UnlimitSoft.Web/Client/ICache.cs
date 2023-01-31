@@ -13,9 +13,8 @@ public interface ICache
     /// 
     /// </summary>
     /// <typeparam name="TResult"></typeparam>
-    /// <typeparam name="TEntry"></typeparam>
     /// <param name="key"></param>
     /// <param name="factory"></param>
     /// <returns></returns>
-    ValueTask<TResult> GetOrCreateAsync<TResult, TEntry>(object key, Func<TEntry, Task<TResult>> factory);
+    ValueTask<TResult?> GetOrCreateAsync<TResult>(object key, Func<object, Task<TResult>> factory);
 }

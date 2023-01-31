@@ -67,11 +67,10 @@ public abstract class BaseApiService : IApiService, IDisposable
     /// If the endpoint is not available and the cache was load in some time alwais return the old cache data.
     /// </remarks>
     /// <typeparam name="TResult"></typeparam>
-    /// <typeparam name="TEntry"></typeparam>
     /// <param name="factory"></param>
     /// <param name="key"></param>
     /// <returns></returns>
-    protected async ValueTask<TResult> TryCacheFirst<TResult, TEntry>(Func<TEntry, Task<TResult>> factory, string? key = null)
+    protected async ValueTask<TResult> TryCacheFirst<TResult>(Func<object, Task<TResult>> factory, string? key = null)
     {
         var cacheKey = key ?? typeof(TResult).FullName!;
         if (_ignorePrevCache)
@@ -79,7 +78,7 @@ public abstract class BaseApiService : IApiService, IDisposable
 
         try
         {
-            return await _cache!.GetOrCreateAsync<TResult, TEntry>(cacheKey, async entry =>
+            return await _cache!.GetOrCreateAsync(cacheKey, async entry =>
             {
                 var aux = await factory(entry);
                 PrevCache = aux;

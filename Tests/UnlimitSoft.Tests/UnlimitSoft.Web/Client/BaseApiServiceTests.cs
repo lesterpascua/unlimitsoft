@@ -90,12 +90,12 @@ public class BaseApiServiceTests
             _expiration = expiration;
         }
 
-        public async ValueTask<TResult> GetOrCreateAsync<TResult, TEntry>(object key, Func<TEntry, Task<TResult>> factory)
+        public async ValueTask<TResult?> GetOrCreateAsync<TResult>(object key, Func<object, Task<TResult>> factory)
         {
-            return await _cachingService.GetOrAddAsync(key.ToString(), entry =>
+            return await _cachingService.GetOrAddAsync(key.ToString(), cacheKey =>
             {
-                entry.AbsoluteExpirationRelativeToNow = _expiration;
-                return factory((TEntry)entry);
+                cacheKey.AbsoluteExpirationRelativeToNow = _expiration;
+                return factory(cacheKey);
             });
         }
     }
@@ -110,12 +110,12 @@ public class BaseApiServiceTests
             _expiration = expiration;
         }
 
-        public async ValueTask<TResult> GetOrCreateAsync<TResult, TEntry>(object key, Func<TEntry, Task<TResult>> factory)
+        public async ValueTask<TResult?> GetOrCreateAsync<TResult>(object key, Func<object, Task<TResult>> factory)
         {
             return await _cachingService.GetOrCreateAsync(key, entry =>
             {
                 entry.AbsoluteExpirationRelativeToNow = _expiration;
-                return factory((TEntry)entry);
+                return factory(entry);
             });
         }
     }
@@ -132,7 +132,7 @@ public class BaseApiServiceTests
 
         public async ValueTask<int> GetAsync()
         {
-            return await TryCacheFirst<int, object>(_ => Task.FromResult(Interlocked.Increment(ref _counter)));
+            return await TryCacheFirst(_ => Task.FromResult(Interlocked.Increment(ref _counter)));
         }
     }
     #endregion
