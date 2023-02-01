@@ -90,7 +90,7 @@ public class BaseApiServiceTests
             _expiration = expiration;
         }
 
-        public async ValueTask<TResult?> GetOrCreateAsync<TResult>(object key, Func<object, Task<TResult>> factory)
+        public async ValueTask<TResult> GetOrCreateAsync<TResult>(object key, Func<object, Task<TResult>> factory)
         {
             return await _cachingService.GetOrAddAsync(key.ToString(), cacheKey =>
             {
@@ -110,7 +110,7 @@ public class BaseApiServiceTests
             _expiration = expiration;
         }
 
-        public async ValueTask<TResult?> GetOrCreateAsync<TResult>(object key, Func<object, Task<TResult>> factory)
+        public async ValueTask<TResult> GetOrCreateAsync<TResult>(object key, Func<object, Task<TResult>> factory)
         {
             return await _cachingService.GetOrCreateAsync(key, entry =>
             {

@@ -72,13 +72,16 @@ public abstract class BaseApiService : IApiService, IDisposable
     /// <returns></returns>
     protected async ValueTask<TResult> TryCacheFirst<TResult>(Func<object, Task<TResult>> factory, string? key = null)
     {
+        if (_cache is null)
+            throw new InvalidOperationException("Cache is not set");
+
         var cacheKey = key ?? typeof(TResult).FullName!;
         if (_ignorePrevCache)
-            return await _cache!.GetOrCreateAsync(cacheKey, factory);
+            return await _cache.GetOrCreateAsync(cacheKey, factory);
 
         try
         {
-            return await _cache!.GetOrCreateAsync(cacheKey, async entry =>
+            return await _cache.GetOrCreateAsync(cacheKey, async entry =>
             {
                 var aux = await factory(entry);
                 PrevCache = aux;
