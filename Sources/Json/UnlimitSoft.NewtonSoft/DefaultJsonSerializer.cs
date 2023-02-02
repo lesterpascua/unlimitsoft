@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Xml.Linq;
 using UnlimitSoft.Json;
 
 namespace UnlimitSoft.NewtonSoft;
@@ -43,13 +44,26 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
 
 
     /// <inheritdoc />
-    public object AddNode(object? body, string name, object value, object? settings = null)
+    public SerializerType Type => SerializerType.NewtonSoft;
+
+    /// <inheritdoc />
+    public object AddNode(object? data, string name, object value, object? settings = null)
     {
-        var aux = body as JObject ?? new JObject();
+        var aux = data as JObject ?? new JObject();
 
         aux.Add(name, JToken.FromObject(value));
         return aux;
     }
+    /// <inheritdoc />
+    public object AddNode(object? data, KeyValuePair<string, object>[] values, object? settings = null)
+    {
+        var aux = data as JObject ?? new JObject();
+
+        foreach (var item in values)
+            aux.Add(item.Key, JToken.FromObject(item.Value));
+        return aux;
+    }
+
     /// <inheritdoc />
     public T? Cast<T>(object? data, object? settings = null)
     {
