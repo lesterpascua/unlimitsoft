@@ -11,6 +11,11 @@ namespace UnlimitSoft.Json;
 public interface IJsonSerializer
 {
     /// <summary>
+    /// Get serializer type used to implement this serializer
+    /// </summary>
+    SerializerType Type { get; }
+
+    /// <summary>
     /// Serialize object into json. If set null the result will be a null string.
     /// </summary>
     /// <param name="data"></param>
@@ -65,4 +70,12 @@ public interface IJsonSerializer
     /// <param name="settings"></param>
     /// <returns></returns>
     object AddNode(object? data, string name, object value, object? settings = null);
+    /// <summary>
+    /// Add a collection of extra value
+    /// </summary>
+    /// <param name="data"></param>
+    /// <param name="values"></param>
+    /// <param name="settings"></param>
+    /// <returns></returns>
+    object AddNode(object? data, KeyValuePair<string, object>[] values, object? settings = null);
 }

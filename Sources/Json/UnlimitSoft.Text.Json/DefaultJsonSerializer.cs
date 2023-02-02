@@ -10,7 +10,7 @@ namespace UnlimitSoft.Text.Json;
 
 
 /// <summary>
-/// 
+/// Allow serialize using System.Text.Json library
 /// </summary>
 public sealed class DefaultJsonSerializer : IJsonSerializer
 {
@@ -45,27 +45,31 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
     /// </summary>
     public static JsonSerializerOptions DeserializerSettings { get; set; }
 
+    /// <inheritdoc />
+    public SerializerType Type => SerializerType.TextJson;
 
     /// <inheritdoc />
-    public object AddNode(object? body, string name, object value, object? settings = null)
+    public object AddNode(object? data, string name, object value, object? settings = null)
     {
-        Dictionary<string, object>? dictionary = null;
-        var options = SerializerSettings;
-        if (settings is not null)
-            options = (JsonSerializerOptions)settings;
-
-        if (body is not null)
-        {
-            var json = ((JsonElement)body).GetRawText();
-            dictionary = JsonSerializer.Deserialize<Dictionary<string, object>>(json, options);
-        }
-        dictionary ??= new Dictionary<string, object>();
+        var dictionary = GetFromJsonElement(data, settings, out var options);
 
         dictionary.Add(name, value);
         var jsonWithProperty = JsonSerializer.Serialize(dictionary, options);
 
         return JsonSerializer.Deserialize<object>(jsonWithProperty, options)!;
     }
+    /// <inheritdoc />
+    public object AddNode(object? data, KeyValuePair<string, object>[] values, object? settings = null)
+    {
+        var dictionary = GetFromJsonElement(data, settings, out var options);
+
+        foreach (var item in values)
+            dictionary.Add(item.Key, item.Value);
+        var jsonWithProperty = JsonSerializer.Serialize(dictionary, options);
+
+        return JsonSerializer.Deserialize<object>(jsonWithProperty, options)!;
+    }
+
     /// <inheritdoc />
     public T? Cast<T>(object? data, object? settings = null)
     {
@@ -179,4 +183,28 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
         data[prefix] = token.ToString();
         return data;
     }
+
+    #region Private Methods
+    /// <summary>
+    /// Get a dictionary from json element
+    /// </summary>
+    /// <param name="data"></param>
+    /// <param name="settings"></param>
+    /// <param name="options"></param>
+    /// <returns></returns>
+    private static Dictionary<string, object> GetFromJsonElement(object? data, object? settings, out JsonSerializerOptions options)
+    {
+        options = SerializerSettings;
+        if (settings is not null)
+            options = (JsonSerializerOptions)settings;
+
+        Dictionary<string, object>? dictionary = null;
+        if (data is not null)
+        {
+            var json = ((JsonElement)data).GetRawText();
+            dictionary = JsonSerializer.Deserialize<Dictionary<string, object>>(json, options);
+        }
+        return dictionary ?? new Dictionary<string, object>();
+    }
+    #endregion
 }
