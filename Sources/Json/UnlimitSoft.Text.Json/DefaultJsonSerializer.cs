@@ -156,9 +156,9 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
             case JsonValueKind.Object:
                 foreach (var child in token.EnumerateObject())
                 {
-                    prefix = string.IsNullOrEmpty(prefix) ? child.Name : $"{prefix}.{child.Name}";
-                    var childContent = ToKeyValue(child.Value, prefix);
-                    if (childContent != null)
+                    var currPrefix = string.IsNullOrEmpty(prefix) ? child.Name : $"{prefix}.{child.Name}";
+                    var childContent = ToKeyValue(child.Value, currPrefix);
+                    if (childContent is not null)
                         data = data.Concat(childContent).ToDictionary(k => k.Key, v => v.Value);
                 }
 
@@ -168,9 +168,9 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
                 var array = token.EnumerateArray();
                 foreach (var child in array)
                 {
-                    prefix = string.IsNullOrEmpty(prefix) ? $"[{index}]" : $"{prefix}[{index}]";
-                    var childContent = ToKeyValue(child, prefix);
-                    if (childContent != null)
+                    var currPrefix = string.IsNullOrEmpty(prefix) ? $"[{index}]" : $"{prefix}[{index}]";
+                    var childContent = ToKeyValue(child, currPrefix);
+                    if (childContent is not null)
                         data = data.Concat(childContent).ToDictionary(k => k.Key, v => v.Value);
 
                     index++;

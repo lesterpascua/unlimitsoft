@@ -29,6 +29,7 @@
     <ProjectReference Include="..\..\Sources\Core\UnlimitSoft.Logger\UnlimitSoft.Logger.csproj" />
     <ProjectReference Include="..\..\Sources\Core\UnlimitSoft\UnlimitSoft.csproj" />
     <ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.CQRS\UnlimitSoft.CQRS.csproj" />
+    <ProjectReference Include="..\..\Sources\Json\UnlimitSoft.Text.Json\UnlimitSoft.Text.Json.csproj" />
   </ItemGroup>
 
   <ItemGroup>
