@@ -37,7 +37,7 @@ public class DefaultApiClient : IApiClient
         _logger = logger;
         if (!string.IsNullOrEmpty(baseUrl))
         {
-            if (baseUrl![baseUrl.Length - 1] != '/')
+            if (baseUrl![^1] != '/')
                 baseUrl += '/';
             httpClient.BaseAddress = new Uri(baseUrl);
         }
