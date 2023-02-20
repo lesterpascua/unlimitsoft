@@ -19,7 +19,7 @@
 		<Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
 		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
 		<Description>Logger library bases on Serilog.</Description>
-		<PackageLicenseFile>License.txt</PackageLicenseFile>
+		<PackageLicenseFile>License.txt</PackageLicenseFile> <RepositoryUrl>https://github.com/lesterpascua/unlimitsoft</RepositoryUrl>
 	</PropertyGroup>
 
 	<ItemGroup>

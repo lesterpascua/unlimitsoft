@@ -18,6 +18,7 @@
 		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
 		<Description>include Json utilities for System.Test.Json</Description>
 		<PackageLicenseFile>License.txt</PackageLicenseFile>
+		<RepositoryUrl>https://github.com/lesterpascua/unlimitsoft</RepositoryUrl>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -28,11 +29,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+		<PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\Core\UnlimitSoft\UnlimitSoft.csproj" />
+		<ProjectReference Include="..\..\Core\UnlimitSoft\UnlimitSoft.csproj" />
 	</ItemGroup>
 
 </Project>

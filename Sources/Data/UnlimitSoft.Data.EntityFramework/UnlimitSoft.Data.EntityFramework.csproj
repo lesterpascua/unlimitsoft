@@ -18,7 +18,7 @@
 		<Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
 		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
 		<Description>Data library with Repository and UnitOfWork desing pattern implement using entity framework</Description>
-		<PackageLicenseFile>License.txt</PackageLicenseFile>
+		<PackageLicenseFile>License.txt</PackageLicenseFile> <RepositoryUrl>https://github.com/lesterpascua/unlimitsoft</RepositoryUrl>
 	</PropertyGroup>
 
 	<ItemGroup>
