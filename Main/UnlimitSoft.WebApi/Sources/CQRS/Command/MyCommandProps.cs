@@ -11,6 +11,15 @@ namespace UnlimitSoft.WebApi.Sources.CQRS.Command;
 public sealed class MyCommandProps : CommandProps
 {
     /// <summary>
+    /// Unique identifier for command
+    /// </summary>
+    public Guid Id { get; set; }
+    /// <summary>
+    /// Command name (normally Type FullName)
+    /// </summary>
+    public string? Name { get; set; }
+
+    /// <summary>
     /// Trace operation across services.
     /// </summary>
     public IdentityInfo? User { get; set; }

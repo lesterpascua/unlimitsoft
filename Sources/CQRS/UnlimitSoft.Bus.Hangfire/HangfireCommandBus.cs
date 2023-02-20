@@ -84,7 +84,7 @@ public class HangfireCommandBus : ICommandBus
     {
         string? jobId;
         TimeSpan? delay;
-        var props = command.GetProps<CommandProps>();
+        var props = command.GetProps();
         var connection = JobStorage.Current.GetConnection();
 
         var scheduler = command as ISchedulerCommand;
@@ -123,7 +123,7 @@ public class HangfireCommandBus : ICommandBus
     /// <returns></returns>
     private static string SerializeWithoutProps(ICommand command, CommandProps? props)
     {
-        command.SetProps<CommandProps>(null);
+        command.SetProps(null);
         var json = JsonSerializer.Serialize<object>(command, _serializeJsonSettings);
         command.SetProps(props);
         return json;

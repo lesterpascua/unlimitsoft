@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace UnlimitSoft.CQRS.Command;
+﻿namespace UnlimitSoft.CQRS.Command;
 
 
 /// <summary>
@@ -9,11 +7,7 @@ namespace UnlimitSoft.CQRS.Command;
 public class CommandProps
 {
     /// <summary>
-    /// Unique identifier for command
+    /// 
     /// </summary>
-    public Guid Id { get; set; }
-    /// <summary>
-    /// Command name (normally Type FullName)
-    /// </summary>
-    public string? Name { get; set; }
+    public static readonly CommandProps Empty = new();
 }
