@@ -114,15 +114,14 @@ public class DefaultJobProcessor<TProps> : IJobProcessor
 
     private async Task<IResponse> RunAsync(ICommand command, CancellationToken ct)
     {
-        Exception? err = null;
         IResponse response;
-        var props = command.GetProps<CommandProps>();
+        Exception? err = null;
 
         var meta = Context.BackgroundJob;
         try
         {
             _logger?.LogDebug("Start process command: {@Command}", command);
-            _logger?.LogInformation("Start process {Job} command: {Id}", meta.Id, props?.Id);
+            _logger?.LogInformation("Start process {Job} command: {Name}", meta.Id, command.GetName());
 
             response = await _dispatcher.DispatchAsync(_provider, command, ct);
         }

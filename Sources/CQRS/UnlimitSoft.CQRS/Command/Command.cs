@@ -1,7 +1,4 @@
-﻿#pragma warning disable CS8603, CS8769 
-// Possible null reference return.
-// Nullability of reference types in type of parameter doesn't match implemented member (possibly because of nullability attributes).
-
+﻿#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 namespace UnlimitSoft.CQRS.Command;
 
 
@@ -14,10 +11,12 @@ public abstract class Command<TResponse, T> : ICommand<TResponse>
     /// <summary>
     /// Get or set metadata props associate with the command.
     /// </summary>
-    public T? Props { get; set; }
+    public T Props { get; protected set; }
 
     /// <inheritdoc />
-    TProps ICommand.GetProps<TProps>() => Props as TProps;
+    public string GetName() => GetType().Name;
     /// <inheritdoc />
-    void ICommand.SetProps<TProps>(TProps props) => Props = props as T;
+    CommandProps ICommand.GetProps() => Props;
+    /// <inheritdoc />
+    void ICommand.SetProps(CommandProps props) => Props = (T)props;
 }
