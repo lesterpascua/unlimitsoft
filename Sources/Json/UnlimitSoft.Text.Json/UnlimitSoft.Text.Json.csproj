@@ -17,7 +17,7 @@
 		<Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
 		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
 		<Description>include Json utilities for System.Test.Json</Description>
-		<PackageLicenseFile>License.txt</PackageLicenseFile>
+		<PackageLicenseFile>License.txt</PackageLicenseFile> <RepositoryUrl>https://github.com/lesterpascua/unlimitsoft</RepositoryUrl>
 	</PropertyGroup>
 
 	<ItemGroup>
