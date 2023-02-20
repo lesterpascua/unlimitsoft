@@ -1,12 +1,13 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using UnlimitSoft.Reflection;
-using UnlimitSoft.Web.Client;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using UnlimitSoft.Json;
+using UnlimitSoft.Reflection;
+using UnlimitSoft.Web.Client;
 
 namespace UnlimitSoft.DependencyInjections;
 
@@ -37,8 +38,9 @@ public static class IServiceCollectionExtensions
     /// <param name="apiClientFactory">Allow create a custom ApiClient if null use <see cref="DefaultApiClient"/> </param>
     /// <param name="extraAssemblies"></param>
     /// <returns></returns>
+    [Obsolete("Use IServiceCollection AddApiServices(this IServiceCollection services, Action<ApiServicesOptions> configure)")]
     public static IServiceCollection AddApiServices(this IServiceCollection services,
-        Func<Assembly, string> assemblyFilter,
+        Func<Assembly, string?> assemblyFilter,
         Func<Type, ServiceLifetime>? lifeTimeResolver = null,
         bool scanPreloadAssemblies = false,
         Func<IServiceProvider, Type, IApiClient, IApiService?>? serviceFactory = null,
@@ -49,12 +51,46 @@ public static class IServiceCollectionExtensions
         params Assembly[] extraAssemblies
     )
     {
-        var loadedAssemblies = scanPreloadAssemblies ? 
-            AppDomain.CurrentDomain.GetAssemblies().Union(extraAssemblies).Distinct().ToArray() : extraAssemblies;
+        return services.AddApiServices(options =>
+        {
+            options.AssemblyFilter = assemblyFilter;
+            options.LifeTimeResolver = lifeTimeResolver;
+            options.ScanPreloadAssemblies = scanPreloadAssemblies;
+            options.ServiceFactory = serviceFactory;
+            options.Resolver = resolver;
+            options.HttpClientBuilder = httpClientBuilder;
+            options.HttpBuilder = httpBuilder;
+            options.ApiClientFactory = apiClientFactory;
+            options.ExtraAssemblies = extraAssemblies;
+        });
+    }
+    /// <summary>
+    /// Scan assembly and register all available service
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="configure"></param>
+    /// <returns></returns>
+    /// <exception cref="InvalidOperationException"></exception>
+    public static IServiceCollection AddApiServices(this IServiceCollection services, Action<ApiServicesOptions> configure)
+    {
+        var options = new ApiServicesOptions { AssemblyFilter = default! };
+        configure(options);
 
+        var loadedAssemblies = options.ExtraAssemblies;
+        if (options.ScanPreloadAssemblies)
+        {
+            IEnumerable<Assembly> aux = AppDomain.CurrentDomain.GetAssemblies();
+            if (options.ExtraAssemblies is not null)
+                aux = aux.Union(options.ExtraAssemblies);
+            loadedAssemblies = aux.Distinct().ToArray();
+        }
+        if (loadedAssemblies is null)
+            return services;
+
+        // Scan assemblies
         foreach (var assembly in loadedAssemblies)
         {
-            var baseUrl = assemblyFilter(assembly);
+            var baseUrl = options.AssemblyFilter(assembly);
             if (baseUrl is null)
                 continue;
 
@@ -67,9 +103,9 @@ public static class IServiceCollectionExtensions
                 c.DefaultRequestHeaders.Add("Accept", "application/json");
                 c.DefaultRequestHeaders.Add("User-Agent", "HttpClientFactory");
 
-                httpClientBuilder?.Invoke(assembly, c);
+                options.HttpClientBuilder?.Invoke(assembly, c);
             });
-            httpBuilder?.Invoke(assembly, builder);
+            options.HttpBuilder?.Invoke(assembly, builder);
 
             // Get all services implemented in the assembly
             var servicesTypes = assembly
@@ -89,7 +125,7 @@ public static class IServiceCollectionExtensions
                     .ToArray();
                 if (typeInterfaces is null || typeInterfaces.Length == 0)
                     throw new InvalidOperationException($"The type {serviceType.FullName} not implement IApiService");
-                 if (typeInterfaces.Length != 1)
+                if (typeInterfaces.Length != 1)
                     throw new InvalidOperationException($"The type {serviceType.FullName} implement multiple time IApiService");
 
                 var typeInterface = typeInterfaces.First();
@@ -101,25 +137,27 @@ public static class IServiceCollectionExtensions
 
                         object? service = null;
                         IApiClient? apiClient = null;
-                        if (serviceFactory is not null)
+                        if (options.ServiceFactory is not null)
                         {
-                            apiClient = CreateApiClient(provider, apiClientFactory, key, typeInterface, factory);
-                            service = serviceFactory(provider, typeInterface, apiClient);
+                            apiClient = CreateApiClient(provider, options.ApiClientFactory, key, typeInterface, factory);
+                            service = options.ServiceFactory(provider, typeInterface, apiClient);
                         }
                         service ??= serviceType.CreateInstance(
                             provider,
                             resolver: (parameter) =>
                             {
                                 if (parameter.ParameterType == typeof(IApiClient))
-                                    return apiClient ?? CreateApiClient(provider, apiClientFactory, key, typeInterface, factory);
+                                    return apiClient ?? CreateApiClient(provider, options.ApiClientFactory, key, typeInterface, factory);
 
-                                return resolver?.Invoke(parameter.ParameterType);
+                                if (options.Resolver is null)
+                                    return null;
+                                return options.Resolver(parameter.ParameterType);
                             }
                         );
 
                         return service;
                     },
-                    lifeTimeResolver?.Invoke(typeInterface) ?? ServiceLifetime.Singleton
+                    options.LifeTimeResolver?.Invoke(typeInterface) ?? ServiceLifetime.Singleton
                 );
                 services.Add(descriptor);
             }
