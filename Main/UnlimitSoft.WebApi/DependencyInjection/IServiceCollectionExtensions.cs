@@ -152,7 +152,7 @@ public static class IServiceCollectionExtensions
 
         if (cqrsSettings is not null)
         {
-            services.AddUnlimitSoftCQRSGen();
+            //services.AddUnlimitSoftCQRSGen();
             services.AddUnlimitSoftCQRS(cqrsSettings);
         }
         return services;

@@ -35,7 +35,6 @@
 		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.AkkaBus\UnlimitSoft.AkkaBus.csproj" />
 		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.Bus.Hangfire\UnlimitSoft.Bus.Hangfire.csproj" />
 		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.CQRS.DependencyInjection\UnlimitSoft.CQRS.DependencyInjection.csproj" />
-		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.CQRS.SourceGenerator\UnlimitSoft.CQRS.SourceGenerator.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
 		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.CQRS\UnlimitSoft.CQRS.csproj" />
 		<ProjectReference Include="..\..\Sources\Data\UnlimitSoft.Data.EntityFramework\UnlimitSoft.Data.EntityFramework.csproj" />
 		<ProjectReference Include="..\..\Sources\Data\UnlimitSoft.Data\UnlimitSoft.Data.csproj" />
