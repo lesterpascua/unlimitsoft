@@ -4,7 +4,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Xml.Linq;
 using UnlimitSoft.Json;
 
 namespace UnlimitSoft.NewtonSoft;
@@ -15,6 +14,18 @@ namespace UnlimitSoft.NewtonSoft;
 /// </summary>
 public sealed class DefaultJsonSerializer : IJsonSerializer
 {
+    private readonly JsonSerializerSettings _serialize, _deserialize;
+
+
+    /// <summary>
+    /// Serialized option. Only change value at the begining of the process
+    /// </summary>
+    public static JsonSerializerSettings SerializerSettings { get; set; }
+    /// <summary>
+    /// Deserialized option. Only change value at the begining of the process
+    /// </summary>
+    public static JsonSerializerSettings DeserializerSettings { get; set; }
+
     static DefaultJsonSerializer()
     {
         SerializerSettings = new JsonSerializerSettings
@@ -32,22 +43,30 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
             NullValueHandling = NullValueHandling.Ignore,
         };
     }
-
     /// <summary>
-    /// Serialized option. Only change value at the begining of the process
+    /// 
     /// </summary>
-    public static JsonSerializerSettings SerializerSettings { get; set; }
+    public DefaultJsonSerializer()
+    {
+        _serialize = SerializerSettings;
+        _deserialize = DeserializerSettings;
+    }
     /// <summary>
-    /// Deserialized option. Only change value at the begining of the process
+    /// 
     /// </summary>
-    public static JsonSerializerSettings DeserializerSettings { get; set; }
-
+    /// <param name="serialize"></param>
+    /// <param name="deserialize"></param>
+    public DefaultJsonSerializer(JsonSerializerSettings serialize, JsonSerializerSettings deserialize)
+    {
+        _serialize = serialize;
+        _deserialize = deserialize;
+    }
 
     /// <inheritdoc />
     public SerializerType Type => SerializerType.NewtonSoft;
 
     /// <inheritdoc />
-    public object AddNode(object? data, string name, object value, object? settings = null)
+    public object AddNode(object? data, string name, object value)
     {
         var aux = data as JObject ?? new JObject();
 
@@ -55,7 +74,7 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
         return aux;
     }
     /// <inheritdoc />
-    public object AddNode(object? data, KeyValuePair<string, object>[] values, object? settings = null)
+    public object AddNode(object? data, KeyValuePair<string, object>[] values)
     {
         var aux = data as JObject ?? new JObject();
 
@@ -65,40 +84,32 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
     }
 
     /// <inheritdoc />
-    public T? Cast<T>(object? data, object? settings = null)
+    public T? Cast<T>(object? data)
     {
         if (data is null)
             return default;
 
         return data switch
         {
-            string body => Deserialize<T>(body, settings),
+            string body => Deserialize<T>(body),
             JObject body => body.ToObject<T>(),
             T body => body,
             _ => throw new NotSupportedException()
         };
     }
     /// <inheritdoc />
-    public T? Deserialize<T>(string? payload, object? settings = null)
+    public T? Deserialize<T>(string? payload)
     {
         if (string.IsNullOrWhiteSpace(payload))
             return default;
-
-        var options = DeserializerSettings;
-        if (settings is not null)
-            options = (JsonSerializerSettings)settings;
-        return JsonConvert.DeserializeObject<T>(payload!, options);
+        return JsonConvert.DeserializeObject<T>(payload!, _deserialize);
     }
     /// <inheritdoc />
-    public object? Deserialize(Type eventType, string? payload, object? settings = null)
+    public object? Deserialize(Type eventType, string? payload)
     {
         if (string.IsNullOrWhiteSpace(payload))
             return default;
-
-        var options = DeserializerSettings;
-        if (settings is not null)
-            options = (JsonSerializerSettings)settings;
-        return JsonConvert.DeserializeObject(payload!, eventType, options);
+        return JsonConvert.DeserializeObject(payload!, eventType, _deserialize);
     }
     /// <inheritdoc />
     public object? GetToken(object? data, params string[] path)
@@ -112,15 +123,11 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
         return jObject;
     }
     /// <inheritdoc />
-    public string? Serialize(object? data, object? settings = null)
+    public string? Serialize(object? data)
     {
         if (data is null)
             return null;
-
-        var options = SerializerSettings;
-        if (settings is not null)
-            options = (JsonSerializerSettings)settings;
-        return JsonConvert.SerializeObject(data, options);
+        return JsonConvert.SerializeObject(data, _serialize);
     }
 
     /// <inheritdoc />

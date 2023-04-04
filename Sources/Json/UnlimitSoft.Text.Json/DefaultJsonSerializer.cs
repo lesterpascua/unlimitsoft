@@ -14,6 +14,18 @@ namespace UnlimitSoft.Text.Json;
 /// </summary>
 public sealed class DefaultJsonSerializer : IJsonSerializer
 {
+    private readonly JsonSerializerOptions _serialize, _deserialize;
+
+    /// <summary>
+    /// Serialized option. Only change value at the begining of the process
+    /// </summary>
+    public static JsonSerializerOptions SerializerSettings { get; set; }
+    /// <summary>
+    /// Deserialized option. Only change value at the begining of the process
+    /// </summary>
+    public static JsonSerializerOptions DeserializerSettings { get; set; }
+
+
     static DefaultJsonSerializer()
     {
         // TextJson Deserializer
@@ -31,81 +43,85 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
         {
             WriteIndented = false,
             PropertyNameCaseInsensitive = true,
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         };
     }
+    /// <summary>
+    /// 
+    /// </summary>
+    public DefaultJsonSerializer() {
+        _serialize = SerializerSettings;
+        _deserialize = DeserializerSettings;
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="serializer"></param>
+    /// <param name="deserializer"></param>
+    public DefaultJsonSerializer(JsonSerializerOptions serializer, JsonSerializerOptions deserializer)
+    {
+        _serialize = serializer;
+        _deserialize = deserializer;
+    }
 
-    /// <summary>
-    /// Serialized option. Only change value at the begining of the process
-    /// </summary>
-    public static JsonSerializerOptions SerializerSettings { get; set; }
-    /// <summary>
-    /// Deserialized option. Only change value at the begining of the process
-    /// </summary>
-    public static JsonSerializerOptions DeserializerSettings { get; set; }
 
     /// <inheritdoc />
     public SerializerType Type => SerializerType.TextJson;
 
     /// <inheritdoc />
-    public object AddNode(object? data, string name, object value, object? settings = null)
+    public object AddNode(object? data, string name, object value)
     {
-        var dictionary = GetFromJsonElement(data, settings, out var options);
+        var dictionary = GetFromJsonElement(data);
 
         dictionary.Add(name, value);
-        var jsonWithProperty = JsonSerializer.Serialize(dictionary, options);
+        var jsonWithProperty = JsonSerializer.Serialize(dictionary, _serialize);
 
-        return JsonSerializer.Deserialize<object>(jsonWithProperty, options)!;
+        return JsonSerializer.Deserialize<object>(jsonWithProperty, _deserialize)!;
     }
     /// <inheritdoc />
-    public object AddNode(object? data, KeyValuePair<string, object>[] values, object? settings = null)
+    public object AddNode(object? data, KeyValuePair<string, object>[] values)
     {
-        var dictionary = GetFromJsonElement(data, settings, out var options);
+        var dictionary = GetFromJsonElement(data);
 
         foreach (var item in values)
             dictionary.Add(item.Key, item.Value);
-        var jsonWithProperty = JsonSerializer.Serialize(dictionary, options);
+        var jsonWithProperty = JsonSerializer.Serialize(dictionary, _serialize);
 
-        return JsonSerializer.Deserialize<object>(jsonWithProperty, options)!;
+        return JsonSerializer.Deserialize<object>(jsonWithProperty, _deserialize)!;
     }
 
     /// <inheritdoc />
-    public T? Cast<T>(object? data, object? settings = null)
+    public T? Cast<T>(object? data)
     {
         if (data is null)
             return default;
 
         return data switch
         {
-            string body => Deserialize<T>(body, settings),
-            JsonElement body => Deserialize<T>(body.GetRawText(), settings),
-            JsonProperty body => Deserialize<T>(body.Value.GetRawText(), settings),
+            string body => Deserialize<T>(body),
+            JsonElement body => Deserialize<T>(body.GetRawText()),
+            JsonProperty body => Deserialize<T>(body.Value.GetRawText()),
             T body => body,
             _ => throw new NotSupportedException($"Can't cast type {data.GetType().FullName}")
         };
     }
     /// <inheritdoc />
-    public T? Deserialize<T>(string? payload, object? settings = null)
+    public T? Deserialize<T>(string? payload)
     {
         if (string.IsNullOrWhiteSpace(payload))
             return default;
 
-        var options = DeserializerSettings;
-        if (settings is not null)
-            options = (JsonSerializerOptions)settings;
-        return JsonSerializer.Deserialize<T>(payload!, options);
+        return JsonSerializer.Deserialize<T>(payload!, _deserialize);
     }
     /// <inheritdoc />
-    public object? Deserialize(Type eventType, string? payload, object? settings = null)
+    public object? Deserialize(Type eventType, string? payload)
     {
         if (string.IsNullOrWhiteSpace(payload))
             return default;
 
-        var options = DeserializerSettings;
-        if (settings is not null)
-            options = (JsonSerializerOptions)settings;
-        return JsonSerializer.Deserialize(payload!, eventType, options);
+        return JsonSerializer.Deserialize(payload!, eventType, _deserialize);
     }
     /// <inheritdoc />
     public object? GetToken(object? data, params string[] path)
@@ -125,15 +141,11 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
         return token;
     }
     /// <inheritdoc />
-    public string? Serialize(object? data, object? settings = null)
+    public string? Serialize(object? data)
     {
         if (data is null)
             return null;
-
-        var options = SerializerSettings;
-        if (settings is not null)
-            options = (JsonSerializerOptions)settings;
-        return JsonSerializer.Serialize(data, options);
+        return JsonSerializer.Serialize(data, _serialize);
     }
 
     /// <inheritdoc />
@@ -189,20 +201,14 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
     /// Get a dictionary from json element
     /// </summary>
     /// <param name="data"></param>
-    /// <param name="settings"></param>
-    /// <param name="options"></param>
     /// <returns></returns>
-    private static Dictionary<string, object> GetFromJsonElement(object? data, object? settings, out JsonSerializerOptions options)
+    private Dictionary<string, object> GetFromJsonElement(object? data)
     {
-        options = SerializerSettings;
-        if (settings is not null)
-            options = (JsonSerializerOptions)settings;
-
         Dictionary<string, object>? dictionary = null;
         if (data is not null)
         {
             var json = ((JsonElement)data).GetRawText();
-            dictionary = JsonSerializer.Deserialize<Dictionary<string, object>>(json, options);
+            dictionary = JsonSerializer.Deserialize<Dictionary<string, object>>(json, _deserialize);
         }
         return dictionary ?? new Dictionary<string, object>();
     }
