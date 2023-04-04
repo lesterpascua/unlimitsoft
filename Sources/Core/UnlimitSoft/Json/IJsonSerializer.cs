@@ -19,34 +19,30 @@ public interface IJsonSerializer
     /// Serialize object into json. If set null the result will be a null string.
     /// </summary>
     /// <param name="data"></param>
-    /// <param name="settings"></param>
     /// <returns></returns>
-    string? Serialize(object? data, object? settings = null);
+    string? Serialize(object? data);
     /// <summary>
     /// Deserialize json payload. If set null will return default object.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="payload"></param>
-    /// <param name="settings"></param>
     /// <returns></returns>
-    T? Deserialize<T>(string? payload, object? settings = null);
+    T? Deserialize<T>(string? payload);
     /// <summary>
     /// Deserialize json payload. If set null will return default object.
     /// </summary>
     /// <param name="type"></param>
     /// <param name="payload"></param>
-    /// <param name="settings"></param>
     /// <returns></returns>
-    object? Deserialize(Type type, string? payload, object? settings = null);
+    object? Deserialize(Type type, string? payload);
 
     /// <summary>
     /// Verify if the object is of type T
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="data"></param>
-    /// <param name="settings"></param>
     /// <returns></returns>
-    T? Cast<T>(object? data, object? settings = null);
+    T? Cast<T>(object? data);
 
     /// <summary>
     /// Get json token follow the specific path.
@@ -67,15 +63,13 @@ public interface IJsonSerializer
     /// <param name="data"></param>
     /// <param name="name"></param>
     /// <param name="value"></param>
-    /// <param name="settings"></param>
     /// <returns></returns>
-    object AddNode(object? data, string name, object value, object? settings = null);
+    object AddNode(object? data, string name, object value);
     /// <summary>
     /// Add a collection of extra value
     /// </summary>
     /// <param name="data"></param>
     /// <param name="values"></param>
-    /// <param name="settings"></param>
     /// <returns></returns>
-    object AddNode(object? data, KeyValuePair<string, object>[] values, object? settings = null);
+    object AddNode(object? data, KeyValuePair<string, object>[] values);
 }

@@ -33,33 +33,29 @@ public static class JsonUtil
     /// Serialize object into json. If set null the result will be a null string.
     /// </summary>
     /// <param name="data"></param>
-    /// <param name="settings"></param>
     /// <returns></returns>
-    public static string? Serialize(object? data, object? settings = null) => Default.Serialize(data, settings);
+    public static string? Serialize(object? data) => Default.Serialize(data);
     /// <summary>
     /// Deserialize json payload. If set null will return default object.
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="payload"></param>
-    /// <param name="settings"></param>
     /// <returns></returns>
-    public static T? Deserialize<T>(string? payload, object? settings = null) => Default.Deserialize<T>(payload, settings);
+    public static T? Deserialize<T>(string? payload) => Default.Deserialize<T>(payload);
     /// <summary>
     /// Deserialize json payload. If set null will return default object.
     /// </summary>
     /// <param name="type"></param>
     /// <param name="payload"></param>
-    /// <param name="settings"></param>
     /// <returns></returns>
-    public static object? Deserialize(Type type, string? payload, object? settings = null) => Default.Deserialize(type, payload, settings);
+    public static object? Deserialize(Type type, string? payload) => Default.Deserialize(type, payload);
     /// <summary>
     /// Verify if the object is of type T
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <param name="data"></param>
-    /// <param name="settings"></param>
     /// <returns></returns>
-    public static T? Cast<T>(object? data, object? settings = null) => Default.Cast<T>(data, settings);
+    public static T? Cast<T>(object? data) => Default.Cast<T>(data);
     /// <summary>
     /// Get json token follow the specific path.
     /// </summary>
@@ -72,9 +68,8 @@ public static class JsonUtil
     /// <param name="data"></param>
     /// <param name="name"></param>
     /// <param name="value"></param>
-    /// <param name="settings"></param>
     /// <returns></returns>
-    public static object AddNode(object? data, string name, object value, object? settings = null) => Default.AddNode(data, name, value, settings);
+    public static object AddNode(object? data, string name, object value) => Default.AddNode(data, name, value);
     /// <summary>
     /// Convert objeto to a dictionary key value folow the asp.net binding method..
     /// </summary>

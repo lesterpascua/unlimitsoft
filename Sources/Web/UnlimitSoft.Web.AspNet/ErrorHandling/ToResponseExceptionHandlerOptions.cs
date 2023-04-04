@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -35,6 +36,7 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
     /// <param name="handlers"></param>
     /// <param name="fatalErrorCode"></param>
     /// <param name="errorBody"></param>
+    /// <param name="contentType">Content type in the response by default application/json</param>
     /// <param name="logger"></param>
     public ToResponseExceptionHandlerOptions(
         IJsonSerializer serializer,
@@ -64,19 +66,19 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
     private async Task ExceptionHandlerInternal(HttpContext context)
     {
         var identity = context.User.Identity;
-        var feature = context.Features.Get<IExceptionHandlerFeature>();
+#if NET7_0_OR_GREATER
+        var feature = context.Features.GetRequiredFeature<IExceptionHandlerFeature>();
+#else 
+        var feature = context.Features.Get<IExceptionHandlerFeature>() ?? throw new InvalidOperationException($"Feature '{typeof(IExceptionHandlerFeature)}' is not present.");
+#endif
+
 
         _logger?.LogError(feature!.Error, "User: {Name}, logged in from: {IpAddress}", identity?.Name, context.GetIpAddress());
-        if (_handlers != null)
+        if (_handlers is not null)
             foreach (var handler in _handlers.Where(x => x.ShouldHandle(context)))
                 await handler.HandleAsync(context);
 
-        object body = feature!.Error;
-        if (!_showExceptionInfo)
-            body = _errorBody?.Invoke(context) ?? _defaultErrorBody;
-
-        var response = new Response<object>(HttpStatusCode.InternalServerError, body);
-
+        var response = GetResponse(context, feature);
         context.Response.ContentType = _contentType;
         context.Response.StatusCode = (int)response.Code;
 
@@ -91,5 +93,22 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
 
         var json = _serializer.Serialize(response)!;
         await context.Response.WriteAsync(json);
+    }
+    /// <summary>
+    /// Get response depending of the exception
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="feature"></param>
+    /// <returns></returns>
+    private IResponse GetResponse(HttpContext context, IExceptionHandlerFeature feature)
+    {
+        if (feature.Error is ResponseException exception)
+            return new Response<IDictionary<string, string[]>>(exception.Code, exception.Body);
+
+        object body = feature.Error;
+        if (!_showExceptionInfo)
+            body = _errorBody?.Invoke(context) ?? _defaultErrorBody;
+
+        return new Response<object>(HttpStatusCode.InternalServerError, body);
     }
 }
