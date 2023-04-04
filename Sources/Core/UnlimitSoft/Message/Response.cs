@@ -39,19 +39,6 @@ public class Response<T> : IResponse
     }
 
     /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="code"></param>
-    /// <param name="body"></param>
-    /// <param name="uiText"></param>
-    /// <param name="traceId"></param>
-    public Response(HttpStatusCode code, T body, string? traceId)
-    {
-        Code = code;
-        Body = body;
-    }
-
-    /// <summary>
     /// Body payload
     /// </summary>
     public T Body { get; set; }
