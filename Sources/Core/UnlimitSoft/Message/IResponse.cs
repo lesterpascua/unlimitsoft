@@ -17,11 +17,6 @@ public interface IResponse
     /// Http response code for execution of command.
     /// </summary>
     HttpStatusCode Code { get; }
-    /// <summary>
-    /// Trace operation identifier.
-    /// </summary>
-    [Obsolete("Response don't need trace identifier keep only for backward compatibility")]
-    string? TraceIdentifier { get; set; }
 
     /// <summary>
     /// Indicate if the response can be mutable.

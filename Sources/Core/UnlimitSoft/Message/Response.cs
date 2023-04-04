@@ -45,12 +45,10 @@ public class Response<T> : IResponse
     /// <param name="body"></param>
     /// <param name="uiText"></param>
     /// <param name="traceId"></param>
-    [Obsolete("Response don't need trace identifier keep only for backward compatibility")]
     public Response(HttpStatusCode code, T body, string? traceId)
     {
         Code = code;
         Body = body;
-        TraceIdentifier = traceId;
     }
 
     /// <summary>
@@ -59,9 +57,6 @@ public class Response<T> : IResponse
     public T Body { get; set; }
     /// <inheritdoc />
     public HttpStatusCode Code { get; set; }
-    /// <inheritdoc />
-    [Obsolete("Response don't need trace identifier keep only for backward compatibility")]
-    public string? TraceIdentifier { get; set; }
     /// <inheritdoc />
     public bool IsSuccess => HttpStatusCode.OK <= Code && Code < HttpStatusCode.Ambiguous;
 
