@@ -17,6 +17,7 @@
 
 	<ItemGroup>
 	  <ProjectReference Include="..\..\..\Sources\Core\UnlimitSoft.Mediator\UnlimitSoft.Mediator.csproj" />
+	  <ProjectReference Include="..\..\..\Sources\CQRS\UnlimitSoft.CQRS.DependencyInjection\UnlimitSoft.CQRS.DependencyInjection.csproj" />
 	  <ProjectReference Include="..\..\..\Sources\CQRS\UnlimitSoft.CQRS\UnlimitSoft.CQRS.csproj" />
 	</ItemGroup>
 

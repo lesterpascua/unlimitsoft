@@ -11,9 +11,8 @@ public interface IQuery : IRequest
     /// <summary>
     /// Return metadata props associate with the query.
     /// </summary>
-    /// <typeparam name="T"></typeparam>
     /// <returns></returns>
-    T? GetProps<T>() where T : QueryProps;
+    QueryProps GetProps();
 }
 /// <summary>
 /// 

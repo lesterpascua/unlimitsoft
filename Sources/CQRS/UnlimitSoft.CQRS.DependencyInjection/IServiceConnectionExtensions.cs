@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,6 +30,7 @@ public static class IServiceConnectionExtensions
         services.AddCommandHandler(settings);
         services.AddEventHandler(settings);
     }
+
     /// <summary>
     /// Scan assemblies and register all events.
     /// </summary>
@@ -61,8 +61,6 @@ public static class IServiceConnectionExtensions
             return result;
         }
     }
-
-
     /// <summary>
     /// Scan assemblies and register all QueryHandler implement the interfaces set in <see cref="CQRSSettings.IQueryHandler"/>
     /// </summary>
@@ -116,7 +114,6 @@ public static class IServiceConnectionExtensions
         }
         #endregion
     }
-
     /// <summary>
     /// Scan assemblies and register all CommandHandler implement the interfaces set in <see cref="CQRSSettings.ICommandHandler"/>
     /// </summary>
@@ -129,7 +126,7 @@ public static class IServiceConnectionExtensions
         return services;
     }
     /// <summary>
-    /// 
+    /// Scan assemblies and register all CommandHandler implement the interfaces set in commandHandlerType
     /// </summary>
     /// <param name="services"></param>
     /// <param name="commandHandlerType"></param>
@@ -196,7 +193,6 @@ public static class IServiceConnectionExtensions
 
         return services;
     }
-    
     /// <summary>
     /// Scan assemblies and register all EventHandler implement the interfaces set in <see cref="CQRSSettings.IEventHandler"/>
     /// </summary>
@@ -210,7 +206,7 @@ public static class IServiceConnectionExtensions
         return services;
     }
     /// <summary>
-    /// 
+    /// Scan assemblies and register all EventHandler implement the type set in eventHandlerType
     /// </summary>
     /// <param name="services"></param>
     /// <param name="eventHandlerType"></param>
