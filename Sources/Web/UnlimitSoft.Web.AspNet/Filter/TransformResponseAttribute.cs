@@ -55,17 +55,10 @@ public sealed class TransformResponseAttribute : ActionFilterAttribute
                 if (result.Value is ValidationProblemDetails validationProblem)
                 {
                     var code = (HttpStatusCode?)result.StatusCode ?? HttpStatusCode.BadRequest;
-                    result.Value = new ErrorResponse(
-                        code,
-                        validationProblem.Errors,
-                        context.HttpContext.TraceIdentifier
-                    );
+                    result.Value = new ErrorResponse(code, validationProblem.Errors);
+
                     _options.BadRequestLogger?.Invoke(_logger, context.HttpContext, result.Value, "InvalidArgument");
                 }
-                break;
-            case ObjectResult result:
-                if (result.Value is IResponse response && !response.IsInmutable())
-                    response.TraceIdentifier = context.HttpContext.TraceIdentifier;
                 break;
         }
     }
