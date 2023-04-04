@@ -6,7 +6,7 @@
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
-	
+
 	<PropertyGroup>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<SignAssembly>true</SignAssembly>
@@ -21,8 +21,15 @@
 		<PackageLicenseFile>License.txt</PackageLicenseFile>
 		<RepositoryUrl>https://github.com/lesterpascua/unlimitsoft</RepositoryUrl>
 	</PropertyGroup>
-	
+
 	<ItemGroup>
-	  <ProjectReference Include="..\UnlimitSoft.CQRS\UnlimitSoft.CQRS.csproj" />
+		<ProjectReference Include="..\UnlimitSoft.CQRS\UnlimitSoft.CQRS.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="License.txt">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
 	</ItemGroup>
 </Project>
