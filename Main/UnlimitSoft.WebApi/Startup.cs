@@ -1,4 +1,3 @@
-using Akka.Actor.Setup;
 using Hangfire;
 using Hangfire.SqlServer;
 using Microsoft.AspNetCore.Builder;
@@ -41,8 +40,21 @@ using UnlimitSoft.WebApi.Sources.Data.Configuration;
 using UnlimitSoft.WebApi.Sources.Data.Model;
 using UnlimitSoft.WebApi.Sources.Security;
 
+[assembly: UnlimitSoft.WebApi.CommandHandler(typeof(IMyCommandHandler<,>))]
 namespace UnlimitSoft.WebApi;
 
+
+
+[AttributeUsage(AttributeTargets.Assembly, Inherited = false)]
+public sealed class CommandHandlerAttribute : Attribute
+{
+    public CommandHandlerAttribute(Type interfaceType)
+    {
+        InterfaceType = interfaceType;
+    }
+
+    public Type InterfaceType { get; }
+}
 
 /// <summary>
 /// 

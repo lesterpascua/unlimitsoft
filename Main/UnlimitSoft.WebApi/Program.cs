@@ -1,10 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Serilog;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using UnlimitSoft.Security.Cryptography;
 
 namespace UnlimitSoft.WebApi;
 

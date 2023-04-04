@@ -5,8 +5,7 @@ namespace UnlimitSoft.CQRS.Command;
 /// <summary>
 /// Base class for all command.
 /// </summary>
-public abstract class Command<TResponse, T> : ICommand<TResponse>
-    where T : CommandProps 
+public abstract class Command<TResponse, T> : ICommand<TResponse> where T : CommandProps 
 {
     /// <summary>
     /// Get or set metadata props associate with the command.

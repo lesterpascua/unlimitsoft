@@ -1,12 +1,5 @@
-﻿using UnlimitSoft.CQRS.Command;
-using UnlimitSoft.CQRS.Message;
-using UnlimitSoft.CQRS.Query;
-using UnlimitSoft.Event;
-using System;
+﻿using System;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
-using UnlimitSoft.Message;
 
 namespace UnlimitSoft.CQRS.DependencyInjection;
 

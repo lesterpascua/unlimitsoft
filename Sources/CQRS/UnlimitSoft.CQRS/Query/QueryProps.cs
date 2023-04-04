@@ -6,4 +6,8 @@
 /// </summary>
 public class QueryProps
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    public static readonly QueryProps Empty = new();
 }

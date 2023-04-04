@@ -61,7 +61,7 @@ public static class IServiceCollectionExtensions
         out TransformResponseAttributeOptions filterTransformResponseOptions
     )
     {
-        corsOrigin = configuration.GetSection("AllowedCors").Get<string[]>();
+        corsOrigin = configuration.GetSection("AllowedCors").Get<string[]>()!;
 
         var databaseSection = configuration.GetSection("Database");
         var authorizeSection = configuration.GetSection("Authorize");
@@ -79,12 +79,12 @@ public static class IServiceCollectionExtensions
         services.Configure<TransformResponseAttributeOptions>(filterTransformResponseSection);
 
 
-        databaseSettings = databaseSection.Get<DatabaseOptions>();
-        authorizeOptions = authorizeSection.Get<AuthorizeOptions>();
+        databaseSettings = databaseSection.Get<DatabaseOptions>()!;
+        authorizeOptions = authorizeSection.Get<AuthorizeOptions>()!;
 
-        filterRequestLoggerSettings = filterRequestLoggerSection.Get<RequestLoggerAttribute.Settings>();
-        filterValidationSettings = filterValidationSection.Get<ValidationModelAttribute.Settings>();
-        filterTransformResponseOptions = filterTransformResponseSection.Get<TransformResponseAttributeOptions>();
+        filterRequestLoggerSettings = filterRequestLoggerSection.Get<RequestLoggerAttribute.Settings>()!;
+        filterValidationSettings = filterValidationSection.Get<ValidationModelAttribute.Settings>()!;
+        filterTransformResponseOptions = filterTransformResponseSection.Get<TransformResponseAttributeOptions>()!;
 
         return services;
     }
@@ -151,7 +151,10 @@ public static class IServiceCollectionExtensions
                 services.AddUnlimitSoftDefaultFrameworkUnitOfWork(unitOfWorkSetting);
 
         if (cqrsSettings is not null)
+        {
+            services.AddUnlimitSoftCQRSGen();
             services.AddUnlimitSoftCQRS(cqrsSettings);
+        }
         return services;
     }
 
@@ -399,7 +402,7 @@ public static class IServiceCollectionExtensions
     /// <param name="services"></param>
     /// <param name="defaultPolicy">Allow set extra policies.</param>
     /// <returns></returns>
-    public static IServiceCollection AddMyAuthorization(this IServiceCollection services, Action<AuthorizationPolicyBuilder> defaultPolicy = null)
+    public static IServiceCollection AddMyAuthorization(this IServiceCollection services, Action<AuthorizationPolicyBuilder>? defaultPolicy = null)
     {
         services.AddAuthorization(options =>
         {
