@@ -97,7 +97,7 @@ public static class IRequestExtensions
     /// </summary>
     /// <param name="_"></param>
     /// <returns></returns>
-    public static IResponse QuickNotFoundResponse(this IRequest _) => _404;
+    public static IResponse NotFoundResponse(this IRequest _) => _404;
     /// <summary>
     /// Generate a not found response using command data.
     /// </summary>
