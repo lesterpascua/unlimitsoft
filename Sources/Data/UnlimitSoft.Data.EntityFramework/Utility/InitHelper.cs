@@ -26,12 +26,13 @@ public static class InitHelper
     /// <param name="publishWorker"></param>
     /// <param name="loadEvent"></param>
     /// <param name="waitRetry"></param>
+    /// <param name="eventBashSize">If publish worker is enable indicate the bach size use to load all the events</param>
     /// <param name="logger"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
     public static async Task InitAsync<TUnitOfWork>(
         IServiceScopeFactory factory, Func<IServiceProvider, Task>? setup = null, bool eventBus = false, Assembly[]? seedAssemblies = null,
-        bool eventListener = false, bool publishWorker = false, bool loadEvent = false, TimeSpan? waitRetry = null, ILogger? logger = null, CancellationToken ct = default)
+        bool eventListener = false, bool publishWorker = false, bool loadEvent = false, TimeSpan? waitRetry = null, int eventBashSize = 1000, ILogger? logger = null, CancellationToken ct = default)
     {
         using var scope = factory.CreateScope();
 
@@ -48,7 +49,7 @@ public static class InitHelper
         {
             await provider.GetRequiredService<IEventBus>().StartAsync(waitRetry.Value, ct);
             if (publishWorker)
-                await provider.GetRequiredService<IEventPublishWorker>().StartAsync(loadEvent, ct);
+                await provider.GetRequiredService<IEventPublishWorker>().StartAsync(loadEvent, eventBashSize, ct);
         }
         if (eventListener)
             await provider.GetRequiredService<IEventListener>().ListenAsync(waitRetry.Value, ct);

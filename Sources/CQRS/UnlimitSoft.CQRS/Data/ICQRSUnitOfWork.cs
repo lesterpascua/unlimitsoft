@@ -5,7 +5,7 @@ namespace UnlimitSoft.CQRS.Data;
 
 
 /// <summary>
-/// 
+/// Unit of work with the CQRS patter integrate
 /// </summary>
 public interface ICQRSUnitOfWork : IUnitOfWork, IAdvancedUnitOfWork
 {

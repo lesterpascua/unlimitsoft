@@ -222,9 +222,11 @@ public static class IServiceCollectionExtensions
             });
             services.AddSingleton<IEventPublishWorker>(provider =>
             {
+                var clock = provider.GetRequiredService<ISysClock>();
+                var factory = provider.GetRequiredService<IServiceScopeFactory>();
                 var eventBus = provider.GetRequiredService<IEventBus>();
                 var logger = provider.GetService<ILogger<MyQueueEventPublishWorker>>();
-                return new MyQueueEventPublishWorker(provider.GetRequiredService<IServiceScopeFactory>(), eventBus, logger: logger);
+                return new MyQueueEventPublishWorker(clock, factory, eventBus, logger: logger);
             });
         }
         #endregion

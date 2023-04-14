@@ -1,16 +1,17 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using UnlimitSoft.Data;
-using UnlimitSoft.Event;
-using UnlimitSoft.Web.Model;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Data;
 using UnlimitSoft.CQRS.Data.Dto;
+using UnlimitSoft.Data;
+using UnlimitSoft.Event;
+using UnlimitSoft.Web.Model;
 
 namespace UnlimitSoft.CQRS.Event;
 
@@ -29,16 +30,51 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
     where TEventPayload : EventPayload<TPayload>
     where TEventSourcedRepository : IEventRepository<TEventPayload, TPayload>
 {
-    private readonly int _bachSize;
-    private readonly bool _enableScheduled;
-    private readonly bool _useEnvelop;
-    private readonly IServiceScopeFactory _factory;
-    private readonly IEventBus _eventBus;
-    private readonly Func<TEventPayload, Func<Task>, CancellationToken, Task>? _middleware;
-    private readonly TimeSpan _startDelay, _errorDelay;
-    private readonly ILogger? _logger;
-    private readonly CancellationTokenSource _cts;
-    private readonly ConcurrentDictionary<Guid, Bucket> _pending;
+    /// <summary>
+    /// Amount of event load per attempt
+    /// </summary>
+    protected readonly int _bachSize;
+    /// <summary>
+    /// Allow scheduler in the the events
+    /// </summary>
+    protected readonly bool _enableScheduled;
+    /// <summary>
+    /// Create the event into an envelop with event information
+    /// </summary>
+    protected readonly bool _useEnvelop;
+    /// <summary>
+    /// Clock for the system
+    /// </summary>
+    protected readonly ISysClock _clock;
+
+    /// <summary>
+    /// Factory to create scope
+    /// </summary>
+    protected readonly IServiceScopeFactory _factory;
+    /// <summary>
+    /// Event bus where the event will be publish
+    /// </summary>
+    protected readonly IEventBus _eventBus;
+    /// <summary>
+    /// Middleware used to publish event usefull to include log information or other
+    /// </summary>
+    protected readonly Func<TEventPayload, Func<Task>, CancellationToken, Task>? _middleware;
+    /// <summary>
+    /// Delay after start and error 
+    /// </summary>
+    protected readonly TimeSpan _startDelay, _errorDelay;
+    /// <summary>
+    /// Token using to cancelate the background task
+    /// </summary>
+    protected readonly CancellationTokenSource _cts;
+    /// <summary>
+    /// Collection with pending to publish event.
+    /// </summary>
+    protected readonly ConcurrentDictionary<Guid, Bucket> _pending;
+    /// <summary>
+    /// Logger used to trace information
+    /// </summary>
+    protected readonly ILogger<QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPayload>>? _logger;
 
     private bool _disposed;
 
@@ -46,6 +82,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
     /// <summary>
     /// Initialize instance.
     /// </summary>
+    /// <param name="clock"></param>
     /// <param name="factory">
     /// <list>
     ///     <item>- Resolve TUnitOfWork </item>
@@ -61,6 +98,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
     /// <param name="useEnvelop">Use envelop when publish the event</param>
     /// <param name="logger"></param>
     public QueueEventPublishWorker(
+        ISysClock clock,
         IServiceScopeFactory factory,
         IEventBus eventBus,
         Func<TEventPayload, Func<Task>, CancellationToken, Task>? middleware = null,
@@ -69,9 +107,11 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
         int bachSize = 10,
         bool enableScheduled = false,
         bool useEnvelop = true,
-        ILogger<QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPayload>>? logger = null)
+        ILogger<QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPayload>>? logger = null
+    )
     {
         _disposed = false;
+        _clock = clock;
         _factory = factory ?? throw new ArgumentNullException(nameof(factory));
         _eventBus = eventBus ?? throw new ArgumentNullException(nameof(eventBus));
 
@@ -86,6 +126,9 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
         _cts = new();
     }
 
+    /// <inheritdoc />
+    public int Pending => _pending.Count;
+
     /// <summary>
     /// Job used to publish event
     /// </summary>
@@ -94,14 +137,6 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
     /// Object was disposed
     /// </summary>
     protected bool Disposed => _disposed;
-    /// <summary>
-    /// Token using to cancelate the background task
-    /// </summary>
-    protected CancellationTokenSource Cts => _cts;
-    /// <summary>
-    /// Collection with pending to publish event.
-    /// </summary>
-    protected ConcurrentDictionary<Guid, Bucket> Pending => _pending;
 
     /// <inheritdoc />
     public virtual void Dispose()
@@ -121,29 +156,12 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
     }
 
     /// <inheritdoc />
-    public async virtual Task StartAsync(bool loadEvent, CancellationToken ct = default)
-    {
-        if (_disposed)
-            throw new ObjectDisposedException(GetType().FullName);
-        if (Worker is not null)
-            throw new InvalidProgramException("Already initialized");
-
-        // Know issue if all services start at the same time this will be a problem because the event will load multiples times.
-        if (loadEvent)
-            await LoadEventAsync(ct);
-
-        // Create an independance task to publish all event in the event bus.
-        Worker = Task.Run(PublishBackground);
-
-        _logger?.LogInformation("EventPublishWorker start");
-    }
-    /// <inheritdoc />
     public virtual ValueTask RetryPublishAsync(Guid id, CancellationToken ct = default)
     {
         if (_disposed)
             throw new ObjectDisposedException(GetType().FullName);
 
-        _pending.TryAdd(id, new Bucket(null, SysClock.GetUtcNow()));
+        _pending.TryAdd(id, new Bucket(null, _clock.UtcNow));
 #if NETSTANDARD2_0
         return ValueTaskExtensions.CompletedTask;
 #else
@@ -184,6 +202,23 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
         return ValueTask.CompletedTask;
 #endif
     }
+    /// <inheritdoc />
+    public async virtual Task StartAsync(bool loadEvent, int bachSize = 1000, CancellationToken ct = default)
+    {
+        if (_disposed)
+            throw new ObjectDisposedException(GetType().FullName);
+        if (Worker is not null)
+            throw new InvalidProgramException("Already initialized");
+
+        // Know issue if all services start at the same time this will be a problem because the event will load multiples times.
+        if (loadEvent)
+            await LoadEventAsync(bachSize, ct);
+
+        // Create an independance task to publish all event in the event bus.
+        Worker = Task.Run(PublishBackground);
+
+        _logger?.LogInformation("EventPublishWorker start");
+    }
 
     #region Protected Methods
     /// <summary>
@@ -200,7 +235,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
                 return true;
             //
             // only if scheduled feature is enable by software
-            return _pending.Any(ScheduledCondition());
+            return _pending.Any(QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPayload>.ScheduledCondition());
         }
 
         return false;
@@ -224,8 +259,14 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
             TEventPayload? lastEvent = null;
             int count = Math.Min(_pending.Count, _bachSize);
 
-            var orderedPending = _enableScheduled ? 
-                _pending.Where(ScheduledCondition()).OrderBy(k => k.Value) : _pending.OrderBy(k => k.Value.Created);
+            IOrderedEnumerable<KeyValuePair<Guid, Bucket>> orderedPending;
+            if (_enableScheduled)
+            {
+                var where = QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPayload>.ScheduledCondition();
+                orderedPending = _pending.Where(where).OrderBy(k => k.Value);
+            }
+            else
+                orderedPending = _pending.OrderBy(k => k.Value.Created);
 
             var eventIds = orderedPending.Select(s => s.Key).Take(count).ToArray();
             try
@@ -254,61 +295,23 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
         }
     }
     /// <summary>
-    /// 
+    /// Publish payload and mark as publish
     /// </summary>
-    /// <param name="ct"></param>
+    /// <param name="repository"></param>
+    /// <param name="payload"></param>
     /// <returns></returns>
-    protected virtual async Task LoadEventAsync(CancellationToken ct)
-    {
-        const int PageSize = 100;
-
-        using var scope = _factory.CreateScope();
-        var eventSourcedRepository = scope.ServiceProvider.GetRequiredService<TEventSourcedRepository>();
-
-        NonPublishEventPayload[] nonPublishEvents;
-        var pending = new List<NonPublishEventPayload>();
-        var paging = new Paging { Page = 0, PageSize = PageSize };
-        do
-        {
-            nonPublishEvents = await eventSourcedRepository.GetNonPublishedEventsAsync(paging, ct);
-            pending.AddRange(nonPublishEvents);
-
-            paging.Page++;
-        } while (nonPublishEvents.Length == PageSize);
-
-        pending.Sort((x, y) =>
-        {
-            int compare = 0;
-            if (x.Scheduled is null)
-            {
-                if (y.Scheduled is not null)
-                    compare = SysClock.GetUtcNow().CompareTo(y.Scheduled.Value);
-            }
-            else if (y.Scheduled is not null)
-                compare = x.Scheduled.Value.CompareTo(SysClock.GetUtcNow());
-
-            if (compare != 0)
-                return compare;
-            return x.Created.CompareTo(y.Created);
-        });
-
-        foreach (var @event in pending)
-            _pending.TryAdd(@event.Id, new Bucket(@event.Scheduled, @event.Created));
-    }
-#endregion
-
-#region Private Methods
-    private Func<KeyValuePair<Guid, Bucket>, bool> ScheduledCondition()
-    {
-        var now = SysClock.GetUtcNow();
-        return p => p.Value.Scheduled is null || p.Value.Scheduled.Value <= now;
-    }
-    private async Task PublishPayloadAsync(TEventSourcedRepository repository, TEventPayload payload)
+    protected async Task PublishPayloadAsync(TEventSourcedRepository repository, TEventPayload payload)
     {
         await _eventBus.PublishPayloadAsync(payload, _useEnvelop, _cts.Token);
         await repository.MarkEventsAsPublishedAsync(payload, _cts.Token);
     }
-    private async Task<TEventPayload?> TryToPublishAsync(TEventSourcedRepository repository, TEventPayload payload)
+    /// <summary>
+    /// Try to publish the event in the queue
+    /// </summary>
+    /// <param name="repository"></param>
+    /// <param name="payload"></param>
+    /// <returns></returns>
+    protected virtual async Task<TEventPayload?> TryToPublishAsync(TEventSourcedRepository repository, TEventPayload payload)
     {
         if (payload.IsPubliched)
             return null;
@@ -322,13 +325,46 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
         await PublishPayloadAsync(repository, payload);
         return payload;
     }
-#endregion
+    /// <summary>
+    /// Load all event from the database.
+    /// </summary>
+    /// <param name="bashSize"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    protected virtual async Task LoadEventAsync(int bashSize, CancellationToken ct)
+    {
+        using var scope = _factory.CreateScope();
+        var eventSourcedRepository = scope.ServiceProvider.GetRequiredService<TEventSourcedRepository>();
 
-#region Nested Classes
+        List<NonPublishEventPayload> nonPublishEvents;
+        var pending = new List<NonPublishEventPayload>();
+        var paging = new Paging { Page = 0, PageSize = bashSize };
+        do
+        {
+            nonPublishEvents = await eventSourcedRepository.GetNonPublishedEventsAsync(paging, ct);
+            pending.AddRange(nonPublishEvents);
+
+            paging.Page++;
+        } while (nonPublishEvents.Count == bashSize);
+
+        foreach (var @event in pending)
+            _pending.TryAdd(@event.Id, new Bucket(@event.Scheduled, @event.Created));
+    }
+    #endregion
+
+    #region Private Methods
+    private static Func<KeyValuePair<Guid, Bucket>, bool> ScheduledCondition()
+    {
+        var now = SysClock.GetUtcNow();
+        return p => p.Value.Scheduled is null || p.Value.Scheduled.Value <= now;
+    }
+    #endregion
+
+    #region Nested Classes
     /// <summary>
     /// 
     /// </summary>
-    protected class Bucket : IComparable<Bucket>
+    protected sealed class Bucket : IComparable<Bucket>
     {
         /// <summary>
         /// 
@@ -355,14 +391,14 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
-        public int CompareTo(Bucket? other)
+        public int CompareTo(Bucket other)
         {
-            if (Scheduled is not null && other!.Scheduled is not null)
+            if (Scheduled is not null && other.Scheduled is not null)
                 return Created.CompareTo(other.Created);
             if (Scheduled is null)
                 return -1;
             return 1;
         }
     }
-#endregion
+    #endregion
 }

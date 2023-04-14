@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.Mediator;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.CQRS.Command;
 

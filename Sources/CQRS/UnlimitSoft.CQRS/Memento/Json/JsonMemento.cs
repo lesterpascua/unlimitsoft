@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Data;
@@ -76,23 +77,33 @@ public abstract class JsonMemento<TInterface, TEntity> : IMemento<TInterface>
 
 
     #region Nested Classes
-    private TEntity LoadEntityFromHistory(JsonEventPayload[] eventsPayload)
+    private TEntity LoadEntityFromHistory(List<JsonEventPayload> eventsPayload)
     {
-        var history = new IMementoEvent<TInterface>[eventsPayload.Length];
-        for (var i = 0; i < eventsPayload.Length; i++)
+        var history = new IMementoEvent<TInterface>[eventsPayload.Count];
+
+#if NET6_0_OR_GREATER
+        var span = CollectionsMarshal.AsSpan(eventsPayload);
+        for (var i = 0; i < span.Length; i++)
         {
-            var eventPayload = eventsPayload[i];
-            var eventType = _nameResolver.Resolver(eventPayload.EventName);
-            if (eventType is null)
-                throw new KeyNotFoundException($"Event name={eventPayload.EventName} can't resolve");
+            var eventPayload = span[i];
+            var eventType = _nameResolver.RequireResolver(eventPayload.EventName);
 
             history[i] = FromEvent(eventType, eventPayload.Payload);
         }
+#else
+    for (var i = 0; i < eventsPayload.Count; i++)
+    {
+        var eventPayload = eventsPayload[i];
+        var eventType = _nameResolver.RequireResolver(eventPayload.EventName);
+
+        history[i] = FromEvent(eventType, eventPayload.Payload);
+    }
+#endif
 
         var entity = _factory?.Invoke(history) ?? new TEntity();
         for (var i = 0; i < history.Length; i++)
             history[i].Apply(entity);
         return entity;
     }
-    #endregion
+#endregion
 }

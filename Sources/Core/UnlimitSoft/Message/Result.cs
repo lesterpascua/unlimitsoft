@@ -1,6 +1,4 @@
-﻿using UnlimitSoft.Message;
-
-namespace UnlimitSoft.Mediator;
+﻿namespace UnlimitSoft.Message;
 
 
 /// <summary>

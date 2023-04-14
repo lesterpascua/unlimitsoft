@@ -4,6 +4,7 @@ using System;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Query;
 using UnlimitSoft.Message;
+using UnlimitSoft.Web.AspNet;
 using UnlimitSoft.Web.Model;
 using UnlimitSoft.WebApi.Model;
 using UnlimitSoft.WebApi.Sources.CQRS.Query;
@@ -34,7 +35,7 @@ public sealed class SearchQueryController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<Response<SearchModel<Customer>>>> Get([FromQuery] SearchCustomer vm)
+    public async Task<ActionResult<SearchModel<Customer>>> Get([FromQuery] SearchCustomer vm)
     {
         var query = new SearchTestQuery(this.GetIdentity())
         {
@@ -44,6 +45,6 @@ public sealed class SearchQueryController : ControllerBase
         };
         var result = await _queryDispatcher.DispatchAsync(_provider, query);
 
-        return this.ToActionResult(in result);
+        return result.ToActionResult(this);
     }
 }

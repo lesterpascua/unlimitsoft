@@ -8,14 +8,15 @@ namespace UnlimitSoft.Data.EntityFramework;
 /// 
 /// </summary>
 /// <typeparam name="TEntity"></typeparam>
-public class EFCQRSRepository<TEntity> : EFRepository<TEntity>, ICQRSRepository<TEntity>
+public class EFCQRSRepository<TContext, TEntity> : EFRepository<TContext, TEntity>, ICQRSRepository<TEntity> 
     where TEntity : class, IAggregateRoot
+    where TContext : DbContext
 {
     /// <summary>
     /// 
     /// </summary>
     /// <param name="dbContext"></param>
-    public EFCQRSRepository(DbContext dbContext)
+    public EFCQRSRepository(TContext dbContext)
         : base(dbContext)
     {
     }

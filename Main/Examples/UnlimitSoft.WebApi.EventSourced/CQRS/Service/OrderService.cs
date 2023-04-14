@@ -36,7 +36,7 @@ public sealed class OrderService
     public async Task<JsonEventPayload[]> HistoryAsync(Guid id, CancellationToken ct)
     {
         var history = await _eventRepository.GetHistoryAsync(id, long.MaxValue, ct);
-        return history;
+        return history.ToArray();
     }
     /// <summary>
     /// 

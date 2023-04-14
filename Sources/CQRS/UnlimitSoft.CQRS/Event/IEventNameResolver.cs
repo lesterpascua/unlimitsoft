@@ -18,3 +18,20 @@ public interface IEventNameResolver
     /// <returns>Type register with the name, null if no type asociate.</returns>
     Type? Resolver(string eventName);
 }
+/// <summary>
+/// 
+/// </summary>
+public static class IEventNameResolverExtensions
+{
+    /// <summary>
+    /// Get event asociate to supplied names.
+    /// </summary>
+    /// <param name="resolver"></param>
+    /// <param name="eventName"></param>
+    /// <returns>Type register with the name, null if no type asociate</returns>
+    /// <exception cref="InvalidOperationException">If the event name is not register in the resolver</exception>
+    public static Type RequireResolver(this IEventNameResolver resolver, string eventName)
+    {
+        return resolver.Resolver(eventName) ?? throw new InvalidOperationException($"Event name={eventName} can't resolve");
+    }
+}

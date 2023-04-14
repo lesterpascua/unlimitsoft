@@ -7,7 +7,7 @@ namespace UnlimitSoft.WebApi.MultiTenant.Sources.Data;
 /// 
 /// </summary>
 /// <typeparam name="TEntity"></typeparam>
-public class MyQueryRepository<TEntity> : EFQueryRepository<TEntity>, IMyQueryRepository<TEntity>
+public class MyQueryRepository<TEntity> : EFQueryRepository<DbContextWrite, TEntity>, IMyQueryRepository<TEntity>
     where TEntity : class
 {
     /// <summary>

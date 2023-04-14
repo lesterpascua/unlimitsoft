@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Query;
+using UnlimitSoft.Web.AspNet;
 using UnlimitSoft.Web.Model;
 using UnlimitSoft.WebApi.Sources.CQRS.Query;
 using UnlimitSoft.WebApi.Sources.Data.Model;
@@ -37,6 +38,6 @@ public sealed class QueryController : ControllerBase
         var query = new TestQuery(this.GetIdentity());
         var result = await _queryDispatcher.DispatchAsync(_provider, query);
 
-        return this.ToActionResult(in result);
+        return result.ToActionResult(this);
     }
 }

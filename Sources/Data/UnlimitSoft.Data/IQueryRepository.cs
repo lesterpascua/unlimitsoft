@@ -8,7 +8,7 @@ namespace UnlimitSoft.Data;
 
 
 /// <summary>
-/// Repository used only for query operations.
+/// Repository for read operations.
 /// </summary>
 /// <typeparam name="TEntity"></typeparam>
 public interface IQueryRepository<TEntity> where TEntity : class
