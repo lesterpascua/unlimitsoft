@@ -53,7 +53,7 @@ public class QueueEventPublishWorkerTests
                     .Skip(paging.Page * paging.PageSize)
                     .Take(paging.PageSize)
                     .Select(s => new NonPublishEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
-                    .ToArray();
+                    .ToList();
             });
         repository.GetEventsAsync(Arg.Any<Guid[]>(), Arg.Any<CancellationToken>())
             .Returns(x =>
@@ -62,7 +62,7 @@ public class QueueEventPublishWorkerTests
                 return _data
                     .AsQueryable()
                     .Where(p => ids.Contains(p.Id))
-                    .ToArray();
+                    .ToList();
             });
 
         var provider = Substitute.For<IServiceProvider>();
@@ -90,14 +90,15 @@ public class QueueEventPublishWorkerTests
     {
         // Arrange
         using var publishWorker = new QueueEventPublishWorker<IEventRepository<JsonEventPayload, string>, JsonEventPayload, string>(
-            _factory, 
-            _eventBus, 
-            null, 
-            TimeSpan.Zero, 
-            TimeSpan.Zero, 
-            10, 
-            true, 
-            true, 
+            SysClock.Clock,
+            _factory,
+            _eventBus,
+            null,
+            TimeSpan.Zero,
+            TimeSpan.Zero,
+            10,
+            true,
+            true,
             null
         );
 

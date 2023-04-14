@@ -38,6 +38,7 @@ using UnlimitSoft.WebApi.Sources.CQRS.Query;
 using UnlimitSoft.WebApi.Sources.Data;
 using UnlimitSoft.WebApi.Sources.Data.Configuration;
 using UnlimitSoft.WebApi.Sources.Data.Model;
+using UnlimitSoft.WebApi.Sources.Data.Repository;
 using UnlimitSoft.WebApi.Sources.Security;
 
 [assembly: UnlimitSoft.WebApi.CommandHandler(typeof(IMyCommandHandler<,>))]
@@ -167,6 +168,7 @@ public class Startup
 
             return new MyMemento<Customer>(serializer, nameResolver, eventSourcedRepository);
         });
+        services.AddScoped<ICustomerQueryRepository, CustomerQueryRepository>();
         #endregion
 
         #region EventBus
@@ -312,7 +314,6 @@ public class Startup
 
         if (env.IsDevelopment())
         {
-            app.UseDeveloperExceptionPage();
             app.UseSwagger();
             app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "UnlimitSoft.WebApi v1"));
         }

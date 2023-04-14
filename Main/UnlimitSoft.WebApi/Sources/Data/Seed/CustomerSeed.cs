@@ -23,11 +23,11 @@ namespace UnlimitSoft.WebApi.Sources.Data.Seed
         public override async Task SeedAsync(CancellationToken ct = default)
         {
             var seed = new List<Customer>();
-            if (await _customerRepository.FindAll().AnyAsync(p => p.Name == "Lester") == false)
+            if (await _customerRepository.FindAll().AnyAsync(p => p.Name == "Lester", ct) == false)
                 seed.Add(new Customer { Id = Guid.NewGuid(), Name = "Lester" });
-            if (await _customerRepository.FindAll().AnyAsync(p => p.Name == "Dianelis") == false)
+            if (await _customerRepository.FindAll().AnyAsync(p => p.Name == "Dianelis", ct) == false)
                 seed.Add(new Customer { Id = Guid.NewGuid(), Name = "Dianelis" });
-            if (await _customerRepository.FindAll().AnyAsync(p => p.Name == "Liam") == false)
+            if (await _customerRepository.FindAll().AnyAsync(p => p.Name == "Liam", ct) == false)
                 seed.Add(new Customer { Id = Guid.NewGuid(), Name = "Liam" });
 
             if (seed.Any())

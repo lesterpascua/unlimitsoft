@@ -21,15 +21,21 @@ public sealed record PublishEventInfo(Guid Id, DateTime Created, DateTime? Sched
 public interface IEventPublishWorker : IDisposable
 {
     /// <summary>
+    /// Amount of event pending to sent
+    /// </summary>
+    int Pending { get; }
+
+    /// <summary>
     /// Initialize worker
     /// </summary>
     /// <param name="loadEvent">
     /// If service has multiples instance and there is pending event when start will be a problem because the event will load multiples times. Only
     /// set true to one service to avoid send duplicate event.
     /// </param>
+    /// <param name="bachSize">Load event identifier using this bach size.</param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task StartAsync(bool loadEvent, CancellationToken ct = default);
+    Task StartAsync(bool loadEvent, int bachSize = 1000, CancellationToken ct = default);
     /// <summary>
     /// Retry send some event already publish.
     /// </summary>

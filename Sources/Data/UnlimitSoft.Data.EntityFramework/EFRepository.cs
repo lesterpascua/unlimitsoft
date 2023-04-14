@@ -10,15 +10,17 @@ namespace UnlimitSoft.Data.EntityFramework;
 /// <summary>
 /// 
 /// </summary>
+/// <typeparam name="TContext"></typeparam>
 /// <typeparam name="TEntity"></typeparam>
-public class EFRepository<TEntity> : EFQueryRepository<TEntity>, IRepository<TEntity>
+public class EFRepository<TContext, TEntity> : EFQueryRepository<TContext, TEntity>, IRepository<TEntity> 
     where TEntity : class
+    where TContext : DbContext
 {
     /// <summary>
     /// 
     /// </summary>
     /// <param name="dbContext"></param>
-    public EFRepository(DbContext dbContext)
+    public EFRepository(TContext dbContext)
         : base(dbContext)
     {
     }

@@ -1,8 +1,9 @@
 ﻿using UnlimitSoft.Data;
+using UnlimitSoft.Data.EntityFramework;
 
-namespace UnlimitSoft.WebApi.Sources.Data
+namespace UnlimitSoft.WebApi.Sources.Data;
+
+
+public interface IMyRepository<TEntity> : IRepository<TEntity>, IEFRepository<DbContextWrite, TEntity> where TEntity : class
 {
-    public interface IMyRepository<TEntity> : IMyQueryRepository<TEntity>, IRepository<TEntity> where TEntity : class
-    {
-    }
 }

@@ -12,8 +12,7 @@ namespace UnlimitSoft.CQRS.Data;
 /// <summary>
 /// Provide an abstraction to access to the event source storage
 /// </summary>
-public interface IEventRepository<TEventPayload, TPayload>
-    where TEventPayload : EventPayload<TPayload>
+public interface IEventRepository<TEventPayload, in TPayload> where TEventPayload : EventPayload<TPayload>
 {
     /// <summary>
     /// Get all event non publish and allow paging
@@ -21,7 +20,7 @@ public interface IEventRepository<TEventPayload, TPayload>
     /// <param name="paging"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<NonPublishEventPayload[]> GetNonPublishedEventsAsync(Paging? paging = null, CancellationToken ct = default);
+    Task<List<NonPublishEventPayload>> GetNonPublishedEventsAsync(Paging? paging = null, CancellationToken ct = default);
 
     /// <summary>
     /// 
@@ -51,7 +50,7 @@ public interface IEventRepository<TEventPayload, TPayload>
     /// <param name="ids"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<TEventPayload[]> GetEventsAsync(Guid[] ids, CancellationToken ct = default);
+    Task<List<TEventPayload>> GetEventsAsync(Guid[] ids, CancellationToken ct = default);
 
     /// <summary>
     /// 
@@ -85,7 +84,7 @@ public interface IEventRepository<TEventPayload, TPayload>
     /// <param name="version"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<TEventPayload[]> GetHistoryAsync(Guid sourceId, long version, CancellationToken ct = default);
+    Task<List<TEventPayload>> GetHistoryAsync(Guid sourceId, long version, CancellationToken ct = default);
     /// <summary>
     /// Get history of operation asociate to some entity
     /// </summary>
@@ -93,7 +92,7 @@ public interface IEventRepository<TEventPayload, TPayload>
     /// <param name="dateTime"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<TEventPayload[]> GetHistoryAsync(Guid sourceId, DateTime dateTime, CancellationToken ct = default);
+    Task<List<TEventPayload>> GetHistoryAsync(Guid sourceId, DateTime dateTime, CancellationToken ct = default);
 
     /// <summary>
     /// Save all pending versiones events.

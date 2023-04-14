@@ -1,9 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Linq;
-using System.Net;
-using UnlimitSoft.Logger.AspNet;
-using UnlimitSoft.Mediator;
 using UnlimitSoft.Message;
 using UnlimitSoft.Web.Security;
 using UnlimitSoft.Web.Security.Claims;
@@ -50,20 +47,5 @@ public static class ControllerBaseExtensions
             correlationId = correlation.FirstOrDefault();
 
         return new IdentityInfo(id, role, scope, correlationId);
-    }
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="this"></param>
-    /// <param name="result"></param>
-    /// <returns></returns>
-    public static ObjectResult ToActionResult<TResponse>(this ControllerBase @this, in Result<TResponse> result)
-    {
-        var err = result.Error;
-        if (err is not null)
-            return @this.StatusCode((int)err.Code, err.GetBody());
-
-        return @this.Ok(result.Value);
     }
 }
