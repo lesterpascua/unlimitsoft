@@ -113,6 +113,35 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
             return default;
         return JsonConvert.DeserializeObject(payload!, eventType, _deserialize);
     }
+
+    /// <inheritdoc />
+    public T? GetTokenValue<T>(object? token)
+    {
+        if (token is null)
+            return default;
+
+        var jObject = (JToken)token;
+        return jObject.Value<T>();
+    }
+    /// <inheritdoc />
+    public T? GetValue<T>(object? data, params string[] path)
+    {
+        if (data is null)
+            return default;
+
+        var jObject = (JToken)data;
+        for (int i = 0; i < path.Length; i++)
+        {
+            if (jObject is null)
+                return default;
+
+            jObject = jObject[path[i]];
+        }
+        if (jObject is null)
+            return default;
+
+        return jObject.Value<T>();
+    }
     /// <inheritdoc />
     public object? GetToken(object? data, params string[] path)
     {
@@ -121,9 +150,16 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
 
         var jObject = (JToken)data;
         for (int i = 0; i < path.Length; i++)
-            jObject = jObject![path[i]];
+        {
+            if (jObject is null)
+                return default;
+
+            jObject = jObject[path[i]];
+        }
         return jObject;
     }
+    
+
     /// <inheritdoc />
     public string? Serialize(object? data)
     {

@@ -45,6 +45,21 @@ public interface IJsonSerializer
     T? Cast<T>(object? data);
 
     /// <summary>
+    /// Get the value asociate to the token
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="token"></param>
+    /// <returns></returns>
+    T? GetTokenValue<T>(object? token);
+    /// <summary>
+    /// Get json value follow the specific path.
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="data"></param>
+    /// <param name="path"></param>
+    /// <returns></returns>
+    T? GetValue<T>(object? data, params string[] path);
+    /// <summary>
     /// Get json token follow the specific path.
     /// </summary>
     /// <param name="data"></param>

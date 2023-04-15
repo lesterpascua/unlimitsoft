@@ -123,6 +123,30 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
 
         return JsonSerializer.Deserialize(payload!, eventType, _deserialize);
     }
+
+
+    /// <inheritdoc />
+    public T? GetTokenValue<T>(object? token)
+    {
+        throw new NotImplementedException();
+    }
+    /// <inheritdoc />
+    public T? GetValue<T>(object? data, params string[] path)
+    {
+        if (data is null)
+            return default;
+
+        var token = (JsonElement)data;
+        ReadOnlySpan<string> span = path;
+        for (int i = 0; i < span.Length; i++)
+        {
+            if (token.TryGetProperty(span[i], out var property) == false)
+                return default;
+
+            token = property;
+        }
+        return default; /*token.GetRawText()*/;
+    }
     /// <inheritdoc />
     public object? GetToken(object? data, params string[] path)
     {
