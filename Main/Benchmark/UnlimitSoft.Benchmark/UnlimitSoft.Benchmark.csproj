@@ -10,15 +10,17 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="BenchmarkDotNet" Version="0.13.4" />
-		<PackageReference Include="MediatR" Version="11.1.0" />
-		<PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="11.0.0" />
+		<PackageReference Include="BenchmarkDotNet" Version="0.13.5" />
+		<PackageReference Include="Bogus" Version="34.0.2" />
+		<PackageReference Include="MediatR" Version="12.0.1" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="7.0.5" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <ProjectReference Include="..\..\..\Sources\Core\UnlimitSoft.Mediator\UnlimitSoft.Mediator.csproj" />
 	  <ProjectReference Include="..\..\..\Sources\CQRS\UnlimitSoft.CQRS.DependencyInjection\UnlimitSoft.CQRS.DependencyInjection.csproj" />
 	  <ProjectReference Include="..\..\..\Sources\CQRS\UnlimitSoft.CQRS\UnlimitSoft.CQRS.csproj" />
+	  <ProjectReference Include="..\..\..\Sources\Data\UnlimitSoft.Data.EntityFramework\UnlimitSoft.Data.EntityFramework.csproj" />
 	</ItemGroup>
 
 </Project>

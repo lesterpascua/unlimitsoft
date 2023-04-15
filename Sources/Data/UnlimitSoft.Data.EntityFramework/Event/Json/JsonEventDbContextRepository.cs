@@ -2,9 +2,7 @@
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
-using System.Reflection.Emit;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Data;
@@ -20,6 +18,7 @@ namespace UnlimitSoft.CQRS.Event.Json;
 /// </summary>
 public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, string>
 {
+    private readonly bool _optimize;
     private readonly DbContext _dbContext;
     private readonly DbSet<JsonEventPayload> _repository;
     private readonly ILogger<JsonEventDbContextRepository>? _logger;
@@ -28,61 +27,15 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
     /// 
     /// </summary>
     /// <param name="dbContext"></param>
+    /// <param name="optimize">Precompile the query and reuse in all iterations</param>
     /// <param name="logger"></param>
     /// <exception cref="ArgumentNullException"></exception>
-    public JsonEventDbContextRepository(DbContext dbContext, ILogger<JsonEventDbContextRepository>? logger = null)
+    public JsonEventDbContextRepository(DbContext dbContext, bool optimize = true, ILogger<JsonEventDbContextRepository>? logger = null)
     {
+        _optimize = optimize;
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         _repository = _dbContext.Set<JsonEventPayload>();
         _logger = logger;
-    }
-
-
-    private static Func<DbContext, IAsyncEnumerable<NonPublishEventPayload>>? _getNonPublishedEventsWithOutPaging;
-    private static Func<DbContext, int, int, IAsyncEnumerable<NonPublishEventPayload>>? _getNonPublishedEventsWithPaging;
-    /// <inheritdoc />
-    public virtual async Task<List<NonPublishEventPayload>> GetNonPublishedEventsAsync(Paging? paging = null, CancellationToken ct = default)
-    {
-        if (paging is not null)
-        {
-            if (_getNonPublishedEventsWithPaging is null)
-                Interlocked.CompareExchange(
-                    ref _getNonPublishedEventsWithPaging,
-                    EF.CompileAsyncQuery(
-                        (DbContext dbContext, int page, int size) => dbContext.Set<JsonEventPayload>()
-                            .Where(x => !x.IsPubliched)
-                            .OrderBy(x => x.Id)
-                            .Skip(page * size)
-                            .Take(size)
-                            .Select(s => new NonPublishEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
-                    ),
-                    null
-                );
-            await using var withPagingEnum = _getNonPublishedEventsWithPaging(_dbContext, paging.Page, paging.PageSize).GetAsyncEnumerator(ct);
-
-            var withPaging = new List<NonPublishEventPayload>();
-            while (await withPagingEnum.MoveNextAsync())
-                withPaging.Add(withPagingEnum.Current);
-            return withPaging;
-        }
-
-        if (_getNonPublishedEventsWithOutPaging is null)
-            Interlocked.CompareExchange(
-                ref _getNonPublishedEventsWithOutPaging,
-                EF.CompileAsyncQuery(
-                    (DbContext dbContext) => dbContext.Set<JsonEventPayload>()
-                        .Where(x => !x.IsPubliched)
-                        .OrderBy(x => x.Id)
-                        .Select(s => new NonPublishEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
-                ),
-                null
-            );
-        await using var withOutPagingEnum = _getNonPublishedEventsWithOutPaging(_dbContext).GetAsyncEnumerator(ct);
-
-        var withOutPaging = new List<NonPublishEventPayload>();
-        while (await withOutPagingEnum.MoveNextAsync())
-            withOutPaging.Add(withOutPagingEnum.Current);
-        return withOutPaging;
     }
 
     /// <inheritdoc />
@@ -107,19 +60,48 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
         _logger?.LogDebug("MarkEventsAsPublishedAsync {Amount} passed {@Events}", amount, events);
     }
 
+    /// <inheritdoc />
+    public virtual async Task<List<NonPublishEventPayload>> GetNonPublishedEventsAsync(Paging? paging = null, CancellationToken ct = default)
+    {
+        if (_optimize)
+        {
+            var enumerable = GetNonPublishedEventsEnumerable(paging);
+            await using var withPagingEnum = enumerable.GetAsyncEnumerator(ct);
+
+            var list = new List<NonPublishEventPayload>();
+            while (await withPagingEnum.MoveNextAsync())
+                list.Add(withPagingEnum.Current);
+            return list;
+        }
+
+        IQueryable<JsonEventPayload> query = _repository
+            .Where(p => !p.IsPubliched)
+            .OrderBy(p => p.Id);
+        if (paging is not null)
+            query = query.ApplyPagging(paging.Page, paging.PageSize);
+
+        return await query
+            .Select(s => new NonPublishEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
+            .ToListAsync(ct);
+    }
+
     private Func<DbContext, Guid, Task<JsonEventPayload?>>? _getEvent;
     /// <inheritdoc />
     public virtual Task<JsonEventPayload?> GetEventAsync(Guid id, CancellationToken ct = default)
     {
-        if (_getEvent is null)
-            Interlocked.CompareExchange(
-                ref _getEvent,
-                EF.CompileAsyncQuery(
-                    (DbContext dbContext, Guid id) => dbContext.Set<JsonEventPayload>().FirstOrDefault(x => x.Id == id)
-                ),
-                null
-            );
-        return _getEvent(_dbContext, id);
+        if (_optimize)
+        {
+            if (_getEvent is null)
+                Interlocked.CompareExchange(
+                    ref _getEvent,
+                    EF.CompileAsyncQuery(
+                        (DbContext dbContext, Guid id) => dbContext.Set<JsonEventPayload>().FirstOrDefault(x => x.Id == id)
+                    ),
+                    null
+                );
+            return _getEvent(_dbContext, id);
+        }
+        return _dbContext.Set<JsonEventPayload>().FirstOrDefaultAsync(x => x.Id == id, ct);
     }
 
     private static Func<DbContext, Guid[], IAsyncEnumerable<JsonEventPayload>>? _getEvents;
@@ -146,34 +128,101 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
     }
 
     /// <inheritdoc />
-    public virtual async Task<SourceIdWithVersion[]> GetAllSourceIdAsync(Paging? page, CancellationToken ct = default)
+    public virtual async Task<List<SourceIdWithVersion>> GetAllSourceIdAsync(Paging? paging, CancellationToken ct = default)
     {
+        if (_optimize)
+        {
+            var enumerable = GetAllSourceIdEnumerable(paging);
+
+            var list = new List<SourceIdWithVersion>();
+            await foreach (var item in enumerable)
+                list.Add(item);
+            return list;
+        }
+
         var query = from versionedEvent in _repository
                     group versionedEvent by versionedEvent.SourceId into versionedEventGroup
-                    select new SourceIdWithVersion(versionedEventGroup.Key, versionedEventGroup.Max(k => k.Version));
-        if (page is not null)
-            query = query.OrderBy(k => k.Id).ApplyPagging(page.Page, page.PageSize);
+                    select new { Id = versionedEventGroup.Key, Version = versionedEventGroup.Max(k => k.Version) };
+        if (paging is not null)
+            query = query.OrderBy(k => k.Id).ApplyPagging(paging.Page, paging.PageSize);
 
-        return await query.ToArrayAsync(ct);
+        return await query.Select(s => new SourceIdWithVersion(s.Id, s.Version)).ToListAsync(ct);
     }
 
+    private Func<DbContext, Guid, Task<JsonEventPayload?>>? _getWithOutVersion;
+    private Func<DbContext, Guid, long, Task<JsonEventPayload?>>? _getWithVersion;
     /// <inheritdoc />
-    public virtual async Task<JsonEventPayload?> GetAsync(Guid sourceId, long? version = null, CancellationToken ct = default)
+    public virtual Task<JsonEventPayload?> GetAsync(Guid sourceId, long? version = null, CancellationToken ct = default)
     {
+        if (_optimize)
+        {
+            if (version is null)
+            {
+                if (_getWithOutVersion is null)
+                    Interlocked.CompareExchange(
+                        ref _getWithOutVersion,
+                        EF.CompileAsyncQuery(
+                            (DbContext dbContext, Guid sourceId) => dbContext.Set<JsonEventPayload>().Where(x => x.SourceId == sourceId).OrderByDescending(k => k.Version).FirstOrDefault()
+                        ),
+                        null
+                    );
+                return _getWithOutVersion(_dbContext, sourceId);
+            }
+
+            if (_getWithVersion is null)
+                Interlocked.CompareExchange(
+                    ref _getWithVersion,
+                    EF.CompileAsyncQuery(
+                        (DbContext dbContext, Guid sourceId, long version) => dbContext.Set<JsonEventPayload>().FirstOrDefault(x => x.SourceId == sourceId && x.Version == version)
+                    ),
+                    null
+                );
+            return _getWithVersion(_dbContext, sourceId, version.Value);
+        }
+
         var query = version.HasValue ? 
             _repository.Where(p => p.SourceId == sourceId && p.Version == version.Value) :
             _repository.Where(p => p.SourceId == sourceId).OrderByDescending(k => k.Version);
 
-        return await query.FirstOrDefaultAsync(ct);
+        return query.FirstOrDefaultAsync(ct);
     }
+
+    private Func<DbContext, Guid, Task<JsonEventPayload?>>? _getWithOutDate;
+    private Func<DbContext, Guid, DateTime, Task<JsonEventPayload?>>? _getWithDate;
     /// <inheritdoc />
-    public virtual async Task<JsonEventPayload?> GetAsync(Guid sourceId, DateTime? dateTime = null, CancellationToken ct = default)
+    public virtual Task<JsonEventPayload?> GetAsync(Guid sourceId, DateTime? dateTime = null, CancellationToken ct = default)
     {
+        if (_optimize)
+        {
+            if (dateTime is null)
+            {
+                if (_getWithOutDate is null)
+                    Interlocked.CompareExchange(
+                        ref _getWithOutDate,
+                        EF.CompileAsyncQuery(
+                            (DbContext dbContext, Guid sourceId) => dbContext.Set<JsonEventPayload>().Where(x => x.SourceId == sourceId).OrderByDescending(k => k.Created).FirstOrDefault()
+                        ),
+                        null
+                    );
+                return _getWithOutDate(_dbContext, sourceId);
+            }
+
+            if (_getWithDate is null)
+                Interlocked.CompareExchange(
+                    ref _getWithDate,
+                    EF.CompileAsyncQuery(
+                        (DbContext dbContext, Guid sourceId, DateTime created) => dbContext.Set<JsonEventPayload>().FirstOrDefault(x => x.SourceId == sourceId && x.Created <= created)
+                    ),
+                    null
+                );
+            return _getWithDate(_dbContext, sourceId, dateTime.Value);
+        }
+
         var query = dateTime.HasValue ?
             _repository.Where(p => p.SourceId == sourceId && p.Created <= dateTime.Value) :
             _repository.Where(p => p.SourceId == sourceId).OrderByDescending(k => k.Created);
 
-        return await query.FirstOrDefaultAsync(ct);
+        return query.FirstOrDefaultAsync(ct);
     }
 
     private static Func<DbContext, Guid, long, IAsyncEnumerable<JsonEventPayload>> _getHistoryByVersion = default!;
@@ -236,4 +285,76 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
         _logger?.LogDebug("With {Force} CreateAsync {@EventPayload} JsonVersionedEventPayload", forceSave, eventPayloads);
         return eventPayloads;
     }
+
+    #region Private Methods
+    private static Func<DbContext, IAsyncEnumerable<NonPublishEventPayload>>? _getNonPublishedEventsWithOutPaging;
+    private static Func<DbContext, int, int, IAsyncEnumerable<NonPublishEventPayload>>? _getNonPublishedEventsWithPaging;
+    private IAsyncEnumerable<NonPublishEventPayload> GetNonPublishedEventsEnumerable(Paging? paging)
+    {
+        if (paging is not null)
+        {
+            if (_getNonPublishedEventsWithPaging is null)
+                Interlocked.CompareExchange(
+                    ref _getNonPublishedEventsWithPaging,
+                    EF.CompileAsyncQuery(
+                        (DbContext dbContext, int page, int size) => dbContext.Set<JsonEventPayload>()
+                            .Where(x => !x.IsPubliched)
+                            .OrderBy(x => x.Id)
+                            .Skip(page * size)
+                            .Take(size)
+                            .Select(s => new NonPublishEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
+                    ),
+                    null
+                );
+            return _getNonPublishedEventsWithPaging(_dbContext, paging.Page, paging.PageSize);
+        }
+
+        if (_getNonPublishedEventsWithOutPaging is null)
+            Interlocked.CompareExchange(
+                ref _getNonPublishedEventsWithOutPaging,
+                EF.CompileAsyncQuery(
+                    (DbContext dbContext) => dbContext.Set<JsonEventPayload>()
+                        .Where(x => !x.IsPubliched)
+                        .Select(s => new NonPublishEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
+                ),
+                null
+            );
+        return _getNonPublishedEventsWithOutPaging(_dbContext);
+    }
+
+    private static Func<DbContext, IAsyncEnumerable<SourceIdWithVersion>>? _getAllSourceIdWithOutPaging;
+    private static Func<DbContext, int, int, IAsyncEnumerable<SourceIdWithVersion>>? _getAllSourceIdWithPaging;
+    private IAsyncEnumerable<SourceIdWithVersion> GetAllSourceIdEnumerable(Paging? paging)
+    {
+        if (paging is not null)
+        {
+            if (_getAllSourceIdWithPaging is null)
+                Interlocked.CompareExchange(
+                    ref _getAllSourceIdWithPaging,
+                    EF.CompileAsyncQuery(
+                        (DbContext dbContext, int page, int size) => dbContext.Set<JsonEventPayload>()
+                            .GroupBy(x => x.SourceId)
+                            .OrderBy(x => x.Key)
+                            .Skip(page * size)
+                            .Take(size)
+                            .Select(s => new SourceIdWithVersion(s.Key, s.Max(x => x.Version)))
+                    ),
+                null
+                );
+            return _getAllSourceIdWithPaging(_dbContext, paging.Page, paging.PageSize);
+        }
+
+        if (_getAllSourceIdWithOutPaging is null)
+            Interlocked.CompareExchange(
+                ref _getAllSourceIdWithOutPaging,
+                EF.CompileAsyncQuery(
+                    (DbContext dbContext) => dbContext.Set<JsonEventPayload>()
+                        .GroupBy(x => x.SourceId)
+                        .Select(s => new SourceIdWithVersion(s.Key, s.Max(x => x.Version)))
+                ),
+                null
+            );
+        return _getAllSourceIdWithOutPaging(_dbContext);
+    }
+    #endregion
 }

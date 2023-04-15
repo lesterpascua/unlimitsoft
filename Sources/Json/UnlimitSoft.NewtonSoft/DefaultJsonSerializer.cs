@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -34,6 +35,7 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
             ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
             NullValueHandling = NullValueHandling.Ignore,
+            ContractResolver = new DefaultContractResolver { NamingStrategy = new CamelCaseNamingStrategy() }
         };
         DeserializerSettings = new JsonSerializerSettings
         {

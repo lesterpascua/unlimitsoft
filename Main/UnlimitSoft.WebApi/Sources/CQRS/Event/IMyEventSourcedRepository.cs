@@ -12,7 +12,7 @@ public interface IMyEventSourcedRepository : IEventRepository<JsonEventPayload, 
 public class MyEventSourcedRepository : JsonEventDbContextRepository, IMyEventSourcedRepository
 {
     public MyEventSourcedRepository(DbContextWrite dbContext, ILogger<MyEventSourcedRepository> logger) : 
-        base(dbContext, logger)
+        base(dbContext, true, logger)
     {
     }
 }

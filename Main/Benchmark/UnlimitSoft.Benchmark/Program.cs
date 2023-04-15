@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using UnlimitSoft.Benchmark.SoftUnlimit.CQRS;
 using UnlimitSoft.Benchmark.UnlimitSoft.CQRS;
 using UnlimitSoft.Benchmark.UnlimitSoft.CQRS.Labs;
 using UnlimitSoft.Mediator;
@@ -11,7 +12,12 @@ using UnlimitSoft.Mediator;
 //var lab = new CommandDispatcherLab(true);
 //await lab.Dispatch1();
 
-BenchmarkRunner.Run<CommandBenchmark>();
+//var aa = new JsonEventRepositoryBenchmark();
+//await aa.WithOptimization();
+//await aa.WithOutOptimization();
+
+
+BenchmarkRunner.Run<JsonEventRepositoryBenchmark>();
 //BenchmarkRunner.Run<QueryBenchmark>();
 //BenchmarkRunner.Run<EventDispatcherBenchmarks>();
 

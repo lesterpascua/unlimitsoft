@@ -23,7 +23,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Hangfire" Version="1.7.32" />
+		<PackageReference Include="Hangfire" Version="1.7.34" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -34,7 +34,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-		<PackageReference Include="System.Text.Json" Version="6.0.6" />
+		<PackageReference Include="System.Text.Json" Version="7.0.2" />
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\UnlimitSoft.CQRS\UnlimitSoft.CQRS.csproj" />

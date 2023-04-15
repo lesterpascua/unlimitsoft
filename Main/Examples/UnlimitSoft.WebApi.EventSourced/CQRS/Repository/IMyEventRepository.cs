@@ -25,7 +25,7 @@ public sealed class MyEventRepository : JsonEventDbContextRepository, IMyEventRe
     /// <param name="dbContext"></param>
     /// <param name="logger"></param>
     public MyEventRepository(DbContextWrite dbContext, ILogger<MyEventRepository> logger) :
-        base(dbContext, logger)
+        base(dbContext, true, logger)
     {
     }
 }
