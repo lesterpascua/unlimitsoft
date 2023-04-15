@@ -29,8 +29,9 @@ public static class EntityBuilderUtility
     /// <typeparam name="TEvent"> Versioned event type. Example: <see cref="JsonEventPayload"/> or you can create your personalize.</typeparam>
     /// <param name="builder"></param>
     /// <param name="useIndex">Add index for properties like Created and IsPubliched</param>
+    /// <param name="useExtraIndex">For SourceId, {SourceId, Version}, {SourceId, Created}</param>
     /// <param name="payloadBuilder">Extra properties applied over payload.</param>
-    public static void ConfigureEvent<TEvent, TPayload>(EntityTypeBuilder<TEvent> builder, bool useIndex = true, Action<PropertyBuilder<TPayload>>? payloadBuilder = null)
+    public static void ConfigureEvent<TEvent, TPayload>(EntityTypeBuilder<TEvent> builder, bool useIndex = true, bool useExtraIndex = false, Action<PropertyBuilder<TPayload>>? payloadBuilder = null)
         where TEvent : EventPayload<TPayload>
     {
         builder.ToTable("VersionedEvent");
@@ -46,8 +47,14 @@ public static class EntityBuilderUtility
 
         if (useIndex)
         {
-            builder.HasIndex(i => i.IsPubliched).IsUnique(false);
             builder.HasIndex(i => i.Created).IsUnique(false);
+            builder.HasIndex(i => i.IsPubliched).IsUnique(false);
+        }
+        if (useExtraIndex)
+        {
+            builder.HasIndex(p => p.SourceId);
+            builder.HasIndex(p => new { p.SourceId, p.Version });
+            builder.HasIndex(p => new { p.SourceId, p.Created });
         }
     }
 

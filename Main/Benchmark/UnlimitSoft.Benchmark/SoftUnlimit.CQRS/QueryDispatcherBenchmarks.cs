@@ -1,5 +1,4 @@
 ﻿using BenchmarkDotNet.Attributes;
-using System.Threading.Tasks;
 using UnlimitSoft.Benchmark.UnlimitSoft.CQRS.Labs;
 
 namespace UnlimitSoft.Benchmark.UnlimitSoft.CQRS;

@@ -1,10 +1,8 @@
 ﻿using Bogus;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using NSubstitute;
 using System;
 using System.Threading;
@@ -116,6 +114,7 @@ public sealed class QueueEventPublishWorkerWithEFTests
         await eventBus.Received(amount).PublishPayloadAsync(Arg.Any<JsonEventPayload>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
     }
 
+    #region Private Methods
     private static ServiceProvider CreateProvider(TimeSpan startDelay, out IEventBus eventBus)
     {
         eventBus = Substitute.For<IEventBus>();
@@ -153,6 +152,7 @@ public sealed class QueueEventPublishWorkerWithEFTests
 
         return serviceCollection.BuildServiceProvider();
     }
+    #endregion
 
     #region Nested Classes
     private sealed class MyDbContext : DbContext
@@ -172,11 +172,7 @@ public sealed class QueueEventPublishWorkerWithEFTests
     {
         public void Configure(EntityTypeBuilder<JsonEventPayload> builder)
         {
-            EntityBuilderUtility.ConfigureEvent<JsonEventPayload, string>(builder);
-
-            builder.HasIndex(p => p.SourceId);
-            builder.HasIndex(p => new { p.SourceId, p.Version });
-            builder.HasIndex(p => new { p.SourceId, p.Created });
+            EntityBuilderUtility.ConfigureEvent<JsonEventPayload, string>(builder, useExtraIndex: true);
         }
     }
     #endregion

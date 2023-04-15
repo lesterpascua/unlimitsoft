@@ -99,7 +99,7 @@ public abstract class EFCQRSDbUnitOfWork<TDbContext> : EFDbUnitOfWork<TDbContext
             if (isTransactionOwner)
                 await transaction!.CommitAsync(ct);
 
-            if (versionedEvents?.Any() == true && EventMediator is not null)
+            if (versionedEvents.Count != 0 && EventMediator is not null)
                 await EventMediator.EventsDispatchedAsync(versionedEvents, ct);
         }
         finally
@@ -125,7 +125,7 @@ public abstract class EFCQRSDbUnitOfWork<TDbContext> : EFDbUnitOfWork<TDbContext
             return eventSourcedMediator.DispatchEventsAsync(versionedEvents, false, ct);
         return Task.CompletedTask;
     }
-    private async Task<(int, IEnumerable<IEvent>)> PublishEvents(object[] changedEntities, CancellationToken ct)
+    private async Task<(int, List<IEvent>)> PublishEvents(object[] changedEntities, CancellationToken ct)
     {
         var versionedEvents = new List<IEvent>();
 

@@ -55,10 +55,10 @@ public interface IEventRepository<TEventPayload, in TPayload> where TEventPayloa
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="page"></param>
+    /// <param name="paging"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task<SourceIdWithVersion[]> GetAllSourceIdAsync(Paging? page = null, CancellationToken ct = default);
+    Task<List<SourceIdWithVersion>> GetAllSourceIdAsync(Paging? paging = null, CancellationToken ct = default);
 
     /// <summary>
     /// Get the serialized event in some version
