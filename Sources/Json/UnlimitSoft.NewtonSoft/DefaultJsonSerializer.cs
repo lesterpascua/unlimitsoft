@@ -2,6 +2,7 @@
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -17,16 +18,9 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
 {
     private readonly JsonSerializerSettings _serialize, _deserialize;
 
-
     /// <summary>
-    /// Serialized option. Only change value at the begining of the process
+    /// 
     /// </summary>
-    public static JsonSerializerSettings SerializerSettings { get; set; }
-    /// <summary>
-    /// Deserialized option. Only change value at the begining of the process
-    /// </summary>
-    public static JsonSerializerSettings DeserializerSettings { get; set; }
-
     static DefaultJsonSerializer()
     {
         SerializerSettings = new JsonSerializerSettings
@@ -45,6 +39,16 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
             NullValueHandling = NullValueHandling.Ignore,
         };
     }
+
+    /// <summary>
+    /// Serialized option. Only change value at the begining of the process
+    /// </summary>
+    public static JsonSerializerSettings SerializerSettings { get; set; }
+    /// <summary>
+    /// Deserialized option. Only change value at the begining of the process
+    /// </summary>
+    public static JsonSerializerSettings DeserializerSettings { get; set; }
+
     /// <summary>
     /// 
     /// </summary>
@@ -68,21 +72,38 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
     public SerializerType Type => SerializerType.NewtonSoft;
 
     /// <inheritdoc />
-    public object AddNode(object? data, string name, object value)
+    public string GetName(object data)
     {
-        var aux = data as JObject ?? new JObject();
-
-        aux.Add(name, JToken.FromObject(value));
-        return aux;
+        return data switch
+        {
+            JProperty property => property.Name,
+            _ => throw new NotSupportedException("Can't iterate supported object JProperty"),
+        };
     }
     /// <inheritdoc />
-    public object AddNode(object? data, KeyValuePair<string, object>[] values)
+    public TokenType GetJTokenType(object data)
     {
-        var aux = data as JObject ?? new JObject();
+        if (data is not JToken token)
+            throw new NotSupportedException("Can't iterate supported object JProperty");
 
-        foreach (var item in values)
-            aux.Add(item.Key, JToken.FromObject(item.Value));
-        return aux;
+        return token.Type switch
+        {
+            Newtonsoft.Json.Linq.JTokenType.Array => Json.TokenType.Array,
+            Newtonsoft.Json.Linq.JTokenType.Object => Json.TokenType.Object,
+            Newtonsoft.Json.Linq.JTokenType.String => Json.TokenType.String,
+            Newtonsoft.Json.Linq.JTokenType.Null => Json.TokenType.Null,
+            Newtonsoft.Json.Linq.JTokenType.Undefined => Json.TokenType.Undefined,
+            _ => Json.TokenType.Undefined,
+        };
+    }
+    /// <inheritdoc />
+    public IEnumerable<object> GetEnumerable(object data)
+    {
+        return data switch
+        {
+            JToken jToken => new JTokenEnumerable(jToken),
+            _ => throw new NotSupportedException("Can't iterate supported object JObject, JToken"),
+        };
     }
 
     /// <inheritdoc />
@@ -94,9 +115,9 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
         return data switch
         {
             string body => Deserialize<T>(body),
-            JObject body => body.ToObject<T>(),
+            JToken body => body.ToObject<T>(),
             T body => body,
-            _ => throw new NotSupportedException()
+            _ => throw new NotSupportedException("Don't allow cast this type of object allowed types are string, JToken or T"),
         };
     }
     /// <inheritdoc />
@@ -112,6 +133,13 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
         if (string.IsNullOrWhiteSpace(payload))
             return default;
         return JsonConvert.DeserializeObject(payload!, eventType, _deserialize);
+    }
+    /// <inheritdoc />
+    public string? Serialize(object? data)
+    {
+        if (data is null)
+            return null;
+        return JsonConvert.SerializeObject(data, _serialize);
     }
 
     /// <inheritdoc />
@@ -159,15 +187,6 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
         return jObject;
     }
     
-
-    /// <inheritdoc />
-    public string? Serialize(object? data)
-    {
-        if (data is null)
-            return null;
-        return JsonConvert.SerializeObject(data, _serialize);
-    }
-
     /// <inheritdoc />
     public IDictionary<string, string?>? ToKeyValue(object? obj, string? prefix = null)
     {
@@ -194,10 +213,60 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
         if (jValue?.Value == null)
             return null;
 
-        var value = jValue?.Type == JTokenType.Date ? jValue?.ToString("o", CultureInfo.InvariantCulture) : jValue?.ToString(CultureInfo.InvariantCulture);
+        var value = jValue?.Type == Newtonsoft.Json.Linq.JTokenType.Date ? jValue?.ToString("o", CultureInfo.InvariantCulture) : jValue?.ToString(CultureInfo.InvariantCulture);
         return new Dictionary<string, string?>
         {
             [token.Path] = value
         };
     }
+
+    /// <inheritdoc />
+    public object AddNode(object? data, string name, object value)
+    {
+        var aux = data as JObject ?? new JObject();
+
+        aux.Add(name, JToken.FromObject(value));
+        return aux;
+    }
+    /// <inheritdoc />
+    public object AddNode(object? data, KeyValuePair<string, object>[] values)
+    {
+        var aux = data as JObject ?? new JObject();
+
+        foreach (var item in values)
+            aux.Add(item.Key, JToken.FromObject(item.Value));
+        return aux;
+    }
+
+    #region Nested Classes
+    /// <summary>
+    /// Return enumerable struct
+    /// </summary>
+    public sealed class JTokenEnumerable : IEnumerable<object>
+    {
+        private readonly JToken? _jToken;
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="jToken"></param>
+        public JTokenEnumerable(JToken? jToken)
+        {
+            _jToken = jToken;
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        public IEnumerator<object> GetEnumerator()
+        {
+            var children = _jToken?.Children() ?? Enumerable.Empty<object>();
+            foreach (var item in children)
+                yield return item;
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    }
+    #endregion
 }

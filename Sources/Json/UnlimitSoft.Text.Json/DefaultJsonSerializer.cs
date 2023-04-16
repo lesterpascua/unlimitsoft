@@ -70,26 +70,19 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
     /// <inheritdoc />
     public SerializerType Type => SerializerType.TextJson;
 
-    /// <inheritdoc />
-    public object AddNode(object? data, string name, object value)
+    public string GetName(object data)
     {
-        var dictionary = GetFromJsonElement(data);
-
-        dictionary.Add(name, value);
-        var jsonWithProperty = JsonSerializer.Serialize(dictionary, _serialize);
-
-        return JsonSerializer.Deserialize<object>(jsonWithProperty, _deserialize)!;
+        throw new NotImplementedException();
     }
-    /// <inheritdoc />
-    public object AddNode(object? data, KeyValuePair<string, object>[] values)
+
+    public TokenType GetJTokenType(object data)
     {
-        var dictionary = GetFromJsonElement(data);
+        throw new NotImplementedException();
+    }
 
-        foreach (var item in values)
-            dictionary.Add(item.Key, item.Value);
-        var jsonWithProperty = JsonSerializer.Serialize(dictionary, _serialize);
-
-        return JsonSerializer.Deserialize<object>(jsonWithProperty, _deserialize)!;
+    public IEnumerable<object> GetEnumerable(object data)
+    {
+        throw new NotImplementedException();
     }
 
     /// <inheritdoc />
@@ -123,7 +116,13 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
 
         return JsonSerializer.Deserialize(payload!, eventType, _deserialize);
     }
-
+    /// <inheritdoc />
+    public string? Serialize(object? data)
+    {
+        if (data is null)
+            return null;
+        return JsonSerializer.Serialize(data, _serialize);
+    }
 
     /// <inheritdoc />
     public T? GetTokenValue<T>(object? token)
@@ -163,13 +162,6 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
             token = property;
         }
         return token;
-    }
-    /// <inheritdoc />
-    public string? Serialize(object? data)
-    {
-        if (data is null)
-            return null;
-        return JsonSerializer.Serialize(data, _serialize);
     }
 
     /// <inheritdoc />
@@ -218,6 +210,28 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
 
         data[prefix] = token.ToString();
         return data;
+    }
+
+    /// <inheritdoc />
+    public object AddNode(object? data, string name, object value)
+    {
+        var dictionary = GetFromJsonElement(data);
+
+        dictionary.Add(name, value);
+        var jsonWithProperty = JsonSerializer.Serialize(dictionary, _serialize);
+
+        return JsonSerializer.Deserialize<object>(jsonWithProperty, _deserialize)!;
+    }
+    /// <inheritdoc />
+    public object AddNode(object? data, KeyValuePair<string, object>[] values)
+    {
+        var dictionary = GetFromJsonElement(data);
+
+        foreach (var item in values)
+            dictionary.Add(item.Key, item.Value);
+        var jsonWithProperty = JsonSerializer.Serialize(dictionary, _serialize);
+
+        return JsonSerializer.Deserialize<object>(jsonWithProperty, _deserialize)!;
     }
 
     #region Private Methods
