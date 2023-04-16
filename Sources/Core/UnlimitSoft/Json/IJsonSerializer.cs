@@ -15,6 +15,38 @@ public interface IJsonSerializer
     /// </summary>
     SerializerType Type { get; }
 
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="_"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    /// <exception cref="NotSupportedException"></exception>
+    string GetName(object data);
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="_"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    /// <exception cref="NotSupportedException"></exception>
+    TokenType GetJTokenType(object data);
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="_"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    IEnumerable<object> GetEnumerable(object data);
+
+    /// <summary>
+    /// Verify if the object is of type T
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    T? Cast<T>(object? data);
     /// <summary>
     /// Serialize object into json. If set null the result will be a null string.
     /// </summary>
@@ -37,14 +69,6 @@ public interface IJsonSerializer
     object? Deserialize(Type type, string? payload);
 
     /// <summary>
-    /// Verify if the object is of type T
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    /// <param name="data"></param>
-    /// <returns></returns>
-    T? Cast<T>(object? data);
-
-    /// <summary>
     /// Get the value asociate to the token
     /// </summary>
     /// <typeparam name="T"></typeparam>
@@ -65,6 +89,7 @@ public interface IJsonSerializer
     /// <param name="data"></param>
     /// <param name="path"></param>
     object? GetToken(object? data, params string[] path);
+
     /// <summary>
     /// Convert objeto to a dictionary key value folow the asp.net binding method..
     /// </summary>
@@ -72,6 +97,7 @@ public interface IJsonSerializer
     /// <param name="prefix"></param>
     /// <returns></returns>
     IDictionary<string, string?>? ToKeyValue(object obj, string? prefix = null);
+
     /// <summary>
     /// Add extra value
     /// </summary>
