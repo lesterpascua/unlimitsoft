@@ -68,16 +68,16 @@ public class JsonEventRepositoryBenchmark
     }
 
 
-    //[Benchmark]
-    //public async Task GetEventWithOptimization()
-    //{
-    //    var data = await _optimize.GetEventAsync(_id);
-    //}
-    //[Benchmark]
-    //public async Task GetEventWithOutOptimization()
-    //{
-    //    var data = await _noOptimize.GetEventAsync(_id);
-    //}
+    [Benchmark]
+    public async Task GetEventWithOptimization()
+    {
+        var data = await _optimize.GetEventAsync(_id);
+    }
+    [Benchmark]
+    public async Task GetEventWithOutOptimization()
+    {
+        var data = await _noOptimize.GetEventAsync(_id);
+    }
 
     [Benchmark]
     public async Task GetAllSourceIdAsyncWithOptimization()
@@ -94,31 +94,31 @@ public class JsonEventRepositoryBenchmark
             ;
     }
 
-    //[Benchmark]
-    //public async Task GetWithOptimization()
-    //{
-    //    var data = await _optimize.GetAsync(_sourceId, 0);
-    //}
-    //[Benchmark]
-    //public async Task GetWithOutOptimization()
-    //{
-    //    var data = await _noOptimize.GetAsync(_sourceId, 0);
-    //}
+    [Benchmark]
+    public async Task GetWithOptimization()
+    {
+        var data = await _optimize.GetAsync(_sourceId, 0);
+    }
+    [Benchmark]
+    public async Task GetWithOutOptimization()
+    {
+        var data = await _noOptimize.GetAsync(_sourceId, 0);
+    }
 
-    //[Benchmark]
-    //public async Task GetNonPublishedEventsWithOptimization()
-    //{
-    //    var data = await _optimize.GetNonPublishedEventsAsync(new Web.Model.Paging { Page = 0, PageSize = 10 });
-    //    foreach (var _ in data)
-    //        ;
-    //}
-    //[Benchmark]
-    //public async Task GetNonPublishedEventsWithOutOptimization()
-    //{
-    //    var data = await _noOptimize.GetNonPublishedEventsAsync(new Web.Model.Paging { Page = 0, PageSize = 10 });
-    //    foreach (var _ in data)
-    //        ;
-    //}
+    [Benchmark]
+    public async Task GetNonPublishedEventsWithOptimization()
+    {
+        var data = await _optimize.GetNonPublishedEventsAsync(new Web.Model.Paging { Page = 0, PageSize = 10 });
+        foreach (var _ in data)
+            ;
+    }
+    [Benchmark]
+    public async Task GetNonPublishedEventsWithOutOptimization()
+    {
+        var data = await _noOptimize.GetNonPublishedEventsAsync(new Web.Model.Paging { Page = 0, PageSize = 10 });
+        foreach (var _ in data)
+            ;
+    }
 
     #region Nested Classes
     private sealed class MyDbContext : DbContext
