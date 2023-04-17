@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Xml.Linq;
 using UnlimitSoft.Json;
 
 namespace UnlimitSoft.Newtonsoft;
@@ -212,7 +213,7 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
     {
         var aux = data as JObject ?? new JObject();
 
-        aux.Add(name, JToken.FromObject(value));
+        aux[name] = JToken.FromObject(value);
         return aux;
     }
     /// <inheritdoc />
@@ -221,7 +222,7 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
         var aux = data as JObject ?? new JObject();
 
         foreach (var item in values)
-            aux.Add(item.Key, JToken.FromObject(item.Value));
+            aux[item.Key] = JToken.FromObject(item.Value);
         return aux;
     }
 
