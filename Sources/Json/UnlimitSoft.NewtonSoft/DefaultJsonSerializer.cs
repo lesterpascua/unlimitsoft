@@ -8,7 +8,7 @@ using System.Globalization;
 using System.Linq;
 using UnlimitSoft.Json;
 
-namespace UnlimitSoft.NewtonSoft;
+namespace UnlimitSoft.Newtonsoft;
 
 
 /// <summary>
@@ -81,19 +81,20 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
         };
     }
     /// <inheritdoc />
-    public TokenType GetJTokenType(object data)
+    public TokenType GetTokenType(object data)
     {
         if (data is not JToken token)
             throw new NotSupportedException("Can't iterate supported object JProperty");
 
         return token.Type switch
         {
-            Newtonsoft.Json.Linq.JTokenType.Array => Json.TokenType.Array,
-            Newtonsoft.Json.Linq.JTokenType.Object => Json.TokenType.Object,
-            Newtonsoft.Json.Linq.JTokenType.String => Json.TokenType.String,
-            Newtonsoft.Json.Linq.JTokenType.Null => Json.TokenType.Null,
-            Newtonsoft.Json.Linq.JTokenType.Undefined => Json.TokenType.Undefined,
-            _ => Json.TokenType.Undefined,
+            JTokenType.Array => TokenType.Array,
+            JTokenType.Object => TokenType.Object,
+            JTokenType.Integer => TokenType.Number,
+            JTokenType.String => TokenType.String,
+            JTokenType.Null => TokenType.Null,
+            JTokenType.Undefined => TokenType.Undefined,
+            _ => TokenType.Undefined,
         };
     }
     /// <inheritdoc />
@@ -154,21 +155,7 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
     /// <inheritdoc />
     public T? GetValue<T>(object? data, params string[] path)
     {
-        if (data is null)
-            return default;
-
-        var jObject = (JToken)data;
-        for (int i = 0; i < path.Length; i++)
-        {
-            if (jObject is null)
-                return default;
-
-            jObject = jObject[path[i]];
-        }
-        if (jObject is null)
-            return default;
-
-        return jObject.Value<T>();
+        return GetTokenValue<T>(GetToken(data, path));
     }
     /// <inheritdoc />
     public object? GetToken(object? data, params string[] path)
@@ -213,7 +200,7 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
         if (jValue?.Value == null)
             return null;
 
-        var value = jValue?.Type == Newtonsoft.Json.Linq.JTokenType.Date ? jValue?.ToString("o", CultureInfo.InvariantCulture) : jValue?.ToString(CultureInfo.InvariantCulture);
+        var value = jValue?.Type == global::Newtonsoft.Json.Linq.JTokenType.Date ? jValue?.ToString("o", CultureInfo.InvariantCulture) : jValue?.ToString(CultureInfo.InvariantCulture);
         return new Dictionary<string, string?>
         {
             [token.Path] = value

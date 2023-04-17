@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Threading;
 using UnlimitSoft.Json;
 
 namespace UnlimitSoft.Text.Json;
@@ -70,19 +73,41 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
     /// <inheritdoc />
     public SerializerType Type => SerializerType.TextJson;
 
+    /// <inheritdoc />
     public string GetName(object data)
     {
-        throw new NotImplementedException();
+        return data switch
+        {
+            JsonProperty property => property.Name,
+            _ => throw new NotSupportedException("Can't iterate supported object JsonProperty"),
+        };
     }
-
-    public TokenType GetJTokenType(object data)
+    /// <inheritdoc />
+    public TokenType GetTokenType(object data)
     {
-        throw new NotImplementedException();
-    }
+        if (data is not JsonElement token)
+            throw new NotSupportedException("Can't iterate supported object JsonElement");
 
+        return token.ValueKind switch
+        {
+            JsonValueKind.Array => TokenType.Array,
+            JsonValueKind.Object => TokenType.Object,
+            JsonValueKind.Number => TokenType.Number,
+            JsonValueKind.String => TokenType.String,
+            JsonValueKind.Null => TokenType.Null,
+            JsonValueKind.Undefined => TokenType.Undefined,
+            _ => TokenType.Undefined,
+        };
+    }
+    /// <inheritdoc />
     public IEnumerable<object> GetEnumerable(object data)
     {
-        throw new NotImplementedException();
+        return data switch
+        {
+            JsonElement json => new JElementEnumerable(json),
+            JsonProperty json => new object[] { json.Value },
+            _ => throw new NotSupportedException("Can't iterate supported object JObject, JToken"),
+        };
     }
 
     /// <inheritdoc />
@@ -125,26 +150,52 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
     }
 
     /// <inheritdoc />
-    public T? GetTokenValue<T>(object? token)
-    {
-        throw new NotImplementedException();
-    }
-    /// <inheritdoc />
-    public T? GetValue<T>(object? data, params string[] path)
+    public T? GetTokenValue<T>(object? data)
     {
         if (data is null)
             return default;
 
+        var type = typeof(T);
         var token = (JsonElement)data;
-        ReadOnlySpan<string> span = path;
-        for (int i = 0; i < span.Length; i++)
+        return System.Type.GetTypeCode(type) switch
         {
-            if (token.TryGetProperty(span[i], out var property) == false)
-                return default;
+            TypeCode.Object => (T)data,
+            TypeCode.Boolean => (T?)(object?)token.GetBoolean(),
+            TypeCode.SByte => (T?)(object?)token.GetSByte(),
+            TypeCode.Int16 => (T?)(object?)token.GetInt16(),
+            TypeCode.Int32 => (T)(object)token.GetInt32(),
+            TypeCode.Int64 => (T)(object)token.GetInt64(),
+            TypeCode.Byte => (T?)(object?)token.GetByte(),
+            TypeCode.UInt16 => (T?)(object?)token.GetUInt16(),
+            TypeCode.UInt32 => (T?)(object?)token.GetUInt32(),
+            TypeCode.UInt64 => (T?)(object?)token.GetUInt64(),
+            TypeCode.String => (T?)(object?)token.GetString(),
+            TypeCode.Single => (T?)(object?)token.GetSingle(),
+            TypeCode.Double => (T?)(object?)token.GetDouble(),
+            TypeCode.Decimal => (T?)(object?)token.GetDecimal(),
+            
+            _ => GetValue(type, token)
+        };
 
-            token = property;
+        // ====================================================================================================
+        static T? GetValue(Type type, JsonElement token)
+        {
+            if (type == typeof(JsonElement))
+                return (T)(object)token;
+            if (type == typeof(Guid))
+                return (T)(object)token.GetGuid();
+            if (type == typeof(DateTime))
+                return (T)(object)token.GetDateTime();
+            if (type == typeof(DateTimeOffset))
+                return (T)(object)token.GetDateTimeOffset();
+
+            throw new NotSupportedException("This value is not supported");
         }
-        return default; /*token.GetRawText()*/;
+    }
+    /// <inheritdoc />
+    public T? GetValue<T>(object? data, params string[] path)
+    {
+        return GetTokenValue<T>(GetToken(data, path));
     }
     /// <inheritdoc />
     public object? GetToken(object? data, params string[] path)
@@ -249,6 +300,34 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
             dictionary = JsonSerializer.Deserialize<Dictionary<string, object>>(json, _deserialize);
         }
         return dictionary ?? new Dictionary<string, object>();
+    }
+    #endregion
+
+    #region Nested Classes
+    private sealed class JElementEnumerable : IEnumerable<object>
+    {
+        private readonly JsonElement _json;
+
+        public JElementEnumerable(JsonElement json)
+        {
+            _json = json;
+        }
+
+        public IEnumerator<object> GetEnumerator()
+        {
+            if (_json.ValueKind == JsonValueKind.Array)
+            {
+                foreach (var entry in _json.EnumerateArray())
+                    yield return entry;
+            }
+            else
+            {
+                foreach (var entry in _json.EnumerateObject())
+                    yield return entry;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
     }
     #endregion
 }

@@ -23,6 +23,10 @@ public enum TokenType
     /// </summary>
     String = 4,
     /// <summary>
+    /// Token is integer element
+    /// </summary>
+    Number = 5,
+    /// <summary>
     /// Token is not defined
     /// </summary>
     Undefined = 50
