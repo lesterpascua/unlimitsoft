@@ -156,7 +156,13 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
             return default;
 
         var type = typeof(T);
-        var token = (JsonElement)data;
+        var token = data switch
+        {
+            JsonElement e => e,
+            JsonProperty p => p.Value,
+            _ => throw new NotSupportedException("Only allow values of type JsonElement or JsonProperty")
+        };
+
         return System.Type.GetTypeCode(type) switch
         {
             TypeCode.Object => (T)data,
