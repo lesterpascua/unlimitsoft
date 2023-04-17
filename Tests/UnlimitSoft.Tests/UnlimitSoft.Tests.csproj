@@ -31,6 +31,7 @@
     <ProjectReference Include="..\..\Sources\Core\UnlimitSoft\UnlimitSoft.csproj" />
     <ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.CQRS\UnlimitSoft.CQRS.csproj" />
     <ProjectReference Include="..\..\Sources\Data\UnlimitSoft.Data.EntityFramework\UnlimitSoft.Data.EntityFramework.csproj" />
+    <ProjectReference Include="..\..\Sources\Json\UnlimitSoft.NewtonSoft\UnlimitSoft.NewtonSoft.csproj" />
     <ProjectReference Include="..\..\Sources\Json\UnlimitSoft.Text.Json\UnlimitSoft.Text.Json.csproj" />
   </ItemGroup>
 
