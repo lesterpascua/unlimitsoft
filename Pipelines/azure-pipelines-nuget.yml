@@ -21,7 +21,7 @@ variables:
   buildConfiguration: 'Release'
   restoreBuildProjects: Sources/**/*.csproj
 
-name: 3.2.0$(Rev:.r)
+name: 3.3.0-preview.3.3.0.$(Rev:.r)
 
 steps:
 - task: UseDotNet@2

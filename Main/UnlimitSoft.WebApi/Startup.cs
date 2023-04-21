@@ -87,7 +87,7 @@ public class Startup
             out string[] corsOrigin,
             out DatabaseOptions databaseSettings,
             out AuthorizeOptions authorizeOption,
-            out RequestLoggerAttribute.Settings requestLoggerSettings,
+            out RequestLoggerAttribute.Options requestLoggerSettings,
             out ValidationModelAttribute.Settings validationModelSettings,
             out TransformResponseAttributeOptions transformResponseOptions);
 

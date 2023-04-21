@@ -56,7 +56,7 @@ public static class IServiceCollectionExtensions
         out string[] corsOrigin,
         out DatabaseOptions databaseSettings,
         out AuthorizeOptions authorizeOptions,
-        out RequestLoggerAttribute.Settings filterRequestLoggerSettings,
+        out RequestLoggerAttribute.Options filterRequestLoggerSettings,
         out ValidationModelAttribute.Settings filterValidationSettings,
         out TransformResponseAttributeOptions filterTransformResponseOptions
     )
@@ -74,7 +74,7 @@ public static class IServiceCollectionExtensions
         services.Configure<DatabaseOptions>(databaseSection);
         services.Configure<AuthorizeOptions>(authorizeSection);
 
-        services.Configure<RequestLoggerAttribute.Settings>(filterRequestLoggerSection);
+        services.Configure<RequestLoggerAttribute.Options>(filterRequestLoggerSection);
         services.Configure<ValidationModelAttribute.Settings>(filterValidationSection);
         services.Configure<TransformResponseAttributeOptions>(filterTransformResponseSection);
 
@@ -82,7 +82,7 @@ public static class IServiceCollectionExtensions
         databaseSettings = databaseSection.Get<DatabaseOptions>()!;
         authorizeOptions = authorizeSection.Get<AuthorizeOptions>()!;
 
-        filterRequestLoggerSettings = filterRequestLoggerSection.Get<RequestLoggerAttribute.Settings>()!;
+        filterRequestLoggerSettings = filterRequestLoggerSection.Get<RequestLoggerAttribute.Options>()!;
         filterValidationSettings = filterValidationSection.Get<ValidationModelAttribute.Settings>()!;
         filterTransformResponseOptions = filterTransformResponseSection.Get<TransformResponseAttributeOptions>()!;
 
