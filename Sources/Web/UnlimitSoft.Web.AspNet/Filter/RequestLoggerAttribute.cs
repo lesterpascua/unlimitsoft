@@ -75,9 +75,9 @@ public class RequestLoggerAttribute : ActionFilterAttribute
                 var param = context.ActionDescriptor.Parameters.First(p => p.Name == arg.Key);
                 if (param is ControllerParameterDescriptor descriptor)
                 {
-                    if (descriptor.ParameterInfo.IsDefined(typeof(HttpGetAttribute), true))
+                    if (descriptor.ParameterInfo.IsDefined(typeof(FromQueryAttribute), false))
                         return false;
-                    if (_options.Ignore is not null && descriptor.ParameterInfo.IsDefined(_options.Ignore, true))
+                    if (_options.Ignore is not null && descriptor.ParameterInfo.IsDefined(_options.Ignore, false))
                         return false;
                 };
                 return true;
