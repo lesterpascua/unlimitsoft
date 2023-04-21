@@ -66,9 +66,6 @@ public class RequestLoggerAttribute : ActionFilterAttribute
 
     private IEnumerable<KeyValuePair<string, object?>> GetActionArguments(ActionExecutingContext context)
     {
-        if (_options.Ignore is null)
-            return context.ActionArguments.Where(a => a.Value is not null);
-
         return context.ActionArguments
             .Where(arg =>
             {
@@ -76,11 +73,14 @@ public class RequestLoggerAttribute : ActionFilterAttribute
                     return false;
 
                 var param = context.ActionDescriptor.Parameters.First(p => p.Name == arg.Key);
-                return param switch
+                if (param is ControllerParameterDescriptor descriptor)
                 {
-                    ControllerParameterDescriptor descriptor => descriptor.ParameterInfo.IsDefined(_options.Ignore, true) == false,
-                    _ => true
+                    if (descriptor.ParameterInfo.IsDefined(typeof(HttpGetAttribute), true))
+                        return false;
+                    if (_options.Ignore is not null && descriptor.ParameterInfo.IsDefined(_options.Ignore, true))
+                        return false;
                 };
+                return true;
             });
     }
 
