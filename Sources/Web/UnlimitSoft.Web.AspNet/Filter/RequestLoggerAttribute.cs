@@ -1,12 +1,13 @@
-﻿using Microsoft.AspNetCore.Mvc.Filters;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Controllers;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using UnlimitSoft.Web.Security.Claims;
-using System;
-using Microsoft.AspNetCore.Mvc;
-using System.Linq;
 using Microsoft.Extensions.Primitives;
+using System;
 using System.Collections.Generic;
+using System.Linq;
+using UnlimitSoft.Web.Security.Claims;
 
 namespace UnlimitSoft.Web.AspNet.Filter;
 
@@ -16,7 +17,7 @@ namespace UnlimitSoft.Web.AspNet.Filter;
 /// </summary>
 public class RequestLoggerAttribute : ActionFilterAttribute
 {
-    private readonly Settings _settings;
+    private readonly Options _options;
     private readonly ILogger<RequestLoggerAttribute> _logger;
 
     /// <summary>
@@ -24,16 +25,16 @@ public class RequestLoggerAttribute : ActionFilterAttribute
     /// </summary>
     /// <param name="options"></param>
     /// <param name="logger"></param>
-    public RequestLoggerAttribute(IOptions<Settings> options, ILogger<RequestLoggerAttribute> logger)
+    public RequestLoggerAttribute(IOptions<Options> options, ILogger<RequestLoggerAttribute> logger)
     {
-        _settings = options.Value;
+        _options = options.Value;
         _logger = logger;
     }
 
     /// <inheritdoc />
     public override void OnActionExecuting(ActionExecutingContext context)
     {
-        if (_settings.LogLevel == LogLevel.None || !_logger.IsEnabled(_settings.LogLevel))
+        if (_options.LogLevel == LogLevel.None || !_logger.IsEnabled(_options.LogLevel))
             return;
 
         var httpContext = context.HttpContext;
@@ -44,37 +45,64 @@ public class RequestLoggerAttribute : ActionFilterAttribute
             sub = subGuid.ToString();
 
         Dictionary<string, StringValues>? headers = null;
-        if (_settings.AddHeader)
+        if (_options.AddHeader)
         {
             headers = context.HttpContext.Request.Headers?.ToDictionary(k => k.Key, v => v.Value);
-            if (_settings.Transform is not null && headers is not null)
-                headers = _settings.Transform(headers);
+            if (_options.Transform is not null && headers is not null)
+                headers = _options.Transform(headers);
         }
 
+        var actionArguments = GetActionArguments(context);
         var url = $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}";
-        _logger.Log(_settings.LogLevel, "Request from {Address}, {Method} {Url} Body = {@Arguments}, Header = {@Headers}",
+
+        _logger.Log(_options.LogLevel, "Request from {Address}, {Method} {Url} Body = {@Arguments}, Header = {@Headers}",
             httpContext.GetIpAddress(),
             request.Method,
             url,
-            context.ActionArguments,
+            actionArguments,
             headers
         );
     }
+
+    private IEnumerable<KeyValuePair<string, object?>> GetActionArguments(ActionExecutingContext context)
+    {
+        if (_options.Ignore is null)
+            return context.ActionArguments.Where(a => a.Value is not null);
+
+        return context.ActionArguments
+            .Where(arg =>
+            {
+                if (arg.Value is null)
+                    return false;
+
+                var param = context.ActionDescriptor.Parameters.First(p => p.Name == arg.Key);
+                return param switch
+                {
+                    ControllerParameterDescriptor descriptor => descriptor.ParameterInfo.IsDefined(_options.Ignore, true) == false,
+                    _ => true
+                };
+            });
+    }
+
     /// <inheritdoc />
     public override void OnResultExecuted(ResultExecutedContext context)
     {
-        if (_settings.LogLevel == LogLevel.None || !_logger.IsEnabled(_settings.LogLevel))
+        if (_options.LogLevel == LogLevel.None || !_logger.IsEnabled(_options.LogLevel))
             return;
 
-        _logger.Log(_settings.LogLevel, "Response {@Response}", context.Result is ObjectResult result ? result.Value : context.Result);
+        _logger.Log(_options.LogLevel, "Response {@Response}", context.Result is ObjectResult result ? result.Value : context.Result);
     }
 
     #region Nested Classes
     /// <summary>
     /// 
     /// </summary>
-    public class Settings
+    public sealed class Options
     {
+        /// <summary>
+        /// Specified attribute type to ignode some parameters into the logger. All parameter with this attribute will be ignored and not logger
+        /// </summary>
+        public Type? Ignore { get; set; }
         /// <summary>
         /// 
         /// </summary>
