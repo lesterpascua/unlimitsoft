@@ -13,12 +13,21 @@ namespace UnlimitSoft.Web.AspNet.Filter;
 
 
 /// <summary>
-/// 
+/// Log the request and the response of the API 
 /// </summary>
-public class RequestLoggerAttribute : ActionFilterAttribute
+public sealed class RequestLoggerAttribute : ActionFilterAttribute
 {
     private readonly Options _options;
     private readonly ILogger<RequestLoggerAttribute> _logger;
+
+    /// <summary>
+    /// Template used for response
+    /// </summary>
+    public const string ResponseTemplate = "API Response {@Response}";
+    /// <summary>
+    /// Template used to log request
+    /// </summary>
+    public const string RequestTemplate = "API Request from {Address}, {Method} {Url} Body = {@Arguments}, Header = {@Headers}";
 
     /// <summary>
     /// 
@@ -31,6 +40,14 @@ public class RequestLoggerAttribute : ActionFilterAttribute
         _logger = logger;
     }
 
+    /// <inheritdoc />
+    public override void OnResultExecuted(ResultExecutedContext context)
+    {
+        if (_options.LogLevel == LogLevel.None || !_logger.IsEnabled(_options.LogLevel))
+            return;
+
+        _logger.Log(_options.LogLevel, ResponseTemplate, context.Result is ObjectResult result ? result.Value : context.Result);
+    }
     /// <inheritdoc />
     public override void OnActionExecuting(ActionExecutingContext context)
     {
@@ -55,15 +72,10 @@ public class RequestLoggerAttribute : ActionFilterAttribute
         var actionArguments = GetActionArguments(context);
         var url = $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}";
 
-        _logger.Log(_options.LogLevel, "Request from {Address}, {Method} {Url} Body = {@Arguments}, Header = {@Headers}",
-            httpContext.GetIpAddress(),
-            request.Method,
-            url,
-            actionArguments,
-            headers
-        );
+        _logger.Log(_options.LogLevel, RequestTemplate, httpContext.GetIpAddress(), request.Method, url, actionArguments, headers);
     }
 
+    #region Private Methods
     private IEnumerable<KeyValuePair<string, object?>> GetActionArguments(ActionExecutingContext context)
     {
         return context.ActionArguments
@@ -83,15 +95,7 @@ public class RequestLoggerAttribute : ActionFilterAttribute
                 return true;
             });
     }
-
-    /// <inheritdoc />
-    public override void OnResultExecuted(ResultExecutedContext context)
-    {
-        if (_options.LogLevel == LogLevel.None || !_logger.IsEnabled(_options.LogLevel))
-            return;
-
-        _logger.Log(_options.LogLevel, "Response {@Response}", context.Result is ObjectResult result ? result.Value : context.Result);
-    }
+    #endregion
 
     #region Nested Classes
     /// <summary>

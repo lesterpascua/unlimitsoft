@@ -24,7 +24,7 @@ public sealed class SemaphoreSlimSysLock : ISysLock
     }
 
     /// <inheritdoc />
-    public async ValueTask<ILockHandler> AdquiereAsync(string name, TimeSpan? timeOut = null, CancellationToken ct = default)
+    public async ValueTask<ILockHandler> AcquireAsync(string name, TimeSpan? timeOut = null, CancellationToken ct = default)
     {
         var semaphore = _locks.GetOrAdd(name, CreateNew);
         return await WaitAsync(semaphore, timeOut, ct);

@@ -16,7 +16,7 @@ namespace UnlimitSoft.Bus.Hangfire;
 /// <summary>
 /// 
 /// </summary>
-public class HangfireCommandBus : ICommandBus
+public sealed class HangfireCommandBus : ICommandBus
 {
     private readonly bool _incIfRetryDetect;
     private readonly IBackgroundJobClient _client;
@@ -49,12 +49,7 @@ public class HangfireCommandBus : ICommandBus
     /// <param name="preeSendCommand">Before enqueue the command execute this function.</param>
     /// <param name="incIfRetryDetect">Indicate increment the retry command counter if detect a retry.</param>
     /// <param name="logger"></param>
-    public HangfireCommandBus(
-        IBackgroundJobClient client,
-        Func<ICommand, Task>? preeSendCommand = null,
-        bool incIfRetryDetect = true,
-        ILogger<HangfireCommandBus>? logger = null
-    )
+    public HangfireCommandBus(IBackgroundJobClient client, Func<ICommand, Task>? preeSendCommand = null, bool incIfRetryDetect = true, ILogger<HangfireCommandBus>? logger = null)
     {
         _client = client;
         _preeSend = preeSendCommand;
@@ -121,9 +116,9 @@ public class HangfireCommandBus : ICommandBus
     /// <param name="command"></param>
     /// <param name="props"></param>
     /// <returns></returns>
-    private static string SerializeWithoutProps(ICommand command, CommandProps? props)
+    private static string SerializeWithoutProps(ICommand command, CommandProps props)
     {
-        command.SetProps(null);
+        command.SetProps(CommandProps.Empty);
         var json = JsonSerializer.Serialize<object>(command, _serializeJsonSettings);
         command.SetProps(props);
         return json;

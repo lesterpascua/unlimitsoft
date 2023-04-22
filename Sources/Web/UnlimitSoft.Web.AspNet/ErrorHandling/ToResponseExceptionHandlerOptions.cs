@@ -10,6 +10,7 @@ using System.Net;
 using System.Threading.Tasks;
 using UnlimitSoft.Json;
 using UnlimitSoft.Message;
+using UnlimitSoft.Web.AspNet.Filter;
 
 namespace UnlimitSoft.Web.AspNet.ErrorHandling;
 
@@ -25,6 +26,7 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
     private readonly ILogger<ToResponseExceptionHandlerOptions>? _logger;
     private readonly Func<HttpContext, Dictionary<string, string[]>>? _errorBody;
     private readonly string _contentType;
+    private readonly LogLevel _logLevel;
     private readonly IJsonSerializer _serializer;
 
 
@@ -33,6 +35,7 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
     /// </summary>
     /// <param name="serializer"></param>
     /// <param name="showExceptionInfo"></param>
+    /// <param name="level">Level of the log.</param>
     /// <param name="handlers"></param>
     /// <param name="fatalErrorCode"></param>
     /// <param name="errorBody"></param>
@@ -41,6 +44,7 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
     public ToResponseExceptionHandlerOptions(
         IJsonSerializer serializer,
         bool showExceptionInfo = true,
+        LogLevel level = LogLevel.Information,
         IEnumerable<IExceptionHandler>? handlers = null,
         int fatalErrorCode = -1,
         Func<HttpContext, Dictionary<string, string[]>>? errorBody = null,
@@ -55,45 +59,10 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
         _defaultErrorBody = new Dictionary<string, string[]> { { string.Empty, new string[] { fatalErrorCode.ToString() } } };
         _errorBody = errorBody;
         _contentType = contentType;
+        _logLevel = level;
         ExceptionHandler = ExceptionHandlerInternal;
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="context"></param>
-    /// <returns></returns>
-    private async Task ExceptionHandlerInternal(HttpContext context)
-    {
-        var identity = context.User.Identity;
-#if NET7_0_OR_GREATER
-        var feature = context.Features.GetRequiredFeature<IExceptionHandlerFeature>();
-#else 
-        var feature = context.Features.Get<IExceptionHandlerFeature>() ?? throw new InvalidOperationException($"Feature '{typeof(IExceptionHandlerFeature)}' is not present.");
-#endif
-
-
-        _logger?.LogError(feature!.Error, "User: {Name}, logged in from: {IpAddress}", identity?.Name, context.GetIpAddress());
-        if (_handlers is not null)
-            foreach (var handler in _handlers.Where(x => x.ShouldHandle(context)))
-                await handler.HandleAsync(context);
-
-        var response = GetResponse(context, feature);
-        context.Response.ContentType = _contentType;
-        context.Response.StatusCode = (int)response.Code;
-
-
-        var traceId = context.TraceIdentifier;
-        var correlationId = context.TraceIdentifier;
-        //var isTrusted = _trusted is null || _trusted.IsTrustedRequest(context);
-        //if (isTrusted && context.Request.Headers.TryGetValue(SysContants.HeaderCorrelation, out var correlationFromHeader))
-        //    correlationId = correlationFromHeader;
-        context.Response.Headers.Add(SysContants.HeaderTrace, traceId);
-        context.Response.Headers.Add(SysContants.HeaderCorrelation, correlationId);
-
-        var json = _serializer.Serialize(response)!;
-        await context.Response.WriteAsync(json);
-    }
     /// <summary>
     /// Get response depending of the exception
     /// </summary>
@@ -111,4 +80,45 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
 
         return new Response<object>(HttpStatusCode.InternalServerError, body);
     }
+
+    #region Private Methods
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="context"></param>
+    /// <returns></returns>
+    private async Task ExceptionHandlerInternal(HttpContext context)
+    {
+        var identity = context.User.Identity;
+#if NET7_0_OR_GREATER
+        var feature = context.Features.GetRequiredFeature<IExceptionHandlerFeature>();
+#else 
+        var feature = context.Features.Get<IExceptionHandlerFeature>() ?? throw new InvalidOperationException($"Feature '{typeof(IExceptionHandlerFeature)}' is not present.");
+#endif
+
+        _logger?.LogError(feature!.Error, "User: {Name}, logged in from: {IpAddress}", identity?.Name, context.GetIpAddress());
+        if (_handlers is not null)
+            foreach (var handler in _handlers.Where(x => x.ShouldHandle(context)))
+                await handler.HandleAsync(context);
+
+        var response = GetResponse(context, feature);
+        context.Response.ContentType = _contentType;
+        context.Response.StatusCode = (int)response.Code;
+
+
+        var traceId = context.TraceIdentifier;
+        var correlationId = context.TraceIdentifier;
+        //var isTrusted = _trusted is null || _trusted.IsTrustedRequest(context);
+        //if (isTrusted && context.Request.Headers.TryGetValue(SysContants.HeaderCorrelation, out var correlationFromHeader))
+        //    correlationId = correlationFromHeader;
+        context.Response.Headers.TryAdd(SysContants.HeaderTrace, traceId);
+        context.Response.Headers.TryAdd(SysContants.HeaderCorrelation, correlationId);
+
+        var json = _serializer.Serialize(response);
+        if (json is not null)
+            await context.Response.WriteAsync(json);
+
+        _logger?.Log(_logLevel, RequestLoggerAttribute.ResponseTemplate, response);
+    }
+    #endregion
 }
