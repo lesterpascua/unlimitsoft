@@ -86,24 +86,20 @@ public abstract class JsonMemento<TInterface, TEntity> : IMemento<TInterface>
         for (var i = 0; i < span.Length; i++)
         {
             var eventPayload = span[i];
-            var eventType = _nameResolver.RequireResolver(eventPayload.EventName);
+#else
+        for (var i = 0; i < eventsPayload.Count; i++)
+        {
+            var eventPayload = eventsPayload[i];
+#endif
 
+            var eventType = _nameResolver.RequireResolver(eventPayload.EventName);
             history[i] = FromEvent(eventType, eventPayload.Payload);
         }
-#else
-    for (var i = 0; i < eventsPayload.Count; i++)
-    {
-        var eventPayload = eventsPayload[i];
-        var eventType = _nameResolver.RequireResolver(eventPayload.EventName);
-
-        history[i] = FromEvent(eventType, eventPayload.Payload);
-    }
-#endif
 
         var entity = _factory?.Invoke(history) ?? new TEntity();
         for (var i = 0; i < history.Length; i++)
             history[i].Apply(entity);
         return entity;
     }
-#endregion
+    #endregion
 }
