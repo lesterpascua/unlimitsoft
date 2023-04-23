@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Cors.Infrastructure;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using System.Linq;
+using System.Net;
 using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Web.AspNet;
@@ -43,11 +45,12 @@ public static class HttpContextExtensions
     /// <typeparam name="T"></typeparam>
     /// <param name="result"></param>
     /// <param name="controller"></param>
+    /// <param name="code"></param>
     /// <returns></returns>
-    public static ActionResult<T> ToActionResult<T>(this in Result<T> result, ControllerBase controller)
+    public static ActionResult<T> ToActionResult<T>(this in Result<T> result, ControllerBase controller, HttpStatusCode code = HttpStatusCode.OK)
     {
         if (result.Error is null)
-            return controller.Ok(result.Value);
+            return controller.StatusCode((int)code, result.Value);
         return controller.StatusCode((int)result.Error.Code, result.Error.GetBody());
     }
 }

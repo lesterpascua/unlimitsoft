@@ -38,7 +38,6 @@ public static class InitHelper
 
         var provider = scope.ServiceProvider;
         var unitOfWorkType = typeof(TUnitOfWork);
-        var unitOfWork = (IUnitOfWork)provider.GetRequiredService(unitOfWorkType);
 
         await EntityBuilderUtility.ExecuteSeedAndMigrationAsync(provider, unitOfWorkType: unitOfWorkType, assemblies: seedAssemblies, logger: logger, ct: ct);
         if (setup is not null)
