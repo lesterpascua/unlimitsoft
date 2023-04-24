@@ -1,4 +1,5 @@
 ﻿using System;
+using UnlimitSoft.EventBus.Configuration;
 
 namespace UnlimitSoft.EventBus.DotNetMQ.Configuration;
 
@@ -7,7 +8,7 @@ namespace UnlimitSoft.EventBus.DotNetMQ.Configuration;
 /// 
 /// </summary>
 /// <typeparam name="TAlias"></typeparam>
-public sealed class EventBusOptions<TAlias> : EventBus.Configuration.EventBusOptions<TAlias>
+public sealed class EventBusOptions<TAlias> : EventBusOptions<QueueAlias<TAlias>, TAlias>
     where TAlias : struct, Enum
 {
     /// <summary>

@@ -173,7 +173,7 @@ public static class IServiceCollectionExtensions
     /// <param name="maxConcurrentCalls">Maximun thread for process events.</param>
     /// <returns></returns>
     public static IServiceCollection AddAzureEventBus<TUnitOfWork, TEvent>(this IServiceCollection services,
-        EventBusOptions<QueueIdentifier> options,
+        AzureEventBusOptions<QueueIdentifier> options,
         Func<IServiceProvider, QueueIdentifier, string, object, bool> filter,
         Func<IServiceProvider, QueueIdentifier, string, object, object> transform,
         Action<TEvent>? beforeProcess = null,

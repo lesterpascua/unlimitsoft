@@ -19,7 +19,7 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
     where TAlias : struct, Enum
 {
     private readonly string _endpoint;
-    private readonly QueueAlias<TAlias>[] _queues;
+    private readonly AzureQueueAlias<TAlias>[] _queues;
     private readonly ProcessorCallback<TAlias, ProcessMessageEventArgs> _processor;
     private readonly IJsonSerializer _serializer;
     private readonly int _maxConcurrentCalls;
@@ -40,7 +40,7 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
     /// <param name="logger">Logger used to register process data</param>
     public AzureEventListener(
         string endpoint,
-        IEnumerable<QueueAlias<TAlias>> queues,
+        IEnumerable<AzureQueueAlias<TAlias>> queues,
         ProcessorCallback<TAlias, ProcessMessageEventArgs> processor,
         IJsonSerializer serializer,
         int maxConcurrentCalls = 1,
@@ -105,7 +105,7 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
     /// <param name="entry"></param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException"></exception>
-    protected virtual ServiceBusProcessor CreateProcessorAsync(QueueAlias<TAlias> entry)
+    protected virtual ServiceBusProcessor CreateProcessorAsync(AzureQueueAlias<TAlias> entry)
     {
         if (_busProcessors is null || _client is null)
             throw new InvalidOperationException("Call ListenAsync first");
@@ -147,7 +147,7 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
         var envelop = _serializer.Deserialize<MessageEnvelop>(json);
         if (envelop is null)
         {
-            _logger?.LogWarning("Invalid evelop for {MessageId}", args.Message.MessageId);
+            _logger?.LogWarning("Invalid envelop for {MessageId}", args.Message.MessageId);
             return;
         }
 

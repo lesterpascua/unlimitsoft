@@ -150,7 +150,7 @@ IServiceCollection AddAzureEventBus(IServiceCollection services)
 
         return new AzureEventListener<QueueIdentifier>(
             options.Endpoint,
-            options.ListenQueues!,
+            options.ListenQueues,
             (arg, ct) => DefaultProcessor.ProcessAsync(arg, logger, ct),
             serialize,
             1,
