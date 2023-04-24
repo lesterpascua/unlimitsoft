@@ -92,11 +92,11 @@ public class Startup
             out TransformResponseAttributeOptions transformResponseOptions);
 
         // bus config by code.
-        var eventBusOptions = new EventBusOptions<QueueIdentifier>() { Endpoint = endpoint };
+        var eventBusOptions = new AzureEventBusOptions<QueueIdentifier>() { Endpoint = endpoint };
         eventBusOptions.ActivateListenAlias(true, QueueIdentifier.MyQueue);
         eventBusOptions.ActivatePublishAlias(true, QueueIdentifier.MyQueue);
 
-        services.Configure<EventBusOptions<QueueIdentifier>>(setup =>
+        services.Configure<AzureEventBusOptions<QueueIdentifier>>(setup =>
         {
             setup.PublishQueues = eventBusOptions.PublishQueues;
             setup.ListenQueues = eventBusOptions.ListenQueues;
@@ -267,7 +267,7 @@ public class Startup
         IApplicationBuilder app, 
         IWebHostEnvironment env, 
         IServiceScopeFactory factory,
-        IOptions<EventBusOptions<QueueIdentifier>> eventBusOption, 
+        IOptions<AzureEventBusOptions<QueueIdentifier>> eventBusOption, 
         ILogger<Startup> logger
     )
     {

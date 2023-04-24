@@ -44,6 +44,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<PackageReference Include="PolySharp" Version="1.13.1">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
 	  <ProjectReference Include="..\..\CQRS\UnlimitSoft.CQRS\UnlimitSoft.CQRS.csproj" />
 	</ItemGroup>
 </Project>

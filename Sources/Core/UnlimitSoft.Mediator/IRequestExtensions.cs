@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using UnlimitSoft.Mediator.Properties;
 using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Mediator;

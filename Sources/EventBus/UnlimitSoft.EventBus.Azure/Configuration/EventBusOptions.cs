@@ -1,4 +1,5 @@
 ﻿using System;
+using UnlimitSoft.EventBus.Configuration;
 
 namespace UnlimitSoft.EventBus.Azure.Configuration;
 
@@ -7,7 +8,7 @@ namespace UnlimitSoft.EventBus.Azure.Configuration;
 /// 
 /// </summary>
 /// <typeparam name="TAlias"></typeparam>
-public sealed class EventBusOptions<TAlias> : EventBus.Configuration.EventBusOptions<TAlias>
+public sealed class AzureEventBusOptions<TAlias> : EventBusOptions<AzureQueueAlias<TAlias>, TAlias>
     where TAlias : struct, Enum
 {
     /// <summary>
