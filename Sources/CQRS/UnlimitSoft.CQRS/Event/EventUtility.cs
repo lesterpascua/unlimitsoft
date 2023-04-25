@@ -21,26 +21,10 @@ public static class EventUtility
     /// <typeparam name="TEvent"></typeparam>
     /// <param name="eventName"></param>
     /// <param name="envelop"></param>
-    /// <param name="serializer"></param>
-    /// <param name="dispatcher"></param>
-    /// <param name="resolver">Contains the map between name of the event and event type</param>
-    /// <param name="beforeProcess"></param>
-    /// <param name="onError"></param>
-    /// <param name="logger"></param>
+    /// <param name="args"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async ValueTask<IResponse?> ProcessAsync<TEvent>(
-        string? eventName, 
-        MessageEnvelop envelop, 
-        IJsonSerializer serializer,
-        IEventDispatcher dispatcher, 
-        IEventNameResolver resolver, 
-        Action<TEvent>? beforeProcess = null, 
-        Func<Exception, TEvent?, MessageEnvelop, CancellationToken, ValueTask>? onError = null, 
-        ILogger? logger = null, 
-        CancellationToken ct = default
-    )
-        where TEvent : class, IEvent
+    public static async ValueTask<IResponse?> ProcessAsync<TEvent>(string? eventName, MessageEnvelop envelop, Args<TEvent> args, CancellationToken ct = default) where TEvent : class, IEvent
     {
         TEvent? curr = null;
         IResponse? responses = null;
@@ -48,27 +32,27 @@ public static class EventUtility
         {
             Type? eventType = null;
             if (!string.IsNullOrEmpty(envelop.MsgType))
-                eventType = resolver.Resolver(envelop.MsgType!);
+                eventType = args.Resolver.Resolver(envelop.MsgType!);
             if (eventType is null && !string.IsNullOrEmpty(eventName))
-                eventType = resolver.Resolver(eventName!);
+                eventType = args.Resolver.Resolver(eventName!);
 
             if (eventType is null)
             {
-                logger?.NoTypeForTheEvent(eventName!);
+                args.Logger?.NoTypeForTheEvent(eventName!);
                 return responses;
             }
 
             // This is alwais deserialized as Json object them convert string a deserialized based of the type
             var json = envelop.Msg.ToString();
-            if (serializer.Deserialize(eventType, json) is not TEvent @event)
+            if (args.Serializer.Deserialize(eventType, json) is not TEvent @event)
             {
-                logger?.SkipEventType(eventType, eventName!);
+                args.Logger?.SkipEventType(eventType, eventName!);
                 return responses;
             }
 
             curr = @event;
-            beforeProcess?.Invoke(curr!);
-            responses = await DispatchEvent(dispatcher, logger, curr!, ct);
+            args.BeforeProcess?.Invoke(curr!);
+            responses = await DispatchEvent(args.Dispatcher, args.Logger, curr!, ct);
 
             // Log error if fail
             if (responses?.IsSuccess != true)
@@ -76,14 +60,15 @@ public static class EventUtility
         }
         catch (Exception ex)
         {
-            logger?.ErrorHandlingEvent(ex, envelop.MsgType, curr?.CorrelationId, envelop.Msg, responses);
+            args.Logger?.ErrorHandlingEvent(ex, envelop.MsgType, curr?.CorrelationId, envelop.Msg, responses);
 
-            if (onError is not null)
-                await onError(ex, curr, envelop, ct);
+            if (args.OnError is not null)
+                await args.OnError(ex, curr, envelop, ct);
         }
         return responses;
     }
 
+    #region Private Methods
     private static async ValueTask<IResponse?> DispatchEvent(IEventDispatcher eventDispatcher, ILogger? logger, IEvent @event, CancellationToken ct)
     {
         var (responses, error) = await eventDispatcher.DispatchAsync(@event, ct);
@@ -93,4 +78,19 @@ Response: {@Response}", @event, responses);
 
         return error ?? responses;
     }
+    #endregion
+
+    #region Nested Classes
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="TEvent"></typeparam>
+    /// <param name="Serializer"></param>
+    /// <param name="Dispatcher"></param>
+    /// <param name="Resolver">Contains the map between name of the event and event type</param>
+    /// <param name="BeforeProcess"></param>
+    /// <param name="OnError"></param>
+    /// <param name="Logger"></param>
+    public sealed record Args<TEvent>(IJsonSerializer Serializer, IEventDispatcher Dispatcher, IEventNameResolver Resolver, Action<TEvent>? BeforeProcess = null, Func<Exception, TEvent?, MessageEnvelop, CancellationToken, ValueTask>? OnError = null, ILogger? Logger = null);
+    #endregion
 }

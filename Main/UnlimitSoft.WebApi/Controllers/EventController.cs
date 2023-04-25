@@ -44,13 +44,11 @@ public class EventController : ControllerBase
         var json = _serializer.Serialize(@event)!;
 
         var envelop = new MessageEnvelop(json, null);
-        var response = await EventUtility.ProcessAsync<IEvent>(
+        var response = await EventUtility.ProcessAsync(
             typeof(TestEvent).FullName!, 
             envelop,
-            _serializer,
-            _dispatcher, 
-            _nameResolver, 
-            ct: ct
+            new EventUtility.Args<IEvent>(_serializer, _dispatcher, _nameResolver),
+            ct
         );
 
         //var obj = JsonUtility.Deserializer<TestEvent>(json);

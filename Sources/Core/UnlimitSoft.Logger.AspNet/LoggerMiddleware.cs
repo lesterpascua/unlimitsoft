@@ -47,7 +47,8 @@ public class LoggerMiddleware
         context.Response.Headers.Add(SysContants.HeaderTrace, traceId);
         context.Response.Headers.Add(SysContants.HeaderCorrelation, correlationId);
 
-        using var _1 = LogContext.PushProperty(SysContants.LogContextCorrelationId, correlationId);
+        using var _1 = LogContext.PushProperty(SysContants.LogContextTraceId, traceId);
+        using var _2 = LogContext.PushProperty(SysContants.LogContextCorrelationId, correlationId);
 
         // Log the asociation to historical debuging process
         if (traceId != correlationId)

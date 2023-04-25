@@ -250,6 +250,7 @@ public static class IServiceCollectionExtensions
                 if (onError is not null)
                     listenerOnError = async (ex, @event, messageEnvelop, ct) => await onError(provider, ex, @event, messageEnvelop, ct);
 
+                var depencyArgs = new EventUtility.Args<TEvent>(serializer, eventDispatcher, resolver, beforeProcess, listenerOnError, logger);
                 return new AzureEventListener<QueueIdentifier>(
                     options.Endpoint,
                     listerners,
@@ -266,17 +267,7 @@ public static class IServiceCollectionExtensions
                         logger.LogDebug("Receive from {Queue}, event: {@Event}", args.Queue, args.Envelop);
                         try
                         {
-                            await ProcessorUtility.Default(
-                                eventDispatcher, 
-                                resolver, 
-                                serializer,
-                                args.Envelop, 
-                                message, 
-                                beforeProcess, 
-                                listenerOnError, 
-                                logger, 
-                                ct
-                            );
+                            await ProcessorUtility.Default(args.Envelop, message, depencyArgs, ct);
                             await args.Message.CompleteMessageAsync(message, ct);
                         }
                         catch (Exception ex)
