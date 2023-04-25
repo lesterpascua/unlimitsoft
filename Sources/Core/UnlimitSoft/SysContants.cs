@@ -7,6 +7,10 @@
 public static class SysContants
 {
     /// <summary>
+    /// Name of the trace in the logger context
+    /// </summary>
+    public const string LogContextTraceId = "TraceId";
+    /// <summary>
     /// Name of the correlation in the logger context
     /// </summary>
     public const string LogContextCorrelationId = "CorrelationId";

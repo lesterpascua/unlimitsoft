@@ -74,16 +74,6 @@ public sealed class ListenerFake : IEventListener
     {
         var eventName = typeof(TEvent).FullName;
         var envelop = new MessageEnvelop(JsonSerializer.Serialize(@event), eventName);
-        return await EventUtility.ProcessAsync<TEvent>(
-            eventName, 
-            envelop,
-            _serializer,
-            _eventDispatcher, 
-            _nameResolver, 
-            null, 
-            null, 
-            null, 
-            ct
-        );
+        return await EventUtility.ProcessAsync(eventName, envelop, new EventUtility.Args<TEvent>(_serializer, _eventDispatcher, _nameResolver), ct);
     }
 }
