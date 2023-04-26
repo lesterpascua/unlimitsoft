@@ -14,8 +14,8 @@ public interface IRequestHandlerCompliance<TRequest> : IRequestHandler
     /// <summary>
     /// Build fluent validation rules.
     /// </summary>
-    /// <param name="command"></param>
+    /// <param name="request"></param>
     /// <param name="ct"></param>
     /// <returns>Allow return custome response before the validation process.</returns>
-    ValueTask<IResponse> ComplianceAsync(TRequest command, CancellationToken ct = default);
+    ValueTask<IResponse> ComplianceAsync(TRequest request, CancellationToken ct = default);
 }

@@ -96,6 +96,16 @@ public sealed class ServiceProviderMediator : IMediator
 
         // Run existing post operations
         PostPipelineHandlerAsync(provider, requestType, request, handler, response, metadata, ct);
+
+        switch (handler)
+        {
+            case IDisposable disposable:
+                disposable.Dispose();
+                break;
+            case IAsyncDisposable asyncDisposable:
+                await asyncDisposable.DisposeAsync();
+                break;
+        }
         return new Result<TResponse>(response, null);
     }
 

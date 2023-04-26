@@ -15,9 +15,9 @@ public interface IRequestHandlerValidator<TRequest> : IRequestHandler
     /// <summary>
     /// Build fluent validation rules.
     /// </summary>
-    /// <param name="command"></param>
+    /// <param name="request">Request to validate</param>
     /// <param name="validator"></param>
     /// <param name="ct"></param>
     /// <returns>Allow return custome response before the validation process.</returns>
-    ValueTask<IResponse> ValidatorAsync(TRequest command, RequestValidator<TRequest> validator, CancellationToken ct = default);
+    ValueTask<IResponse> ValidatorAsync(TRequest request, RequestValidator<TRequest> validator, CancellationToken ct = default);
 }
