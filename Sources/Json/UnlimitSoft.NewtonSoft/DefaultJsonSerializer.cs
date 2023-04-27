@@ -123,6 +123,22 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
         };
     }
     /// <inheritdoc />
+    public object? Cast(Type type, object? data)
+    {
+        if (data is null)
+            return default;
+
+        if (data is string str)
+            return Deserialize(type, str);
+        if (data is JToken jToken)
+            return jToken.ToObject(type);
+        if (data.GetType() == type)
+            return data;
+
+        throw new NotSupportedException("Don't allow cast this type of object allowed types are string, JToken or Type");
+    }
+
+    /// <inheritdoc />
     public T? Deserialize<T>(string? payload)
     {
         if (string.IsNullOrWhiteSpace(payload))
@@ -209,20 +225,20 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
     }
 
     /// <inheritdoc />
-    public object AddNode(object? data, string name, object value)
+    public object AddNode(object? data, string name, object? value)
     {
         var aux = data as JObject ?? new JObject();
 
-        aux[name] = JToken.FromObject(value);
+        aux[name] = value is not null ? JToken.FromObject(value) : null;
         return aux;
     }
     /// <inheritdoc />
-    public object AddNode(object? data, KeyValuePair<string, object>[] values)
+    public object AddNode(object? data, IEnumerable<KeyValuePair<string, object?>> values)
     {
         var aux = data as JObject ?? new JObject();
 
         foreach (var item in values)
-            aux[item.Key] = JToken.FromObject(item.Value);
+            aux[item.Key] = item.Value is not null ? JToken.FromObject(item.Value) : null;
         return aux;
     }
 

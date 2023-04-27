@@ -52,6 +52,13 @@ public interface IJsonSerializer
     /// <returns></returns>
     T? Cast<T>(object? data);
     /// <summary>
+    /// Verify if the object is of type <paramref name="type"/>.
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="data"></param>
+    /// <returns></returns>
+    object? Cast(Type type, object? data);
+    /// <summary>
     /// Serialize object into json. If set null the result will be a null string.
     /// </summary>
     /// <param name="data"></param>
@@ -109,12 +116,12 @@ public interface IJsonSerializer
     /// <param name="name"></param>
     /// <param name="value"></param>
     /// <returns></returns>
-    object AddNode(object? data, string name, object value);
+    object AddNode(object? data, string name, object? value);
     /// <summary>
     /// Add a collection of extra value
     /// </summary>
     /// <param name="data"></param>
     /// <param name="values"></param>
     /// <returns></returns>
-    object AddNode(object? data, KeyValuePair<string, object>[] values);
+    object AddNode(object? data, IEnumerable<KeyValuePair<string, object?>> values);
 }
