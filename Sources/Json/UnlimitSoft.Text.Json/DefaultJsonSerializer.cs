@@ -122,8 +122,25 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
             JsonElement body => Deserialize<T>(body.GetRawText()),
             JsonProperty body => Deserialize<T>(body.Value.GetRawText()),
             T body => body,
-            _ => throw new NotSupportedException($"Can't cast type {data.GetType().FullName}")
+            _ => throw new NotSupportedException("Don't allow cast this type of object allowed types are string, JsonElement, JsonProperty or Type")
         };
+    }
+    /// <inheritdoc />
+    public object? Cast(Type type, object? data)
+    {
+        if (data is null)
+            return default;
+
+        if (data is string str)
+            return Deserialize(type, str);
+        if (data is JsonElement jElement)
+            return Deserialize(type, jElement.GetRawText());
+        if (data is JsonProperty jProperty)
+            return Deserialize(type, jProperty.Value.GetRawText());
+        if (data.GetType() == type)
+            return data;
+
+        throw new NotSupportedException("Don't allow cast this type of object allowed types are string, JsonElement, JsonProperty or Type");
     }
     /// <inheritdoc />
     public T? Deserialize<T>(string? payload)
@@ -270,7 +287,7 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
     }
 
     /// <inheritdoc />
-    public object AddNode(object? data, string name, object value)
+    public object AddNode(object? data, string name, object? value)
     {
         var dictionary = GetFromJsonElement(data);
 
@@ -280,7 +297,7 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
         return JsonSerializer.Deserialize<object>(jsonWithProperty, _deserialize)!;
     }
     /// <inheritdoc />
-    public object AddNode(object? data, KeyValuePair<string, object>[] values)
+    public object AddNode(object? data, IEnumerable<KeyValuePair<string, object?>> values)
     {
         var dictionary = GetFromJsonElement(data);
 
@@ -297,15 +314,15 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
     /// </summary>
     /// <param name="data"></param>
     /// <returns></returns>
-    private Dictionary<string, object> GetFromJsonElement(object? data)
+    private Dictionary<string, object?> GetFromJsonElement(object? data)
     {
-        Dictionary<string, object>? dictionary = null;
+        Dictionary<string, object?>? dictionary = null;
         if (data is not null)
         {
             var json = ((JsonElement)data).GetRawText();
-            dictionary = JsonSerializer.Deserialize<Dictionary<string, object>>(json, _deserialize);
+            dictionary = JsonSerializer.Deserialize<Dictionary<string, object?>>(json, _deserialize);
         }
-        return dictionary ?? new Dictionary<string, object>();
+        return dictionary ?? new Dictionary<string, object?>();
     }
     #endregion
 
