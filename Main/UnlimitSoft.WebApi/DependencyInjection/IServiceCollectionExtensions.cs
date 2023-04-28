@@ -196,8 +196,8 @@ public static class IServiceCollectionExtensions
                 var eventNameResolver = provider.GetRequiredService<IEventNameResolver>();
                 var serialize = provider.GetRequiredService<IJsonSerializer>();
 
-                Func<QueueIdentifier, string, object, bool> busFilter = null;
-                Func<QueueIdentifier, string, object, object> busTransform = null;
+                Func<QueueIdentifier, string, object, bool>? busFilter = null;
+                Func<QueueIdentifier, string, object, object>? busTransform = null;
                 if (filter != null)
                     busFilter = (queueName, eventName, @event) => filter(provider, queueName, eventName, @event);
                 if (transform != null)

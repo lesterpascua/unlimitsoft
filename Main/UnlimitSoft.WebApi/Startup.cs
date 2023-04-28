@@ -248,9 +248,10 @@ public class Startup
 
         #region Api Services
         services.AddApiServices(
-            assembly => "https://mock.codes/",
-            extraAssemblies: new Assembly[] {
-                typeof(Sources.Adapter.ITestApiService).Assembly
+            opt =>
+            {
+                opt.AssemblyFilter = assembly => "https://mock.codes/";
+                opt.ExtraAssemblies = new[] { typeof(Sources.Adapter.ITestApiService).Assembly };
             }
         );
         #endregion
