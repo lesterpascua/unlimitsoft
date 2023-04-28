@@ -27,7 +27,7 @@ public class MyAuthenticationOptions : ApiKeyAuthenticationOptions
             return ValueTask.FromResult<IEnumerable<Claim>?>(null);
 
         var json = value.First();
-        if (json.StartsWith("ApiKey "))
+        if (json?.StartsWith("ApiKey ") == true)
         {
             json = json
                 .Split(' ', 2, StringSplitOptions.None)

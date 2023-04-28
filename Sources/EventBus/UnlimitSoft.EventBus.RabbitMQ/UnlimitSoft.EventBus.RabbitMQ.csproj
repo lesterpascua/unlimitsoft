@@ -1,0 +1,40 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+	  <TargetFrameworks>net7.0;net6.0;netstandard2.0</TargetFrameworks>
+	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	  <LangVersion>latest</LangVersion>
+	  <Nullable>enable</Nullable>
+  </PropertyGroup>
+	<PropertyGroup>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+		<Authors>Lester Pastrana</Authors>
+		<Company>Private</Company>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">0.0.0.1</Version>
+		<Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
+		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+		<Description>RabbitMQ event bus integration.</Description>
+		<PackageLicenseFile>License.txt</PackageLicenseFile>
+		<RepositoryUrl>https://github.com/lesterpascua/unlimitsoft</RepositoryUrl>
+	</PropertyGroup>
+	<ItemGroup>
+	  <PackageReference Include="PolySharp" Version="1.13.1">
+	    <PrivateAssets>all</PrivateAssets>
+	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+	  </PackageReference>
+	  <PackageReference Include="RabbitMQ.Client" Version="6.5.0" />
+	</ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\UnlimitSoft.EventBus\UnlimitSoft.EventBus.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Update="License.txt">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+
+</Project>
