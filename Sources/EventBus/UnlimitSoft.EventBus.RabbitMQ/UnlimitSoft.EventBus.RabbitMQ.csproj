@@ -1,11 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-	  <TargetFrameworks>net7.0;net6.0;netstandard2.0</TargetFrameworks>
-	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
-	  <LangVersion>latest</LangVersion>
-	  <Nullable>enable</Nullable>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>net7.0;net6.0;netstandard2.0</TargetFrameworks>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+	
 	<PropertyGroup>
 		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<SignAssembly>true</SignAssembly>
@@ -20,21 +21,38 @@
 		<PackageLicenseFile>License.txt</PackageLicenseFile>
 		<RepositoryUrl>https://github.com/lesterpascua/unlimitsoft</RepositoryUrl>
 	</PropertyGroup>
+	
 	<ItemGroup>
-	  <PackageReference Include="PolySharp" Version="1.13.1">
-	    <PrivateAssets>all</PrivateAssets>
-	    <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-	  </PackageReference>
-	  <PackageReference Include="RabbitMQ.Client" Version="6.5.0" />
+		<PackageReference Include="PolySharp" Version="1.13.1">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="RabbitMQ.Client" Version="6.5.0" />
 	</ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\UnlimitSoft.EventBus\UnlimitSoft.EventBus.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Update="License.txt">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\UnlimitSoft.EventBus\UnlimitSoft.EventBus.csproj" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<Compile Update="Properties\Resources.Designer.cs">
+			<DesignTime>True</DesignTime>
+			<AutoGen>True</AutoGen>
+			<DependentUpon>Resources.resx</DependentUpon>
+		</Compile>
+	</ItemGroup>
+
+	<ItemGroup>
+		<EmbeddedResource Update="Properties\Resources.resx">
+			<Generator>ResXFileCodeGenerator</Generator>
+			<LastGenOutput>Resources.Designer.cs</LastGenOutput>
+		</EmbeddedResource>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Include="License.txt">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
 
 </Project>
