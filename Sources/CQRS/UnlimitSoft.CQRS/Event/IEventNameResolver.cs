@@ -12,6 +12,12 @@ namespace UnlimitSoft.CQRS.Event;
 public interface IEventNameResolver
 {
     /// <summary>
+    /// Get name asociate to supplied event type.
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    string? Resolver(Type type);
+    /// <summary>
     /// Get event asociate to supplied names.
     /// </summary>
     /// <param name="eventName"></param>
