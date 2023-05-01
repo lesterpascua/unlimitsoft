@@ -31,10 +31,17 @@ public class RabbitMQEventBus<TAlias> : IEventBus, IDisposable where TAlias : st
     private readonly Action<object, IBasicProperties>? _setup;
     private readonly ILogger<RabbitMQEventBus<TAlias>>? _logger;
 
-    private IModel? _channel;
-    private IConnection? _connection;
+    /// <summary>
+    /// RabbitMQ model
+    /// </summary>
+    protected IModel? _channel;
+    /// <summary>
+    /// RabbitMQ connection
+    /// </summary>
+    protected IConnection? _connection;
 
     //private readonly RetryPolicy _retryPolicy;
+
 
     /// <summary>
     /// 
@@ -105,8 +112,8 @@ public class RabbitMQEventBus<TAlias> : IEventBus, IDisposable where TAlias : st
     /// <inheritdoc />
     public ValueTask StartAsync(TimeSpan waitRetry, CancellationToken ct = default)
     {
-        using var connection = _factory.CreateConnection();
-        using var channel = connection.CreateModel();
+        _connection = _factory.CreateConnection();
+        _channel = _connection.CreateModel();
         return default;
     }
 
@@ -118,15 +125,14 @@ public class RabbitMQEventBus<TAlias> : IEventBus, IDisposable where TAlias : st
     /// <inheritdoc />
     public virtual Task PublishPayloadAsync<T>(EventPayload<T> eventPayload, bool useEnvelop = true, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
-        //var eventType = _resolver.Resolver(eventPayload.EventName);
-        //if (eventType is null)
-        //{
-        //    _logger?.LogWarning("Not found event {EventType}", eventPayload.EventName);
-        //    return Task.CompletedTask;
-        //}
-        //var @event = LoadFromPaylod(eventType, eventPayload.Payload);
-        //return Task.CompletedTask;
+        var eventType = _resolver.Resolver(eventPayload.EventName);
+        if (eventType is null)
+            return Task.CompletedTask;
+
+        var @event = LoadFromPaylod(eventType, eventPayload.Payload);
+        if (@event is null)
+            return Task.CompletedTask;
+        return SendAsync(@event, eventPayload.Id, eventPayload.EventName, eventPayload.CorrelationId, useEnvelop);
     }
     /// <inheritdoc />
     public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop = true, CancellationToken ct = default) => SendAsync(graph, id, eventName, correlationId, useEnvelop);
@@ -145,9 +151,16 @@ public class RabbitMQEventBus<TAlias> : IEventBus, IDisposable where TAlias : st
             throw new NotSupportedException("Only allow json payload");
         return _serializer.Deserialize(eventType, json);
     }
-
-    #region Private Methods
-    private Task SendAsync(object graph, Guid id, string eventName, string? correlationId, bool useEnvelop)
+    /// <summary>
+    /// Send message async
+    /// </summary>
+    /// <param name="graph"></param>
+    /// <param name="id"></param>
+    /// <param name="eventName"></param>
+    /// <param name="correlationId"></param>
+    /// <param name="useEnvelop"></param>
+    /// <returns></returns>
+    protected Task SendAsync(object graph, Guid id, string eventName, string? correlationId, bool useEnvelop)
     {
         //using var rabbitMQConnection = _retryPolicy.Execute(() => _factory.CreateConnection());
         //rabbitMQConnection.CreateModel()
@@ -159,8 +172,9 @@ public class RabbitMQEventBus<TAlias> : IEventBus, IDisposable where TAlias : st
         properties.MessageId = id.ToString();
 
         properties.Headers ??= new Dictionary<string, object>();
-        properties.Headers.Add(SysContants.HeaderCorrelation, correlationId);
-        properties.Headers.Add(Constanst.HeaderHasEnvelop, useEnvelop);
+        properties.Headers[SysContants.HeaderCorrelation] = correlationId;
+        properties.Headers[Constants.HeaderEventName] = eventName;
+        properties.Headers[Constants.HeaderHasEnvelop] = useEnvelop;
 
         _setup?.Invoke(graph, properties);
 
@@ -185,16 +199,15 @@ public class RabbitMQEventBus<TAlias> : IEventBus, IDisposable where TAlias : st
         {
             var content = _transform?.Invoke(queue.Alias, eventName, graph) ?? graph;
             if (useEnvelop)
-                content = new MessageEnvelop(content, queue.RoutingKey);    // use resolve event in reverse to 
+                content = new MessageEnvelop(content, _resolver.Resolver(content.GetType()) ?? queue.RoutingKey);
 
             var message = Encoding.UTF8.GetBytes(_serializer.Serialize(content)!);
 
             _channel.BasicPublish(queue.Exchange, queue.RoutingKey, true, properties, message);
             _channel.WaitForConfirms();
 
-            _logger?.LogInformation("Publish to {Exchange}, RoutingKey {Key}, {@Event}", queue.Exchange, queue.RoutingKey, graph);
+            _logger?.LogInformation("Publish Event to {Exchange}, {RoutingKey}, {@Event}", queue.Exchange, queue.RoutingKey, graph);
         }
         return Task.CompletedTask;
     }
-    #endregion
 }

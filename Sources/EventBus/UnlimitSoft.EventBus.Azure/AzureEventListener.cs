@@ -143,13 +143,13 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
     /// <returns></returns>
     protected virtual async Task ProcessMessageAsync(QueueAlias<TAlias> queue, ProcessMessageEventArgs args)
     {
+        MessageEnvelop? envelop = null;
         var json = args.Message.Body.ToString();
-        var envelop = _serializer.Deserialize<MessageEnvelop>(json);
-        if (envelop is null)
-        {
-            _logger?.LogWarning("Invalid envelop for {MessageId}", args.Message.MessageId);
-            return;
-        }
+
+        // Check if the envelop property is present then deserialize as envelop
+        if (args.Message.ApplicationProperties?.TryGetValue(Constants.HeaderHasEnvelop, out var hasEnvelop) == true && hasEnvelop.Equals(true))
+            envelop = _serializer.Deserialize<MessageEnvelop>(json);
+        envelop ??= new MessageEnvelop(json, null);
 
         var message = new ProcessMessageArgs<TAlias, ProcessMessageEventArgs>(queue, envelop, args, _waitRetry);
         await _processor(message, args.CancellationToken);
