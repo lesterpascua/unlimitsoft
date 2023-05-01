@@ -1,10 +1,5 @@
-﻿using UnlimitSoft.CQRS.Event.Json;
-using UnlimitSoft.Event;
-using UnlimitSoft.Json;
+﻿using UnlimitSoft.Message;
 using UnlimitSoft.WebApi.EventSourced.Client;
-using UnlimitSoft.WebApi.EventSourced.CQRS.Data;
-using UnlimitSoft.WebApi.EventSourced.CQRS.Event;
-using UnlimitSoft.WebApi.EventSourced.CQRS.Repository;
 
 namespace UnlimitSoft.WebApi.EventSourced.CQRS.Model;
 

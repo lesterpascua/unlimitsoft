@@ -1,4 +1,4 @@
-﻿using UnlimitSoft.Mediator;
+﻿using UnlimitSoft.Message;
 
 namespace UnlimitSoft.CQRS.Command;
 

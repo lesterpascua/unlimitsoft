@@ -19,7 +19,6 @@ public interface IJsonSerializer
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="_"></param>
     /// <param name="data"></param>
     /// <returns></returns>
     /// <exception cref="NotSupportedException"></exception>
@@ -27,7 +26,6 @@ public interface IJsonSerializer
     /// <summary>
     /// 
     /// </summary>
-    /// <param name="_"></param>
     /// <param name="data"></param>
     /// <returns></returns>
     /// <exception cref="NotSupportedException"></exception>
@@ -39,7 +37,6 @@ public interface IJsonSerializer
     /// The enumerable object iterate for the properties inside the object fist and later the object. 
     /// Them { "a": { "b": 1 } } first iterator get "a": { "b": 1 } as property and applied iterator over this will take { "b": 1 }
     /// </remarks>
-    /// <param name="_"></param>
     /// <param name="data"></param>
     /// <returns></returns>
     IEnumerable<object> GetEnumerable(object data);

@@ -1,13 +1,15 @@
-﻿using UnlimitSoft.Event;
+﻿using UnlimitSoft.CQRS.Data;
+using UnlimitSoft.Message;
 using UnlimitSoft.WebApi.Sources.Security.Cryptography;
-using System;
-using UnlimitSoft.CQRS.Data;
 
 namespace UnlimitSoft.WebApi.Sources.Data.Model;
 
 
 public class Customer : EventSourced
 {
+    /// <summary>
+    /// Name of the customer
+    /// </summary>
     public string Name { get; set; }
 
 

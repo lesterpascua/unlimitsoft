@@ -1,8 +1,8 @@
-﻿namespace UnlimitSoft.Mediator;
+﻿namespace UnlimitSoft.Message;
 
 
 /// <summary>
-/// 
+/// Base interface for all request
 /// </summary>
 public interface IRequest { }
 /// <summary>

@@ -11,6 +11,7 @@ using UnlimitSoft.CQRS.Data;
 using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.Data;
 using UnlimitSoft.Event;
+using UnlimitSoft.Message;
 using UnlimitSoft.Web.Model;
 
 namespace UnlimitSoft.CQRS.Event;
@@ -391,8 +392,10 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
         /// </summary>
         /// <param name="other"></param>
         /// <returns></returns>
-        public int CompareTo(Bucket other)
+        public int CompareTo(Bucket? other)
         {
+            if (other is null) return 1;
+
             if (Scheduled is not null && other.Scheduled is not null)
                 return Created.CompareTo(other.Created);
             if (Scheduled is null)

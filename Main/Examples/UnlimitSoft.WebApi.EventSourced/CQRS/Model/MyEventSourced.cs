@@ -1,4 +1,4 @@
-﻿using UnlimitSoft.Event;
+﻿using UnlimitSoft.Message;
 using UnlimitSoft.WebApi.EventSourced.CQRS.Event;
 
 namespace UnlimitSoft.WebApi.EventSourced.CQRS.Model;

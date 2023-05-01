@@ -9,8 +9,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.Event;
 using UnlimitSoft.Json;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.EventBus.RabbitMQ;
 
