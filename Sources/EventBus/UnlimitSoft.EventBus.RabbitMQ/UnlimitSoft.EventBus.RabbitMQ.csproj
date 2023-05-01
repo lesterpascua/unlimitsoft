@@ -28,6 +28,7 @@
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
 		<PackageReference Include="RabbitMQ.Client" Version="6.5.0" />
+		<!--<PackageReference Include="UnlimitSoft.EventBus" Version="3.3.0-preview.3.3.0.16" />-->
 	</ItemGroup>
 	<ItemGroup>
 		<ProjectReference Include="..\UnlimitSoft.EventBus\UnlimitSoft.EventBus.csproj" />

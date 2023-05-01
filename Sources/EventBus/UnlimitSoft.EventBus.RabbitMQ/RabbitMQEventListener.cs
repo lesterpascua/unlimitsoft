@@ -122,7 +122,7 @@ public class RabbitMQEventListener<TAlias> : IEventListener, IDisposable where T
         var json = Encoding.UTF8.GetString(e.Body.ToArray());
 
         // Check if the envelop property is present then deserialize as envelop
-        if (e.BasicProperties.Headers?.TryGetValue(Constanst.HeaderHasEnvelop, out var hasEnvelop) == true && hasEnvelop.Equals(true))
+        if (e.BasicProperties.Headers?.TryGetValue(Constants.HeaderHasEnvelop, out var hasEnvelop) == true && hasEnvelop.Equals(true))
             envelop = _serializer.Deserialize<MessageEnvelop>(json);
         envelop ??= new MessageEnvelop(json, null);
 

@@ -1,4 +1,5 @@
 ﻿using Azure.Messaging.ServiceBus;
+using Microsoft.Azure.Amqp.Framing;
 using Microsoft.Extensions.Logging;
 using Polly;
 using Polly.Retry;
@@ -205,8 +206,8 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
         if (graph is IDelayEvent delayEvent && delayEvent.Scheduled.HasValue)
             message.ScheduledEnqueueTime = delayEvent.Scheduled.Value;
 
-        message.ApplicationProperties[BusProperty.EventName] = eventName;
-        message.ApplicationProperties[BusProperty.MessageType] = content.GetType().AssemblyQualifiedName;
+        message.ApplicationProperties[Constants.HeaderEventName] = eventName;
+        message.ApplicationProperties[Constants.HeaderHasEnvelop] = useEnvelop;
         _setup?.Invoke(graph, message);
 
         await _retryPolicy.ExecuteAsync((cancelationToken) => sender.SendMessageAsync(message, cancelationToken), ct);
