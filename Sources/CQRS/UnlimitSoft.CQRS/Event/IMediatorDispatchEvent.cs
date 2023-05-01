@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Data;
 using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.Message;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace UnlimitSoft.CQRS.Event;
 
@@ -58,16 +59,15 @@ public abstract class MediatorDispatchEvent<TEventPayload, TPayload> : IMediator
     /// </summary>
     protected IServiceProvider Provider { get; }
     /// <summary>
-    /// 
+    /// Get event dispatcher registered in the DPI
     /// </summary>
-    protected abstract IEventDispatcher? EventDispatcher { get; }
+    protected virtual IEventDispatcher? EventDispatcher => Provider.GetService<IEventDispatcher>();
     /// <summary>
-    /// 
+    /// Get event publish worker registered in the DPI
     /// </summary>
-    protected abstract IEventPublishWorker? EventPublishWorker { get; }
-
+    protected virtual IEventPublishWorker? EventPublishWorker => Provider.GetService<IEventPublishWorker>();
     /// <summary>
-    /// 
+    /// Get event repository registered in the DPI
     /// </summary>
     protected abstract IEventRepository<TEventPayload, TPayload>? EventRepository { get; }
 

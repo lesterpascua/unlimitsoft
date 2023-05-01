@@ -9,14 +9,14 @@ namespace UnlimitSoft.WebApi.Sources.CQRS.Event;
 
 
 /// <inheritdoc />
-public sealed class MyMediatorDispatchEventSourced : JsonMediatorDispatchEvent
+public sealed class MyMediatorDispatchEvent : JsonMediatorDispatchEvent
 {
     /// <summary>
     /// 
     /// </summary>
     /// <param name="provider"></param>
     /// <param name="serializer"></param>
-    public MyMediatorDispatchEventSourced(IServiceProvider provider, IJsonSerializer serializer)
+    public MyMediatorDispatchEvent(IServiceProvider provider, IJsonSerializer serializer)
         : base(provider, serializer, false)
     {
     }

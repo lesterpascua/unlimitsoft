@@ -88,7 +88,7 @@ public abstract class EventSourced : AggregateRoot, IEventSourced
     /// <param name="workerId">Worker identifier. Can't be null.</param>
     /// <param name="correlationId">Correlation identifier to trace the events.</param>
     /// <param name="body"></param>
-    protected IEvent AddEvent<TEvent, TBody>(Guid eventId, ushort serviceId, string? workerId, string? correlationId, TBody body) where TEvent : Event<TBody>
+    protected TEvent AddEvent<TEvent, TBody>(Guid eventId, ushort serviceId, string? workerId, string? correlationId, TBody body) where TEvent : Event<TBody>
     {
         var args = new EventFactoryArgs<TBody>
         {
@@ -102,7 +102,7 @@ public abstract class EventSourced : AggregateRoot, IEventSourced
             IsDomain = false,
             Body = body
         };
-        var @event = EventFactory(in args);
+        var @event = (TEvent)EventFactory(in args);
 
         AddEvent(@event);
         return @event;
@@ -125,9 +125,8 @@ public abstract class EventSourced : AggregateRoot, IEventSourced
             args.CorrelationId,
             args.IsDomain,
             args.Body
-        );
-        if (@event is null)
-            throw new InvalidOperationException("Not able to build event of type");
+        ) ?? throw new InvalidOperationException("Not able to build event of type");
+
         return (IEvent)@event;
     }
 
