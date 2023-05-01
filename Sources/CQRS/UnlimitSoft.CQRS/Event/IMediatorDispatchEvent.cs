@@ -96,10 +96,8 @@ public abstract class MediatorDispatchEvent<TEventPayload> : IMediatorDispatchEv
             if (error is null)
                 continue;
 
-            var ex = error.GetBody<Exception>();
-            if (ex is null)
-                throw new InvalidOperationException("Error when executed events");
-            throw new AggregateException("Error when executed events", ex);
+            var msg = "Error when executed events";
+            throw new AggregateException(msg, error.GetBody<Exception>() ?? throw new InvalidOperationException(msg));
         }
         var eventRepository = EventRepository;
         if (eventRepository is not null)
