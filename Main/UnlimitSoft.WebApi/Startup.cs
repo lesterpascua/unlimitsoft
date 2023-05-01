@@ -148,7 +148,7 @@ public class Startup
                     
                     IEventSourcedRepository = typeof(IMyEventSourcedRepository),
                     EventSourcedRepository = typeof(MyEventSourcedRepository),
-                    MediatorDispatchEvent = typeof(MyMediatorDispatchEventSourced),
+                    MediatorDispatchEvent = typeof(MyMediatorDispatchEvent),
                     IMediatorDispatchEvent = typeof(IMediatorDispatchEvent),
                 }
             },

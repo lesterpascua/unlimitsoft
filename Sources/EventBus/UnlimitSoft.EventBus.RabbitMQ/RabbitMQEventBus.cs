@@ -116,7 +116,7 @@ public class RabbitMQEventBus<TAlias> : IEventBus, IDisposable where TAlias : st
         return SendAsync(@event, @event.Id, @event.Name, @event.CorrelationId, useEnvelop);
     }
     /// <inheritdoc />
-    public Task PublishPayloadAsync<T>(EventPayload<T> eventPayload, bool useEnvelop = true, CancellationToken ct = default)
+    public virtual Task PublishPayloadAsync<T>(EventPayload<T> eventPayload, bool useEnvelop = true, CancellationToken ct = default)
     {
         throw new NotImplementedException();
         //var eventType = _resolver.Resolver(eventPayload.EventName);
