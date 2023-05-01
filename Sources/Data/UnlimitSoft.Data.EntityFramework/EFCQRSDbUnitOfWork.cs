@@ -1,14 +1,14 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;
-using UnlimitSoft.CQRS.Data;
-using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.Event;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Data;
+using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.Data.EntityFramework.Utility;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Data.EntityFramework;
 

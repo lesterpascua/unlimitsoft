@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Data;
 using UnlimitSoft.CQRS.Data.Dto;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.CQRS.Event;
 

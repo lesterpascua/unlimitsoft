@@ -1,4 +1,6 @@
-﻿namespace UnlimitSoft.Event;
+﻿using UnlimitSoft.Message;
+
+namespace UnlimitSoft.Event;
 
 
 /// <summary>

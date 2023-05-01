@@ -1,7 +1,7 @@
 ﻿using System;
 using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.CQRS.Event.Json;
-using UnlimitSoft.Event;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.CQRS.Data.Dto;
 

@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Mediator.Pipeline;
 

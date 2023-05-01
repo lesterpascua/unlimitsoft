@@ -1,5 +1,6 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Mediator;
 
@@ -13,8 +14,7 @@ public interface IRequestHandler { }
 /// </summary>
 /// <typeparam name="TRequest"></typeparam>
 /// <typeparam name="TResponse"></typeparam>
-public interface IRequestHandler<in TRequest, TResponse> : IRequestHandler
-    where TRequest : IRequest<TResponse>
+public interface IRequestHandler<in TRequest, TResponse> : IRequestHandler where TRequest : IRequest<TResponse>
 {
     /// <summary>
     /// 

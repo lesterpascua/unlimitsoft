@@ -31,7 +31,6 @@ public class Response<T> : IResponse
     /// </summary>
     /// <param name="code"></param>
     /// <param name="body"></param>
-    /// <param name="uiText"></param>
     public Response(HttpStatusCode code, T body)
     {
         Code = code;

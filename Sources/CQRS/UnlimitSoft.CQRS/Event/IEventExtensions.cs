@@ -1,4 +1,5 @@
 ﻿using UnlimitSoft.Json;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Event;
 

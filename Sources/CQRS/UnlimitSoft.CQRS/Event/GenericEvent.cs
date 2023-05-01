@@ -1,4 +1,4 @@
-﻿using UnlimitSoft.Event;
+﻿using UnlimitSoft.Message;
 
 namespace UnlimitSoft.CQRS.Event;
 

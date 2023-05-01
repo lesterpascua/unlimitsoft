@@ -1,5 +1,5 @@
 ﻿using System.Text.Json.Serialization;
-using UnlimitSoft.Event;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.WebApi.EventBus.EventBus;
 

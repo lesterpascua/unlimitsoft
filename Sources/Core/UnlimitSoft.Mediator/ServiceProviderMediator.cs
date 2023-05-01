@@ -37,7 +37,6 @@ public sealed class ServiceProviderMediator : IMediator
     /// <param name="validate"></param>
     /// <param name="useScope"></param>
     /// <param name="errorTransforms"></param>
-    /// <param name="errorText"></param>
     /// <param name="logger"></param>
     public ServiceProviderMediator(
         IServiceProvider provider,
