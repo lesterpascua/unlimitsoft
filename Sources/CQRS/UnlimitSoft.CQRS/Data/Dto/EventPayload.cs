@@ -74,6 +74,11 @@ public abstract class EventPayload
     /// </summary>
     public void MarkEventAsPublished() => IsPubliched = true;
 
+    /// <summary>
+    /// Get event name inside the payload.
+    /// </summary>
+    /// <returns></returns>
+    public override string ToString() => EventName;
     /// <inheritdoc />
     public override int GetHashCode() => Id.GetHashCode();
     /// <inheritdoc />
@@ -107,10 +112,4 @@ public abstract class EventPayload<TPayload> : EventPayload
     /// Complete event serialized in a payload. Serialization depends of the user approach could be json or binary
     /// </summary>
     public TPayload Payload { get; set; }
-
-    /// <summary>
-    /// Get event name inside the payload.
-    /// </summary>
-    /// <returns></returns>
-    public override string ToString() => EventName;
 }

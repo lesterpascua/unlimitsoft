@@ -8,6 +8,18 @@ using UnlimitSoft.Benchmark.UnlimitSoft.CQRS;
 using UnlimitSoft.Benchmark.UnlimitSoft.CQRS.Labs;
 using UnlimitSoft.Mediator;
 
+var a = 56.4;
+var b = 40.5;
+var c = 1.7;
+
+Console.WriteLine((a / 12.0 + b / 15.0 - c / 0.4));
+Console.WriteLine((a / 3.0 - b / 3.0 + c / 0.4));
+Console.WriteLine(((a + b + c) / 2.0));
+Console.WriteLine(((a - b - c) / 4.0));
+Console.WriteLine((a + b - c ) / 16);
+Console.WriteLine((a - b + c) / 4);
+
+return;
 
 //var lab = new CommandDispatcherLab(true);
 //await lab.Dispatch1();
@@ -17,7 +29,7 @@ using UnlimitSoft.Mediator;
 //await aa.WithOutOptimization();
 
 
-BenchmarkRunner.Run<JsonEventRepositoryBenchmark>();
+//BenchmarkRunner.Run<JsonEventRepositoryBenchmark>();
 //BenchmarkRunner.Run<QueryBenchmark>();
 //BenchmarkRunner.Run<EventDispatcherBenchmarks>();
 
