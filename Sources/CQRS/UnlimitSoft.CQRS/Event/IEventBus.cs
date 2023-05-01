@@ -28,14 +28,6 @@ public interface IEventBus
     /// <returns></returns>
     Task PublishAsync(IEvent @event, bool useEnvelop = true, CancellationToken ct = default);
     /// <summary>
-    /// Publis event in bus.
-    /// </summary>
-    /// <param name="event"></param>
-    /// <param name="useEnvelop"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
-    Task PublishPayloadAsync<T>(EventPayload<T> @event, bool useEnvelop = true, CancellationToken ct = default);
-    /// <summary>
     /// 
     /// </summary>
     /// <param name="graph"></param>
@@ -46,4 +38,12 @@ public interface IEventBus
     /// <param name="ct"></param>
     /// <returns></returns>
     Task PublishAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop = true, CancellationToken ct = default);
+    /// <summary>
+    /// Publis event in bus.
+    /// </summary>
+    /// <param name="event"></param>
+    /// <param name="useEnvelop"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    Task PublishPayloadAsync<TEventPayload>(TEventPayload @event, bool useEnvelop = true, CancellationToken ct = default) where TEventPayload : EventPayload;
 }

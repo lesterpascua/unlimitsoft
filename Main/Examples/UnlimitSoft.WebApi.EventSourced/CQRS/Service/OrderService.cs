@@ -1,4 +1,4 @@
-﻿using UnlimitSoft.CQRS.Event.Json;
+﻿using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Memento;
 using UnlimitSoft.Json;
 using UnlimitSoft.WebApi.EventSourced.Client;
@@ -33,7 +33,7 @@ public sealed class OrderService
     {
         return (Order?)await _memento.FindByVersionAsync(id, ct: ct);
     }
-    public async Task<JsonEventPayload[]> HistoryAsync(Guid id, CancellationToken ct)
+    public async Task<MyEventPayload[]> HistoryAsync(Guid id, CancellationToken ct)
     {
         var history = await _eventRepository.GetHistoryAsync(id, long.MaxValue, ct);
         return history.ToArray();
@@ -56,7 +56,7 @@ public sealed class OrderService
 
         var body = new CreatedBody(order.Id, order.Name, order.Amount, order.Created);
         var @event = order.AddEvent<CreatedEvent, CreatedBody>(_gen, body);
-        await _eventRepository.CreateAsync(new JsonEventPayload(@event, _serializer), ct: ct);
+        await _eventRepository.CreateAsync(new MyEventPayload(@event, _serializer), ct: ct);
 
         _logger.LogInformation("Create order: {@Order}", order);
         await _unitOfWork.SaveChangesAsync(ct);
@@ -79,7 +79,7 @@ public sealed class OrderService
 
         var body = new AddAmountBody(amount);
         var @event = order.AddEvent<AddAmountEvent, AddAmountBody>(_gen, body);
-        await _eventRepository.CreateAsync(new JsonEventPayload(@event, _serializer), ct: ct);
+        await _eventRepository.CreateAsync(new MyEventPayload(@event, _serializer), ct: ct);
 
         _logger.LogInformation("Add amount to {@Order}", order);
         await _unitOfWork.SaveChangesAsync(ct);

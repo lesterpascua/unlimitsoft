@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
+using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Json;
 using UnlimitSoft.WebApi.EventBus.EventBus;
 
@@ -34,7 +34,7 @@ public class EventBusController : ControllerBase
     public async Task<ActionResult> Payload(CancellationToken ct = default)
     {
         var @event = new CreateEvent(Guid.NewGuid(), Guid.NewGuid(), body: "This is a body");
-        var payload = new JsonEventPayload(@event, JsonUtil.Default);
+        var payload = new EventPayload(@event, JsonUtil.Default);
         await _eventBus.PublishPayloadAsync(payload, ct: ct);
 
         _logger.LogInformation("Publish payload {@event}", payload);

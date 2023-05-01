@@ -28,7 +28,7 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
 
     private readonly IEnumerable<QueueAlias<TAlias>> _queues;
     private readonly string _endpoint;
-    private readonly IEventNameResolver _eventNameResolver;
+    private readonly IEventNameResolver _resolver;
     private readonly IJsonSerializer _serializer;
     private readonly Func<TAlias, string, object, bool>? _filter;
     private readonly Func<TAlias, string, object, object>? _transform;
@@ -41,7 +41,7 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
     /// </summary>
     /// <param name="endpoint">Connection string to azure event bus. Endpoint=sb://my.servicebus.windows.net/;SharedAccessKeyName=RootManageSharedAccessKey;SharedAccessKey=supersecretsharedkey</param>
     /// <param name="queues">Queues where the current bus can publish events. This is a collection of all availables queue later the system can select the queue to publish every specific event using filter argument</param>
-    /// <param name="eventNameResolver">Resolve real type of event using his name.</param>
+    /// <param name="resolver">Resolve real type of event using his name.</param>
     /// <param name="serializer">Json serializer used to serializer the event</param>
     /// <param name="filter">Filter if this event able to sent to specifix queue, function (alias, eventName, event) => bool</param>
     /// <param name="transform">Transform event into a diferent event (alias, eventName, event) => event</param>
@@ -50,7 +50,7 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
     public AzureEventBus(
         string endpoint,
         IEnumerable<QueueAlias<TAlias>> queues,
-        IEventNameResolver eventNameResolver,
+        IEventNameResolver resolver,
         IJsonSerializer serializer,
         Func<TAlias, string, object, bool>? filter = null,
         Func<TAlias, string, object, object>? transform = null,
@@ -61,7 +61,7 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
         _queues = queues.Where(x => x.Active == true).ToArray();
         _filter = filter;
         _endpoint = endpoint;
-        _eventNameResolver = eventNameResolver;
+        _resolver = resolver;
         _serializer = serializer;
         _transform = transform;
         _setup = setup;
@@ -100,21 +100,21 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
     /// <inheritdoc/>
     public Task PublishAsync(IEvent @event, bool useEnvelop = true, CancellationToken ct = default) => SendMessageAsync(@event, @event.Id, @event.Name, @event.CorrelationId, useEnvelop, ct);
     /// <inheritdoc/>
-    public Task PublishPayloadAsync<T>(EventPayload<T> eventPayload, bool useEnvelop = true, CancellationToken ct = default)
+    public Task PublishPayloadAsync<TEventPayload>(TEventPayload eventPayload, bool useEnvelop = true, CancellationToken ct = default) where TEventPayload : EventPayload
     {
-        var eventType = _eventNameResolver.Resolver(eventPayload.EventName);
+        var eventType = _resolver.Resolver(eventPayload.Name);
         if (eventType is null)
         {
-            _logger?.LogWarning("Not found event {EventType}", eventPayload.EventName);
+            _logger?.LogWarning("Not found event {EventType}", eventPayload.Name);
             return Task.CompletedTask;
         }
-        var @event = LoadFromPayload(eventType, eventPayload.Payload);
+        var @event = LoadFromPayload(eventType, eventPayload);
         if (@event is null)
         {
             _logger?.LogWarning("Skip event of {Type} because is null", eventType);
             return Task.CompletedTask;
         }
-        return SendMessageAsync(@event, eventPayload.Id, eventPayload.EventName, eventPayload.CorrelationId, useEnvelop, ct);
+        return SendMessageAsync(@event, eventPayload.Id, eventPayload.Name, eventPayload.CorrelationId, useEnvelop, ct);
     }
 
     /// <summary>
@@ -132,17 +132,14 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
     /// <summary>
     /// Load event from payload
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="TEventPayload"></typeparam>
     /// <param name="eventType"></param>
     /// <param name="payload"></param>
     /// <returns></returns>
-    /// <exception cref="NotSupportedException"></exception>
-    protected virtual object? LoadFromPayload<T>(Type eventType, T payload)
+    protected virtual IEvent? LoadFromPayload<TEventPayload>(Type eventType, TEventPayload payload) where TEventPayload : EventPayload
     {
-        if (payload is not string json)
-            throw new NotSupportedException("Only allow json payload");
-
-        return _serializer.Deserialize(eventType, json);
+        var bodyType = _resolver.GetBodyType(eventType);
+        return EventPayload.FromEventPayload(eventType, bodyType, payload, _serializer);
     }
     /// <summary>
     /// Create instance of the service bus client

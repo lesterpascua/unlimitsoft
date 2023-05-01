@@ -22,9 +22,9 @@ public class EventBusFake : IEventBus
         return Task.CompletedTask;
     }
     /// <inheritdoc />
-    public Task PublishPayloadAsync<T>(EventPayload<T> @event, bool useEnvelop = true, CancellationToken ct = default)
+    public Task PublishPayloadAsync<TEventPayload>(TEventPayload @event, bool useEnvelop = true, CancellationToken ct = default) where TEventPayload : EventPayload
     {
-        Action?.Invoke(@event.Id, @event.EventName, @event.Payload, @event.CorrelationId, ++EventArrive);
+        Action?.Invoke(@event.Id, @event.Name, @event, @event.CorrelationId, ++EventArrive);
         return Task.CompletedTask;
     }
     /// <inheritdoc />

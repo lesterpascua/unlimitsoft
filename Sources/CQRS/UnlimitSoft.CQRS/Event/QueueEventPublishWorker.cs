@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Data;
 using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.Data;
-using UnlimitSoft.Event;
 using UnlimitSoft.Message;
 using UnlimitSoft.Web.Model;
 
@@ -26,10 +25,9 @@ namespace UnlimitSoft.CQRS.Event;
 /// </remarks>
 /// <typeparam name="TEventSourcedRepository"></typeparam>
 /// <typeparam name="TEventPayload"></typeparam>
-/// <typeparam name="TPayload"></typeparam>
-public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPayload> : IEventPublishWorker
-    where TEventPayload : EventPayload<TPayload>
-    where TEventSourcedRepository : IEventRepository<TEventPayload, TPayload>
+public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : IEventPublishWorker
+    where TEventPayload : EventPayload
+    where TEventSourcedRepository : IEventRepository<TEventPayload>
 {
     /// <summary>
     /// Amount of event load per attempt
@@ -75,7 +73,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
     /// <summary>
     /// Logger used to trace information
     /// </summary>
-    protected readonly ILogger<QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPayload>>? _logger;
+    protected readonly ILogger<QueueEventPublishWorker<TEventSourcedRepository, TEventPayload>>? _logger;
 
     private bool _disposed;
 
@@ -108,7 +106,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
         int bachSize = 10,
         bool enableScheduled = false,
         bool useEnvelop = true,
-        ILogger<QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPayload>>? logger = null
+        ILogger<QueueEventPublishWorker<TEventSourcedRepository, TEventPayload>>? logger = null
     )
     {
         _disposed = false;
@@ -236,7 +234,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
                 return true;
             //
             // only if scheduled feature is enable by software
-            return _pending.Any(QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPayload>.ScheduledCondition());
+            return _pending.Any(QueueEventPublishWorker<TEventSourcedRepository, TEventPayload>.ScheduledCondition());
         }
 
         return false;
@@ -263,7 +261,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPa
             IOrderedEnumerable<KeyValuePair<Guid, Bucket>> orderedPending;
             if (_enableScheduled)
             {
-                var where = QueueEventPublishWorker<TEventSourcedRepository, TEventPayload, TPayload>.ScheduledCondition();
+                var where = QueueEventPublishWorker<TEventSourcedRepository, TEventPayload>.ScheduledCondition();
                 orderedPending = _pending.Where(where).OrderBy(k => k.Value);
             }
             else

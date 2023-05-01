@@ -16,12 +16,12 @@ namespace UnlimitSoft.CQRS.Event.Json;
 /// <summary>
 /// 
 /// </summary>
-public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, string>
+public class EventDbContextRepository<TEventPayload> : IEventRepository<TEventPayload> where TEventPayload : EventPayload
 {
     private readonly bool _optimize;
     private readonly DbContext _dbContext;
-    private readonly DbSet<JsonEventPayload> _repository;
-    private readonly ILogger<JsonEventDbContextRepository>? _logger;
+    private readonly DbSet<TEventPayload> _repository;
+    private readonly ILogger<EventDbContextRepository<TEventPayload>>? _logger;
 
     /// <summary>
     /// 
@@ -30,16 +30,16 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
     /// <param name="optimize">Precompile the query and reuse in all iterations</param>
     /// <param name="logger"></param>
     /// <exception cref="ArgumentNullException"></exception>
-    public JsonEventDbContextRepository(DbContext dbContext, bool optimize = true, ILogger<JsonEventDbContextRepository>? logger = null)
+    public EventDbContextRepository(DbContext dbContext, bool optimize = true, ILogger<EventDbContextRepository<TEventPayload>>? logger = null)
     {
         _optimize = optimize;
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-        _repository = _dbContext.Set<JsonEventPayload>();
+        _repository = _dbContext.Set<TEventPayload>();
         _logger = logger;
     }
 
     /// <inheritdoc />
-    public virtual async Task MarkEventsAsPublishedAsync(JsonEventPayload @event, CancellationToken ct = default)
+    public virtual async Task MarkEventsAsPublishedAsync(TEventPayload @event, CancellationToken ct = default)
     {
         @event.MarkEventAsPublished();
         _dbContext.Update(@event);
@@ -48,7 +48,7 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
         _logger?.LogDebug("MarkEventsAsPublishedAsync {Amount} passed {@Event}", amount, @event);
     }
     /// <inheritdoc />
-    public virtual async Task MarkEventsAsPublishedAsync(IEnumerable<JsonEventPayload> events, CancellationToken ct = default)
+    public virtual async Task MarkEventsAsPublishedAsync(IEnumerable<TEventPayload> events, CancellationToken ct = default)
     {
         foreach (var @event in events)
         {
@@ -74,7 +74,7 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
             return list;
         }
 
-        IQueryable<JsonEventPayload> query = _repository
+        IQueryable<TEventPayload> query = _repository
             .Where(p => !p.IsPubliched)
             .OrderBy(p => p.Id);
         if (paging is not null)
@@ -85,9 +85,9 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
             .ToListAsync(ct);
     }
 
-    private Func<DbContext, Guid, Task<JsonEventPayload?>>? _getEvent;
+    private Func<DbContext, Guid, Task<TEventPayload?>>? _getEvent;
     /// <inheritdoc />
-    public virtual Task<JsonEventPayload?> GetEventAsync(Guid id, CancellationToken ct = default)
+    public virtual Task<TEventPayload?> GetEventAsync(Guid id, CancellationToken ct = default)
     {
         if (_optimize)
         {
@@ -95,24 +95,24 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
                 Interlocked.CompareExchange(
                     ref _getEvent,
                     EF.CompileAsyncQuery(
-                        (DbContext dbContext, Guid id) => dbContext.Set<JsonEventPayload>().FirstOrDefault(x => x.Id == id)
+                        (DbContext dbContext, Guid id) => dbContext.Set<TEventPayload>().FirstOrDefault(x => x.Id == id)
                     ),
                     null
                 );
             return _getEvent(_dbContext, id);
         }
-        return _dbContext.Set<JsonEventPayload>().FirstOrDefaultAsync(x => x.Id == id, ct);
+        return _dbContext.Set<TEventPayload>().FirstOrDefaultAsync(x => x.Id == id, ct);
     }
 
-    private static Func<DbContext, Guid[], IAsyncEnumerable<JsonEventPayload>>? _getEvents;
+    private static Func<DbContext, Guid[], IAsyncEnumerable<TEventPayload>>? _getEvents;
     /// <inheritdoc />
-    public virtual async Task<List<JsonEventPayload>> GetEventsAsync(Guid[] ids, CancellationToken ct = default)
+    public virtual async Task<List<TEventPayload>> GetEventsAsync(Guid[] ids, CancellationToken ct = default)
     {
         if (_getEvents is null)
             Interlocked.CompareExchange(
                 ref _getEvents,
                 EF.CompileAsyncQuery(
-                    (DbContext dbContext, Guid[] ids) => dbContext.Set<JsonEventPayload>()
+                    (DbContext dbContext, Guid[] ids) => dbContext.Set<TEventPayload>()
                         .Where(p => ids.Contains(p.Id))
                         .OrderBy(k => k.Created)
                         .AsQueryable()
@@ -120,7 +120,7 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
                 null
             );
 
-        var list = new List<JsonEventPayload>();
+        var list = new List<TEventPayload>();
         await foreach (var item in _getEvents(_dbContext, ids))
             list.Add(item);
 
@@ -149,10 +149,10 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
         return await query.Select(s => new SourceIdWithVersion(s.Id, s.Version)).ToListAsync(ct);
     }
 
-    private Func<DbContext, Guid, Task<JsonEventPayload?>>? _getWithOutVersion;
-    private Func<DbContext, Guid, long, Task<JsonEventPayload?>>? _getWithVersion;
+    private Func<DbContext, Guid, Task<TEventPayload?>>? _getWithOutVersion;
+    private Func<DbContext, Guid, long, Task<TEventPayload?>>? _getWithVersion;
     /// <inheritdoc />
-    public virtual Task<JsonEventPayload?> GetAsync(Guid sourceId, long? version = null, CancellationToken ct = default)
+    public virtual Task<TEventPayload?> GetAsync(Guid sourceId, long? version = null, CancellationToken ct = default)
     {
         if (_optimize)
         {
@@ -162,7 +162,7 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
                     Interlocked.CompareExchange(
                         ref _getWithOutVersion,
                         EF.CompileAsyncQuery(
-                            (DbContext dbContext, Guid sourceId) => dbContext.Set<JsonEventPayload>().Where(x => x.SourceId == sourceId).OrderByDescending(k => k.Version).FirstOrDefault()
+                            (DbContext dbContext, Guid sourceId) => dbContext.Set<TEventPayload>().Where(x => x.SourceId == sourceId).OrderByDescending(k => k.Version).FirstOrDefault()
                         ),
                         null
                     );
@@ -173,7 +173,7 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
                 Interlocked.CompareExchange(
                     ref _getWithVersion,
                     EF.CompileAsyncQuery(
-                        (DbContext dbContext, Guid sourceId, long version) => dbContext.Set<JsonEventPayload>().FirstOrDefault(x => x.SourceId == sourceId && x.Version == version)
+                        (DbContext dbContext, Guid sourceId, long version) => dbContext.Set<TEventPayload>().FirstOrDefault(x => x.SourceId == sourceId && x.Version == version)
                     ),
                     null
                 );
@@ -187,10 +187,10 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
         return query.FirstOrDefaultAsync(ct);
     }
 
-    private Func<DbContext, Guid, Task<JsonEventPayload?>>? _getWithOutDate;
-    private Func<DbContext, Guid, DateTime, Task<JsonEventPayload?>>? _getWithDate;
+    private Func<DbContext, Guid, Task<TEventPayload?>>? _getWithOutDate;
+    private Func<DbContext, Guid, DateTime, Task<TEventPayload?>>? _getWithDate;
     /// <inheritdoc />
-    public virtual Task<JsonEventPayload?> GetAsync(Guid sourceId, DateTime? dateTime = null, CancellationToken ct = default)
+    public virtual Task<TEventPayload?> GetAsync(Guid sourceId, DateTime? dateTime = null, CancellationToken ct = default)
     {
         if (_optimize)
         {
@@ -200,7 +200,7 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
                     Interlocked.CompareExchange(
                         ref _getWithOutDate,
                         EF.CompileAsyncQuery(
-                            (DbContext dbContext, Guid sourceId) => dbContext.Set<JsonEventPayload>().Where(x => x.SourceId == sourceId).OrderByDescending(k => k.Created).FirstOrDefault()
+                            (DbContext dbContext, Guid sourceId) => dbContext.Set<TEventPayload>().Where(x => x.SourceId == sourceId).OrderByDescending(k => k.Created).FirstOrDefault()
                         ),
                         null
                     );
@@ -211,7 +211,7 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
                 Interlocked.CompareExchange(
                     ref _getWithDate,
                     EF.CompileAsyncQuery(
-                        (DbContext dbContext, Guid sourceId, DateTime created) => dbContext.Set<JsonEventPayload>().FirstOrDefault(x => x.SourceId == sourceId && x.Created <= created)
+                        (DbContext dbContext, Guid sourceId, DateTime created) => dbContext.Set<TEventPayload>().FirstOrDefault(x => x.SourceId == sourceId && x.Created <= created)
                     ),
                     null
                 );
@@ -225,35 +225,35 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
         return query.FirstOrDefaultAsync(ct);
     }
 
-    private static Func<DbContext, Guid, long, IAsyncEnumerable<JsonEventPayload>> _getHistoryByVersion = default!;
+    private static Func<DbContext, Guid, long, IAsyncEnumerable<TEventPayload>> _getHistoryByVersion = default!;
     /// <inheritdoc />
-    public virtual async Task<List<JsonEventPayload>> GetHistoryAsync(Guid sourceId, long version, CancellationToken ct = default)
+    public virtual async Task<List<TEventPayload>> GetHistoryAsync(Guid sourceId, long version, CancellationToken ct = default)
     {
         if (_getHistoryByVersion is null)
             Interlocked.CompareExchange(
                 ref _getHistoryByVersion,
-                EF.CompileAsyncQuery((DbContext dbContext, Guid sourceId, long version) => dbContext.Set<JsonEventPayload>().Where(p => p.SourceId == sourceId && p.Version <= version).OrderBy(k => k.Version).AsQueryable()),
+                EF.CompileAsyncQuery((DbContext dbContext, Guid sourceId, long version) => dbContext.Set<TEventPayload>().Where(p => p.SourceId == sourceId && p.Version <= version).OrderBy(k => k.Version).AsQueryable()),
                 null
             );
 
-        var list = new List<JsonEventPayload>();
+        var list = new List<TEventPayload>();
         await foreach (var item in _getHistoryByVersion(_dbContext, sourceId, version))
             list.Add(item);
         return list;
     }
 
-    private static Func<DbContext, Guid, DateTime, IAsyncEnumerable<JsonEventPayload>>? _getHistoryByCreate;
+    private static Func<DbContext, Guid, DateTime, IAsyncEnumerable<TEventPayload>>? _getHistoryByCreate;
     /// <inheritdoc />
-    public virtual async Task<List<JsonEventPayload>> GetHistoryAsync(Guid sourceId, DateTime dateTime, CancellationToken ct = default)
+    public virtual async Task<List<TEventPayload>> GetHistoryAsync(Guid sourceId, DateTime dateTime, CancellationToken ct = default)
     {
         if (_getHistoryByCreate is null)
             Interlocked.CompareExchange(
                 ref _getHistoryByCreate,
-                EF.CompileAsyncQuery((DbContext dbContext, Guid sourceId, DateTime dateTime) => dbContext.Set<JsonEventPayload>().Where(p => p.SourceId == sourceId && p.Created <= dateTime).OrderBy(k => k.Version).AsQueryable()),
+                EF.CompileAsyncQuery((DbContext dbContext, Guid sourceId, DateTime dateTime) => dbContext.Set<TEventPayload>().Where(p => p.SourceId == sourceId && p.Created <= dateTime).OrderBy(k => k.Version).AsQueryable()),
                 null
             );
 
-        var list = new List<JsonEventPayload>();
+        var list = new List<TEventPayload>();
         await foreach (var item in _getHistoryByCreate(_dbContext, sourceId, dateTime))
             list.Add(item);
         return list;
@@ -266,7 +266,7 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
         _logger?.LogDebug("SavePendingCangesAsync {Amount} JsonVersionedEventPayload", amount);
     }
     /// <inheritdoc />
-    public virtual async ValueTask<JsonEventPayload> CreateAsync(JsonEventPayload eventPayload, bool forceSave = false, CancellationToken ct = default)
+    public virtual async ValueTask<TEventPayload> CreateAsync(TEventPayload eventPayload, bool forceSave = false, CancellationToken ct = default)
     {
         await _repository.AddAsync(eventPayload, ct);
         if (forceSave)
@@ -276,7 +276,7 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
         return eventPayload;
     }
     /// <inheritdoc />
-    public virtual async Task<IEnumerable<JsonEventPayload>> CreateAsync(IEnumerable<JsonEventPayload> eventPayloads, bool forceSave = false, CancellationToken ct = default)
+    public virtual async Task<IEnumerable<TEventPayload>> CreateAsync(IEnumerable<TEventPayload> eventPayloads, bool forceSave = false, CancellationToken ct = default)
     {
         await _repository.AddRangeAsync(eventPayloads, ct);
         if (forceSave)
@@ -297,7 +297,7 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
                 Interlocked.CompareExchange(
                     ref _getNonPublishedEventsWithPaging,
                     EF.CompileAsyncQuery(
-                        (DbContext dbContext, int page, int size) => dbContext.Set<JsonEventPayload>()
+                        (DbContext dbContext, int page, int size) => dbContext.Set<TEventPayload>()
                             .Where(x => !x.IsPubliched)
                             .OrderBy(x => x.Id)
                             .Skip(page * size)
@@ -313,7 +313,7 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
             Interlocked.CompareExchange(
                 ref _getNonPublishedEventsWithOutPaging,
                 EF.CompileAsyncQuery(
-                    (DbContext dbContext) => dbContext.Set<JsonEventPayload>()
+                    (DbContext dbContext) => dbContext.Set<TEventPayload>()
                         .Where(x => !x.IsPubliched)
                         .Select(s => new NonPublishEventPayload(s.Id, s.SourceId, s.Version, s.Created, s.Scheduled))
                 ),
@@ -332,7 +332,7 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
                 Interlocked.CompareExchange(
                     ref _getAllSourceIdWithPaging,
                     EF.CompileAsyncQuery(
-                        (DbContext dbContext, int page, int size) => dbContext.Set<JsonEventPayload>()
+                        (DbContext dbContext, int page, int size) => dbContext.Set<TEventPayload>()
                             .GroupBy(x => x.SourceId)
                             .OrderBy(x => x.Key)
                             .Skip(page * size)
@@ -348,7 +348,7 @@ public class JsonEventDbContextRepository : IEventRepository<JsonEventPayload, s
             Interlocked.CompareExchange(
                 ref _getAllSourceIdWithOutPaging,
                 EF.CompileAsyncQuery(
-                    (DbContext dbContext) => dbContext.Set<JsonEventPayload>()
+                    (DbContext dbContext) => dbContext.Set<TEventPayload>()
                         .GroupBy(x => x.SourceId)
                         .Select(s => new SourceIdWithVersion(s.Key, s.Max(x => x.Version)))
                 ),

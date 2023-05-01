@@ -1,18 +1,16 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Data.EntityFramework.Utility;
+using UnlimitSoft.WebApi.EventSourced.CQRS.Repository;
 
 namespace UnlimitSoft.WebApi.EventSourced.CQRS.Configuration;
 
 
-public sealed class EventEntityTypeBuilder : _EntityTypeBuilder<JsonEventPayload>
+public sealed class EventEntityTypeBuilder : _EntityTypeBuilder<MyEventPayload>
 {
-    public override void Configure(EntityTypeBuilder<JsonEventPayload> builder)
+    public override void Configure(EntityTypeBuilder<MyEventPayload> builder)
     {
-        EntityBuilderUtility.ConfigureEvent<JsonEventPayload, string>(builder);
+        EntityBuilderUtility.ConfigureEvent(builder, useExtraIndex: true);
 
-        builder.HasIndex(p => p.SourceId);
-        builder.HasIndex(p => new { p.SourceId, p.Version });
-        builder.HasIndex(p => new { p.SourceId, p.Created });
+        builder.Property(p => p.Text).IsRequired().HasMaxLength(30);
     }
 }

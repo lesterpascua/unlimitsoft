@@ -8,7 +8,6 @@ using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Data.Dto;
-using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Data.Seed;
 
 namespace UnlimitSoft.Data.EntityFramework.Utility;
@@ -25,24 +24,27 @@ public static class EntityBuilderUtility
     /// <remarks>
     /// If the table groud to mush use index in IsPubliched, otherwise can affect the service restart process.
     /// </remarks>
-    /// <typeparam name="TPayload">Type of the payload used as body of the event. The body is where save the data.</typeparam>
-    /// <typeparam name="TEvent"> Versioned event type. Example: <see cref="JsonEventPayload"/> or you can create your personalize.</typeparam>
+    /// <typeparam name="TEvent"> Versioned event type. Example: <see cref="EventPayload"/> or you can create your personalize.</typeparam>
     /// <param name="builder"></param>
     /// <param name="useIndex">Add index for properties like Created and IsPubliched</param>
     /// <param name="useExtraIndex">For SourceId, {SourceId, Version}, {SourceId, Created}</param>
     /// <param name="payloadBuilder">Extra properties applied over payload.</param>
-    public static void ConfigureEvent<TEvent, TPayload>(EntityTypeBuilder<TEvent> builder, bool useIndex = true, bool useExtraIndex = false, Action<PropertyBuilder<TPayload>>? payloadBuilder = null)
-        where TEvent : EventPayload<TPayload>
+    public static void ConfigureEvent<TEvent>(EntityTypeBuilder<TEvent> builder, bool useIndex = true, bool useExtraIndex = false, Action<PropertyBuilder<string?>>? payloadBuilder = null)
+        where TEvent : EventPayload
     {
         builder.ToTable("VersionedEvent");
         builder.HasKey(k => k.Id);
 
-        builder.Property(p => p.Id).ValueGeneratedNever();                      // Guid
-        builder.Property(p => p.SourceId);                                      // Guid
-        builder.Property(p => p.EventName).IsRequired().HasMaxLength(255);
-        builder.Property(p => p.Created).HasConversion(DateTimeUtcConverter.Instance);
+        builder.Property(p => p.Id).ValueGeneratedNever().HasComment("Event unique identifier");
+        builder.Property(p => p.SourceId).HasComment("PKey of the identity where event was attached");
+        builder.Property(p => p.Version).HasComment("Version or order of the event in the stream. Este valor lo asigna la entidad que lo genero y \r\n    /// es el que ella poseia en el instante en que fue generado el evento");
+        builder.Property(p => p.ServiceId).HasComment("Identifier of the service where the event below");
+        builder.Property(p => p.WorkerId).HasComment("Identifier of the worker were the event is create");
+        builder.Property(p => p.Name).IsRequired().HasMaxLength(255).HasComment("Name of the event. This is use to identified the event type");
+        builder.Property(p => p.Created).HasConversion(DateTimeUtcConverter.Instance).HasComment("Date when the event was created");
+        builder.Property(p => p.IsDomainEvent).HasComment("Specify if an event belown to domain. This have optimization propouse");
 
-        var payloadPropertyBuilder = builder.Property(p => p.Payload).IsRequired();
+        var payloadPropertyBuilder = builder.Property(p => p.Body);
         payloadBuilder?.Invoke(payloadPropertyBuilder);
 
         if (useIndex)

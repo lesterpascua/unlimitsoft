@@ -21,28 +21,28 @@ public class QueueEventPublishWorkerTests
 {
     private readonly IEventBus _eventBus;
     private readonly IServiceScopeFactory _factory;
-    private readonly JsonEventPayload[] _data;
-    private readonly List<JsonEventPayload> _publish;
+    private readonly EventPayload[] _data;
+    private readonly List<EventPayload> _publish;
 
     public QueueEventPublishWorkerTests()
     {
-        _publish = new List<JsonEventPayload>();
-        _data = new JsonEventPayload[] {
-            new JsonEventPayload{ Id = Guid.NewGuid(), Created = new DateTime(1, 12, 31), IsPubliched = true, Scheduled = DateTime.MaxValue },
-            new JsonEventPayload{ Id = Guid.NewGuid(), Created = new DateTime(2021, 10, 10), Scheduled = new DateTime(2021, 10, 12) },
-            new JsonEventPayload{ Id = Guid.NewGuid(), Created = new DateTime(2021, 10, 11), Scheduled = null },
+        _publish = new List<EventPayload>();
+        _data = new EventPayload[] {
+            new EventPayload{ Id = Guid.NewGuid(), Created = new DateTime(1, 12, 31), IsPubliched = true, Scheduled = DateTime.MaxValue },
+            new EventPayload{ Id = Guid.NewGuid(), Created = new DateTime(2021, 10, 10), Scheduled = new DateTime(2021, 10, 12) },
+            new EventPayload{ Id = Guid.NewGuid(), Created = new DateTime(2021, 10, 11), Scheduled = null },
         };
 
         _eventBus = Substitute.For<IEventBus>();
         _eventBus
-            .PublishPayloadAsync(Arg.Any<JsonEventPayload>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .PublishPayloadAsync(Arg.Any<EventPayload>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(args =>
             {
-                _publish.Add(args.ArgAt<JsonEventPayload>(0));
+                _publish.Add(args.ArgAt<EventPayload>(0));
                 return Task.CompletedTask;
             });
 
-        var repository = Substitute.For<IEventRepository<JsonEventPayload, string>>();
+        var repository = Substitute.For<IEventRepository<EventPayload>>();
         repository.GetNonPublishedEventsAsync(Arg.Any<Paging>(), Arg.Any<CancellationToken>())
             .Returns(x =>
             {
@@ -72,7 +72,7 @@ public class QueueEventPublishWorkerTests
             {
                 if (info.ArgAt<Type>(0) == typeof(IUnitOfWork))
                     return Substitute.For<IUnitOfWork>();
-                if (info.ArgAt<Type>(0) == typeof(IEventRepository<JsonEventPayload, string>))
+                if (info.ArgAt<Type>(0) == typeof(IEventRepository<EventPayload>))
                     return repository;
 
                 throw new NotSupportedException();
@@ -89,7 +89,7 @@ public class QueueEventPublishWorkerTests
     public async Task StartLoadingPendingEvent_Load3EventOnly2SchedulerInTime_ShouldPublish2EventInEventBus()
     {
         // Arrange
-        using var publishWorker = new QueueEventPublishWorker<IEventRepository<JsonEventPayload, string>, JsonEventPayload, string>(
+        using var publishWorker = new QueueEventPublishWorker<IEventRepository<EventPayload>, EventPayload>(
             SysClock.Clock,
             _factory,
             _eventBus,

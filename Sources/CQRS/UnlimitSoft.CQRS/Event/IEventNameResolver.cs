@@ -23,6 +23,12 @@ public interface IEventNameResolver
     /// <param name="eventName"></param>
     /// <returns>Type register with the name, null if no type asociate.</returns>
     Type? Resolver(string eventName);
+    /// <summary>
+    /// Get the body of the event type
+    /// </summary>
+    /// <param name="type"></param>
+    /// <returns></returns>
+    Type GetBodyType(Type type);
 }
 /// <summary>
 /// 

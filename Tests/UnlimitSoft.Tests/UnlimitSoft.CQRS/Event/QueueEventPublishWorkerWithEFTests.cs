@@ -8,6 +8,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Data;
+using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Data.EntityFramework.Utility;
@@ -37,16 +38,16 @@ public sealed class QueueEventPublishWorkerWithEFTests
         var provider = scope.ServiceProvider;
 
         // Arrange
-        var data = new JsonEventPayload[amount];
+        var data = new EventPayload[amount];
         for (var i = 0; i < amount; i++)
-            data[i] = new JsonEventPayload
+            data[i] = new EventPayload
             {
                 Id = _faker.Random.Guid(),
                 Created = _faker.Date.Past(),
                 IsPubliched = false,
                 Scheduled = null,
-                EventName = _faker.Random.String2(3),
-                Payload = """
+                Name = _faker.Random.String2(3),
+                Body = """
                         {
                             id: "1",
                             name: "Test"
@@ -80,16 +81,16 @@ public sealed class QueueEventPublishWorkerWithEFTests
         var provider = scope.ServiceProvider;
 
         // Arrange
-        var data = new JsonEventPayload[amount];
+        var data = new EventPayload[amount];
         for (var i = 0; i < amount; i++)
-            data[i] = new JsonEventPayload
+            data[i] = new EventPayload
             {
                 Id = _faker.Random.Guid(),
                 Created = _faker.Date.Past(),
                 IsPubliched = false,
                 Scheduled = null,
-                EventName = _faker.Random.String2(3),
-                Payload = """
+                Name = _faker.Random.String2(3),
+                Body = """
                         {
                             id: "1",
                             name: "Test"
@@ -111,7 +112,7 @@ public sealed class QueueEventPublishWorkerWithEFTests
 
         // Assert
         worker.Pending.Should().Be(0);
-        await eventBus.Received(amount).PublishPayloadAsync(Arg.Any<JsonEventPayload>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
+        await eventBus.Received(amount).PublishPayloadAsync(Arg.Any<EventPayload>(), Arg.Any<bool>(), Arg.Any<CancellationToken>());
     }
 
     #region Private Methods
@@ -119,7 +120,7 @@ public sealed class QueueEventPublishWorkerWithEFTests
     {
         eventBus = Substitute.For<IEventBus>();
         eventBus
-            .PublishPayloadAsync(Arg.Any<JsonEventPayload>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
+            .PublishPayloadAsync(Arg.Any<EventPayload>(), Arg.Any<bool>(), Arg.Any<CancellationToken>())
             .Returns(args => Task.CompletedTask);
 
         var dbName = Guid.NewGuid().ToString();
@@ -128,14 +129,14 @@ public sealed class QueueEventPublishWorkerWithEFTests
         serviceCollection.AddLogging();
         serviceCollection.AddDbContext<MyDbContext>(opt => opt.UseInMemoryDatabase(dbName));
         serviceCollection.AddSingleton<ISysClock, SysClock>();
-        serviceCollection.AddScoped<IEventRepository<JsonEventPayload, string>, JsonEventDbContextRepository>();
+        serviceCollection.AddScoped<IEventRepository<EventPayload>, EventDbContextRepository<EventPayload>>();
 
         serviceCollection.AddSingleton<IEventPublishWorker>(provider =>
         {
             var clock = provider.GetRequiredService<ISysClock>();
             var eventBus = provider.GetRequiredService<IEventBus>();
             var factory = provider.GetRequiredService<IServiceScopeFactory>();
-            return new QueueEventPublishWorker<IEventRepository<JsonEventPayload, string>, JsonEventPayload, string>(
+            return new QueueEventPublishWorker<IEventRepository<EventPayload>, EventPayload>(
                 clock,
                 factory,
                 eventBus,
@@ -166,13 +167,13 @@ public sealed class QueueEventPublishWorkerWithEFTests
             base.OnModelCreating(modelBuilder);
         }
 
-        public DbSet<JsonEventPayload> Events => Set<JsonEventPayload>();
+        public DbSet<EventPayload> Events => Set<EventPayload>();
     }
-    private sealed class EventEntityTypeBuilder : IEntityTypeConfiguration<JsonEventPayload>
+    private sealed class EventEntityTypeBuilder : IEntityTypeConfiguration<EventPayload>
     {
-        public void Configure(EntityTypeBuilder<JsonEventPayload> builder)
+        public void Configure(EntityTypeBuilder<EventPayload> builder)
         {
-            EntityBuilderUtility.ConfigureEvent<JsonEventPayload, string>(builder, useExtraIndex: true);
+            EntityBuilderUtility.ConfigureEvent<EventPayload>(builder, useExtraIndex: true);
         }
     }
     #endregion
