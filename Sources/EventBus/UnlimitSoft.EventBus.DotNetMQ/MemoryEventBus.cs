@@ -27,7 +27,7 @@ public class MemoryEventBus<TAlias> : IEventBus, IAsyncDisposable
 
     private readonly string _name;
     private readonly IEnumerable<QueueAlias<TAlias>> _queues;
-    private readonly IEventNameResolver _eventNameResolver;
+    private readonly IEventNameResolver _resolver;
     private readonly IJsonSerializer _serializer;
     private readonly Func<TAlias, string, object, bool>? _filter;
     private readonly Func<TAlias, string, object, object>? _transform;
@@ -40,7 +40,7 @@ public class MemoryEventBus<TAlias> : IEventBus, IAsyncDisposable
     /// </summary>
     /// <param name="name"></param>
     /// <param name="queues"></param>
-    /// <param name="eventNameResolver"></param>
+    /// <param name="resolver"></param>
     /// <param name="serializer"></param>
     /// <param name="filter"></param>
     /// <param name="transform"></param>
@@ -49,7 +49,7 @@ public class MemoryEventBus<TAlias> : IEventBus, IAsyncDisposable
     public MemoryEventBus(
         string name,
         IEnumerable<QueueAlias<TAlias>> queues,
-        IEventNameResolver eventNameResolver,
+        IEventNameResolver resolver,
         IJsonSerializer serializer,
         Func<TAlias, string, object, bool>? filter = null,
         Func<TAlias, string, object, object>? transform = null,
@@ -60,7 +60,7 @@ public class MemoryEventBus<TAlias> : IEventBus, IAsyncDisposable
         _name = name;
         _queues = queues.Where(x => x.Active == true).ToArray();
         _filter = filter;
-        _eventNameResolver = eventNameResolver;
+        _resolver = resolver;
         _serializer = serializer;
         _transform = transform;
         _setup = setup;
@@ -103,7 +103,7 @@ public class MemoryEventBus<TAlias> : IEventBus, IAsyncDisposable
     /// <inheritdoc />
     public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop = true, CancellationToken ct = default) => SendMessageAsync(graph, id, eventName, correlationId, useEnvelop, ct);
     /// <inheritdoc />
-    public Task PublishPayloadAsync<T>(EventPayload<T> @event, bool useEnvelop = true, CancellationToken ct = default)
+    public Task PublishPayloadAsync<TEventPayload>(TEventPayload @event, bool useEnvelop = true, CancellationToken ct = default) where TEventPayload : EventPayload
     {
         throw new NotImplementedException();
     }

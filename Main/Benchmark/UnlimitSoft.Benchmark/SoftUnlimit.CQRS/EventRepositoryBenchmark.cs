@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.Data.Common;
 using UnlimitSoft.CQRS.Data;
+using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Data.EntityFramework.Utility;
 
@@ -12,11 +13,11 @@ namespace UnlimitSoft.Benchmark.SoftUnlimit.CQRS;
 
 
 [MemoryDiagnoser]
-public class JsonEventRepositoryBenchmark
+public class EventRepositoryBenchmark
 {
     private Guid _id, _sourceId;
     private MyDbContext _dbContext = default!;
-    private IEventRepository<JsonEventPayload, string> _optimize = default!, _noOptimize = default!;
+    private IEventRepository<EventPayload> _optimize = default!, _noOptimize = default!;
 
 
     [GlobalSetup]
@@ -30,8 +31,8 @@ public class JsonEventRepositoryBenchmark
         _dbContext = new MyDbContext(connection);
         (_id, _sourceId) = await SeedAsync(faker, _dbContext, _id, _sourceId);
 
-        _optimize = new JsonEventDbContextRepository(_dbContext);
-        _noOptimize = new JsonEventDbContextRepository(_dbContext, optimize: false);
+        _optimize = new EventDbContextRepository<EventPayload>(_dbContext);
+        _noOptimize = new EventDbContextRepository<EventPayload>(_dbContext, optimize: false);
 
         // ==================================================================================================================================
         static async Task<(Guid Id, Guid SourceId)> SeedAsync(Faker faker, MyDbContext dbContext, Guid id, Guid sourceId)
@@ -42,16 +43,16 @@ public class JsonEventRepositoryBenchmark
                 return (id, sourceId);
 
             int amount = 100_000;
-            var data = new JsonEventPayload[amount];
+            var data = new EventPayload[amount];
             for (var i = 0; i < amount; i++)
-                data[i] = new JsonEventPayload
+                data[i] = new EventPayload
                 {
                     Id = faker.Random.Guid(),
                     Created = faker.Date.Past(),
                     IsPubliched = false,
                     Scheduled = null,
-                    EventName = faker.Random.String2(3),
-                    Payload = """{ id: "1", name: "Test" }"""
+                    Name = faker.Random.String2(3),
+                    Body = """{ id: "1", name: "Test" }"""
                 };
 
             await dbContext.Events.AddRangeAsync(data);
@@ -141,13 +142,13 @@ public class JsonEventRepositoryBenchmark
             base.OnModelCreating(modelBuilder);
         }
 
-        public DbSet<JsonEventPayload> Events => Set<JsonEventPayload>();
+        public DbSet<EventPayload> Events => Set<EventPayload>();
     }
-    private sealed class EventEntityTypeBuilder : IEntityTypeConfiguration<JsonEventPayload>
+    private sealed class EventEntityTypeBuilder : IEntityTypeConfiguration<EventPayload>
     {
-        public void Configure(EntityTypeBuilder<JsonEventPayload> builder)
+        public void Configure(EntityTypeBuilder<EventPayload> builder)
         {
-            EntityBuilderUtility.ConfigureEvent<JsonEventPayload, string>(builder, useExtraIndex: true);
+            EntityBuilderUtility.ConfigureEvent<EventPayload>(builder, useExtraIndex: true);
         }
     }
     #endregion

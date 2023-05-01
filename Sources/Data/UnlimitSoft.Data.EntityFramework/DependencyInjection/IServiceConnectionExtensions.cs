@@ -1,13 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
-using UnlimitSoft.Data.Reflection;
-using UnlimitSoft.Reflection;
 using System;
 using System.Linq;
 using System.Reflection;
 using System.Threading;
 using UnlimitSoft.CQRS.Data;
-using Microsoft.EntityFrameworkCore.Storage;
+using UnlimitSoft.Data.Reflection;
+using UnlimitSoft.Reflection;
 
 namespace UnlimitSoft.Data.EntityFramework.DependencyInjection;
 
@@ -160,7 +159,7 @@ public static class IServiceConnectionExtensions
         {
             var constraints = settings.IEventSourcedRepository
                 .GetInterfaces()
-                .Any(i => i.GetGenericTypeDefinition() == typeof(IEventRepository<,>));
+                .Any(i => i.GetGenericTypeDefinition() == typeof(IEventRepository<>));
             if (!constraints)
                 throw new InvalidOperationException("IEventRepository don't implement IEventRepository<TEventPayload, TPayload>");
 

@@ -1,5 +1,4 @@
-﻿using System.Security.Cryptography.Xml;
-using UnlimitSoft.Event;
+﻿using UnlimitSoft.Event;
 using UnlimitSoft.WebApi.EventSourced.Client;
 
 namespace UnlimitSoft.WebApi.EventSourced.CQRS.Event;
@@ -18,6 +17,7 @@ public sealed record CreatedBody(Guid Id, string Name, int Amount, DateTime Crea
 /// </summary>
 public sealed class CreatedEvent : MyEvent<CreatedBody>, IMementoEvent<IOrder>
 {
+    public CreatedEvent() : base() { }
     /// <summary>
     /// 
     /// </summary>

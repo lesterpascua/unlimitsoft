@@ -1,6 +1,6 @@
 ﻿using System;
 using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.Event.Json;
+using UnlimitSoft.Json;
 using UnlimitSoft.Message;
 
 namespace UnlimitSoft.CQRS.Data.Dto;
@@ -9,30 +9,36 @@ namespace UnlimitSoft.CQRS.Data.Dto;
 /// <summary>
 /// Dto to represent an event in an storage
 /// </summary>
-public abstract class EventPayload
+public class EventPayload
 {
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     /// <summary>
-    /// 
+    /// Deserialize constructor
     /// </summary>
-    protected EventPayload() { }
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+    public EventPayload() { }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
     /// <summary>
     /// 
     /// </summary>
     /// <param name="event"></param>
-    protected EventPayload(IEvent @event)
+    /// <param name="serializer"></param>
+    public EventPayload(IEvent @event, IJsonSerializer serializer)
     {
         Id = @event.Id;
         SourceId = @event.SourceId;
         Version = @event.Version;
+        ServiceId = @event.ServiceId;
+        WorkerId = @event.WorkerId;
         CorrelationId = @event.CorrelationId;
-        EventName = @event.Name;
+        Name = @event.Name;
         Created = @event.Created;
+        IsDomainEvent = @event.IsDomainEvent;
         IsPubliched = false;
         if (@event is IDelayEvent delayEvent)
             Scheduled = delayEvent.Scheduled;
+
+        Body = serializer.Serialize(@event.GetBody());
     }
 
     /// <summary>
@@ -49,17 +55,29 @@ public abstract class EventPayload
     /// </summary>
     public long Version { get; set; }
     /// <summary>
+    /// Identifier of service where event is created
+    /// </summary>
+    public ushort ServiceId { get; set; }
+    /// <summary>
+    /// Identifier of the worker were the event is create.
+    /// </summary>
+    public string? WorkerId { get; set; }
+    /// <summary>
     /// Event correlation identifier.
     /// </summary>
     public string? CorrelationId { get; set; }
     /// <summary>
     /// Event unique name.
     /// </summary>
-    public string EventName { get; set; }
+    public string Name { get; set; }
     /// <summary>
     /// 
     /// </summary>
     public DateTime Created { get; set; }
+    /// <summary>
+    /// Specify if an event belown to domain. This have optimization propouse.
+    /// </summary>
+    public bool IsDomainEvent { get; set; }
     /// <summary>
     /// If the proviced 
     /// </summary>
@@ -68,6 +86,10 @@ public abstract class EventPayload
     /// 
     /// </summary>
     public bool IsPubliched { get; set; }
+    /// <summary>
+    /// Body serialize as json object
+    /// </summary>
+    public string? Body { get; set; }
 
     /// <summary>
     /// 
@@ -78,38 +100,38 @@ public abstract class EventPayload
     /// Get event name inside the payload.
     /// </summary>
     /// <returns></returns>
-    public override string ToString() => EventName;
+    public override string ToString() => Name;
     /// <inheritdoc />
     public override int GetHashCode() => Id.GetHashCode();
     /// <inheritdoc />
     public override bool Equals(object? obj) => obj is EventPayload payload && Id == payload.Id;
-}
-/// <summary>
-/// Dto to represent an event in an storage with a generic body depending of the serialization algorithm this value could change. 
-/// See <see cref="JsonEventPayload"/> to visualize a body using json string
-/// </summary>
-/// <typeparam name="TPayload"></typeparam>
-public abstract class EventPayload<TPayload> : EventPayload
-{
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    /// <summary>
-    /// 
-    /// </summary>
-    protected EventPayload() { }
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="event"></param>
-    /// <param name="payload"></param>
-    protected EventPayload(IEvent @event, TPayload payload)
-        : base(@event)
-    {
-        Payload = payload;
-    }
 
     /// <summary>
-    /// Complete event serialized in a payload. Serialization depends of the user approach could be json or binary
+    /// Create event from EventPayload
     /// </summary>
-    public TPayload Payload { get; set; }
+    /// <typeparam name="TEventPayload"></typeparam>
+    /// <param name="eventType"></param>
+    /// <param name="bodyType"></param>
+    /// <param name="payload"></param>
+    /// <param name="serializer"></param>
+    /// <returns></returns>
+    public static IEvent FromEventPayload<TEventPayload>(Type eventType, Type bodyType, TEventPayload payload, IJsonSerializer serializer) where TEventPayload : EventPayload
+    {
+        var e = (IEvent?)Activator.CreateInstance(eventType) ?? throw new InvalidOperationException("Can't create an event of this type");
+
+        e.Id = payload.Id;
+        e.SourceId = payload.SourceId;
+        e.Version = payload.Version;
+        e.ServiceId = payload.ServiceId;
+        e.WorkerId = payload.WorkerId;
+        e.CorrelationId = payload.CorrelationId;
+        e.Name = payload.Name;
+        e.Created = payload.Created;
+        e.IsDomainEvent = payload.IsDomainEvent;
+
+        var body = serializer.Deserialize(bodyType, payload.Body);
+        e.SetBody(body);
+
+        return e;
+    }
 }

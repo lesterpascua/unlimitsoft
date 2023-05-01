@@ -123,16 +123,16 @@ public class RabbitMQEventBus<TAlias> : IEventBus, IDisposable where TAlias : st
         return SendAsync(@event, @event.Id, @event.Name, @event.CorrelationId, useEnvelop);
     }
     /// <inheritdoc />
-    public virtual Task PublishPayloadAsync<T>(EventPayload<T> eventPayload, bool useEnvelop = true, CancellationToken ct = default)
+    public virtual Task PublishPayloadAsync<TEventPayload>(TEventPayload eventPayload, bool useEnvelop = true, CancellationToken ct = default) where TEventPayload : EventPayload
     {
-        var eventType = _resolver.Resolver(eventPayload.EventName);
+        var eventType = _resolver.Resolver(eventPayload.Name);
         if (eventType is null)
             return Task.CompletedTask;
 
-        var @event = LoadFromPaylod(eventType, eventPayload.Payload);
+        var @event = LoadFromPaylod(eventType, eventPayload);
         if (@event is null)
             return Task.CompletedTask;
-        return SendAsync(@event, eventPayload.Id, eventPayload.EventName, eventPayload.CorrelationId, useEnvelop);
+        return SendAsync(@event, eventPayload.Id, eventPayload.Name, eventPayload.CorrelationId, useEnvelop);
     }
     /// <inheritdoc />
     public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop = true, CancellationToken ct = default) => SendAsync(graph, id, eventName, correlationId, useEnvelop);
@@ -140,16 +140,14 @@ public class RabbitMQEventBus<TAlias> : IEventBus, IDisposable where TAlias : st
     /// <summary>
     /// Load event from Payload
     /// </summary>
-    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="TEventPayload"></typeparam>
     /// <param name="eventType"></param>
     /// <param name="payload"></param>
     /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
-    protected virtual object? LoadFromPaylod<T>(Type eventType, T payload)
+    protected virtual IEvent? LoadFromPaylod<TEventPayload>(Type eventType, TEventPayload payload) where TEventPayload : EventPayload
     {
-        if (payload is not string json)
-            throw new NotSupportedException("Only allow json payload");
-        return _serializer.Deserialize(eventType, json);
+        var bodyType = _resolver.GetBodyType(eventType);
+        return EventPayload.FromEventPayload(eventType, bodyType, payload, _serializer);
     }
     /// <summary>
     /// Send message async

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Data.Dto;
-using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Web.Model;
 
 namespace UnlimitSoft.CQRS.Data;
@@ -12,7 +11,7 @@ namespace UnlimitSoft.CQRS.Data;
 /// <summary>
 /// Provide an abstraction to access to the event source storage
 /// </summary>
-public interface IEventRepository<TEventPayload, in TPayload> where TEventPayload : EventPayload<TPayload>
+public interface IEventRepository<TEventPayload> where TEventPayload : EventPayload
 {
     /// <summary>
     /// Get all event non publish and allow paging
@@ -107,7 +106,7 @@ public interface IEventRepository<TEventPayload, in TPayload> where TEventPayloa
     /// <param name="forceSave">Indicate the save should happend in this moment.</param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    ValueTask<JsonEventPayload> CreateAsync(JsonEventPayload eventPayload, bool forceSave = false, CancellationToken ct = default);
+    ValueTask<TEventPayload> CreateAsync(TEventPayload eventPayload, bool forceSave = false, CancellationToken ct = default);
     /// <summary>
     /// Create multiples versioned event to the storage
     /// </summary>

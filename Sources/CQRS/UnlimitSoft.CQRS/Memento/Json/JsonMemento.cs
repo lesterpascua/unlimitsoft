@@ -5,8 +5,8 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Data;
+using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Event;
 using UnlimitSoft.Json;
 
@@ -19,12 +19,14 @@ namespace UnlimitSoft.CQRS.Memento.Json;
 /// </summary>
 /// <typeparam name="TInterface"></typeparam>
 /// <typeparam name="TEntity"></typeparam>
-public abstract class JsonMemento<TInterface, TEntity> : IMemento<TInterface>
+/// <typeparam name="TEventPayload"></typeparam>
+public abstract class JsonMemento<TInterface, TEntity, TEventPayload> : IMemento<TInterface>
     where TEntity : class, TInterface, IEventSourced, new()
+    where TEventPayload : EventPayload
 {
     private readonly IJsonSerializer _serializer;
     private readonly IEventNameResolver _nameResolver;
-    private readonly IEventRepository<JsonEventPayload, string> _eventSourcedRepository;
+    private readonly IEventRepository<TEventPayload> _eventSourcedRepository;
     private readonly Func<IReadOnlyCollection<IMementoEvent<TInterface>>, TEntity>? _factory;
 
     /// <summary>
@@ -37,7 +39,7 @@ public abstract class JsonMemento<TInterface, TEntity> : IMemento<TInterface>
     public JsonMemento(
         IJsonSerializer serializer,
         IEventNameResolver nameResolver,
-        IEventRepository<JsonEventPayload, string> eventSourcedRepository,
+        IEventRepository<TEventPayload> eventSourcedRepository,
         Func<IReadOnlyCollection<IMementoEvent<TInterface>>, TEntity>? factory = null
     )
     {
@@ -73,11 +75,14 @@ public abstract class JsonMemento<TInterface, TEntity> : IMemento<TInterface>
     /// <param name="type"></param>
     /// <param name="payload"></param>
     /// <returns></returns>
-    protected virtual IMementoEvent<TInterface> FromEvent(Type type, string payload) => (IMementoEvent<TInterface>)_serializer.Deserialize(type, payload)!;
-
+    protected virtual IMementoEvent<TInterface> FromEvent(Type type, TEventPayload payload)
+    {
+        var bodyType = _nameResolver.GetBodyType(type);
+        return (IMementoEvent<TInterface>)EventPayload.FromEventPayload(type, bodyType, payload, _serializer);
+    }
 
     #region Nested Classes
-    private TEntity LoadEntityFromHistory(List<JsonEventPayload> eventsPayload)
+    private TEntity LoadEntityFromHistory(List<TEventPayload> eventsPayload)
     {
         var history = new IMementoEvent<TInterface>[eventsPayload.Count];
 
@@ -92,8 +97,8 @@ public abstract class JsonMemento<TInterface, TEntity> : IMemento<TInterface>
             var eventPayload = eventsPayload[i];
 #endif
 
-            var eventType = _nameResolver.RequireResolver(eventPayload.EventName);
-            history[i] = FromEvent(eventType, eventPayload.Payload);
+            var eventType = _nameResolver.RequireResolver(eventPayload.Name);
+            history[i] = FromEvent(eventType, eventPayload);
         }
 
         var entity = _factory?.Invoke(history) ?? new TEntity();

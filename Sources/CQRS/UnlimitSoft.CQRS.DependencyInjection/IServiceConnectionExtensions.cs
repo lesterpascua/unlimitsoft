@@ -54,7 +54,7 @@ public static class IServiceConnectionExtensions
             {
                 var types = assambly
                     .GetTypes()
-                    .Where(mytype => mytype.GetInterfaces().Contains(typeof(T)));
+                    .Where(mytype => mytype.IsClass && !mytype.IsAbstract && mytype.GetInterfaces().Contains(typeof(T)));
 
                 result.AddRange(types);
             }

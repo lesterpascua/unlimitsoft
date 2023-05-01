@@ -1,14 +1,14 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event;
-using UnlimitSoft.CQRS.Event.Json;
 
 namespace UnlimitSoft.WebApi.Sources.CQRS.Event;
 
 
 /// <inheritdoc />
-public class MyQueueEventPublishWorker : QueueEventPublishWorker<IMyEventSourcedRepository, JsonEventPayload, string>
+public class MyQueueEventPublishWorker : QueueEventPublishWorker<IMyEventSourcedRepository, EventPayload>
 {
     /// <summary>
     /// 

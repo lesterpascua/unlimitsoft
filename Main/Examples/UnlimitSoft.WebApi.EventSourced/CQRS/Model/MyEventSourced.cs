@@ -30,11 +30,10 @@ public abstract class MyEventSourced : UnlimitSoft.CQRS.Data.EventSourced
     /// <param name="gen"></param>
     /// <param name="body"></param>
     /// <returns></returns>
-    internal IEvent AddEvent<T, TBody>(IMyIdGenerator gen, TBody body) where T : MyEvent<TBody>
+    internal T AddEvent<T, TBody>(IMyIdGenerator gen, TBody body) where T : MyEvent<TBody>
     {
         var @event = AddEvent<T, TBody>(gen.GenerateId(), gen.ServiceId, gen.WorkerId, null, body);
-        if (@event is IMyEvent e)
-            e.Text = "Some text";
+        @event.Text = "Some text";
 
         return @event;
     }

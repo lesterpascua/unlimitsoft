@@ -51,6 +51,11 @@ public interface IEvent : IRequest<IResponse>
     /// </summary>
     /// <returns></returns>
     object? GetBody();
+    /// <summary>
+    /// Set event body.
+    /// </summary>
+    /// <returns></returns>
+    void SetBody(object? body);
 }
 /// <summary>
 /// Represents an event message.
@@ -119,6 +124,8 @@ public abstract class Event<TBody> : IEvent
 
     /// <inheritdoc />
     public object? GetBody() => Body;
+    /// <inheritdoc />
+    public void SetBody(object? body) => Body = (TBody)body!;
 
     /// <inheritdoc />
     public override string ToString() => Name;

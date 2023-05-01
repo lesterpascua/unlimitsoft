@@ -36,8 +36,8 @@ public interface IMediatorDispatchEvent
 /// <summary>
 /// 
 /// </summary>
-public abstract class MediatorDispatchEvent<TEventPayload, TPayload> : IMediatorDispatchEvent
-    where TEventPayload : EventPayload<TPayload>
+public abstract class MediatorDispatchEvent<TEventPayload> : IMediatorDispatchEvent
+    where TEventPayload : EventPayload
 {
     /// <summary>
     /// 
@@ -69,7 +69,7 @@ public abstract class MediatorDispatchEvent<TEventPayload, TPayload> : IMediator
     /// <summary>
     /// Get event repository registered in the DPI
     /// </summary>
-    protected abstract IEventRepository<TEventPayload, TPayload>? EventRepository { get; }
+    protected abstract IEventRepository<TEventPayload>? EventRepository { get; }
 
 
     /// <summary>
