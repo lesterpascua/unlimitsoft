@@ -101,12 +101,12 @@ public class MemoryEventBus<TAlias> : IEventBus, IAsyncDisposable
     /// <inheritdoc />
     public Task PublishAsync(IEvent @event, bool useEnvelop = true, CancellationToken ct = default) => SendMessageAsync(@event, @event.Id, @event.Name, @event.CorrelationId, useEnvelop, ct);
     /// <inheritdoc />
-    public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop = true, CancellationToken ct = default) => SendMessageAsync(graph, id, eventName, correlationId, useEnvelop, ct);
-    /// <inheritdoc />
-    public Task PublishPayloadAsync<TEventPayload>(TEventPayload @event, bool useEnvelop = true, CancellationToken ct = default) where TEventPayload : EventPayload
+    public Task PublishPayloadAsync(EventPayload @event, bool useEnvelop = true, CancellationToken ct = default)
     {
         throw new NotImplementedException();
     }
+    /// <inheritdoc />
+    public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop = true, CancellationToken ct = default) => SendMessageAsync(graph, id, eventName, correlationId, useEnvelop, ct);
 
     /// <summary>
     /// Create client 

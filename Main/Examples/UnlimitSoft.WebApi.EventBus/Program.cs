@@ -1,6 +1,7 @@
 using Microsoft.Extensions.Options;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
+using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.DependencyInjection;
 using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.EventBus.Azure;
@@ -123,11 +124,11 @@ IServiceCollection AddAzureEventBus(IServiceCollection services)
     services.AddSingleton<IEventBus>(provider =>
     {
         var options = provider.GetRequiredService<IOptions<EventBusOptions>>().Value;
-        var logger = provider.GetRequiredService<ILogger<AzureEventBus<QueueIdentifier>>>();
+        var logger = provider.GetRequiredService<ILogger<AzureEventBus<QueueIdentifier, EventPayload>>>();
         var eventNameResolver = provider.GetRequiredService<IEventNameResolver>();
         var serialize = provider.GetRequiredService<IJsonSerializer>();
 
-        return new AzureEventBus<QueueIdentifier>(
+        return new AzureEventBus<QueueIdentifier, EventPayload>(
            options.Endpoint,
            options.PublishQueues,
            eventNameResolver,

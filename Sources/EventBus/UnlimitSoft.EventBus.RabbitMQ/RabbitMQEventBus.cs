@@ -18,7 +18,9 @@ namespace UnlimitSoft.EventBus.RabbitMQ;
 /// <summary>
 /// 
 /// </summary>
-public class RabbitMQEventBus<TAlias> : IEventBus, IDisposable where TAlias : struct, Enum
+public class RabbitMQEventBus<TAlias, TEventPayload> : IEventBus, IDisposable 
+    where TAlias : struct, Enum
+    where TEventPayload: EventPayload
 {
     private readonly IConnectionFactory _factory;
     private readonly IEnumerable<RabbitMQQueueAlias<TAlias>> _queue;
@@ -29,7 +31,7 @@ public class RabbitMQEventBus<TAlias> : IEventBus, IDisposable where TAlias : st
     private readonly Action<object?, BasicAckEventArgs, IEvent?>? _acks;
     private readonly Action<object?, BasicNackEventArgs, IEvent?>? _nacks;
     private readonly Action<object, IBasicProperties>? _setup;
-    private readonly ILogger<RabbitMQEventBus<TAlias>>? _logger;
+    private readonly ILogger<RabbitMQEventBus<TAlias, TEventPayload>>? _logger;
 
     /// <summary>
     /// RabbitMQ model
@@ -62,7 +64,7 @@ public class RabbitMQEventBus<TAlias> : IEventBus, IDisposable where TAlias : st
         Func<TAlias, string, object, bool>? filter = null,
         Func<TAlias, string, object, object>? transform = null,
         Action<object, IBasicProperties>? setup = null,
-        ILogger<RabbitMQEventBus<TAlias>>? logger = null
+        ILogger<RabbitMQEventBus<TAlias, TEventPayload>>? logger = null
     ) : this(new ConnectionFactory { Uri = new Uri(endpoint) }, queue, resolver, serializer, filter, transform, null, null, setup, logger)
     {
     }
@@ -83,7 +85,7 @@ public class RabbitMQEventBus<TAlias> : IEventBus, IDisposable where TAlias : st
         Func<TAlias, string, object, bool>? filter = null, Func<TAlias, string, object, object>? transform = null,
         Action<object?, BasicAckEventArgs, IEvent?>? acks = null, Action<object?, BasicNackEventArgs, IEvent?>? nacks = null,
         Action<object, IBasicProperties>? setup = null,
-        ILogger<RabbitMQEventBus<TAlias>>? logger = null
+        ILogger<RabbitMQEventBus<TAlias, TEventPayload>>? logger = null
     )
     {
         _factory = factory;
@@ -123,13 +125,13 @@ public class RabbitMQEventBus<TAlias> : IEventBus, IDisposable where TAlias : st
         return SendAsync(@event, @event.Id, @event.Name, @event.CorrelationId, useEnvelop);
     }
     /// <inheritdoc />
-    public virtual Task PublishPayloadAsync<TEventPayload>(TEventPayload eventPayload, bool useEnvelop = true, CancellationToken ct = default) where TEventPayload : EventPayload
+    public virtual Task PublishPayloadAsync(EventPayload eventPayload, bool useEnvelop = true, CancellationToken ct = default)
     {
         var eventType = _resolver.Resolver(eventPayload.Name);
         if (eventType is null)
             return Task.CompletedTask;
 
-        var @event = LoadFromPaylod(eventType, eventPayload);
+        var @event = LoadFromPaylod(eventType, (TEventPayload)eventPayload);
         if (@event is null)
             return Task.CompletedTask;
         return SendAsync(@event, eventPayload.Id, eventPayload.Name, eventPayload.CorrelationId, useEnvelop);
@@ -140,11 +142,10 @@ public class RabbitMQEventBus<TAlias> : IEventBus, IDisposable where TAlias : st
     /// <summary>
     /// Load event from Payload
     /// </summary>
-    /// <typeparam name="TEventPayload"></typeparam>
     /// <param name="eventType"></param>
     /// <param name="payload"></param>
     /// <returns></returns>
-    protected virtual IEvent? LoadFromPaylod<TEventPayload>(Type eventType, TEventPayload payload) where TEventPayload : EventPayload
+    protected virtual IEvent? LoadFromPaylod(Type eventType, TEventPayload payload)
     {
         var bodyType = _resolver.GetBodyType(eventType);
         return EventPayload.FromEventPayload(eventType, bodyType, payload, _serializer);

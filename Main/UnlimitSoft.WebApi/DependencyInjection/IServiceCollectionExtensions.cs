@@ -13,6 +13,7 @@ using System.Linq;
 using System.Text.Json.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.DependencyInjection;
 using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.Data;
@@ -192,7 +193,7 @@ public static class IServiceCollectionExtensions
         {
             services.AddSingleton<IEventBus>(provider =>
             {
-                var logger = provider.GetRequiredService<ILogger<AzureEventBus<QueueIdentifier>>>();
+                var logger = provider.GetRequiredService<ILogger<AzureEventBus<QueueIdentifier, EventPayload>>>();
                 var eventNameResolver = provider.GetRequiredService<IEventNameResolver>();
                 var serialize = provider.GetRequiredService<IJsonSerializer>();
 
@@ -203,7 +204,7 @@ public static class IServiceCollectionExtensions
                 if (transform != null)
                     busTransform = (queueName, eventName, @event) => transform(provider, queueName, eventName, @event);
 
-                return new AzureEventBus<QueueIdentifier>(
+                return new AzureEventBus<QueueIdentifier, EventPayload>(
                     options.Endpoint, 
                     publishs, 
                     eventNameResolver,

@@ -20,8 +20,9 @@ namespace UnlimitSoft.EventBus.Azure;
 /// <summary>
 /// Implement a bus to send message using azure resources.
 /// </summary>
-public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
+public class AzureEventBus<TAlias, TEventPayload> : IEventBus, IAsyncDisposable
     where TAlias : struct, Enum
+    where TEventPayload : EventPayload
 {
     private ServiceBusClient? _client;
     private AsyncRetryPolicy? _retryPolicy;
@@ -33,7 +34,7 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
     private readonly Func<TAlias, string, object, bool>? _filter;
     private readonly Func<TAlias, string, object, object>? _transform;
     private readonly Action<object, ServiceBusMessage>? _setup;
-    private readonly ILogger<AzureEventBus<TAlias>>? _logger;
+    private readonly ILogger<AzureEventBus<TAlias, TEventPayload>>? _logger;
 
 
     /// <summary>
@@ -55,7 +56,7 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
         Func<TAlias, string, object, bool>? filter = null,
         Func<TAlias, string, object, object>? transform = null,
         Action<object, ServiceBusMessage>? setup = null,
-        ILogger<AzureEventBus<TAlias>>? logger = null
+        ILogger<AzureEventBus<TAlias, TEventPayload>>? logger = null
     )
     {
         _queues = queues.Where(x => x.Active == true).ToArray();
@@ -100,7 +101,7 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
     /// <inheritdoc/>
     public Task PublishAsync(IEvent @event, bool useEnvelop = true, CancellationToken ct = default) => SendMessageAsync(@event, @event.Id, @event.Name, @event.CorrelationId, useEnvelop, ct);
     /// <inheritdoc/>
-    public Task PublishPayloadAsync<TEventPayload>(TEventPayload eventPayload, bool useEnvelop = true, CancellationToken ct = default) where TEventPayload : EventPayload
+    public Task PublishPayloadAsync(EventPayload eventPayload, bool useEnvelop = true, CancellationToken ct = default)
     {
         var eventType = _resolver.Resolver(eventPayload.Name);
         if (eventType is null)
@@ -108,7 +109,7 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
             _logger?.LogWarning("Not found event {EventType}", eventPayload.Name);
             return Task.CompletedTask;
         }
-        var @event = LoadFromPayload(eventType, eventPayload);
+        var @event = LoadFromPayload(eventType, (TEventPayload)eventPayload);
         if (@event is null)
         {
             _logger?.LogWarning("Skip event of {Type} because is null", eventType);
@@ -132,11 +133,10 @@ public class AzureEventBus<TAlias> : IEventBus, IAsyncDisposable
     /// <summary>
     /// Load event from payload
     /// </summary>
-    /// <typeparam name="TEventPayload"></typeparam>
     /// <param name="eventType"></param>
     /// <param name="payload"></param>
     /// <returns></returns>
-    protected virtual IEvent? LoadFromPayload<TEventPayload>(Type eventType, TEventPayload payload) where TEventPayload : EventPayload
+    protected virtual IEvent? LoadFromPayload(Type eventType, TEventPayload payload)
     {
         var bodyType = _resolver.GetBodyType(eventType);
         return EventPayload.FromEventPayload(eventType, bodyType, payload, _serializer);
