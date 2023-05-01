@@ -89,7 +89,7 @@ public abstract class MediatorDispatchEvent<TEventPayload> : IMediatorDispatchEv
             eventsPayload.Add(payload);
 
             var eventDispatcher = EventDispatcher;
-            if (eventDispatcher is null || !@event.IsDomainEvent && !DirectlyDispatchNotDomainEvents)
+            if (eventDispatcher is null || (!@event.IsDomainEvent && !DirectlyDispatchNotDomainEvents))
                 continue;
 
             var (response, error) = await eventDispatcher.DispatchAsync(Provider, @event, ct);
