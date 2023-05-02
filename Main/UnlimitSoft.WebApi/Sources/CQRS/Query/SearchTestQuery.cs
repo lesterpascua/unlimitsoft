@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -24,7 +25,7 @@ public class SearchTestQuery : MyQuery<SearchModel<Customer>>, IQuerySearch
     public SearchCustomer.FilterVM? Filter { get; set; }
 
     public Paging Paging { get; init; }
-    public IReadOnlyList<ColumnName> Order { get; init; }
+    public IReadOnlyList<ColumnName> Order { get; init; } = Array.Empty<ColumnName>();
 }
 
 /// <summary>

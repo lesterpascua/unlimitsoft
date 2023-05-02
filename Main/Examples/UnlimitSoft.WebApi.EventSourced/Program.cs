@@ -102,6 +102,7 @@ WebApplication ConfigureServices(IServiceCollection services)
             historicalEvents => new Order(historicalEvents)
         );
     });
+    services.AddScoped<IMediatorDispatchEvent>(p => new MyMediatorDispatchEvent(p));
     #endregion
 
     #region EventBus

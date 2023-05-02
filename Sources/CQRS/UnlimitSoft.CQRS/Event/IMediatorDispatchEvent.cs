@@ -22,9 +22,10 @@ public interface IMediatorDispatchEvent
     /// </summary>
     /// <param name="events"></param>
     /// <param name="forceSave">If false event is wait for save in cache, else force to save event before to leave this implementation.</param>
+    /// <param name="stopCreation">Indicate don't create the event in the repository. Is usefull when the event was already created</param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    Task DispatchEventsAsync(IEnumerable<IEvent> events, bool forceSave, CancellationToken ct = default);
+    Task DispatchEventsAsync(IEnumerable<IEvent> events, bool forceSave, bool stopCreation, CancellationToken ct = default);
     /// <summary>
     /// When all event are saved invoqued this method.
     /// </summary>
@@ -80,7 +81,7 @@ public abstract class MediatorDispatchEvent<TEventPayload> : IMediatorDispatchEv
     protected abstract TEventPayload Create(IEvent @event);
 
     /// <inheritdoc />
-    public virtual async Task DispatchEventsAsync(IEnumerable<IEvent> events, bool forceSave, CancellationToken ct)
+    public virtual async Task DispatchEventsAsync(IEnumerable<IEvent> events, bool forceSave, bool stopCreation, CancellationToken ct)
     {
         var eventsPayload = new List<TEventPayload>();
         foreach (var @event in events)
@@ -100,7 +101,7 @@ public abstract class MediatorDispatchEvent<TEventPayload> : IMediatorDispatchEv
             throw new AggregateException(msg, error.GetBody<Exception>() ?? throw new InvalidOperationException(msg));
         }
         var eventRepository = EventRepository;
-        if (eventRepository is not null)
+        if (eventRepository is not null && !stopCreation)
             await eventRepository.CreateAsync(eventsPayload, forceSave, ct);
     }
     /// <summary>

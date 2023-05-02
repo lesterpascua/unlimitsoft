@@ -110,7 +110,7 @@ public sealed class UnitOfWorkOptions
     /// </summary>
     public Type? IMediatorDispatchEvent { get; set; }
     /// <summary>
-    /// Materialized type derived of <see cref="CQRS.Event.Json.JsonMediatorDispatchEvent"/> interface. 
+    /// Materialized type derived of <see cref="CQRS.Event.MediatorDispatchEvent{TEventPayload}"/> interface. 
     /// </summary>
     public Type? MediatorDispatchEvent { get; set; }
 }

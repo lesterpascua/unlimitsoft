@@ -6,7 +6,7 @@ namespace UnlimitSoft.WebApi.Model
     {
         public class FilterVM
         {
-            public string Name { get; init; }
+            public string? Name { get; init; }
         }
     }
 }
