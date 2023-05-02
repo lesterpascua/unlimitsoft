@@ -1,51 +1,94 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using UnlimitSoft.CQRS.Event;
+using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Data.Dto;
+using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.Json;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Data.EntityFramework;
 
 
 /// <summary>
-/// 
+/// Allow manipulate the pure EventSource implementation
 /// </summary>
+/// <remarks>
+/// This implementation can change in the future for better optimization
+/// </remarks>
 /// <typeparam name="TDbContext"></typeparam>
-public abstract class EFEventSourceDbUnitOfWork<TDbContext> : EFDbUnitOfWork<TDbContext>
+/// <typeparam name="TEventPayload"></typeparam>
+public abstract class EFEventSourceDbUnitOfWork<TDbContext, TEventPayload> : EFMediatorDbUnitOfWork<TDbContext>
     where TDbContext : DbContext
+    where TEventPayload : EventPayload
 {
-    private readonly IEventPublishWorker? _publishWorker;
+    /// <summary>
+    /// 
+    /// </summary>
+    protected readonly IEventNameResolver _nameResolver;
 
     /// <summary>
     /// 
     /// </summary>
     /// <param name="dbContext"></param>
-    /// <param name="publishWorker"></param>
-    protected EFEventSourceDbUnitOfWork(TDbContext dbContext, IEventPublishWorker? publishWorker)
-        : base(dbContext)
+    /// <param name="serializer"></param>
+    /// <param name="nameResolver"></param>
+    /// <param name="eventMediator"></param>
+    protected EFEventSourceDbUnitOfWork(TDbContext dbContext, IJsonSerializer serializer, IEventNameResolver nameResolver, IMediatorDispatchEvent? eventMediator = null)
+        : base(dbContext, eventMediator)
     {
-        _publishWorker = publishWorker;
+        StopCreation = true;
+        Serializer = serializer;
+        _nameResolver = nameResolver;
     }
 
-    /// <inheritdoc />
-    public override int SaveChanges() => SaveChangesAsync().Result;
-    /// <inheritdoc />
-    public override async Task<int> SaveChangesAsync(CancellationToken ct = default)
+    /// <summary>
+    /// 
+    /// </summary>
+    public IJsonSerializer Serializer { get; }
+
+    /// <summary>
+    /// Get all entities pending for update
+    /// </summary>
+    /// <returns></returns>
+    protected override object[] GetPendingEntities()
     {
-        var changed = DbContext.ChangeTracker
+        var changes = DbContext.ChangeTracker
             .Entries()
             .Where(p => p.State != EntityState.Unchanged && p.Entity is EventPayload)
-            .Select(s =>
-            {
-                var e = (EventPayload)s.Entity;
-                return new PublishEventInfo(e.Id, e.Created, e.Scheduled);
-            })
+            .Select(s => (TEventPayload)s.Entity)
             .ToArray();
+        return changes;
+    }
+    /// <summary>
+    /// Load event from Payload
+    /// </summary>
+    /// <param name="eventType"></param>
+    /// <param name="payload"></param>
+    /// <returns></returns>
+    protected virtual IEvent? LoadFromPaylod(Type eventType, TEventPayload payload)
+    {
+        var bodyType = _nameResolver.GetBodyType(eventType);
+        return EventPayload.FromEventPayload(eventType, bodyType, payload, Serializer);
+    }
+    /// <summary>
+    /// Extract events from the entities pending for change
+    /// </summary>
+    /// <param name="changes"></param>
+    /// <param name="events"></param>
+    protected override void CollectEventsFromEntities(object[] changes, List<IEvent> events)
+    {
+        var span = ((TEventPayload[])changes).AsSpan();
+        for (var i = 0; i < span.Length; i++)
+        {
+            var entity = span[i];
+            if (entity is not TEventPayload eventPayload)
+                continue;
 
-        var count = await DbContext.SaveChangesAsync(ct);
-        if (_publishWorker is not null)
-            await _publishWorker.PublishAsync(changed, ct);
-        return count;
+            var eventType = _nameResolver.RequireResolver(eventPayload.Name);
+            var @event = LoadFromPaylod(eventType, eventPayload) ?? throw new InvalidOperationException("Can't load event of this type");
+
+            events.Add(@event);
+        }
     }
 }

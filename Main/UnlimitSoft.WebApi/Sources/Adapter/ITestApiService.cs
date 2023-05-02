@@ -42,11 +42,11 @@ public class TestService : BaseApiService, ITestApiService
     public async Task<TestApiResponse> Request200(CancellationToken ct = default)
     {
         var (response, code) = await ApiClient.SendAsync<TestApiResponse>(HttpMethod.Get, "https://mock.codes/200", ct: ct);
-        return response;
+        return response!;
     }
     public async Task<TestApiResponse> Request202(CancellationToken ct = default)
     {
         var (response, code) = await ApiClient.SendAsync<TestApiResponse>(HttpMethod.Get, "https://mock.codes/202", ct: ct);
-        return response;
+        return response!;
     }
 }

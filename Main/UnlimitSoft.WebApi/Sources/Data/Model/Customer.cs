@@ -10,7 +10,7 @@ public class Customer : EventSourced
     /// <summary>
     /// Name of the customer
     /// </summary>
-    public string Name { get; set; }
+    public string Name { get; set; } = default!;
 
 
     public IEvent AddEvent<TEvent, TBody>(IMyIdGenerator gen, string? correlationId, TBody body) where TEvent : Event<TBody>
