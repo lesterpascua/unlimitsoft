@@ -96,7 +96,8 @@ public class RabbitMQEventListener<TAlias> : IEventListener, IDisposable where T
         }
         #endregion
 
-        foreach (var entry in _queues)
+        var comparer = new QueueComparer();
+        foreach (var entry in _queues.Distinct(comparer))
         {
             var queue = entry.Queue;
 
@@ -129,6 +130,16 @@ public class RabbitMQEventListener<TAlias> : IEventListener, IDisposable where T
         var args = new RabbitMQBody(_channel!, e);
         var message = new ProcessMessageArgs<TAlias, RabbitMQBody>(queue, envelop, args, TimeSpan.Zero);
         await _processor(message, CancellationToken.None);
+    }
+    #endregion
+
+    #region Nested Classes
+    private sealed class QueueComparer : IEqualityComparer<RabbitMQQueueAlias<TAlias>>
+    {
+        /// <inheritdoc />
+        public int GetHashCode(RabbitMQQueueAlias<TAlias> obj) => obj.Alias.GetHashCode();
+        /// <inheritdoc/>
+        public bool Equals(RabbitMQQueueAlias<TAlias> x, RabbitMQQueueAlias<TAlias> y) => x.Queue.Equals(y.Queue);
     }
     #endregion
 }
