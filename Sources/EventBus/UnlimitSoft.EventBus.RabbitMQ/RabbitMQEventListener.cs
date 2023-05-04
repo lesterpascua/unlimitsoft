@@ -139,7 +139,7 @@ public class RabbitMQEventListener<TAlias> : IEventListener, IDisposable where T
         /// <inheritdoc />
         public int GetHashCode(RabbitMQQueueAlias<TAlias> obj) => obj.Alias.GetHashCode();
         /// <inheritdoc/>
-        public bool Equals(RabbitMQQueueAlias<TAlias> x, RabbitMQQueueAlias<TAlias> y) => x.Queue.Equals(y.Queue);
+        public bool Equals(RabbitMQQueueAlias<TAlias>? x, RabbitMQQueueAlias<TAlias>? y) => Equals(x?.Queue, y?.Queue);
     }
     #endregion
 }
