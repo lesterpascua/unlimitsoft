@@ -19,7 +19,7 @@ public class EventPayload
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
     /// <summary>
-    /// 
+    /// Build a event payload from an event.
     /// </summary>
     /// <param name="event"></param>
     /// <param name="serializer"></param>

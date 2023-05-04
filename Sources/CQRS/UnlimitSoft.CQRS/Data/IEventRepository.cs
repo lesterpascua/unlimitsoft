@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Data.Dto;
+using UnlimitSoft.Json;
 using UnlimitSoft.Web.Model;
 
 namespace UnlimitSoft.CQRS.Data;
@@ -13,6 +14,11 @@ namespace UnlimitSoft.CQRS.Data;
 /// </summary>
 public interface IEventRepository<TEventPayload> where TEventPayload : EventPayload
 {
+    /// <summary>
+    /// Serializer used for the internal functionalities
+    /// </summary>
+    IJsonSerializer Serializer { get; }
+
     /// <summary>
     /// Get all event non publish and allow paging
     /// </summary>
@@ -115,4 +121,37 @@ public interface IEventRepository<TEventPayload> where TEventPayload : EventPayl
     /// <param name="ct"></param>
     /// <returns></returns>
     Task<IEnumerable<TEventPayload>> CreateAsync(IEnumerable<TEventPayload> eventPayloads, bool forceSave = false, CancellationToken ct = default);
+}
+/// <summary>
+/// Extenssions method for the event repository
+/// </summary>
+public static class IEventRepositoryExtensions
+{
+    /// <summary>
+    /// Add the instance to the event repository
+    /// </summary>
+    /// <remarks>
+    /// Require the TEventPayload have a contructor where recieve (IEvent, IJsonSerializer)
+    /// </remarks>
+    /// <typeparam name="TEventPayload"></typeparam>
+    /// <typeparam name="TEntity"></typeparam>
+    /// <param name="this"></param>
+    /// <param name="entity"></param>
+    /// <param name="serializer"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    public static async ValueTask AddAsync<TEventPayload, TEntity>(IEventRepository<TEventPayload> @this, TEntity entity, CancellationToken ct = default)
+        where TEventPayload : EventPayload
+        where TEntity : class, IEventSourced
+    {
+        foreach (var @event in entity.GetEvents())
+        {
+            var payload = (TEventPayload?)Activator.CreateInstance(
+                typeof(TEventPayload), 
+                @event,
+                @this.Serializer
+            ) ?? throw new InvalidOperationException("Can't create a payload of this type, there no defined ctor(IEvent, IJsonSerializer)");
+            await @this.CreateAsync(payload, false, ct);
+        }
+    }
 }
