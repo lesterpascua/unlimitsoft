@@ -140,7 +140,7 @@ public static class IEventRepositoryExtensions
     /// <param name="serializer"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async ValueTask AddAsync<TEventPayload, TEntity>(this IEventRepository<TEventPayload> @this, TEntity entity, CancellationToken ct = default)
+    public static async ValueTask AddOrUpdateAsync<TEventPayload, TEntity>(this IEventRepository<TEventPayload> @this, TEntity entity, CancellationToken ct = default)
         where TEventPayload : EventPayload
         where TEntity : class, IEventSourced
     {
