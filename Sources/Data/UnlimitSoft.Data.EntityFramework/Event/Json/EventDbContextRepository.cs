@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Data;
 using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Query;
+using UnlimitSoft.Json;
 using UnlimitSoft.Web.Model;
 
 namespace UnlimitSoft.CQRS.Event.Json;
@@ -19,6 +20,7 @@ namespace UnlimitSoft.CQRS.Event.Json;
 public class EventDbContextRepository<TEventPayload> : IEventRepository<TEventPayload> where TEventPayload : EventPayload
 {
     private readonly bool _optimize;
+    private readonly IJsonSerializer _serializer;
     private readonly DbContext _dbContext;
     private readonly DbSet<TEventPayload> _repository;
     private readonly ILogger<EventDbContextRepository<TEventPayload>>? _logger;
@@ -26,17 +28,22 @@ public class EventDbContextRepository<TEventPayload> : IEventRepository<TEventPa
     /// <summary>
     /// 
     /// </summary>
+    /// <param name="serializer"></param>
     /// <param name="dbContext"></param>
     /// <param name="optimize">Precompile the query and reuse in all iterations</param>
     /// <param name="logger"></param>
     /// <exception cref="ArgumentNullException"></exception>
-    public EventDbContextRepository(DbContext dbContext, bool optimize = true, ILogger<EventDbContextRepository<TEventPayload>>? logger = null)
+    public EventDbContextRepository(IJsonSerializer serializer, DbContext dbContext, bool optimize = true, ILogger<EventDbContextRepository<TEventPayload>>? logger = null)
     {
         _optimize = optimize;
+        _serializer = serializer;
         _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
         _repository = _dbContext.Set<TEventPayload>();
         _logger = logger;
     }
+
+    /// <inheritdoc />
+    public IJsonSerializer Serializer => _serializer;
 
     /// <inheritdoc />
     public virtual async Task MarkEventsAsPublishedAsync(TEventPayload @event, CancellationToken ct = default)

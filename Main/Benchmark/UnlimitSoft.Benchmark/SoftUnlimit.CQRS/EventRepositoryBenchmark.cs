@@ -8,6 +8,7 @@ using UnlimitSoft.CQRS.Data;
 using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Data.EntityFramework.Utility;
+using UnlimitSoft.Json;
 
 namespace UnlimitSoft.Benchmark.SoftUnlimit.CQRS;
 
@@ -31,8 +32,8 @@ public class EventRepositoryBenchmark
         _dbContext = new MyDbContext(connection);
         (_id, _sourceId) = await SeedAsync(faker, _dbContext, _id, _sourceId);
 
-        _optimize = new EventDbContextRepository<EventPayload>(_dbContext);
-        _noOptimize = new EventDbContextRepository<EventPayload>(_dbContext, optimize: false);
+        _optimize = new EventDbContextRepository<EventPayload>(JsonUtil.Default,_dbContext);
+        _noOptimize = new EventDbContextRepository<EventPayload>(JsonUtil.Default, _dbContext, optimize: false);
 
         // ==================================================================================================================================
         static async Task<(Guid Id, Guid SourceId)> SeedAsync(Faker faker, MyDbContext dbContext, Guid id, Guid sourceId)

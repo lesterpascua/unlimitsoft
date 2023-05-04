@@ -1,6 +1,7 @@
 ﻿using UnlimitSoft.CQRS.Data;
 using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event.Json;
+using UnlimitSoft.Json;
 using UnlimitSoft.WebApi.EventSourced.CQRS.Data;
 
 namespace UnlimitSoft.WebApi.EventSourced.CQRS.Repository;
@@ -26,7 +27,7 @@ public sealed class MyEventRepository : EventDbContextRepository<MyEventPayload>
     /// <param name="dbContext"></param>
     /// <param name="logger"></param>
     public MyEventRepository(DbContextWrite dbContext, ILogger<MyEventRepository> logger) :
-        base(dbContext, true, logger)
+        base(JsonUtil.Default, dbContext, true, logger)
     {
     }
 }

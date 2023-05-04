@@ -1,5 +1,4 @@
-﻿using UnlimitSoft.CQRS.Data.Dto;
-using UnlimitSoft.CQRS.Memento;
+﻿using UnlimitSoft.CQRS.Memento;
 using UnlimitSoft.Json;
 using UnlimitSoft.WebApi.EventSourced.Client;
 using UnlimitSoft.WebApi.EventSourced.CQRS.Data;
