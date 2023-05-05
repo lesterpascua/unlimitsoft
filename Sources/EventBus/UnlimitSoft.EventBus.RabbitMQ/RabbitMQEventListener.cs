@@ -88,11 +88,12 @@ public class RabbitMQEventListener<TAlias> : IEventListener, IDisposable where T
             _channel.QueueDeclare(entry.Queue, entry.Durable, entry.Exclusive, entry.AutoDelete, null);
 
         _channel.BasicQos(0, 1, false);
-        foreach (var entry in _queues)
+        foreach (var queue in _queues)
         {
             if (_recreateQueue)
-                _channel.QueuePurge(entry.Queue);
-            _channel.QueueBind(entry.Queue, entry.Exchange, entry.RoutingKey);
+                _channel.QueuePurge(queue.Queue);
+            foreach (var rk in queue.RoutingKey)
+                _channel.QueueBind(queue.Queue, queue.Exchange, rk);
         }
         #endregion
 

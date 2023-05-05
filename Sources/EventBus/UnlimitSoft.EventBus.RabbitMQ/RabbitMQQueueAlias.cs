@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using UnlimitSoft.EventBus.Configuration;
 
 namespace UnlimitSoft.EventBus.RabbitMQ;
@@ -7,14 +8,15 @@ namespace UnlimitSoft.EventBus.RabbitMQ;
 /// <summary>
 /// 
 /// </summary>
-public sealed class RabbitMQQueueAlias<TAlias> : QueueAlias<TAlias> where TAlias : struct, Enum
+public class RabbitMQQueueAlias<TAlias> : QueueAlias<TAlias> where TAlias : struct, Enum
 {
     /// <summary>
     /// 
     /// </summary>
     public RabbitMQQueueAlias()
     {
-        RoutingKey = Exchange = string.Empty;
+        Exchange = string.Empty;
+        RoutingKey = Array.Empty<string>();
     }
 
     /// <summary>
@@ -36,5 +38,5 @@ public sealed class RabbitMQQueueAlias<TAlias> : QueueAlias<TAlias> where TAlias
     /// <summary>
     /// Routing key asociate to the event
     /// </summary>
-    public string RoutingKey { get; set; }
+    public string[] RoutingKey { get; set; }
 }
