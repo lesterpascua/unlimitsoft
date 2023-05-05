@@ -197,15 +197,18 @@ public class RabbitMQEventBus<TAlias, TEventPayload> : IEventBus, IDisposable
         foreach (var queue in destQueues)
         {
             var content = _transform?.Invoke(queue.Alias, eventName, graph) ?? graph;
-            if (useEnvelop)
-                content = new MessageEnvelop(content, _resolver.Resolver(content.GetType()) ?? queue.RoutingKey);
+            foreach (var rk in queue.RoutingKey)
+            {
+                if (useEnvelop)
+                    content = new MessageEnvelop(content, _resolver.Resolver(content.GetType()) ?? rk);
 
-            var message = Encoding.UTF8.GetBytes(_serializer.Serialize(content)!);
+                var message = Encoding.UTF8.GetBytes(_serializer.Serialize(content)!);
 
-            _channel.BasicPublish(queue.Exchange, queue.RoutingKey, true, properties, message);
-            _channel.WaitForConfirms();
+                _channel.BasicPublish(queue.Exchange, rk, true, properties, message);
+                _channel.WaitForConfirms();
 
-            _logger?.LogInformation("Publish Event to {Exchange}, {RoutingKey}, {@Event}", queue.Exchange, queue.RoutingKey, graph);
+                _logger?.LogInformation("Publish Event to {Exchange}, {RoutingKey}, {@Event}", queue.Exchange, queue.RoutingKey, graph);
+            }
         }
         return Task.CompletedTask;
     }
