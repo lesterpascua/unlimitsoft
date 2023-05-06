@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Linq;
 using UnlimitSoft.EventBus.Configuration;
 
 namespace UnlimitSoft.EventBus.RabbitMQ;
