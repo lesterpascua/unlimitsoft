@@ -2,6 +2,7 @@
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -151,6 +152,19 @@ public class RabbitMQEventBus<TAlias, TEventPayload> : IEventBus, IDisposable
         return EventPayload.FromEventPayload(eventType, bodyType, payload, _serializer);
     }
     /// <summary>
+    /// Return the event name asociate to the queue
+    /// </summary>
+    /// <param name="queue"></param>
+    /// <param name="eventName"></param>
+    /// <param name="graph"></param>
+    /// <returns></returns>
+    protected virtual string GenEventName(RabbitMQQueueAlias<TAlias> queue, string eventName, object graph)
+    {
+        if (queue.RoutingKey.Length == 1)
+            return queue.RoutingKey[0];
+        return eventName;
+    }
+    /// <summary>
     /// Send message async
     /// </summary>
     /// <param name="graph"></param>
@@ -159,7 +173,7 @@ public class RabbitMQEventBus<TAlias, TEventPayload> : IEventBus, IDisposable
     /// <param name="correlationId"></param>
     /// <param name="useEnvelop"></param>
     /// <returns></returns>
-    protected Task SendAsync(object graph, Guid id, string eventName, string? correlationId, bool useEnvelop)
+    protected virtual Task SendAsync(object graph, Guid id, string eventName, string? correlationId, bool useEnvelop)
     {
         //using var rabbitMQConnection = _retryPolicy.Execute(() => _factory.CreateConnection());
         //rabbitMQConnection.CreateModel()
@@ -192,7 +206,7 @@ public class RabbitMQEventBus<TAlias, TEventPayload> : IEventBus, IDisposable
 
         var destQueues = _queue;
         if (_filter is not null)
-            destQueues = destQueues.Where(queue => _filter(queue.Alias, eventName, graph));
+            destQueues = destQueues.Where(queue => _filter(queue.Alias, GenEventName(queue, eventName, graph), graph));
 
         foreach (var queue in destQueues)
         {
