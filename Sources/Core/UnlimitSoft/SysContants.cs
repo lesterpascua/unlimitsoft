@@ -18,6 +18,10 @@ public static class SysContants
     /// <summary>
     /// Trace identifier
     /// </summary>
+    public const string HeaderApiKey = "X-API-KEY";
+    /// <summary>
+    /// Trace identifier
+    /// </summary>
     public const string HeaderTrace = "X-Trace-ID";
     /// <summary>
     /// Correlation identifier.
