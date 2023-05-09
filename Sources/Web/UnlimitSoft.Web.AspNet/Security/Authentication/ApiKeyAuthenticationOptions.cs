@@ -16,7 +16,7 @@ public abstract class ApiKeyAuthenticationOptions : AuthenticationSchemeOptions
     /// <summary>
     /// Header were the API Key supplied.
     /// </summary>
-    public const string HeaderName = "X-API-KEY";
+    public const string HeaderName = SysContants.HeaderApiKey;
 
     /// <summary>
     /// 
