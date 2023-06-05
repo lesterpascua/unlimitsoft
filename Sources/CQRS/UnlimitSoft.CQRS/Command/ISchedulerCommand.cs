@@ -38,7 +38,7 @@ public interface ISchedulerCommand : ICommand
     /// <summary>
     /// Set time to delay this command before procesed
     /// </summary>
-    public void SetDelay(TimeSpan? dalay);
+    public void SetDelay(TimeSpan? delay);
 }
 /// <summary>
 /// 

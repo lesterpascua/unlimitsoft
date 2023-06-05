@@ -10,7 +10,7 @@ public abstract class Command<TResponse, T> : ICommand<TResponse> where T : Comm
     /// <summary>
     /// Get or set metadata props associate with the command.
     /// </summary>
-    public T Props { get; protected set; }
+    public T Props { get; set; }
 
     /// <inheritdoc />
     public string GetName() => GetType().Name;

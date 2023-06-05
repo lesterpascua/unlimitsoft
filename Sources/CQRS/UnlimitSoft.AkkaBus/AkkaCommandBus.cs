@@ -104,15 +104,15 @@ public class AkkaCommandBus : ICommandBus
     public static async Task ProcessCommand(ICommandDispatcher dispatcher, CommandEnvelopment envelopment, IActorRef sender, ICommandCompletionService completionService, ILogger logger)
     {
         Exception err = null;
-        IResponse response;
+        IResult response;
         try
         {
-            response = await dispatcher.DispatchAsync(envelopment.Command);
+            response = await dispatcher.DispatchDynamicAsync(envelopment.Command);
         } catch (Exception exc)
         {
             err = exc;
-            response = envelopment.Command.ErrorResponse(GENERIC_ERROR);
-            logger.LogError(exc, "CoordinatorActor.DispatchAsync: {0}", envelopment.Command);
+            response = new Result<object>(null, envelopment.Command.ErrorResponse(GENERIC_ERROR));
+            logger.LogError(exc, "CoordinatorActor.DispatchAsync: {Command}", envelopment.Command);
         }
 
         if (envelopment.IsAsk)

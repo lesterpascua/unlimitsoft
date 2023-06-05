@@ -17,7 +17,7 @@ public class MyCommandCompletionService : ICommandCompletionService
     {
         _logger = logger;
     }
-    public Task<IResponse> CompleteAsync(ICommand command, IResponse response, Exception? ex = null, CancellationToken ct = default)
+    public Task<IResult> CompleteAsync(ICommand command, IResult response, Exception? ex = null, CancellationToken ct = default)
     {
         if (ex is null)
         {

@@ -7,7 +7,7 @@ namespace UnlimitSoft.CQRS.Command;
 
 
 /// <summary>
-/// 
+/// Allos dispatch command over the system
 /// </summary>
 public interface ICommandDispatcher
 {
@@ -39,9 +39,10 @@ public static class ICommandDispatcherExtensions
     /// <param name="command"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static ValueTask<IResponse> DispatchAsync(this ICommandDispatcher @this, ICommand command, CancellationToken ct = default)
+    public static async ValueTask<IResult> DispatchDynamicAsync(this ICommandDispatcher @this, ICommand command, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        dynamic dynamicCommand = command;
+        return await @this.DispatchAsync(dynamicCommand, ct);
     }
     /// <summary>
     /// Send a command to his command handler. This operation must execute in new scope.
@@ -51,8 +52,9 @@ public static class ICommandDispatcherExtensions
     /// <param name="command"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static ValueTask<IResponse> DispatchAsync(this ICommandDispatcher @this, IServiceProvider provider, ICommand command, CancellationToken ct = default)
+    public static async ValueTask<IResult> DispatchDynamicAsync(this ICommandDispatcher @this, IServiceProvider provider, ICommand command, CancellationToken ct = default)
     {
-        throw new NotImplementedException();
+        dynamic dynamicCommand = command;
+        return await @this.DispatchAsync(provider, dynamicCommand, ct);
     }
 }

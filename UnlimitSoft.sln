@@ -95,6 +95,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.CQRS.Dependency
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "UnlimitSoft.EventBus.RabbitMQ", "Sources\EventBus\UnlimitSoft.EventBus.RabbitMQ\UnlimitSoft.EventBus.RabbitMQ.csproj", "{E8C15FF5-EC41-464E-873E-E3424AE9AB28}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnlimitSoft.WebApi.CommandBus", "Main\Examples\UnlimitSoft.WebApi.CommandBus\UnlimitSoft.WebApi.CommandBus.csproj", "{77C2FFDE-2CDF-4384-A7C7-95FF1FC8314A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -225,6 +227,10 @@ Global
 		{E8C15FF5-EC41-464E-873E-E3424AE9AB28}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E8C15FF5-EC41-464E-873E-E3424AE9AB28}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E8C15FF5-EC41-464E-873E-E3424AE9AB28}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77C2FFDE-2CDF-4384-A7C7-95FF1FC8314A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77C2FFDE-2CDF-4384-A7C7-95FF1FC8314A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77C2FFDE-2CDF-4384-A7C7-95FF1FC8314A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77C2FFDE-2CDF-4384-A7C7-95FF1FC8314A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -273,6 +279,7 @@ Global
 		{A7E8C04C-D28C-4BEE-9DF9-DA5B98CE0732} = {29A580B3-26C0-4B52-AE23-E6B179A0DEFA}
 		{8D49A7F1-D725-4763-A8B6-38B0C5FCB6B6} = {EDC44552-59C5-4FC1-88DA-B24429BFA6F0}
 		{E8C15FF5-EC41-464E-873E-E3424AE9AB28} = {7A2BF6D2-4C6A-4DF2-96F7-0BBF0764FE4B}
+		{77C2FFDE-2CDF-4384-A7C7-95FF1FC8314A} = {1E2F4303-FEFD-488D-AAEF-B55AEAC1F43F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9B9451D6-06A9-4FE7-BD5A-062F758B8538}

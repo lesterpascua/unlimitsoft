@@ -20,5 +20,5 @@ public interface ICommandCompletionService
     /// <param name="error">If some exception happened send here</param>
     /// <param name="ct"></param>
     /// <returns>Response after pass for completion service. Normally is the same supplied as argument.</returns>
-    Task<IResponse> CompleteAsync(ICommand command, IResponse response, Exception? error = null, CancellationToken ct = default);
+    Task<IResult> CompleteAsync(ICommand command, IResult response, Exception? error = null, CancellationToken ct = default);
 }

@@ -1,10 +1,9 @@
 ﻿using Akka.Actor;
-using UnlimitSoft.CQRS.Command;
-using UnlimitSoft.CQRS.Message;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using UnlimitSoft.Web.Client;
+using UnlimitSoft.CQRS.Command;
+using UnlimitSoft.CQRS.Message;
 using UnlimitSoft.Message;
 
 namespace UnlimitSoft.AkkaBus.Message;
@@ -39,7 +38,7 @@ public class CommandCompletionService : ICommandCompletionService
     /// <param name="ex"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public Task<IResponse> CompleteAsync(ICommand command, IResponse response, Exception ex = null, CancellationToken ct = default)
+    public Task<IResult> CompleteAsync(ICommand command, IResult response, Exception ex = null, CancellationToken ct = default)
     {
         _commandCompletionActor.Tell(response);
         return Task.FromResult(response);

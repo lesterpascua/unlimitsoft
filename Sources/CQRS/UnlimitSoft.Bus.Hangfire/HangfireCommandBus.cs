@@ -78,64 +78,58 @@ public sealed class HangfireCommandBus : ICommandBus
     private string? CreateJob(ICommand command, Type type)
     {
         string? jobId;
-        TimeSpan? delay;
         var props = command.GetProps();
         var connection = JobStorage.Current.GetConnection();
 
-        var scheduler = command as ISchedulerCommand;
-        if (_incIfRetryDetect && scheduler is not null)
-            scheduler.SetRetry(scheduler.GetRetry() + 1);
-
         // If not scheduler command go and enqueue a new command
-        if (scheduler is null || (delay = scheduler.GetDelay()) is null || delay == TimeSpan.Zero)
+        if (command is not ISchedulerCommand scheduler)
         {
-            var json = SerializeWithoutProps(command, props);
+            var json = JsonSerializer.Serialize<object>(command, _serializeJsonSettings);
             jobId = _client.Enqueue<IJobProcessor>(processor => processor.ProcessAsync(json, type));
-            return UpdateJobParameters(connection, jobId, props);
+            return jobId;
         }
 
+        int retry = 0;
+        if (_incIfRetryDetect)
+            retry = scheduler.GetRetry() + 1;
+
+        var delay = scheduler.GetDelay();
+        if (delay is null || delay == TimeSpan.Zero)
+            delay = TimeSpan.FromSeconds(1);                    // Set minimun delay or assign a min in case is set null
+
+        // Clean to safe disk space (will be saved in properties and assign in the contructor)
+        scheduler.SetRetry(0);
+        scheduler.SetDelay(null);
+
         jobId = (string?)scheduler.GetJobId();
-        // If the jobid is null we can't track the command history them create a new scheduler.
         if (jobId is null)
         {
-            var json = SerializeWithoutProps(command, props);
+            // If the jobid is null we can't track the command history them create a new scheduler.
+            var json = JsonSerializer.Serialize<object>(command, _serializeJsonSettings);
             jobId = _client.Schedule<IJobProcessor>(processor => processor.ProcessAsync(json, type), delay.Value);
-            return UpdateJobParameters(connection, jobId, props);
+            return UpdateJobParameters(connection, jobId, delay.Value, retry);
         }
 
         // Otherwise reenqueue the same command
-        jobId = UpdateJobParameters(connection, jobId, props);
+        jobId = UpdateJobParameters(connection, jobId, delay.Value, retry);
         var state = new ScheduledState(delay.Value) { Reason = $"Delay the command {delay.Value}" };
         _client.ChangeState(jobId, state);
 
         return jobId;
     }
     /// <summary>
-    /// Serialize the command witout the props.
-    /// </summary>
-    /// <param name="command"></param>
-    /// <param name="props"></param>
-    /// <returns></returns>
-    private static string SerializeWithoutProps(ICommand command, CommandProps props)
-    {
-        command.SetProps(CommandProps.Empty);
-        var json = JsonSerializer.Serialize<object>(command, _serializeJsonSettings);
-        command.SetProps(props);
-        return json;
-    }
-    /// <summary>
     /// Update the job parameters to trace retry and delay argumets
     /// </summary>
     /// <param name="connection"></param>
     /// <param name="jobId"></param>
+    /// <param name="delay"></param>
+    /// <param name="retry"></param>
     /// <param name="props"></param>
     /// <returns></returns>
-    private static string UpdateJobParameters(IStorageConnection connection, string jobId, CommandProps? props)
+    private static string UpdateJobParameters(IStorageConnection connection, string jobId, TimeSpan delay, int retry)
     {
-        if (props is null)
-            return jobId;
-        
-        var json = JsonSerializer.Serialize<object>(props, _serializeJsonSettings);
+        var @params = new JobParams { Delay = delay, Retry = retry };
+        var json = JsonSerializer.Serialize<object>(@params, _serializeJsonSettings);
         connection.SetJobParameter(jobId, PropsParam, json);
         return jobId;
     }
