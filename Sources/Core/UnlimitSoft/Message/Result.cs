@@ -4,8 +4,27 @@
 /// <summary>
 /// 
 /// </summary>
+public interface IResult
+{
+    /// <summary>
+    /// Indicate if the operation finish successfully
+    /// </summary>
+    bool IsSuccess { get; }
+    /// <summary>
+    /// Error asociate to the result
+    /// </summary>
+    IResponse? Error { get; }
+
+    /// <summary>
+    /// Result if no error detected
+    /// </summary>
+    object? GetValue();
+}
+/// <summary>
+/// 
+/// </summary>
 /// <typeparam name="TResponse"></typeparam>
-public readonly struct Result<TResponse>
+public readonly struct Result<TResponse> : IResult
 {
     /// <summary>
     /// Initialize Result
@@ -26,6 +45,8 @@ public readonly struct Result<TResponse>
     /// Error asociate to the result
     /// </summary>
     public IResponse? Error { get; }
+    /// <inheritdoc />
+    public bool IsSuccess => Error is null;
 
     /// <summary>
     /// Destructuring result
@@ -40,4 +61,8 @@ public readonly struct Result<TResponse>
 
     /// <inheritdoc />
     public override string ToString() => $"Value: {Value}, Error: {Error}";
+
+    #region Private Methods
+    object? IResult.GetValue() => Value;
+    #endregion
 }

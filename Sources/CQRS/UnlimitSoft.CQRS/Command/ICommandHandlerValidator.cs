@@ -2,6 +2,7 @@
 
 namespace UnlimitSoft.CQRS.Command;
 
+
 /// <summary>
 /// Indicate the command handler allow validate him self
 /// </summary>

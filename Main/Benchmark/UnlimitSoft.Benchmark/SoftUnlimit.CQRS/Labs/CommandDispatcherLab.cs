@@ -46,10 +46,10 @@ public sealed class CommandDispatcherLab
     }
     public async Task<string?> DispatchCommand()
     {
-        ICommand command = new Command { Name = "Lester Pastrana" };
+        var command = new Command { Name = "Lester Pastrana" };
         var result = await _dispatcher.DispatchAsync(_provider, command);
 
-        return result.GetBody<string>();
+        return result.Value;
     }
 
     #region Nested Classes

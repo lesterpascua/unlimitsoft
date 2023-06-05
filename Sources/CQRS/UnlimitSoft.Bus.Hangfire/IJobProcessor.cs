@@ -22,5 +22,5 @@ public interface IJobProcessor
     /// <param name="json">Command serialize as json</param>
     /// <param name="type">Type of the command</param>
     /// <returns></returns>
-    Task<IResponse> ProcessAsync(string json, Type type);
+    Task<IResult> ProcessAsync(string json, Type type);
 }

@@ -27,7 +27,13 @@ public sealed class ServiceProviderMediator : IMediator
     private readonly ILogger<ServiceProviderMediator>? _logger;
 
     private static Dictionary<Type, RequestMetadata>? _cache;
-    private const string HandleMethod = "HandleAsync", ValidatorMethod = "ValidatorAsync", ComplianceMethod = "ComplianceAsync", PostPipelineMethod = "HandleAsync";
+    private const string 
+        InitMethod = nameof(IRequestHandlerLifeCycle<IRequest>.InitAsync), 
+        HandleMethod = nameof(IRequestHandler<IRequest<object>, object>.HandleAsync),
+        ValidatorMethod = "ValidatorAsync", 
+        ComplianceMethod = "ComplianceAsync", 
+        PostPipelineMethod = "HandleAsync", 
+        EndMethod = nameof(IRequestHandlerLifeCycle<IRequest>.EndAsync);
 
 
     /// <summary>
@@ -74,6 +80,9 @@ public sealed class ServiceProviderMediator : IMediator
         _logger?.LogDebug(12, "Execute request type {Request} with response {Response}", requestType, responseType);
 
         var handler = BuildHandlerMetadata(provider, requestType, responseType, out var metadata);
+        if (metadata.HasLifeCycle)
+            await InitAsync(handler, request, requestType, metadata, ct);
+
         if (_validate)
         {
             if (metadata.Validator is not null)
@@ -90,21 +99,14 @@ public sealed class ServiceProviderMediator : IMediator
             }
         }
         var response = await HandlerAsync(handler, request, requestType, metadata, ct);
-        if (metadata.PostPipeline is null)
-            return new Result<TResponse>(response, null);
 
         // Run existing post operations
-        PostPipelineHandlerAsync(provider, requestType, request, handler, response, metadata, ct);
+        if (metadata.PostPipeline is not null)
+            PostPipelineHandlerAsync(provider, requestType, request, handler, response, metadata, ct);
 
-        switch (handler)
-        {
-            case IDisposable disposable:
-                disposable.Dispose();
-                break;
-            case IAsyncDisposable asyncDisposable:
-                await asyncDisposable.DisposeAsync();
-                break;
-        }
+        if (metadata.HasLifeCycle)
+            await EndAsync(handler, request, requestType, metadata, ct);
+
         return new Result<TResponse>(response, null);
     }
 
@@ -164,6 +166,11 @@ public sealed class ServiceProviderMediator : IMediator
                     HandlerImplementType = handleType
                 };
                 var interfaces = handleType.GetInterfaces();
+
+                // LiveCycle
+                var liveCycleHandlerType = typeof(IRequestHandlerLifeCycle<>).MakeGenericType(requestType);
+                if (interfaces.Any(type => type == liveCycleHandlerType))
+                    metadata.HasLifeCycle = true;
 
                 // Validator
                 var validationHandlerType = typeof(IRequestHandlerValidator<>).MakeGenericType(requestType);
@@ -360,6 +367,86 @@ public sealed class ServiceProviderMediator : IMediator
         return null;
     }
 
+    private static Func<IRequestHandler, IRequest, CancellationToken, ValueTask> GetInit(Type requestType, RequestMetadata metadata)
+    {
+        var cli = metadata.InitCLI;
+        if (cli is not null)
+            return cli;
+
+        lock (metadata)
+        {
+            cli = metadata.InitCLI;
+            if (cli is not null)
+                return cli;
+
+            var method = metadata
+                .HandlerImplementType
+                .GetMethod(InitMethod, new Type[] { requestType, typeof(CancellationToken) })
+                ?? throw new MissingMethodException($"Can't find {InitMethod} in {requestType}");
+
+            cli = Emit<Func<IRequestHandler, IRequest, CancellationToken, ValueTask>>
+                .NewDynamicMethod($"{InitMethod}_{requestType.FullName}")
+                .LoadArgument(0).CastClass(metadata.HandlerImplementType)
+                .LoadArgument(1).CastClass(requestType)
+                .LoadArgument(2)
+                .Call(method)
+                .Return()
+                .CreateDelegate();
+
+            metadata.InitCLI = cli;
+        }
+
+        // Return function
+        return cli;
+    }
+    private ValueTask InitAsync<TResponse>(IRequestHandler handler, IRequest<TResponse> request, Type requestType, RequestMetadata metadata, CancellationToken ct)
+    {
+        _logger?.LogDebug("Request {Request} handler implement internal life cycle", request);
+
+        var method = GetInit(requestType, metadata);
+        return method(handler, request, ct);
+    }
+
+    private static Func<IRequestHandler, IRequest, CancellationToken, ValueTask> GetEnd(Type requestType, RequestMetadata metadata)
+    {
+        var cli = metadata.EndCLI;
+        if (cli is not null)
+            return cli;
+
+        lock (metadata)
+        {
+            cli = metadata.EndCLI;
+            if (cli is not null)
+                return cli;
+
+            var method = metadata
+                .HandlerImplementType
+                .GetMethod(EndMethod, new Type[] { requestType, typeof(CancellationToken) })
+                ?? throw new MissingMethodException($"Can't find {EndMethod} in {requestType}");
+
+            cli = Emit<Func<IRequestHandler, IRequest, CancellationToken, ValueTask>>
+                .NewDynamicMethod($"{EndMethod}_{requestType.FullName}")
+                .LoadArgument(0).CastClass(metadata.HandlerImplementType)
+                .LoadArgument(1).CastClass(requestType)
+                .LoadArgument(2)
+                .Call(method)
+                .Return()
+                .CreateDelegate();
+
+            metadata.EndCLI = cli;
+        }
+
+        // Return function
+        return cli;
+    }
+    private ValueTask EndAsync<TResponse>(IRequestHandler handler, IRequest<TResponse> request, Type requestType, RequestMetadata metadata, CancellationToken ct)
+    {
+        _logger?.LogDebug("Request {Request} handler implement internal life cycle", request);
+
+        var method = GetEnd(requestType, metadata);
+        return method(handler, request, ct);
+    }
+
     /// <summary>
     /// Handler post async operations
     /// </summary>
@@ -450,6 +537,9 @@ public sealed class ServiceProviderMediator : IMediator
 
         public bool HasCompliance;
         public Func<IRequestHandler, IRequest, CancellationToken, ValueTask<IResponse>>? ComplianceCLI;
+
+        public bool HasLifeCycle;
+        public Func<IRequestHandler, IRequest, CancellationToken, ValueTask>? InitCLI, EndCLI;
 
         public PostPipelineMetadata[][]? PostPipeline;
     }

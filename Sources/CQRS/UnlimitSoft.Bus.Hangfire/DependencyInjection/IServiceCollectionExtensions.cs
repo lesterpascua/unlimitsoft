@@ -2,14 +2,13 @@
 using Hangfire.SqlServer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 using UnlimitSoft.Bus.Hangfire.Activator;
 using UnlimitSoft.Bus.Hangfire.Filter;
 using UnlimitSoft.CQRS.Command;
 using UnlimitSoft.CQRS.Message;
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using UnlimitSoft.Web.Client;
 using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Bus.Hangfire.DependencyInjection;
@@ -34,20 +33,22 @@ public static class IServiceCollectionExtensions
     /// <param name="activatorFactory">Custom activator creator.</param>
     /// <param name="setup"></param>
     /// <param name="recomendedConfig"></param>
+    /// <param name="enableMigrate"></param>
     /// <param name="compatibility">Default <see cref="CompatibilityLevel.Version_170"/>.</param>
     /// <returns></returns>
     public static IServiceCollection AddHangfireCommandBus<TProps>(this IServiceCollection services,
         HangfireOptions options,
         string? errorCode = null,
         Func<IServiceProvider, ICommand, Task>? preeSendCommand = null,
-        Func<IServiceProvider, ICommand, JobActivatorContext, Func<ICommand, CancellationToken, Task<IResponse>>, CancellationToken, Task<IResponse>>? preeProcessCommand = null,
+        Func<IServiceProvider, ICommand, JobActivatorContext, Func<ICommand, CancellationToken, Task<IResult>>, CancellationToken, Task<IResult>>? preeProcessCommand = null,
         Func<IServiceProvider, Exception, Task>? onError = null,
         bool addLoggerFilter = false,
         Func<IServiceProvider, JobActivator>? activatorFactory = null,
         Func<IServiceProvider, IServiceProvider>? providerFactory = null,
         Action<IGlobalConfiguration>? setup = null,
         bool recomendedConfig = true,
-        CompatibilityLevel compatibility = CompatibilityLevel.Version_170
+        bool enableMigrate = true,
+        CompatibilityLevel compatibility = CompatibilityLevel.Version_180
     )
         where TProps : CommandProps
     {
@@ -70,20 +71,30 @@ public static class IServiceCollectionExtensions
                     config.UseActivator(activator ?? new DefaultJobActivator(ActivatorUtilities.GetServiceOrCreateInstance<IServiceScopeFactory>(provider)));
                 }
 
-                if (setup is null)
+                if (setup is not null)
                 {
-                    config.UseSqlServerStorage(options.ConnectionString, new SqlServerStorageOptions
-                    {
-                        SchemaName = options.Scheme,
-                        CommandBatchMaxTimeout = TimeSpan.FromMinutes(5),
-                        SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5),
-                        QueuePollInterval = TimeSpan.Zero,
-                        UseRecommendedIsolationLevel = true,
-                        DisableGlobalLocks = true
-                    });
-                }
-                else
                     setup(config);
+                    return;
+                }
+
+                config.UseIgnoredAssemblyVersionTypeResolver();
+
+                var sqlServerStorageOptions = new SqlServerStorageOptions
+                {
+                    SqlClientFactory = Microsoft.Data.SqlClient.SqlClientFactory.Instance,
+                    SchemaName = options.Scheme,
+                    CommandBatchMaxTimeout = TimeSpan.FromMinutes(5.0),
+                    SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5.0),
+                    QueuePollInterval = TimeSpan.Zero,
+                    UseRecommendedIsolationLevel = true,
+                    DisableGlobalLocks = true,
+                };
+                if (enableMigrate)                                              // Options to migrate to 1.8
+                {
+                    sqlServerStorageOptions.PrepareSchemaIfNecessary = true;    // Enabled by default
+                    sqlServerStorageOptions.EnableHeavyMigrations = true;       // Disabled by default
+                }
+                config.UseSqlServerStorage(options.ConnectionString, sqlServerStorageOptions);
             })
             .AddScoped<IJobProcessor>(provider =>
             {
