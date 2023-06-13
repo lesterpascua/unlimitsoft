@@ -251,7 +251,7 @@ public static class IServiceCollectionExtensions
                 if (onError is not null)
                     listenerOnError = async (ex, @event, messageEnvelop, ct) => await onError(provider, ex, @event, messageEnvelop, ct);
 
-                var depencyArgs = new EventUtility.Args<TEvent>(serializer, eventDispatcher, resolver, beforeProcess, listenerOnError, logger);
+                var depencyArgs = new EventUtility.Args<TEvent>(serializer, eventDispatcher, resolver, beforeProcess, listenerOnError, Logger: logger);
                 return new AzureEventListener<QueueIdentifier>(
                     options.Endpoint,
                     listerners,

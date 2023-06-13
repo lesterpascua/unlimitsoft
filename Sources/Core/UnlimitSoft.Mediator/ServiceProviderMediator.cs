@@ -80,6 +80,9 @@ public sealed class ServiceProviderMediator : IMediator
         _logger?.LogDebug(12, "Execute request type {Request} with response {Response}", requestType, responseType);
 
         var handler = BuildHandlerMetadata(provider, requestType, responseType, out var metadata);
+        if (handler is null)
+            return new Result<TResponse>(default, request.NotFoundResponse());
+
         if (metadata.HasLifeCycle)
             await InitAsync(handler, request, requestType, metadata, ct);
 
@@ -145,10 +148,14 @@ public sealed class ServiceProviderMediator : IMediator
         }
     }
 
-    private static IRequestHandler BuildHandlerMetadata(IServiceProvider provider, Type requestType, Type responseType, out RequestMetadata metadata)
+    private static IRequestHandler? BuildHandlerMetadata(IServiceProvider provider, Type requestType, Type responseType, out RequestMetadata metadata)
     {
         if (Cache.TryGetValue(requestType, out metadata!))
-            return (IRequestHandler)provider.GetRequiredService(metadata.HandlerInterfaceType);
+        {
+            if (metadata.HandlerInterfaceType is not null)
+                return (IRequestHandler)provider.GetRequiredService(metadata.HandlerInterfaceType);
+            return null;
+        }
 
         // Handler
         lock (Cache)
@@ -156,7 +163,12 @@ public sealed class ServiceProviderMediator : IMediator
             {
                 // Create Handler
                 var handlerInterfaceType = typeof(IRequestHandler<,>).MakeGenericType(requestType, responseType);
-                var handler = (IRequestHandler)provider.GetRequiredService(handlerInterfaceType);
+                var handler = (IRequestHandler)provider.GetService(handlerInterfaceType);
+                if (handler is null)
+                {
+                    Cache.Add(requestType, new RequestMetadata());
+                    return null;
+                }
 
                 // Features implemented by this command
                 var handleType = handler.GetType();

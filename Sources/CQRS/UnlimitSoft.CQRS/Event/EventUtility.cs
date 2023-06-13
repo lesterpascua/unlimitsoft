@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Logging;
@@ -56,7 +57,12 @@ public static class EventUtility
 
             // Log error if fail
             if (responses?.IsSuccess != true)
-                throw new EventResponseException("Some event process has error see responses", responses);
+            {
+                if (responses?.Code != HttpStatusCode.NotFound || !args.NotFoundAsWarning)
+                    throw new EventResponseException("Some event process has error see responses", responses);
+
+                args.Logger?.LogWarning("Event: {Name} don't have handler associate", eventType.FullName);
+            }
         }
         catch (Exception ex)
         {
@@ -90,7 +96,8 @@ Response: {@Response}", @event, responses);
     /// <param name="Resolver">Contains the map between name of the event and event type</param>
     /// <param name="BeforeProcess"></param>
     /// <param name="OnError"></param>
+    /// <param name="NotFoundAsWarning">If no handler attached just log a warning don't thread as an error</param>
     /// <param name="Logger"></param>
-    public sealed record Args<TEvent>(IJsonSerializer Serializer, IEventDispatcher Dispatcher, IEventNameResolver Resolver, Action<TEvent>? BeforeProcess = null, Func<Exception, TEvent?, MessageEnvelop, CancellationToken, ValueTask>? OnError = null, ILogger? Logger = null);
+    public sealed record Args<TEvent>(IJsonSerializer Serializer, IEventDispatcher Dispatcher, IEventNameResolver Resolver, Action<TEvent>? BeforeProcess = null, Func<Exception, TEvent?, MessageEnvelop, CancellationToken, ValueTask>? OnError = null, bool NotFoundAsWarning = true, ILogger ? Logger = null);
     #endregion
 }
