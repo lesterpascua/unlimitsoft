@@ -33,8 +33,8 @@
 		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="6.0.16" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'net7.0'">
-		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.5" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.5" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="7.0.8" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="7.0.8" />
 	</ItemGroup>
 
 	<ItemGroup>
