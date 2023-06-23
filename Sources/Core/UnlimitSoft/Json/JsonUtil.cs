@@ -12,6 +12,10 @@ public static class JsonUtil
     private static IJsonSerializer? _default;
 
     /// <summary>
+    /// Indicate if the default serializer is stablished
+    /// </summary>
+    public static bool IsInitialize => _default is not null;
+    /// <summary>
     /// Access to the default serializer in the system. This value only can be assign one time
     /// </summary>
     public static IJsonSerializer Default

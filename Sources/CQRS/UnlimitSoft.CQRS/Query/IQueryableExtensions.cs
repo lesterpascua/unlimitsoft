@@ -61,7 +61,7 @@ public static class IQueryableExtensions
     /// <param name="pagging"></param>
     /// <param name="ordered"></param>
     /// <returns></returns>
-    public static IQueryable<TEntity> ApplySearch<TEntity>(this IQueryable<TEntity> @this, Paging pagging, IEnumerable<ColumnName> ordered)
+    public static IQueryable<TEntity> ApplySearch<TEntity>(this IQueryable<TEntity> @this, Paging pagging, IEnumerable<ColumnName>? ordered)
         where TEntity : class
     {
         if (ordered?.Any() == true)
