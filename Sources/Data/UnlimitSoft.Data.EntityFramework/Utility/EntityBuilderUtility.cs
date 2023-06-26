@@ -32,17 +32,26 @@ public static class EntityBuilderUtility
     public static void ConfigureEvent<TEvent>(EntityTypeBuilder<TEvent> builder, bool useIndex = true, bool useExtraIndex = false, Action<PropertyBuilder<string?>>? payloadBuilder = null)
         where TEvent : EventPayload
     {
-        builder.ToTable("VersionedEvent");
+        var comment = "Store the event generated for the service. All event will be taken from here and publish";
+#if NET7_0_OR_GREATER
+        builder.ToTable("VersionedEvent", t => t.HasComment(comment));
+#else
+        builder.ToTable("VersionedEvent").HasComment(comment);
+#endif
         builder.HasKey(k => k.Id);
 
         builder.Property(p => p.Id).ValueGeneratedNever().HasComment("Event unique identifier");
         builder.Property(p => p.SourceId).HasComment("PKey of the identity where event was attached");
         builder.Property(p => p.Version).HasComment("Version or order of the event in the stream. Este valor lo asigna la entidad que lo genero y \r\n    /// es el que ella poseia en el instante en que fue generado el evento");
         builder.Property(p => p.ServiceId).HasComment("Identifier of the service where the event below");
-        builder.Property(p => p.WorkerId).HasComment("Identifier of the worker were the event is create");
+        builder.Property(p => p.WorkerId).HasMaxLength(20).HasComment("Identifier of the worker were the event is create");
         builder.Property(p => p.Name).IsRequired().HasMaxLength(255).HasComment("Name of the event. This is use to identified the event type");
         builder.Property(p => p.Created).HasConversion(DateTimeUtcConverter.Instance).HasComment("Date when the event was created");
         builder.Property(p => p.IsDomainEvent).HasComment("Specify if an event belown to domain. This have optimization propouse");
+        builder.Property(p => p.Body).HasComment("Json with the body serialized");
+        builder.Property(p => p.CorrelationId).HasMaxLength(40).HasComment("Operation correlation identifier");
+        builder.Property(p => p.IsPubliched).HasComment("Indicate if the event was already published");
+        builder.Property(p => p.Scheduled).HasComment("Date when the event was scheduled to publish");
 
         var payloadPropertyBuilder = builder.Property(p => p.Body);
         payloadBuilder?.Invoke(payloadPropertyBuilder);

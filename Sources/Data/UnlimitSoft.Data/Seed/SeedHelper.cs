@@ -30,7 +30,7 @@ public static class SeedHelper
     public static async Task SeedAsync(IServiceProvider provider, IUnitOfWork unitOfWork, Assembly[] assemblies,
         Func<IUnitOfWork, CancellationToken, Task>? migrateCallback = null, Func<Type, bool>? condition = null, Func<ParameterInfo, object>? resolver = null, CancellationToken ct = default)
     {
-        if (migrateCallback != null)
+        if (migrateCallback is not null)
             await migrateCallback(unitOfWork, ct);
 
         var typesToSeed = assemblies
