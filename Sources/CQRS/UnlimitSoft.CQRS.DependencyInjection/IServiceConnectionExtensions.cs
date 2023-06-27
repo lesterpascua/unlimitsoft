@@ -69,16 +69,17 @@ public static class IServiceConnectionExtensions
     public static void AddQueryHandler(this IServiceCollection services, CQRSSettings settings)
     {
         if (settings.IQueryHandler is not null)
-            AddQueryHandler(services, settings.IQueryHandler, true, settings.Assemblies);
+            AddQueryHandler(services, settings.Filter, settings.IQueryHandler, true, settings.Assemblies);
     }
     /// <summary>
     /// Scan assemblies and register all QueryHandler implement the interfaces set in <see cref="CQRSSettings.IQueryHandler"/>
     /// </summary>
     /// <param name="services"></param>
+    /// <param name="filter"></param>
     /// <param name="queryHandlerType"></param>
     /// <param name="validate"></param>
     /// <param name="assemblies"></param>
-    public static void AddQueryHandler(this IServiceCollection services, Type queryHandlerType, bool validate = true, params Assembly[] assemblies)
+    public static void AddQueryHandler(this IServiceCollection services, Func<Type, bool>? filter, Type queryHandlerType, bool validate = true, params Assembly[] assemblies)
     {
         services.AddSingleton<IQueryDispatcher>((provider) => new ServiceProviderQueryDispatcher(provider, validate: validate));
 
@@ -87,7 +88,7 @@ public static class IServiceConnectionExtensions
             .SelectMany(s => s.GetTypes())
             .Where(p => p.IsClass && !p.IsAbstract && p.GetInterfaces().Contains(typeof(IQueryHandler)));
 
-        foreach (var handlerImplementation in existHandler)
+        foreach (var handlerImplementation in existHandler.Where(x => filter is null || filter(x)))
         {
             var queryHandlerImplementedInterfaces = handlerImplementation
                 .GetInterfaces()
@@ -122,17 +123,18 @@ public static class IServiceConnectionExtensions
     public static IServiceCollection AddCommandHandler(this IServiceCollection services, CQRSSettings settings)
     {
         if (settings.ICommandHandler is not null)
-            AddCommandHandler(services, settings.ICommandHandler, true, settings.Assemblies);
+            AddCommandHandler(services, settings.Filter, settings.ICommandHandler, true, settings.Assemblies);
         return services;
     }
     /// <summary>
     /// Scan assemblies and register all CommandHandler implement the interfaces set in commandHandlerType
     /// </summary>
     /// <param name="services"></param>
+    /// <param name="filter"></param>
     /// <param name="commandHandlerType"></param>
     /// <param name="validate"></param>
     /// <param name="assemblies"></param>
-    public static IServiceCollection AddCommandHandler(this IServiceCollection services, Type commandHandlerType, bool validate = true, params Assembly[] assemblies)
+    public static IServiceCollection AddCommandHandler(this IServiceCollection services, Func<Type, bool>? filter, Type commandHandlerType, bool validate = true, params Assembly[] assemblies)
     {
         services.AddSingleton<ICommandDispatcher>((provider) => new ServiceProviderCommandDispatcher(provider, validate: validate));
 
@@ -141,7 +143,7 @@ public static class IServiceConnectionExtensions
             .SelectMany(s => s.GetTypes())
             .Where(p => p.IsClass && !p.IsAbstract && p.GetInterfaces().Contains(typeof(ICommandHandler)));
 
-        foreach (var handlerImplementation in existHandler)
+        foreach (var handlerImplementation in existHandler.Where(x => filter is null || filter(x)))
         {
             var commandHandlerImplementedInterfaces = handlerImplementation
                 .GetInterfaces()
@@ -202,17 +204,18 @@ public static class IServiceConnectionExtensions
     public static IServiceCollection AddEventHandler(this IServiceCollection services, CQRSSettings settings)
     {
         if (settings.IEventHandler is not null)
-            AddEventHandler(services, settings.IEventHandler, settings.Assemblies);
+            AddEventHandler(services, settings.Filter, settings.IEventHandler, settings.Assemblies);
         return services;
     }
     /// <summary>
     /// Scan assemblies and register all EventHandler implement the type set in eventHandlerType
     /// </summary>
     /// <param name="services"></param>
+    /// <param name="filter"></param>
     /// <param name="eventHandlerType"></param>
     /// <param name="assemblies"></param>
     /// <returns></returns>
-    public static IServiceCollection AddEventHandler(this IServiceCollection services, Type eventHandlerType, params Assembly[] assemblies)
+    public static IServiceCollection AddEventHandler(this IServiceCollection services, Func<Type, bool>? filter, Type eventHandlerType, params Assembly[] assemblies)
     {
         services.AddSingleton<IEventDispatcher>((provider) => new ServiceProviderEventDispatcher(provider, true));
 
@@ -221,7 +224,7 @@ public static class IServiceConnectionExtensions
             .SelectMany(s => s.GetTypes())
             .Where(p => p.IsClass && !p.IsAbstract && p.GetInterfaces().Contains(typeof(IEventHandler)));
 
-        foreach (var handlerImplementation in existHandler)
+        foreach (var handlerImplementation in existHandler.Where(x => filter is null || filter(x)))
         {
             var eventHandlerImplementedInterfaces = handlerImplementation
                 .GetInterfaces()

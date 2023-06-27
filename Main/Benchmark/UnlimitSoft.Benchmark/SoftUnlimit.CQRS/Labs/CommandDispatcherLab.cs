@@ -29,7 +29,7 @@ public sealed class CommandDispatcherLab
         services.AddScoped<IRequestHandlerPostPipeline<Command, CommandHandler, string, CommandHandlerPipeline1>, CommandHandlerPipeline1>();
         services.AddScoped<IRequestHandlerPostPipeline<Command, CommandHandler, string, CommandHandlerPipeline2>, CommandHandlerPipeline2>();
 
-        services.AddCommandHandler(typeof(ICommandHandler<,>), validate, typeof(Program).Assembly);
+        services.AddCommandHandler(null, typeof(ICommandHandler<,>), validate, typeof(Program).Assembly);
 
 
         _provider = services.BuildServiceProvider();
