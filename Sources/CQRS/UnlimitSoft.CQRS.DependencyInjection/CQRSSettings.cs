@@ -28,4 +28,9 @@ public sealed class CQRSSettings
     /// typeof(IEventHandler&lt;&gt;)
     /// </summary>
     public Type? IEventHandler { get; set; }
+
+    /// <summary>
+    /// Filter if the type should be register or not
+    /// </summary>
+    public Func<Type, bool>? Filter { get; set; }
 }

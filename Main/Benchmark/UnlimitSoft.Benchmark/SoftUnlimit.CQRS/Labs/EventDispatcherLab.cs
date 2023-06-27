@@ -21,7 +21,7 @@ public class EventDispatcherLab
     {
         var services = new ServiceCollection();
 
-        services.AddEventHandler(typeof(IEventHandler<>), typeof(Program).Assembly);
+        services.AddEventHandler(null, typeof(IEventHandler<>), typeof(Program).Assembly);
 
         _provider = services.BuildServiceProvider();
         _dispatcher = _provider.GetRequiredService<IEventDispatcher>();
