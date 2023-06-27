@@ -208,7 +208,7 @@ public class AzureEventBus<TAlias, TEventPayload> : IEventBus, IAsyncDisposable
         _setup?.Invoke(graph, message);
 
         await _retryPolicy.ExecuteAsync((cancelationToken) => sender.SendMessageAsync(message, cancelationToken), ct);
-        _logger?.LogInformation("Publish to {Queue} body: {@Body}", queue.Queue, body);
+        _logger?.LogInformation("Publish to {Queue} body: {@Body}", queue.Queue, envelop);
     }
     #endregion
 }
