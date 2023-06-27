@@ -55,6 +55,11 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
         _logger = logger;
     }
 
+    /// <summary>
+    /// Wait time for retry the event
+    /// </summary>
+    protected TimeSpan WaitRetry => _waitRetry;
+
     /// <inheritdoc />
     public async ValueTask DisposeAsync()
     {
