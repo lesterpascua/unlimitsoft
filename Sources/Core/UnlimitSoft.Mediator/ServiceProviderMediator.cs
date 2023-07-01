@@ -81,7 +81,7 @@ public sealed class ServiceProviderMediator : IMediator
 
         var handler = BuildHandlerMetadata(provider, requestType, responseType, out var metadata);
         if (handler is null)
-            return new Result<TResponse>(default, request.NotFoundResponse());
+            return Result<TResponse>.FromError(request.NotFoundResponse());
 
         if (metadata.HasLifeCycle)
             await InitAsync(handler, request, requestType, metadata, ct);
@@ -92,13 +92,13 @@ public sealed class ServiceProviderMediator : IMediator
             {
                 var error = await ValidationAsync(handler, request, requestType, metadata, ct);
                 if (error is not null)
-                    return new Result<TResponse>(default, error);
+                    return Result<TResponse>.FromError(error);
             }
             if (metadata.HasCompliance)
             {
                 var error = await ComplianceAsync(handler, request, requestType, metadata, ct);
                 if (error is not null)
-                    return new Result<TResponse>(default, error);
+                    return Result<TResponse>.FromError(error);
             }
         }
         var response = await HandlerAsync(handler, request, requestType, metadata, ct);
@@ -110,7 +110,7 @@ public sealed class ServiceProviderMediator : IMediator
         if (metadata.HasLifeCycle)
             await EndAsync(handler, request, requestType, metadata, ct);
 
-        return new Result<TResponse>(response, null);
+        return Result<TResponse>.FromOk(response);
     }
 
     /// <summary>

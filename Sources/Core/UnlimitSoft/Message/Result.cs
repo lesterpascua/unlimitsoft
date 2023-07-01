@@ -1,4 +1,6 @@
-﻿namespace UnlimitSoft.Message;
+﻿using System.Runtime.CompilerServices;
+
+namespace UnlimitSoft.Message;
 
 
 /// <summary>
@@ -31,7 +33,7 @@ public readonly struct Result<TResponse> : IResult
     /// </summary>
     /// <param name="value"></param>
     /// <param name="error"></param>
-    public Result(TResponse? value, IResponse? error)
+    private Result(TResponse? value, IResponse? error)
     {
         Value = value;
         Error = error;
@@ -61,6 +63,21 @@ public readonly struct Result<TResponse> : IResult
 
     /// <inheritdoc />
     public override string ToString() => $"Value: {Value}, Error: {Error}";
+
+    /// <summary>
+    /// Return a result from success
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Result<TResponse> FromOk(TResponse? value) => new(value, null);
+    /// <summary>
+    /// Return a result from error
+    /// </summary>
+    /// <param name="error"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Result<TResponse> FromError(IResponse error) => new(default, error);
 
     #region Private Methods
     object? IResult.GetValue() => Value;

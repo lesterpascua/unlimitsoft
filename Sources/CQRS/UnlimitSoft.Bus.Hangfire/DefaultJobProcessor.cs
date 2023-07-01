@@ -135,19 +135,27 @@ public sealed class DefaultJobProcessor<TProps> : IJobProcessor
 
             if (_onError != null)
                 await _onError(exc);
-            response = new Result<object>(null, command.ErrorResponse(_errorBody));
+
+            var error = command.ErrorResponse(_errorBody);
+            response = Result<object>.FromError(error);
         }
 
         if (_completionService is not null)
             response = await _completionService.CompleteAsync(command, response, err, CancellationToken);
 
-        _logger?.LogDebug(@"End process
-JobId: {JobId}
-command: {@Command}
-Response: {@Response}", meta.Id, command, response);
-        _logger?.LogInformation("End process {Job} with error {Error}", meta.Id, err is not null || response.Error is null);
+        _logger?.LogDebug("End process JobId: {JobId} command: {@Command} Response: {@Response}", meta.Id, command, response);
+        LogCompleteProcess(meta, err is not null || response.Error is not null);
 
-        return response!;
+        return response;
+    }
+    private void LogCompleteProcess(BackgroundJob meta, bool hasError)
+    {
+        if (!hasError)
+        {
+            _logger?.LogInformation("End process {Job} successfully");
+            return;
+        }
+        _logger?.LogWarning("End process {Job} with error", meta.Id);
     }
     #endregion
 }
