@@ -111,7 +111,7 @@ public class AkkaCommandBus : ICommandBus
         } catch (Exception exc)
         {
             err = exc;
-            response = new Result<object>(null, envelopment.Command.ErrorResponse(GENERIC_ERROR));
+            response = Result<object>.FromError(envelopment.Command.ErrorResponse(GENERIC_ERROR));
             logger.LogError(exc, "CoordinatorActor.DispatchAsync: {Command}", envelopment.Command);
         }
 
