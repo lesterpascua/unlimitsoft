@@ -1,9 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -34,10 +32,6 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
     /// </summary>
     protected readonly int _bachSize;
     /// <summary>
-    /// Allow scheduler in the the events
-    /// </summary>
-    protected readonly bool _enableScheduled;
-    /// <summary>
     /// Create the event into an envelop with event information
     /// </summary>
     protected readonly bool _useEnvelop;
@@ -67,9 +61,13 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
     /// </summary>
     protected readonly CancellationTokenSource _cts;
     /// <summary>
-    /// Collection with pending to publish event.
+    /// Collection with pending to publish event ordering by priority
     /// </summary>
-    protected readonly ConcurrentDictionary<Guid, Bucket> _pending;
+    protected readonly SortedList<Key, bool> _pending;
+    /// <summary>
+    /// Lock object to make collection safe
+    /// </summary>
+    protected readonly SemaphoreSlim _lock;
     /// <summary>
     /// Logger used to trace information
     /// </summary>
@@ -104,7 +102,6 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
         TimeSpan? startDelay = null,
         TimeSpan? errorDelay = null,
         int bachSize = 10,
-        bool enableScheduled = false,
         bool useEnvelop = true,
         ILogger<QueueEventPublishWorker<TEventSourcedRepository, TEventPayload>>? logger = null
     )
@@ -119,9 +116,9 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
         _errorDelay = errorDelay ?? TimeSpan.FromSeconds(20);
         _logger = logger;
         _bachSize = bachSize;
-        _enableScheduled = enableScheduled;
         _useEnvelop = useEnvelop;
         _pending = new();
+        _lock = new(1, 1);
         _cts = new();
     }
 
@@ -138,7 +135,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
     protected bool Disposed => _disposed;
 
     /// <inheritdoc />
-    public virtual void Dispose()
+    public void Dispose()
     {
         _cts.Cancel();
         if (Worker is not null)
@@ -155,54 +152,68 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
     }
 
     /// <inheritdoc />
-    public virtual ValueTask RetryPublishAsync(Guid id, CancellationToken ct = default)
+    public async Task RetryPublishAsync(Guid id, CancellationToken ct = default)
     {
         if (_disposed)
             throw new ObjectDisposedException(GetType().FullName);
 
-        _pending.TryAdd(id, new Bucket(null, _clock.UtcNow));
-#if NETSTANDARD2_0
-        return ValueTaskExtensions.CompletedTask;
-#else
-        return ValueTask.CompletedTask;
-#endif
-    }
-    /// <inheritdoc />
-    public virtual ValueTask PublishAsync(IEnumerable<IEvent> events, CancellationToken ct = default)
-    {
-        if (_disposed)
-            throw new ObjectDisposedException(GetType().FullName);
-
-        foreach (var @event in events)
+        var key = new Key(id, null, _clock.UtcNow);
+        await _lock.WaitAsync(ct);
+        try
         {
-            DateTime? scheduled = null;
-            if (@event is IDelayEvent delayEvent)
-                scheduled = delayEvent.Scheduled;
-
-            _pending.TryAdd(@event.Id, new Bucket(scheduled, @event.Created));
+            _pending.Add(key, true);
         }
-#if NETSTANDARD2_0
-        return ValueTaskExtensions.CompletedTask;
-#else
-        return ValueTask.CompletedTask;
-#endif
+        finally
+        {
+            _lock.Release();
+        }
     }
     /// <inheritdoc />
-    public ValueTask PublishAsync(IEnumerable<PublishEventInfo> events, CancellationToken ct = default)
+    public async Task PublishAsync(IEnumerable<IEvent> events, CancellationToken ct = default)
     {
         if (_disposed)
             throw new ObjectDisposedException(GetType().FullName);
 
-        foreach (var @event in events)
-            _pending.TryAdd(@event.Id, new Bucket(@event.Scheduled, @event.Created));
-#if NETSTANDARD2_0
-        return ValueTaskExtensions.CompletedTask;
-#else
-        return ValueTask.CompletedTask;
-#endif
+        await _lock.WaitAsync(ct);
+        try
+        {
+            foreach (var @event in events)
+            {
+                DateTime? scheduled = null;
+                if (@event is IDelayEvent delayEvent)
+                    scheduled = delayEvent.Scheduled;
+
+                var key = new Key(@event.Id, scheduled, @event.Created);
+                _pending.Add(key, true);
+            }
+        }
+        finally
+        {
+            _lock.Release();
+        }
     }
     /// <inheritdoc />
-    public async virtual Task StartAsync(bool loadEvent, int bachSize = 1000, CancellationToken ct = default)
+    public async Task PublishAsync(IEnumerable<PublishEventInfo> events, CancellationToken ct = default)
+    {
+        if (_disposed)
+            throw new ObjectDisposedException(GetType().FullName);
+
+        await _lock.WaitAsync(ct);
+        try
+        {
+            foreach (var @event in events)
+            {
+                var key = new Key(@event.Id, @event.Scheduled, @event.Created);
+                _pending.Add(key, true);
+            }
+        }
+        finally
+        {
+            _lock.Release();
+        }
+    }
+    /// <inheritdoc />
+    public async Task StartAsync(bool loadEvent, int bachSize = 1000, CancellationToken ct = default)
     {
         if (_disposed)
             throw new ObjectDisposedException(GetType().FullName);
@@ -213,8 +224,10 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
         if (loadEvent)
             await LoadEventAsync(bachSize, ct);
 
+#pragma warning disable CA2016 // Forward the 'CancellationToken' parameter to methods
         // Create an independance task to publish all event in the event bus.
         Worker = Task.Run(PublishBackground);
+#pragma warning restore CA2016 // Forward the 'CancellationToken' parameter to methods
 
         _logger?.LogInformation("EventPublishWorker start");
     }
@@ -228,16 +241,11 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
     {
         if (_cts.Token.IsCancellationRequested)
             return true;
-        if (!_pending.IsEmpty)
-        {
-            if (!_enableScheduled)
-                return true;
-            //
-            // only if scheduled feature is enable by software
-            return _pending.Any(QueueEventPublishWorker<TEventSourcedRepository, TEventPayload>.ScheduledCondition());
-        }
+        if (_pending.Count == 0)
+            return false;
 
-        return false;
+        var first = _pending.Keys[0];
+        return first.Scheduled is null || first.Scheduled.Value <= _clock.UtcNow;
     }
     /// <summary>
     /// Backgound process event to the queue.
@@ -256,31 +264,53 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
             _logger?.LogDebug("Start to publish events");
 
             TEventPayload? lastEvent = null;
-            int count = Math.Min(_pending.Count, _bachSize);
+            int bachSize = Math.Min(_pending.Count, _bachSize);
 
-            IOrderedEnumerable<KeyValuePair<Guid, Bucket>> orderedPending;
-            if (_enableScheduled)
-            {
-                var where = QueueEventPublishWorker<TEventSourcedRepository, TEventPayload>.ScheduledCondition();
-                orderedPending = _pending.Where(where).OrderBy(k => k.Value);
-            }
-            else
-                orderedPending = _pending.OrderBy(k => k.Value.Created);
-
-            var eventIds = orderedPending.Select(s => s.Key).Take(count).ToArray();
             try
             {
+                int index = 0;
+                var now = _clock.UtcNow;
+                var ids = new Dictionary<Guid, Key>();
+
+                await _lock.WaitAsync(_cts.Token);
+                try
+                {
+                    while (index < bachSize)
+                    {
+                        var key = _pending.Keys[index];
+                        if (key.Scheduled is not null && now < key.Scheduled.Value)
+                            break;
+                        ids.Add(key.Id, key);
+                        index++;
+                    }
+                }
+                finally 
+                { 
+                    _lock.Release();
+                }
+                if (ids.Count == 0)
+                    return;
+
                 using var scope = _factory.CreateScope();
                 var eventSourcedRepository = scope.ServiceProvider.GetRequiredService<TEventSourcedRepository>();
 
-                var eventsPayload = await eventSourcedRepository.GetEventsAsync(eventIds, _cts.Token);
+                var eventsPayload = await eventSourcedRepository.GetEventsAsync(ids.Keys.ToArray(), _cts.Token);
                 foreach (var payload in eventsPayload)
                 {
                     var aux = await TryToPublishAsync(eventSourcedRepository, payload);
                     if (aux is not null)
                         lastEvent = aux;
 
-                    _pending.TryRemove(payload.Id, out var _);
+
+                    await _lock.WaitAsync(_cts.Token);
+                    try
+                    {
+                        _pending.Remove(ids[payload.Id]);
+                    }
+                    finally
+                    {
+                        _lock.Release();
+                    }
                 }
             }
             catch (Exception ex) when (!_cts.Token.IsCancellationRequested)
@@ -335,70 +365,94 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
         using var scope = _factory.CreateScope();
         var eventSourcedRepository = scope.ServiceProvider.GetRequiredService<TEventSourcedRepository>();
 
-        List<NonPublishEventPayload> nonPublishEvents;
+        List<NonPublishEventPayload>? nonPublishEvents;
         var pending = new List<NonPublishEventPayload>();
         var paging = new Paging { Page = 0, PageSize = bashSize };
         do
         {
-            nonPublishEvents = await eventSourcedRepository.GetNonPublishedEventsAsync(paging, ct);
-            pending.AddRange(nonPublishEvents);
+            try
+            {
+                nonPublishEvents = await eventSourcedRepository.GetNonPublishedEventsAsync(paging, ct);
+                _logger?.LogInformation("Event loaded: {Count}", paging.Page * paging.PageSize + nonPublishEvents.Count);
 
-            paging.Page++;
-        } while (nonPublishEvents.Count == bashSize);
+                pending.AddRange(nonPublishEvents);
+                paging.Page++;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "Error retrieving pending event from database, {@Page}", paging);
+                nonPublishEvents = null;
+            }
+        } while (nonPublishEvents is null || nonPublishEvents.Count == bashSize);
 
-        foreach (var @event in pending)
-            _pending.TryAdd(@event.Id, new Bucket(@event.Scheduled, @event.Created));
-    }
-    #endregion
-
-    #region Private Methods
-    private static Func<KeyValuePair<Guid, Bucket>, bool> ScheduledCondition()
-    {
-        var now = SysClock.GetUtcNow();
-        return p => p.Value.Scheduled is null || p.Value.Scheduled.Value <= now;
+        await _lock.WaitAsync(ct);
+        try
+        {
+            // Insert all
+            foreach (var @event in pending)
+                _pending.Add(new Key(@event.Id, @event.Scheduled, @event.Created), true);
+        }
+        finally
+        {
+            _lock.Release();
+        }
     }
     #endregion
 
     #region Nested Classes
     /// <summary>
-    /// 
+    /// Key asocciate to the event allow compute a hash and sorting
     /// </summary>
-    protected sealed class Bucket : IComparable<Bucket>
+    public sealed class Key : IComparable<Key>
     {
         /// <summary>
         /// 
         /// </summary>
+        /// <param name="id"></param>
         /// <param name="scheduled"></param>
         /// <param name="created"></param>
-        public Bucket(DateTime? scheduled, DateTime created)
+        public Key(Guid id, DateTime? scheduled, DateTime created)
         {
+            Id = id;
             Scheduled = scheduled;
             Created = created;
         }
 
         /// <summary>
-        /// 
+        /// Identifier of the event
         /// </summary>
-        public DateTime? Scheduled { get; set; } 
+        public Guid Id { get; }
         /// <summary>
-        /// 
+        /// Date where the event is scheduled
         /// </summary>
-        public DateTime Created { get; set; }
+        public DateTime? Scheduled { get; init; }
+        /// <summary>
+        /// Date where the event is created
+        /// </summary>
+        public DateTime Created { get; init; }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="other"></param>
-        /// <returns></returns>
-        public int CompareTo(Bucket? other)
+        /// <inheritdoc />
+        public int CompareTo(Key? other)
         {
-            if (other is null) return 1;
+            if (other is null)
+                throw new ArgumentNullException(nameof(other), "Compare operand can't be null");
 
-            if (Scheduled is not null && other.Scheduled is not null)
-                return Created.CompareTo(other.Created);
-            if (Scheduled is null)
-                return -1;
-            return 1;
+            var date1 = Scheduled ?? Created;
+            var date2 = other.Scheduled ?? other.Created;
+
+            return date1.CompareTo(date2);
+        }
+        /// <inheritdoc />
+        public override int GetHashCode()
+        {
+            return Id.GetHashCode();
+        }
+        /// <inheritdoc />
+        public override bool Equals(object? obj)
+        {
+            if (obj is null || obj is not Key k)
+                return false;
+            return Id == k.Id;
         }
     }
     #endregion
