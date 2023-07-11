@@ -144,7 +144,6 @@ public sealed class QueueEventPublishWorkerWithEFTests
                 startDelay,
                 TimeSpan.Zero,
                 10,
-                false,
                 true,
                 null
             );

@@ -12,6 +12,6 @@ namespace UnlimitSoft;
 /// </summary>
 internal class ValueTaskExtensions
 {
-    internal readonly static ValueTask CompletedTask = new(Task.CompletedTask);
+    internal static ValueTask CompletedTask => default;
 }
 #endif

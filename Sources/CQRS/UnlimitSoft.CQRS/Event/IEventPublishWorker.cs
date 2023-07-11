@@ -42,19 +42,19 @@ public interface IEventPublishWorker : IDisposable
     /// <param name="id"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    ValueTask RetryPublishAsync(Guid id, CancellationToken ct = default);
+    Task RetryPublishAsync(Guid id, CancellationToken ct = default);
     /// <summary>
     /// Add collection of events to worker. To publish in the bus.
     /// </summary>
     /// <param name="events"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    ValueTask PublishAsync(IEnumerable<IEvent> events, CancellationToken ct = default);
+    Task PublishAsync(IEnumerable<IEvent> events, CancellationToken ct = default);
     /// <summary>
     /// Add collection of events to worker. To publish in the bus.
     /// </summary>
     /// <param name="events"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    ValueTask PublishAsync(IEnumerable<PublishEventInfo> events, CancellationToken ct = default);
+    Task PublishAsync(IEnumerable<PublishEventInfo> events, CancellationToken ct = default);
 }
