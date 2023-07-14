@@ -50,8 +50,8 @@ public abstract class EventSourced : AggregateRoot, IEventSourced
     /// Create a Event Sourced initial amount of event
     /// </summary>
     /// <param name="historicalEvents">List of event asociate to the entity at this moment.</param>
-    protected EventSourced(IReadOnlyCollection<IEvent>? historicalEvents)
-        : this()
+    protected EventSourced(IReadOnlyCollection<IEvent>? historicalEvents) : 
+        this()
     {
         if (historicalEvents?.Any() == true)
         {
@@ -61,7 +61,6 @@ public abstract class EventSourced : AggregateRoot, IEventSourced
     }
 
     #region Public Properties
-
     /// <summary>
     /// Gets the entity's version. As the entity is being updated and events being generated, the version is incremented.
     /// </summary>
@@ -79,7 +78,7 @@ public abstract class EventSourced : AggregateRoot, IEventSourced
     /// Attach the event to the entity
     /// </summary>
     /// <param name="event"></param>
-    protected void AddEvent(IEvent @event) => _events.Add(@event);
+    protected void AddEvent(IEvent @event) => Events.Add(@event);
     /// <summary>
     /// Create event of the type specified and attach the event to the entity
     /// </summary>
