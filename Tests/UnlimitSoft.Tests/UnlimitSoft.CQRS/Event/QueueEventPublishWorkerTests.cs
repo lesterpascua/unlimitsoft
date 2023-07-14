@@ -1,4 +1,5 @@
 ﻿using Bogus;
+using Castle.Components.DictionaryAdapter.Xml;
 using FluentAssertions;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.TestPlatform.Utilities;
@@ -33,7 +34,8 @@ public sealed class QueueEventPublishWorkerTests
 
     [Theory]
     [InlineData(1_000, 9_999)]
-    //[InlineData(1_000_000, 9_999_999)]
+    [InlineData(10_000, 99_999)]
+    //[InlineData(1_000_000, 3_000_000)]
     public async Task GenerateHugeAmountOfEvent_AllEventReadyToDeploy_ShouldPublishAllInEventBus(int min, int max)
     {
         // Arrange

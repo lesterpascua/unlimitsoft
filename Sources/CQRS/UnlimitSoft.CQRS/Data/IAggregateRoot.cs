@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Threading;
 using UnlimitSoft.Data;
 using UnlimitSoft.Message;
 
@@ -26,18 +27,30 @@ public interface IAggregateRoot : IEntity
 /// </summary>
 public abstract class AggregateRoot : Entity<Guid>, IAggregateRoot
 {
-    internal readonly List<IEvent> _events;
+    private List<IEvent>? _events = null;
 
     /// <summary>
     /// 
     /// </summary>
     protected AggregateRoot()
     {
-        _events = new List<IEvent>();
     }
 
+    /// <summary>
+    /// Get event collection
+    /// </summary>
+    internal List<IEvent> Events
+    {
+        get
+        {
+            if (_events is not null)
+                return _events;
+            Interlocked.CompareExchange(ref _events, new List<IEvent>(), null);
+            return _events;
+        }
+    }
     /// <inheritdoc />
-    public void ClearEvents() => _events.Clear();
+    public void ClearEvents() => Events.Clear();
     /// <inheritdoc />
-    public IReadOnlyCollection<IEvent> GetEvents() => _events;
+    public IReadOnlyCollection<IEvent> GetEvents() => Events;
 }

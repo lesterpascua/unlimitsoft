@@ -9,8 +9,6 @@ namespace UnlimitSoft.Data;
 /// <typeparam name="TKey"></typeparam>f
 public abstract class Entity<TKey> : IEntity where TKey : notnull
 {
-    private int? _hashCode;
-
     /// <inheritdoc/>
     public TKey Id { get; set; } = default!;
 
@@ -30,9 +28,10 @@ public abstract class Entity<TKey> : IEntity where TKey : notnull
         if (IsTransient())
             return base.GetHashCode();
 
-        if (!_hashCode.HasValue)
-            _hashCode = Id.GetHashCode() ^ 31;
-        return _hashCode.Value;    // XOR for random distribution. See: http://blogs.msdn.com/b/ericlippert/archive/2011/02/28/guidelines-and-rules-forgethashcode.aspx
+        return Id.GetHashCode();
+        //if (!_hashCode.HasValue)
+        //    _hashCode = Id.GetHashCode() ^ 31;
+        //return _hashCode.Value;    // XOR for random distribution. See: http://blogs.msdn.com/b/ericlippert/archive/2011/02/28/guidelines-and-rules-forgethashcode.aspx
     }
     /// <inheritdoc />
     public override bool Equals(object? obj)
