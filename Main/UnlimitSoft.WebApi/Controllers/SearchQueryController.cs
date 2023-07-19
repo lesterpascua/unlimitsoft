@@ -41,7 +41,7 @@ public sealed class SearchQueryController : ControllerBase
         {
             Filter = vm.Filter,
             Order = vm.Order ?? _order,
-            Paging = vm.Paging
+            Paging = vm.Paging ?? Paging.Default,
         };
         var result = await _queryDispatcher.DispatchAsync(_provider, query);
 

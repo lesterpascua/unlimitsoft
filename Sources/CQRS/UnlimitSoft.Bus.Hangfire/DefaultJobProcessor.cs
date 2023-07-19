@@ -25,7 +25,7 @@ public sealed class DefaultJobProcessor<TProps> : IJobProcessor
     private readonly ICommandDispatcher _dispatcher;
     private readonly Func<Exception, Task>? _onError;
     private readonly ICommandCompletionService? _completionService;
-    private readonly Func<IServiceProvider, ICommand, JobActivatorContext, Func<ICommand, CancellationToken, Task<IResult>>, CancellationToken, Task<IResult>>? _preeProcess;
+    private readonly ProcessCommandMiddleware? _middleware;
     private readonly ILogger<DefaultJobProcessor<TProps>>? _logger;
 
     private readonly string _errorCode;
@@ -59,7 +59,7 @@ public sealed class DefaultJobProcessor<TProps> : IJobProcessor
     /// <param name="dispatcher"></param>
     /// <param name="errorCode"></param>
     /// <param name="onError"></param>
-    /// <param name="preeProcess">Allow to invoke some action before the command processing.</param>
+    /// <param name="middleware">Allow to invoke some action before the command processing.</param>
     /// <param name="completionService"> After finish some command processing will call the method <see cref="ICommandCompletionService.CompleteAsync(ICommand, IResponse, Exception?, CancellationToken)"/>
     /// </param>
     /// <param name="logger"></param>
@@ -69,7 +69,7 @@ public sealed class DefaultJobProcessor<TProps> : IJobProcessor
         string? errorCode = null,
         Func<Exception, Task>? onError = null,
         ICommandCompletionService? completionService = null,
-        Func<IServiceProvider, ICommand, JobActivatorContext, Func<ICommand, CancellationToken, Task<IResult>>, CancellationToken, Task<IResult>>? preeProcess = null,
+        ProcessCommandMiddleware? middleware = null,
         ILogger<DefaultJobProcessor<TProps>>? logger = null
     )
     {
@@ -77,7 +77,7 @@ public sealed class DefaultJobProcessor<TProps> : IJobProcessor
         _provider = provider;
         _dispatcher = dispatcher;
         _onError = onError;
-        _preeProcess = preeProcess;
+        _middleware = middleware;
         _completionService = completionService;
 
         _errorCode = errorCode ?? DefaultErrorCode;
@@ -103,10 +103,10 @@ public sealed class DefaultJobProcessor<TProps> : IJobProcessor
             scheduler.SetJobId(Context.BackgroundJob.Id);
         }
 
-        if (_preeProcess is null)
+        if (_middleware is null)
             return await RunAsync(command, CancellationToken);
 
-        return await _preeProcess(_provider, command, Context, RunAsync, CancellationToken);
+        return await _middleware(_provider, command, Context, RunAsync, CancellationToken);
     }
 
     #region Private Methods

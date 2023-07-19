@@ -81,7 +81,7 @@ WebApplication ConfigureServices(IServiceCollection services)
     };
     services.AddHangfireCommandBus<SchedulerCommandProps>(
         hangfireOptions,
-        preeProcessCommand: async (provider, command, context, next, ct) =>
+        middleware: async (provider, command, context, next, ct) =>
         {
             var meta = context.BackgroundJob;
             var correlationId = Guid.NewGuid().ToString();

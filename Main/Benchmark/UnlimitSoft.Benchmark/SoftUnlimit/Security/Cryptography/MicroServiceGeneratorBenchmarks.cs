@@ -2,22 +2,22 @@
 using UnlimitSoft.Security.Cryptography;
 using System;
 
-namespace UnlimitSoft.Benchmark.UnlimitSoft.Security.Cryptography
-{
-    [MemoryDiagnoser]
-    public class MicroServiceGeneratorBenchmarks
-    {
-        private readonly IIdGenerator<Guid> gen = new MicroServiceGenerator(1);
+namespace UnlimitSoft.Benchmark.UnlimitSoft.Security.Cryptography;
 
-        [Benchmark]
-        public Guid TestGeneration()
-        {
-            return gen.GenerateId();
-        }
-        [Benchmark]
-        public string TestGenerationAsString()
-        {
-            return gen.GenerateIdAsString();
-        }
+
+[MemoryDiagnoser]
+public class MicroServiceGeneratorBenchmarks
+{
+    private readonly IIdGenerator<Guid> gen = new MicroServiceGenerator(1);
+
+    [Benchmark]
+    public Guid TestGeneration()
+    {
+        return gen.GenerateId();
+    }
+    [Benchmark]
+    public string TestGenerationAsString()
+    {
+        return gen.GenerateIdAsString();
     }
 }
