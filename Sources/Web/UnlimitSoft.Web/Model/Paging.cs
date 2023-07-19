@@ -4,7 +4,7 @@
 /// <summary>
 /// 
 /// </summary>
-public class Paging
+public sealed class Paging
 {
     /// <summary>
     /// Default pagination

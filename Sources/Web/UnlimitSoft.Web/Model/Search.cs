@@ -10,7 +10,7 @@ public class Search<TFilter> where TFilter : class
     /// <summary>
     /// Contain page information
     /// </summary>
-    public Paging Paging { get; set; } = Paging.Default;
+    public Paging? Paging { get; set; }
     /// <summary>
     /// Array of column, the ordenation is in the order on the array.
     /// </summary>

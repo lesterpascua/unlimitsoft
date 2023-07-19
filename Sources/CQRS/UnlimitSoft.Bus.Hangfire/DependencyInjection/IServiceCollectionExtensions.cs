@@ -26,7 +26,7 @@ public static class IServiceCollectionExtensions
     /// <param name="options"></param>
     /// <param name="errorCode">Error code in case some exception happened. If null in the body will arrive the exception.</param>
     /// <param name="preeSendCommand">Invoke this function before send any command to the bus.</param>
-    /// <param name="preeProcessCommand">Before sent the command to the dispatcher execute this function to custome add more information to the command.</param>
+    /// <param name="middleware">Before sent the command to the dispatcher execute this function to custome add more information to the command.</param>
     /// <param name="onError"></param>
     /// <param name="addLoggerFilter"></param>
     /// <param name="providerFactory"></param>
@@ -40,7 +40,7 @@ public static class IServiceCollectionExtensions
         HangfireOptions options,
         string? errorCode = null,
         Func<IServiceProvider, ICommand, Task>? preeSendCommand = null,
-        Func<IServiceProvider, ICommand, JobActivatorContext, Func<ICommand, CancellationToken, Task<IResult>>, CancellationToken, Task<IResult>>? preeProcessCommand = null,
+        ProcessCommandMiddleware? middleware = null,
         Func<IServiceProvider, Exception, Task>? onError = null,
         bool addLoggerFilter = false,
         Func<IServiceProvider, JobActivator>? activatorFactory = null,
@@ -112,7 +112,7 @@ public static class IServiceCollectionExtensions
                     errorCode: errorCode,
                     completionService: commandCompletionService,
                     onError: interOnError, 
-                    preeProcess: preeProcessCommand,
+                    middleware: middleware,
                     logger: logger
                 );
             })

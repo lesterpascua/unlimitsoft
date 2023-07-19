@@ -5,7 +5,7 @@ namespace UnlimitSoft.Web.Model;
 /// <summary>
 /// Colum name and how is goint to sorting
 /// </summary>
-public class ColumnName
+public sealed class ColumnName
 {
     /// <summary>
     /// Column's name

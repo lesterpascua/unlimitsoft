@@ -193,7 +193,7 @@ public class Startup
         };
         services.AddHangfireCommandBus<MyCommandProps>(
             hangfireOptions,
-            preeProcessCommand: async (provider, command, context, next, ct) =>
+            middleware: async (provider, command, context, next, ct) =>
             {
                 var meta = context.BackgroundJob;
                 string? correlationId = null;
