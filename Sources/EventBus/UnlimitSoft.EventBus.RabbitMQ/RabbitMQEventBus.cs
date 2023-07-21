@@ -185,7 +185,7 @@ public class RabbitMQEventBus<TAlias, TEventPayload> : IEventBus, IDisposable
         properties.MessageId = id.ToString();
 
         properties.Headers ??= new Dictionary<string, object>();
-        properties.Headers[SysContants.HeaderCorrelation] = correlationId;
+        properties.Headers[UnlimitSoft.Constants.HeaderCorrelation] = correlationId;
         properties.Headers[Constants.HeaderEventName] = eventName;
         properties.Headers[Constants.HeaderHasEnvelop] = useEnvelop;
 

@@ -111,8 +111,8 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
         //var isTrusted = _trusted is null || _trusted.IsTrustedRequest(context);
         //if (isTrusted && context.Request.Headers.TryGetValue(SysContants.HeaderCorrelation, out var correlationFromHeader))
         //    correlationId = correlationFromHeader;
-        context.Response.Headers.TryAdd(SysContants.HeaderTrace, traceId);
-        context.Response.Headers.TryAdd(SysContants.HeaderCorrelation, correlationId);
+        context.Response.Headers.TryAdd(Constants.HeaderTrace, traceId);
+        context.Response.Headers.TryAdd(Constants.HeaderCorrelation, correlationId);
 
         var json = _serializer.Serialize(response);
         if (json is not null)

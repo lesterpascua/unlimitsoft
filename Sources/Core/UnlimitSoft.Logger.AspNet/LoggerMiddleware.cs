@@ -41,14 +41,14 @@ public class LoggerMiddleware
         var correlationId = context.TraceIdentifier;
 
         var isTrusted = _trusted is null || _trusted.IsTrustedRequest(context);
-        if (isTrusted && context.Request.Headers.TryGetValue(SysContants.HeaderCorrelation, out var correlationFromHeader))
+        if (isTrusted && context.Request.Headers.TryGetValue(Constants.HeaderCorrelation, out var correlationFromHeader))
             correlationId = correlationFromHeader;
 
-        context.Response.Headers.Add(SysContants.HeaderTrace, traceId);
-        context.Response.Headers.Add(SysContants.HeaderCorrelation, correlationId);
+        context.Response.Headers.Add(Constants.HeaderTrace, traceId);
+        context.Response.Headers.Add(Constants.HeaderCorrelation, correlationId);
 
-        using var _1 = LogContext.PushProperty(SysContants.LogContextTraceId, traceId);
-        using var _2 = LogContext.PushProperty(SysContants.LogContextCorrelationId, correlationId);
+        using var _1 = LogContext.PushProperty(Constants.LogContextTraceId, traceId);
+        using var _2 = LogContext.PushProperty(Constants.LogContextCorrelationId, correlationId);
 
         // Log the asociation to historical debuging process
         if (traceId != correlationId)

@@ -203,7 +203,7 @@ public class Startup
                     correlationId = cmd.Props.User?.CorrelationId;
                 }
 
-                using var _1 = LogContext.PushProperty(SysContants.LogContextCorrelationId, correlationId);
+                using var _1 = LogContext.PushProperty(Constants.LogContextCorrelationId, correlationId);
                 return await next(command, ct);
             },
             setup: config =>
