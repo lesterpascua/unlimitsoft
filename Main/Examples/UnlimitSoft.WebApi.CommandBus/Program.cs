@@ -86,7 +86,7 @@ WebApplication ConfigureServices(IServiceCollection services)
             var meta = context.BackgroundJob;
             var correlationId = Guid.NewGuid().ToString();
 
-            using var _1 = LogContext.PushProperty(SysContants.LogContextCorrelationId, correlationId);
+            using var _1 = LogContext.PushProperty(Constants.LogContextCorrelationId, correlationId);
             return await next(command, ct);
         }
     );

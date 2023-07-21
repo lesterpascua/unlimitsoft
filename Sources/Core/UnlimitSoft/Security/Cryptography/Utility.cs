@@ -9,7 +9,6 @@ namespace UnlimitSoft.Security.Cryptography;
 /// </summary>
 public static class Utility
 {
-
     /// <summary>
     /// Get first valid network interface to get the mack address as identifier.
     /// </summary>

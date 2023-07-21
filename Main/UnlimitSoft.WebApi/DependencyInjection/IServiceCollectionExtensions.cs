@@ -263,7 +263,7 @@ public static class IServiceCollectionExtensions
                         var identityId = message.ApplicationProperties["IdentityId"];
 
                         using var _1 = LogContext.PushProperty("IdentityId", identityId);
-                        using var _2 = LogContext.PushProperty(SysContants.LogContextCorrelationId, message.CorrelationId);
+                        using var _2 = LogContext.PushProperty(Constants.LogContextCorrelationId, message.CorrelationId);
 
                         logger.LogDebug("Receive from {Queue}, event: {@Event}", args.Queue, args.Envelop);
                         try

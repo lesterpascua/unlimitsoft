@@ -43,7 +43,7 @@ public static class ControllerBaseExtensions
         var role = aux.Any() ? aux.Aggregate((a, b) => $"{a},{b}") : null;
 
         var correlationId = @this.HttpContext.TraceIdentifier;
-        if (@this.HttpContext.Request.Headers.TryGetValue(SysContants.HeaderCorrelation, out var correlation))
+        if (@this.HttpContext.Request.Headers.TryGetValue(Constants.HeaderCorrelation, out var correlation))
             correlationId = correlation.FirstOrDefault();
 
         return new IdentityInfo(id, role, scope, correlationId);
