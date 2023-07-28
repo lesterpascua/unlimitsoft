@@ -12,11 +12,6 @@ public class ScopeAuthorizeAttribute : AuthorizeAttribute
     /// 
     /// </summary>
     public ScopeAuthorizeAttribute() { }
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="scope"></param>
-    public ScopeAuthorizeAttribute(string scope) => Scope = scope;
 
     /// <summary>
     /// Scopes required one per attribute
