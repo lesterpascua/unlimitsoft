@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
-namespace UnlimitSoft.CQRS.Specification;
+namespace UnlimitSoft.Specification;
 
 
 /// <summary>
