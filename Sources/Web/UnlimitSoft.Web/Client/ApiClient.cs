@@ -19,6 +19,10 @@ public interface IApiClient : IDisposable
     /// Get internal http client resource.
     /// </summary>
     HttpClient HttpClient { get; }
+    /// <summary>
+    /// Serializer user to serialize and deserialize the response and the request
+    /// </summary>
+    IJsonSerializer Serializer { get; }
 
     /// <summary>
     /// 

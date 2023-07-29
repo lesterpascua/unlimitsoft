@@ -43,10 +43,10 @@ public class DefaultApiClient : IApiClient
         }
     }
 
-    /// <summary>
-    /// Expose internal HttpClient
-    /// </summary>
+    /// <inheritdoc />
     public HttpClient HttpClient => _httpClient;
+    /// <inheritdoc />
+    public IJsonSerializer Serializer => _serializer;
 
     /// <inheritdoc />
     public void Dispose()
