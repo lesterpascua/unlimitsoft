@@ -124,7 +124,7 @@ public static class EntityBuilderUtility
         await SeedHelper.SeedAsync(
             provider,
             unitOfWork,
-            assemblies ?? new Assembly[] { unitOfWorkType.Assembly },
+            assemblies ?? new [] { unitOfWorkType.Assembly },
             (unitOfWork, ct) =>
             {
                 if (unitOfWork is not IDbContextWrapper dbContext || dbContext.GetDbContext().Database.IsInMemory())
