@@ -32,7 +32,9 @@ public static class InitHelper
     /// <returns></returns>
     public static async Task InitAsync<TUnitOfWork>(
         IServiceScopeFactory factory, Func<IServiceProvider, Task>? setup = null, bool eventBus = false, Assembly[]? seedAssemblies = null,
-        bool eventListener = false, bool publishWorker = false, bool loadEvent = false, TimeSpan? waitRetry = null, int eventBashSize = 1000, ILogger? logger = null, CancellationToken ct = default)
+        bool eventListener = false, bool publishWorker = false, bool loadEvent = false, TimeSpan? waitRetry = null, int eventBashSize = 1000, ILogger? logger = null, CancellationToken ct = default
+    )
+        where TUnitOfWork : IUnitOfWork
     {
         using var scope = factory.CreateScope();
 
