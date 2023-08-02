@@ -152,7 +152,7 @@ public sealed class DefaultJobProcessor<TProps> : IJobProcessor
     {
         if (!hasError)
         {
-            _logger?.LogInformation("End process {Job} successfully");
+            _logger?.LogInformation("End process {Job} successfully", meta.Id);
             return;
         }
         _logger?.LogWarning("End process {Job} with error", meta.Id);
