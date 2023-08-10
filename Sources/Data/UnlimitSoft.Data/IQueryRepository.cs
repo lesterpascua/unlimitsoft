@@ -38,4 +38,12 @@ public static class IQueryRepositoryExtenssion
     /// <param name="predicate"></param>
     /// <returns></returns>
     public static IQueryable<TEntity> Find<TEntity>(this IQueryRepository<TEntity> self, Expression<Func<TEntity, bool>> predicate) where TEntity : class => self.FindAll().Where(predicate);
+    /// <summary>
+    /// Find entity by primary key.
+    /// </summary>
+    /// <param name="self"></param>
+    /// <param name="key"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    public static ValueTask<TEntity?> FindAsync<TEntity>(this IQueryRepository<TEntity> self, object key, CancellationToken ct = default) where TEntity : class => self.FindAsync(new object[] { key }, ct);
 }
