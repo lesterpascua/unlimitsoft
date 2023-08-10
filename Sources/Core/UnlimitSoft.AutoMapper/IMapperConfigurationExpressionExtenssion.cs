@@ -85,7 +85,7 @@ public static class IMapperConfigurationExpressionExtenssion
 
                 foreach (var memberInfo in type.GetMembers(BindingFlags.Public | BindingFlags.Instance))
                     foreach (var memberConfigurationProvider in memberInfo.GetCustomAttributes(true).OfType<IMemberConfigurationProvider>())
-                        mappingExpression.ForMember(memberInfo.Name, cfg => memberConfigurationProvider.ApplyConfiguration(cfg));
+                        mappingExpression.ForMember(memberInfo.Name, memberConfigurationProvider.ApplyConfiguration);
 
                 autoMapAttribute.ApplyConfiguration(mappingExpression);
             }
