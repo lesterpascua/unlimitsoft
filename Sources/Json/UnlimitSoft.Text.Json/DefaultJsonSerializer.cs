@@ -50,6 +50,7 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
             DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault,
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         };
+        SerializerSettings.Converters.Add(new MethodBaseJsonConverter());
     }
     /// <summary>
     /// 
