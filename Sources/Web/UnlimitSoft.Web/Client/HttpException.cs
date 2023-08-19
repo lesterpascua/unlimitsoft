@@ -1,8 +1,8 @@
-﻿using UnlimitSoft.Json;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text;
+using UnlimitSoft.Json;
 using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Web.Client;
@@ -48,9 +48,29 @@ public sealed class HttpException : Exception
             sb.AppendLine("Body: ").Append("   ").AppendLine(Body);
         return sb.ToString();
     }
+}
+/// <summary>
+/// 
+/// </summary>
+public static class HttpExceptionExtensions
+{
     /// <summary>
-    /// Get standard response.
+    /// Get legacy standard response.
     /// </summary>
     /// <returns></returns>
-    public Response<Dictionary<string, string[]>>? GetResponse() => JsonUtil.Deserialize<Response<Dictionary<string, string[]>>>(Body);
+    [Obsolete("Use GetResponse(this HttpException @this, IJsonSerializer serializer)")]
+    public static Response<Dictionary<string, string[]>>? GetResponse(this HttpException @this) => JsonUtil.Deserialize<Response<Dictionary<string, string[]>>>(@this.Body);
+
+    /// <summary>
+    /// Get legacy standard response.
+    /// </summary>
+    /// <returns></returns>
+    public static Response<Dictionary<string, string[]>>? GetResponse(this HttpException @this, IJsonSerializer serializer) => serializer.Deserialize<Response<Dictionary<string, string[]>>>(@this.Body);
+    /// <summary>
+    /// Get standard error body
+    /// </summary>
+    /// <param name="this"></param>
+    /// <param name="serializer">serializer to use</param>
+    /// <returns></returns>
+    public static Dictionary<string, string[]>? GetBody(this HttpException @this, IJsonSerializer serializer) => serializer.Deserialize<Dictionary<string, string[]>>(@this.Body);
 }
