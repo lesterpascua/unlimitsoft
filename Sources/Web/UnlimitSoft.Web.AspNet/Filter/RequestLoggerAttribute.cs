@@ -7,6 +7,7 @@ using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnlimitSoft.Message;
 using UnlimitSoft.Web.Security.Claims;
 
 namespace UnlimitSoft.Web.AspNet.Filter;
@@ -23,11 +24,11 @@ public sealed class RequestLoggerAttribute : ActionFilterAttribute
     /// <summary>
     /// Template used for response
     /// </summary>
-    public const string ResponseTemplate = "API Response {@Response}";
+    public const string ResponseTemplate = "API Response {TraceId} Code = {Code}, Body = {@Response}";
     /// <summary>
     /// Template used to log request
     /// </summary>
-    public const string RequestTemplate = "API Request from {Address}, {Method} {Url} Body = {@Arguments}, Header = {@Headers}";
+    public const string RequestTemplate = "API Request {TraceId} from {Address}, {Method} {Url} Body = {@Arguments}, Header = {@Headers}";
 
     /// <summary>
     /// 
@@ -41,12 +42,35 @@ public sealed class RequestLoggerAttribute : ActionFilterAttribute
     }
 
     /// <inheritdoc />
+    public override void OnActionExecuted(ActionExecutedContext context)
+    {
+        if (context.Exception is null || _options.LogLevel == LogLevel.None || !_logger.IsEnabled(_options.LogLevel))
+            return;
+
+        int code = 500;
+        object result = context.Exception.Message;
+        if (context.Exception is ResponseException ex)
+        {
+            result = ex.Body;
+            code = (int)ex.Code;
+        }
+
+        _logger.Log(_options.LogLevel, ResponseTemplate, context.HttpContext.TraceIdentifier, code, result);
+    }
+    /// <inheritdoc />
     public override void OnResultExecuted(ResultExecutedContext context)
     {
         if (_options.LogLevel == LogLevel.None || !_logger.IsEnabled(_options.LogLevel))
             return;
 
-        _logger.Log(_options.LogLevel, ResponseTemplate, context.Result is ObjectResult result ? result.Value : context.Result);
+        int? code = null;
+        object? response = context.Result;
+        if (context.Result is ObjectResult result)
+        {
+            response = result.Value;
+            code = result.StatusCode;
+        }
+        _logger.Log(_options.LogLevel, ResponseTemplate, context.HttpContext.TraceIdentifier, code, response);
     }
     /// <inheritdoc />
     public override void OnActionExecuting(ActionExecutingContext context)
@@ -72,7 +96,7 @@ public sealed class RequestLoggerAttribute : ActionFilterAttribute
         var actionArguments = GetActionArguments(context);
         var url = $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}";
 
-        _logger.Log(_options.LogLevel, RequestTemplate, httpContext.GetIpAddress(), request.Method, url, actionArguments, headers);
+        _logger.Log(_options.LogLevel, RequestTemplate, httpContext.TraceIdentifier, httpContext.GetIpAddress(), request.Method, url, actionArguments, headers);
     }
 
     #region Private Methods
