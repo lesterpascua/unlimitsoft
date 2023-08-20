@@ -15,6 +15,10 @@ namespace UnlimitSoft.Web.AspNet;
 public static class HttpContextExtensions
 {
     /// <summary>
+    /// Unknow ip name
+    /// </summary>
+    public const string Unknow = "unknow";
+    /// <summary>
     /// Header where the real ip is store when is forwarding using proxy
     /// </summary>
     public const string HeaderXRealIp = "x-real-ip";
@@ -27,8 +31,8 @@ public static class HttpContextExtensions
     /// Get ip address for the client.
     /// </summary>
     /// <param name="context"></param>
-    /// <returns></returns>
-    public static string? GetIpAddress(this HttpContext context)
+    /// <returns>Ip where the request was made, <see cref="Unknow"/> if the ip can't be resolved.</returns>
+    public static string GetIpAddress(this HttpContext context)
     {
         StringValues forwardedForOrProto = StringValues.Empty;
         if (context.Request.Headers?.TryGetValue(HeaderXForwardedFor, out forwardedForOrProto) ?? false)
@@ -37,7 +41,7 @@ public static class HttpContextExtensions
         if (context.Request.Headers?.TryGetValue(HeaderXRealIp, out forwardedForOrProto) ?? false)
             return forwardedForOrProto.ToString().Split(',').Select(s => s.Trim()).First();
         
-        return context.Connection.RemoteIpAddress?.ToString();
+        return context.Connection.RemoteIpAddress?.ToString() ?? Unknow;
     }
     /// <summary>
     /// Convert result into action result

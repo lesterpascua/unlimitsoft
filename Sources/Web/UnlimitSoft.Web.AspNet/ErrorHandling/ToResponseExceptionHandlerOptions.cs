@@ -10,7 +10,6 @@ using System.Net;
 using System.Threading.Tasks;
 using UnlimitSoft.Json;
 using UnlimitSoft.Message;
-using UnlimitSoft.Web.AspNet.Filter;
 
 namespace UnlimitSoft.Web.AspNet.ErrorHandling;
 
@@ -96,7 +95,7 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
         var feature = context.Features.Get<IExceptionHandlerFeature>() ?? throw new InvalidOperationException($"Feature '{typeof(IExceptionHandlerFeature)}' is not present.");
 #endif
 
-        _logger?.LogError(feature!.Error, "User: {Name}, logged in from: {IpAddress}", identity?.Name, context.GetIpAddress());
+        _logger?.LogError(feature.Error, "User: {Name}, logged in from: {IpAddress}", identity?.Name, context.GetIpAddress());
         if (_handlers is not null)
             foreach (var handler in _handlers.Where(x => x.ShouldHandle(context)))
                 await handler.HandleAsync(context);
@@ -117,8 +116,6 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
         var json = _serializer.Serialize(response);
         if (json is not null)
             await context.Response.WriteAsync(json);
-
-        _logger?.Log(_logLevel, RequestLoggerAttribute.ResponseTemplate, response);
     }
     #endregion
 }
