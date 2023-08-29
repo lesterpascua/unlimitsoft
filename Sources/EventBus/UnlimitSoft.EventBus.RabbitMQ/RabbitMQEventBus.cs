@@ -2,7 +2,6 @@
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,8 +28,8 @@ public class RabbitMQEventBus<TAlias, TEventPayload> : IEventBus, IDisposable
     private readonly IJsonSerializer _serializer;
     private readonly Func<TAlias, string, object, bool>? _filter;
     private readonly Func<TAlias, string, object, object>? _transform;
-    private readonly Action<object?, BasicAckEventArgs, IEvent?>? _acks;
-    private readonly Action<object?, BasicNackEventArgs, IEvent?>? _nacks;
+    private readonly Action<object?, BasicAckEventArgs>? _acks;
+    private readonly Action<object?, BasicNackEventArgs>? _nacks;
     private readonly Action<object, IBasicProperties>? _setup;
     private readonly ILogger<RabbitMQEventBus<TAlias, TEventPayload>>? _logger;
 
@@ -84,7 +83,7 @@ public class RabbitMQEventBus<TAlias, TEventPayload> : IEventBus, IDisposable
     /// <param name="logger"></param>
     public RabbitMQEventBus(IConnectionFactory factory, IEnumerable<RabbitMQQueueAlias<TAlias>> queue, IEventNameResolver resolver, IJsonSerializer serializer,
         Func<TAlias, string, object, bool>? filter = null, Func<TAlias, string, object, object>? transform = null,
-        Action<object?, BasicAckEventArgs, IEvent?>? acks = null, Action<object?, BasicNackEventArgs, IEvent?>? nacks = null,
+        Action<object?, BasicAckEventArgs>? acks = null, Action<object?, BasicNackEventArgs>? nacks = null,
         Action<object, IBasicProperties>? setup = null,
         ILogger<RabbitMQEventBus<TAlias, TEventPayload>>? logger = null
     )
@@ -117,7 +116,24 @@ public class RabbitMQEventBus<TAlias, TEventPayload> : IEventBus, IDisposable
     {
         _connection = _factory.CreateConnection();
         _channel = _connection.CreateModel();
+
+        // 
+        // code when message is confirmed
+        _channel.BasicAcks += (sender, ea) =>
+        {
+            _logger?.LogDebug("Acks: {@Event}", ea);
+            _acks?.Invoke(sender, ea);
+        };
+        _channel.BasicNacks += (sender, ea) =>
+        {
+            _logger?.LogDebug("Nacks: {@Event}", ea);
+            _nacks?.Invoke(sender, ea);
+        };
+#if NETSTANDARD
         return default;
+#else
+        return ValueTask.CompletedTask;
+#endif
     }
 
     /// <inheritdoc />
@@ -190,19 +206,6 @@ public class RabbitMQEventBus<TAlias, TEventPayload> : IEventBus, IDisposable
         properties.Headers[Constants.HeaderHasEnvelop] = useEnvelop;
 
         _setup?.Invoke(graph, properties);
-
-        // 
-        // code when message is confirmed
-        _channel.BasicAcks += (sender, ea) =>
-        {
-            _logger?.LogInformation("Acks: {Event}", id);
-            _acks?.Invoke(sender, ea, graph as IEvent);
-        };
-        _channel.BasicNacks += (sender, ea) =>
-        {
-            _logger?.LogInformation("Nacks: {Event}", id);
-            _nacks?.Invoke(sender, ea, graph as IEvent);
-        };
 
         var destQueues = _queue;
         if (_filter is not null)
