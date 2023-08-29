@@ -1,5 +1,4 @@
 ﻿using Microsoft.Extensions.Logging;
-using UnlimitSoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -9,6 +8,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.Json;
 
 namespace UnlimitSoft.Web.Client;
 
@@ -96,8 +96,6 @@ public class DefaultApiClient : IApiClient
                 httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
             var (json, code) = await SendWithContentAsync(method, completeUri, httpContent, setup, ct);
-
-            _logger?.LogInformation("HttpResponse for {Url}, Result = {Code}, Body = {Json}", completeUri, code, json);
             var result = jsonSerialize.Deserialize<TModel>(json);
 
             return (result, code);
@@ -121,6 +119,7 @@ public class DefaultApiClient : IApiClient
         foreach (var stream in streams)
             content.Add(new StreamContent(stream), fileName, fileName);
 
+        _logger?.LogInformation("HttpRequest for {Url}", completeUri);
         if (qs != null)
             completeUri += string.Concat('?', await ObjectUtils.ToQueryString(_serializer, qs));
 
@@ -147,6 +146,9 @@ public class DefaultApiClient : IApiClient
 #else
         string body = await response.Content.ReadAsStringAsync(ct);
 #endif
+
+        _logger?.LogInformation("HttpResponse for {Url}, Result = {Code}, Body = {Json}", completeUri, response.StatusCode, body);
+
         if (!response.IsSuccessStatusCode)
             throw new HttpException(response.StatusCode, response.ToString(), body);
 
