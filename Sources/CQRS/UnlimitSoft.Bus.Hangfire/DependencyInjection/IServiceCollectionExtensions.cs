@@ -3,13 +3,11 @@ using Hangfire.SqlServer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
-using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.Bus.Hangfire.Activator;
 using UnlimitSoft.Bus.Hangfire.Filter;
 using UnlimitSoft.CQRS.Command;
 using UnlimitSoft.CQRS.Message;
-using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Bus.Hangfire.DependencyInjection;
 
