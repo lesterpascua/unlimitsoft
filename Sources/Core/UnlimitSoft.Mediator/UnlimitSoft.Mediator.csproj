@@ -21,6 +21,10 @@
 		<PackageLicenseFile>License.txt</PackageLicenseFile> <RepositoryUrl>https://github.com/lesterpascua/unlimitsoft</RepositoryUrl>
 	</PropertyGroup>
 
+	<PropertyGroup>
+	  <DefineConstants>EMIT_NATIVE</DefineConstants>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<None Include="License.txt">
 			<Pack>True</Pack>

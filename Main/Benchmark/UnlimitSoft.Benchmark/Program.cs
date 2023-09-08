@@ -1,8 +1,18 @@
 ﻿using BenchmarkDotNet.Running;
-using UnlimitSoft.Benchmark.SoftUnlimit;
+using UnlimitSoft.Benchmark.UnlimitSoft.CQRS;
 
 
-BenchmarkRunner.Run<DelegateVsFunctBenchmarks>();
+//var command = new CommandDispatcherLab.Command { Name = "Test" };
+//var handler = new CommandDispatcherLab.CommandHandler();
+
+//var wrapInvoker = ServiceProviderMediator.GetHandler<string>(
+//    command.GetType(), 
+//    new ServiceProviderMediator.RequestMetadata { HandlerImplementType = typeof(CommandDispatcherLab.CommandHandler), }
+//);
+//var result = await wrapInvoker(handler, command, default);
+//Console.WriteLine(result);
+
+BenchmarkRunner.Run<CommandBenchmark>();
 
 //var lab = new DelegateVsFunctBenchmarks();
 

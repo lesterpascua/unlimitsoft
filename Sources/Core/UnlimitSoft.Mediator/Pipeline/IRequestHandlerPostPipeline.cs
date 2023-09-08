@@ -19,7 +19,7 @@ public interface IRequestHandlerPostPipeline { }
 public interface IRequestHandlerPostPipeline<in TRequest, in THandler, TResponse, TPipeline> : IRequestHandlerPostPipeline
     where TRequest : IRequest<TResponse>
     where THandler : IRequestHandler
-    where TPipeline : IRequestHandlerPostPipeline<TRequest, THandler, TResponse, TPipeline>
+    where TPipeline : IRequestHandlerPostPipeline
 {
     /// <summary>
     /// 
