@@ -63,7 +63,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
     /// <summary>
     /// Collection with pending to publish event ordering by priority
     /// </summary>
-    protected readonly SortedList<Key, bool> _pending;
+    protected readonly SortedList<PublishEventInfo, bool> _pending;
     /// <summary>
     /// Lock object to make collection safe
     /// </summary>
@@ -91,7 +91,6 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
     /// <param name="startDelay">Wait time before start the listener.</param>
     /// <param name="errorDelay">Wait time if some error happened in the bus, 20 second default time.</param>
     /// <param name="bachSize">Amount of pulling event for every iteration. 10 event by default.</param>
-    /// <param name="enableScheduled">Enable scheduler feature by software. If false no scheduler feature will added and all will be handler by the queue provider.</param>
     /// <param name="useEnvelop">Use envelop when publish the event</param>
     /// <param name="logger"></param>
     public QueueEventPublishWorker(
@@ -157,7 +156,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
         if (_disposed)
             throw new ObjectDisposedException(GetType().FullName);
 
-        var key = new Key(id, null, _clock.UtcNow);
+        var key = new PublishEventInfo(id, _clock.UtcNow, null);
         await _lock.WaitAsync(ct);
         try
         {
@@ -183,7 +182,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
                 if (@event is IDelayEvent delayEvent)
                     scheduled = delayEvent.Scheduled;
 
-                var key = new Key(@event.Id, scheduled, @event.Created);
+                var key = new PublishEventInfo(@event.Id, @event.Created, scheduled);
                 _pending.Add(key, true);
             }
         }
@@ -203,7 +202,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
         {
             foreach (var @event in events)
             {
-                var key = new Key(@event.Id, @event.Scheduled, @event.Created);
+                var key = new PublishEventInfo(@event.Id, @event.Created, @event.Scheduled);
                 _pending.Add(key, true);
             }
         }
@@ -253,7 +252,9 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
     /// <returns></returns>
     protected virtual async Task PublishBackground()
     {
+        TEventPayload? lastEvent = null;
         await Task.Delay(_startDelay, _cts.Token);
+
         while (!_cts.Token.IsCancellationRequested)
         {
             SpinWait.SpinUntil(ExistNewEvent);
@@ -263,14 +264,13 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
             // Dispatch event throws the bus
             _logger?.LogDebug("Start to publish events");
 
-            TEventPayload? lastEvent = null;
             int bachSize = Math.Min(_pending.Count, _bachSize);
 
             try
             {
                 int index = 0;
                 var now = _clock.UtcNow;
-                var ids = new Dictionary<Guid, Key>();
+                var ids = new Dictionary<Guid, PublishEventInfo>();
 
                 await _lock.WaitAsync(_cts.Token);
                 try
@@ -312,6 +312,8 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
                         _lock.Release();
                     }
                 }
+
+                _logger?.LogInformation("Publish {Try} events and found {Found}", ids.Count, eventsPayload.Count);
             }
             catch (Exception ex) when (!_cts.Token.IsCancellationRequested)
             {
@@ -390,69 +392,11 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
         {
             // Insert all
             foreach (var @event in pending)
-                _pending.Add(new Key(@event.Id, @event.Scheduled, @event.Created), true);
+                _pending.Add(new PublishEventInfo(@event.Id, @event.Created, @event.Scheduled), true);
         }
         finally
         {
             _lock.Release();
-        }
-    }
-    #endregion
-
-    #region Nested Classes
-    /// <summary>
-    /// Key asocciate to the event allow compute a hash and sorting
-    /// </summary>
-    public sealed class Key : IComparable<Key>
-    {
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="id"></param>
-        /// <param name="scheduled"></param>
-        /// <param name="created"></param>
-        public Key(Guid id, DateTime? scheduled, DateTime created)
-        {
-            Id = id;
-            Scheduled = scheduled;
-            Created = created;
-        }
-
-        /// <summary>
-        /// Identifier of the event
-        /// </summary>
-        public Guid Id { get; }
-        /// <summary>
-        /// Date where the event is scheduled
-        /// </summary>
-        public DateTime? Scheduled { get; init; }
-        /// <summary>
-        /// Date where the event is created
-        /// </summary>
-        public DateTime Created { get; init; }
-
-        /// <inheritdoc />
-        public int CompareTo(Key? other)
-        {
-            if (other is null)
-                throw new ArgumentNullException(nameof(other), "Compare operand can't be null");
-
-            var date1 = Scheduled ?? Created;
-            var date2 = other.Scheduled ?? other.Created;
-
-            return date1.CompareTo(date2);
-        }
-        /// <inheritdoc />
-        public override int GetHashCode()
-        {
-            return Id.GetHashCode();
-        }
-        /// <inheritdoc />
-        public override bool Equals(object? obj)
-        {
-            if (obj is null || obj is not Key k)
-                return false;
-            return Id == k.Id;
         }
     }
     #endregion

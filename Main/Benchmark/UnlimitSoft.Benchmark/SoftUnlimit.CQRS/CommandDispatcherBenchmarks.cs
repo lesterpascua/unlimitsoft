@@ -18,11 +18,11 @@ public class CommandBenchmark
         _unlimitSoft = new CommandDispatcherLab(false);
     }
 
-    [Benchmark]
-    public async Task MediatR()
-    {
-        await _mediatR.DispatchCommand();
-    }
+    //[Benchmark]
+    //public async Task MediatR()
+    //{
+    //    await _mediatR.DispatchCommand();
+    //}
     [Benchmark]
     public async Task UnlimitSoft()
     {

@@ -95,7 +95,7 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
         var feature = context.Features.Get<IExceptionHandlerFeature>() ?? throw new InvalidOperationException($"Feature '{typeof(IExceptionHandlerFeature)}' is not present.");
 #endif
 
-        _logger?.LogError(feature.Error, "User: {Name}, logged in from: {IpAddress}", identity?.Name, context.GetIpAddress());
+        _logger?.Log(_logLevel, feature.Error, "User: {Name}, logged in from: {IpAddress}", identity?.Name, context.GetIpAddress());
         if (_handlers is not null)
             foreach (var handler in _handlers.Where(x => x.ShouldHandle(context)))
                 await handler.HandleAsync(context);
