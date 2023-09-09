@@ -17,7 +17,7 @@ public sealed class TenantServiceProvider : IServiceProvider, IDisposable
     private readonly ServiceDescriptor[] _descriptors;                                  // root service descriptos.
     private readonly Dictionary<Guid, IServiceProvider> _tenantProviders;               // Keeps track of all of the tenant scopes that we have created
 
-    private readonly ITenantAccessService _tenantAccessService;
+    private readonly ITenantAccessService? _tenantAccessService;
 
     /// <summary>
     /// 
@@ -31,7 +31,7 @@ public sealed class TenantServiceProvider : IServiceProvider, IDisposable
         _descriptors = services.ToArray();
         _root = services.BuildServiceProvider(options);
 
-        _tenantAccessService = _root.GetRequiredService<ITenantAccessService>();
+        _tenantAccessService = _root.GetService<ITenantAccessService>();
     }
 
     /// <summary>
@@ -76,7 +76,7 @@ public sealed class TenantServiceProvider : IServiceProvider, IDisposable
     {
         // We have registered our TenantAccessService in Part 1, the service is
         // available in the application container which allows us to access the current Tenant
-        return _tenantAccessService.GetTenant();
+        return _tenantAccessService?.GetTenant();
     }
     /// <summary>
     /// Get the scope of the current tenant
