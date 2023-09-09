@@ -3,10 +3,11 @@ using System;
 
 namespace UnlimitSoft.MultiTenant.DependencyInjection;
 
+
 /// <summary>
 /// Build a provider using multitenance.
 /// </summary>
-public class TenantServiceProviderFactory : IServiceProviderFactory<IServiceCollection>
+public sealed class TenantServiceProviderFactory : IServiceProviderFactory<IServiceCollection>
 {
     private readonly ServiceProviderOptions _options;
 

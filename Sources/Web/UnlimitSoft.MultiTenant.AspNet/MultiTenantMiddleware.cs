@@ -85,9 +85,7 @@ public class MultiTenantMiddleware<T> where T : Tenant
 
         // Set to current tenant container.
         // Begin new scope for request as ASP.NET Core standard scope is per-request
-        var root = _multiTenantRootServiceProvider.GetProvider();
-        if (root is null)
-            throw new InvalidOperationException("Can't resolve root tenant");
+        var root = _multiTenantRootServiceProvider.GetProvider() ?? throw new InvalidOperationException("Can't resolve root tenant");
 
         //
         // Create tenant scope to execute asp.net request inside of the current
