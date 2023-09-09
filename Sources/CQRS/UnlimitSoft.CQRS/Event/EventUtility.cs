@@ -98,6 +98,6 @@ Response: {@Response}", @event, responses);
     /// <param name="OnError"></param>
     /// <param name="NotFoundAsWarning">If no handler attached just log a warning don't thread as an error</param>
     /// <param name="Logger"></param>
-    public sealed record Args<TEvent>(IJsonSerializer Serializer, IEventDispatcher Dispatcher, IEventNameResolver Resolver, Action<TEvent>? BeforeProcess = null, Func<Exception, TEvent?, MessageEnvelop, CancellationToken, ValueTask>? OnError = null, bool NotFoundAsWarning = true, ILogger ? Logger = null);
+    public sealed record Args<TEvent>(IJsonSerializer Serializer, IEventDispatcher Dispatcher, IEventNameResolver Resolver, Action<TEvent>? BeforeProcess = null, Func<Exception, TEvent?, MessageEnvelop, CancellationToken, ValueTask>? OnError = null, bool NotFoundAsWarning = true, ILogger? Logger = null);
     #endregion
 }

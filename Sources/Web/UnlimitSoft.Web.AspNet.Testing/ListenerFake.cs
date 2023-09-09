@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,6 +20,7 @@ public sealed class ListenerFake : IEventListener
     private readonly IJsonSerializer _serializer;
     private readonly IEventDispatcher _eventDispatcher;
     private readonly IEventNameResolver _nameResolver;
+    private readonly ILogger<ListenerFake> _logger;
 
     /// <summary>
     /// 
@@ -26,11 +28,13 @@ public sealed class ListenerFake : IEventListener
     /// <param name="serializer"></param>
     /// <param name="eventDispatcher"></param>
     /// <param name="nameResolver"></param>
-    public ListenerFake(IJsonSerializer serializer, IEventDispatcher eventDispatcher, IEventNameResolver nameResolver)
+    /// <param name="logger"></param>
+    public ListenerFake(IJsonSerializer serializer, IEventDispatcher eventDispatcher, IEventNameResolver nameResolver, ILogger<ListenerFake>? logger)
     {
         _serializer = serializer;
         _eventDispatcher = eventDispatcher;
         _nameResolver = nameResolver;
+        _logger = logger;
     }
 
     /// <inheritdoc />
@@ -74,6 +78,11 @@ public sealed class ListenerFake : IEventListener
     {
         var eventName = typeof(TEvent).FullName;
         var envelop = new MessageEnvelop(JsonSerializer.Serialize(@event), eventName);
-        return await EventUtility.ProcessAsync(eventName, envelop, new EventUtility.Args<TEvent>(_serializer, _eventDispatcher, _nameResolver), ct);
+        return await EventUtility.ProcessAsync(
+            eventName, 
+            envelop, 
+            new EventUtility.Args<TEvent>(_serializer, _eventDispatcher, _nameResolver, Logger: _logger),
+            ct
+        );
     }
 }
