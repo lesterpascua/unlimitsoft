@@ -11,6 +11,7 @@ using UnlimitSoft.CQRS.Event;
 using System;
 using System.Linq;
 using UnlimitSoft.Json;
+using Microsoft.Extensions.Logging;
 
 namespace UnlimitSoft.Web.AspNet.Testing;
 
@@ -53,8 +54,9 @@ public static class TestFactory
             var resolver = provider.GetRequiredService<IEventNameResolver>();
             var eventDispatcher = provider.GetRequiredService<IEventDispatcher>();
             var serializer = provider.GetRequiredService<IJsonSerializer>();
+            var logger = provider.GetService<ILogger<ListenerFake>>();
 
-            return new ListenerFake(serializer, eventDispatcher, resolver);
+            return new ListenerFake(serializer, eventDispatcher, resolver, logger);
         });
         services.AddSingleton<IEventListener>(p => p.GetService<ListenerFake>());
 
