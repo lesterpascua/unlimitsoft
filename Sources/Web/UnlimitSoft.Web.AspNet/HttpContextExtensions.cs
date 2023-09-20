@@ -36,11 +36,11 @@ public static class HttpContextExtensions
     {
         StringValues forwardedForOrProto = StringValues.Empty;
         if (context.Request.Headers?.TryGetValue(HeaderXForwardedFor, out forwardedForOrProto) ?? false)
-            return forwardedForOrProto.ToString().Split(',').Select(s => s.Trim()).First();
+            return forwardedForOrProto.ToString().Split(',').Select(s => s.Trim()).First();                     /// TODO: optimize .Select(s => s.Trim())
 
         if (context.Request.Headers?.TryGetValue(HeaderXRealIp, out forwardedForOrProto) ?? false)
-            return forwardedForOrProto.ToString().Split(',').Select(s => s.Trim()).First();
-        
+            return forwardedForOrProto.ToString().Split(',').Select(s => s.Trim()).First();                     /// TODO: optimize .Select(s => s.Trim())
+
         return context.Connection.RemoteIpAddress?.ToString() ?? Unknow;
     }
     /// <summary>
