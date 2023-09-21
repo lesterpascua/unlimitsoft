@@ -30,7 +30,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<PackageReference Include="IPNetwork2" Version="2.6.605" />
+		<PackageReference Include="IPNetwork2" Version="2.6.611" />
 	</ItemGroup>
 
 </Project>
