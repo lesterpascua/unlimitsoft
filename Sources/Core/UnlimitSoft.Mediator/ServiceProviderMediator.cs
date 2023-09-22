@@ -139,13 +139,10 @@ public sealed class ServiceProviderMediator : IMediator
 
             // Features implemented by this command
             var handleType = handler.GetType();
-            var parameters = handlerInterfaceType.GetGenericArguments();
             metadata = new RequestMetadata
             {
                 HandlerInterfaceType = handlerInterfaceType,
                 HandlerImplementType = handleType,
-
-                IsResult = parameters[1].GetGenericTypeDefinition() == typeof(Result<>),
             };
             var interfaces = handleType.GetInterfaces();
 
