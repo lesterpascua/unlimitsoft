@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Primitives;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -63,21 +64,35 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
     }
 
     /// <summary>
+    /// Get correlation identifier.
+    /// </summary>
+    /// <param name="context"></param>
+    /// <returns></returns>
+    protected virtual StringValues GetCorrelation(HttpContext context)
+    {
+        return context.TraceIdentifier;
+    }
+    /// <summary>
     /// Get response depending of the exception
     /// </summary>
     /// <param name="context"></param>
     /// <param name="feature"></param>
+    /// <param name="code"></param>
     /// <returns></returns>
-    private IResponse GetResponse(HttpContext context, IExceptionHandlerFeature feature)
+    protected virtual object GetResponse(HttpContext context, IExceptionHandlerFeature feature, out HttpStatusCode code)
     {
         if (feature.Error is ResponseException exception)
-            return new Response<IDictionary<string, string[]>>(exception.Code, exception.Body);
+        {
+            code = exception.Code;
+            return exception.Body;
+        }
 
         object body = feature.Error;
+        code = HttpStatusCode.InternalServerError;
         if (!_showExceptionInfo)
             body = _errorBody?.Invoke(context) ?? _defaultErrorBody;
 
-        return new Response<object>(HttpStatusCode.InternalServerError, body);
+        return body;
     }
 
     #region Private Methods
@@ -95,21 +110,20 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
         var feature = context.Features.Get<IExceptionHandlerFeature>() ?? throw new InvalidOperationException($"Feature '{typeof(IExceptionHandlerFeature)}' is not present.");
 #endif
 
-        _logger?.Log(_logLevel, feature.Error, "User: {Name}, logged in from: {IpAddress}", identity?.Name, context.GetIpAddress());
         if (_handlers is not null)
             foreach (var handler in _handlers.Where(x => x.ShouldHandle(context)))
                 await handler.HandleAsync(context);
 
-        var response = GetResponse(context, feature);
+        var response = GetResponse(context, feature, out var code);
         context.Response.ContentType = _contentType;
-        context.Response.StatusCode = (int)response.Code;
+        context.Response.StatusCode = (int)code;
 
+        var level = code == HttpStatusCode.InternalServerError ? LogLevel.Error : _logLevel;
+        _logger?.Log(level, feature.Error, "User: {Name}, login from: {IpAddress}", identity?.Name, context.GetIpAddress());
 
         var traceId = context.TraceIdentifier;
-        var correlationId = context.TraceIdentifier;
-        //var isTrusted = _trusted is null || _trusted.IsTrustedRequest(context);
-        //if (isTrusted && context.Request.Headers.TryGetValue(SysContants.HeaderCorrelation, out var correlationFromHeader))
-        //    correlationId = correlationFromHeader;
+        var correlationId = GetCorrelation(context);
+
         context.Response.Headers.TryAdd(Constants.HeaderTrace, traceId);
         context.Response.Headers.TryAdd(Constants.HeaderCorrelation, correlationId);
 
