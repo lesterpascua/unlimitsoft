@@ -39,6 +39,16 @@ public class CommandController : ControllerBase
 
         return result.ToActionResult(this);
     }
+    [HttpPost("withResult")]
+    public async Task<ActionResult<string>> PostTestWithResult(CancellationToken ct)
+    {
+        var ipAddress = HttpContext.GetIpAddress();
+        var command = new TestWithResultCommand(_gen.GenerateId(), this.GetIdentity());
+        var result = await _dispatcher.SafeDispatchAsync(command, ct);
+
+        return result.ToActionResult(this);
+    }
+
     /// <summary>
     /// Return exception and translate to bad response
     /// </summary>

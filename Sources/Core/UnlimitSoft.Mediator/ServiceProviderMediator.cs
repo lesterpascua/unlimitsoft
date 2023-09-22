@@ -2,11 +2,10 @@
 using FluentValidation.Results;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Sigil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Emit;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.Mediator.Pipeline;
@@ -61,54 +60,36 @@ public sealed class ServiceProviderMediator : IMediator
         return await SendAsync(scope.ServiceProvider, request, ct);
     }
     /// <inheritdoc />
-    public async ValueTask<Result<TResponse>> SendAsync<TResponse>(IServiceProvider provider, IRequest<TResponse> request, CancellationToken ct = default)
+    public async ValueTask<Result<TResponse>> SafeSendAsync<TResponse>(IRequest<Result<TResponse>> request, CancellationToken ct = default)
     {
-        _logger?.LogDebug(10, "Process request: {@Request}", request);
+        if (!_useScope)
+            return await SafeSendAsync(_provider, request, ct);
 
-        //
-        // Get handler and execute command.
-        var requestType = request.GetType();
-        var responseType = typeof(TResponse);
-        _logger?.LogDebug(12, "Execute request type {Request} with response {Response}", requestType, responseType);
-
-        var handler = BuildHandlerMetadata(provider, requestType, responseType, out var metadata);
-        if (handler is null)
-            return Result<TResponse>.FromError(request.NotFoundResponse());
-
-        if (metadata.HasLifeCycle)
-            await InitAsync(handler, request, requestType, metadata, ct);
-
-        try
-        {
-            if (_validate)
-            {
-                if (metadata.Validator is not null)
-                {
-                    var error = await ValidationAsync(handler, request, requestType, metadata, ct);
-                    if (error is not null)
-                        return Result<TResponse>.FromError(error);
-                }
-                if (metadata.HasCompliance)
-                {
-                    var error = await ComplianceAsync(handler, request, requestType, metadata, ct);
-                    if (error is not null)
-                        return Result<TResponse>.FromError(error);
-                }
-            }
-            var response = await HandlerAsync(handler, request, requestType, metadata, ct);
-
-            // Run existing post operations
-            if (metadata.PostPipeline is not null)
-                PostPipelineHandlerAsync(provider, requestType, request, handler, response, metadata, ct);
-
-            return Result<TResponse>.FromOk(response);
-        }
-        finally
-        {
-            if (metadata.HasLifeCycle)
-                await EndAsync(handler, request, requestType, metadata, ct);
-        }
+        using var scope = _provider.CreateScope();
+        return await SafeSendAsync(scope.ServiceProvider, request, ct);
     }
+
+    /// <inheritdoc />
+    public ValueTask<Result<TResponse>> SendAsync<TResponse>(IServiceProvider provider, IRequest<TResponse> request, CancellationToken ct = default)
+    {
+        return InternalSendAsync(
+            provider,
+            request,
+            Transform,
+            ct
+        );
+    }
+    /// <inheritdoc />
+    public ValueTask<Result<TResponse>> SafeSendAsync<TResponse>(IServiceProvider provider, IRequest<Result<TResponse>> request, CancellationToken ct = default)
+    {
+        return InternalSendAsync(
+            provider,
+            request,
+            TransformWithResult,
+            ct
+        );
+    }
+
 
     /// <summary>
     /// Default function used to convert error transform to standard ASP.NET format
@@ -129,6 +110,7 @@ public sealed class ServiceProviderMediator : IMediator
 
         return result;
     }
+
 
     #region Private Methods
     private static IRequestHandler? BuildHandlerMetadata(IServiceProvider provider, Type requestType, Type responseType, out RequestMetadata metadata)
@@ -157,10 +139,13 @@ public sealed class ServiceProviderMediator : IMediator
 
             // Features implemented by this command
             var handleType = handler.GetType();
+            var parameters = handlerInterfaceType.GetGenericArguments();
             metadata = new RequestMetadata
             {
                 HandlerInterfaceType = handlerInterfaceType,
-                HandlerImplementType = handleType
+                HandlerImplementType = handleType,
+
+                IsResult = parameters[1].GetGenericTypeDefinition() == typeof(Result<>),
             };
             var interfaces = handleType.GetInterfaces();
 
@@ -206,6 +191,67 @@ public sealed class ServiceProviderMediator : IMediator
             return handler;
         }
     }
+
+
+    private static Result<TOut> Transform<TOut>(TOut result)
+    {
+        return Result.FromOk(result);
+    }
+    private static Result<TOut> TransformWithResult<TOut>(Result<TOut> result)
+    {
+        if (result.IsSuccess)
+            return Result.FromOk(result.Value);
+        return Result.FromError<TOut>(result.Error!);
+    }
+    private async ValueTask<Result<TOut>> InternalSendAsync<TResponse, TOut>(IServiceProvider provider, IRequest<TResponse> request, Func<TResponse?, Result<TOut>> transform, CancellationToken ct)
+    {
+        _logger?.LogDebug(10, "Process request: {@Request}", request);
+
+        //
+        // Get handler and execute command.
+        var requestType = request.GetType();
+        var responseType = typeof(TResponse);
+        _logger?.LogDebug(12, "Execute request type {Request} with response {Response}", requestType, responseType);
+
+        var handler = BuildHandlerMetadata(provider, requestType, responseType, out var metadata);
+        if (handler is null)
+            return Result.FromError<TOut>(request.NotFoundResponse());
+
+        if (metadata.HasLifeCycle)
+            await InitAsync(handler, request, requestType, metadata, ct);
+
+        try
+        {
+            if (_validate)
+            {
+                if (metadata.Validator is not null)
+                {
+                    var error = await ValidationAsync(handler, request, requestType, metadata, ct);
+                    if (error is not null)
+                        return Result.FromError<TOut>(error);
+                }
+                if (metadata.HasCompliance)
+                {
+                    var error = await ComplianceAsync(handler, request, requestType, metadata, ct);
+                    if (error is not null)
+                        return Result.FromError<TOut>(error);
+                }
+            }
+            var response = await HandlerAsync(handler, request, requestType, metadata, ct);
+
+            // Run existing post operations
+            if (metadata.PostPipeline is not null)
+                PostPipelineHandlerAsync(provider, requestType, request, handler, response, metadata, ct);
+
+            return transform(response);
+        }
+        finally
+        {
+            if (metadata.HasLifeCycle)
+                await EndAsync(handler, request, requestType, metadata, ct);
+        }
+    }
+
 
     private static async ValueTask<TResponse?> HandlerAsync<TResponse>(IRequestHandler handler, IRequest<TResponse> request, Type requestType, RequestMetadata metadata, CancellationToken ct)
     {

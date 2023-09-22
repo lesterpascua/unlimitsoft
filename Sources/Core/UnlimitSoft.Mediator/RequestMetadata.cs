@@ -9,6 +9,11 @@ namespace UnlimitSoft.Mediator;
 
 internal sealed class RequestMetadata
 {
+    /// <summary>
+    /// The response returned is a <see cref="Result{TResponse}"/> response.
+    /// </summary>
+    public bool IsResult;
+
     public Type? Validator;
     public Func<IRequestHandler, IRequest, IValidator, CancellationToken, ValueTask<IResponse>>? ValidatorCLI;
 

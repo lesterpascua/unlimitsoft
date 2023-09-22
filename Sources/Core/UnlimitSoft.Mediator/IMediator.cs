@@ -29,4 +29,24 @@ public interface IMediator
     /// <param name="ct"></param>
     /// <returns></returns>
     ValueTask<Result<TResponse>> SendAsync<TResponse>(IServiceProvider provider, IRequest<TResponse> request, CancellationToken ct = default);
+
+    /// <summary>
+    /// Send a request and match this request with a handler request using the service provider in the argument. 
+    /// </summary>
+    /// <remarks>Use this to execute in the same scope of the executor.</remarks>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="request"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    ValueTask<Result<TResponse>> SafeSendAsync<TResponse>(IRequest<Result<TResponse>> request, CancellationToken ct = default);
+    /// <summary>
+    /// Send a request and match this request with a handler request using the service provider in the argument. 
+    /// </summary>
+    /// <remarks>Use this to execute in the same scope of the executor.</remarks>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="provider"></param>
+    /// <param name="request"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    ValueTask<Result<TResponse>> SafeSendAsync<TResponse>(IServiceProvider provider, IRequest<Result<TResponse>> request, CancellationToken ct = default);
 }

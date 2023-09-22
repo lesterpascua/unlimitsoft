@@ -1,7 +1,7 @@
-﻿using Microsoft.AspNetCore.Cors.Infrastructure;
-using Microsoft.AspNetCore.Http;
+﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
+using System;
 using System.Linq;
 using System.Net;
 using UnlimitSoft.Message;
@@ -36,10 +36,10 @@ public static class HttpContextExtensions
     {
         StringValues forwardedForOrProto = StringValues.Empty;
         if (context.Request.Headers?.TryGetValue(HeaderXForwardedFor, out forwardedForOrProto) ?? false)
-            return forwardedForOrProto.ToString().Split(',').Select(s => s.Trim()).First();                     /// TODO: optimize .Select(s => s.Trim())
+            return forwardedForOrProto.ToString().Split(',', 2, StringSplitOptions.RemoveEmptyEntries)[0].Trim();
 
         if (context.Request.Headers?.TryGetValue(HeaderXRealIp, out forwardedForOrProto) ?? false)
-            return forwardedForOrProto.ToString().Split(',').Select(s => s.Trim()).First();                     /// TODO: optimize .Select(s => s.Trim())
+            return forwardedForOrProto.ToString().Split(',', 2, StringSplitOptions.RemoveEmptyEntries)[0].Trim();
 
         return context.Connection.RemoteIpAddress?.ToString() ?? Unknow;
     }

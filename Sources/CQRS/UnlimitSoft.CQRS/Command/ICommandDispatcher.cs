@@ -26,6 +26,24 @@ public interface ICommandDispatcher
     /// <param name="ct"></param>
     /// <returns></returns>
     ValueTask<Result<TResponse>> DispatchAsync<TResponse>(IServiceProvider provider, ICommand<TResponse> command, CancellationToken ct = default);
+
+    /// <summary>
+    /// Send a command to his command handler. This operation must execute in new scope.
+    /// This method is optimize for command that return a result response
+    /// </summary>
+    /// <param name="command"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    ValueTask<Result<TResponse>> SafeDispatchAsync<TResponse>(ICommand<Result<TResponse>> command, CancellationToken ct = default);
+    /// <summary>
+    /// Send command to his handler using specific service provider. This operation use same scope of provider.
+    /// This method is optimize for command that return a result response
+    /// </summary>
+    /// <param name="provider"></param>
+    /// <param name="command"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    ValueTask<Result<TResponse>> SafeDispatchAsync<TResponse>(IServiceProvider provider, ICommand<Result<TResponse>> command, CancellationToken ct = default);
 }
 /// <summary>
 /// Extension method for Command dispatcher

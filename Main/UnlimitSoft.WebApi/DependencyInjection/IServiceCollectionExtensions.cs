@@ -145,6 +145,7 @@ public static class IServiceCollectionExtensions
         services.AddSingleton<IMyIdGenerator>(gen);
         services.AddSingleton<IServiceMetadata>(gen);
 
+        services.AddSingleton(SysClock.Clock = new SysClock());
         services.AddSingleton(JsonUtil.Default = new DefaultJsonSerializer());
 
         if (unitOfWorkSettings?.Any() == true)
