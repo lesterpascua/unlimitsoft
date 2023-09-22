@@ -40,4 +40,9 @@ public sealed class ServiceProviderCommandDispatcher : ICommandDispatcher
     public ValueTask<Result<TResponse>> DispatchAsync<TResponse>(ICommand<TResponse> command, CancellationToken ct = default) => _mediator.SendAsync(command, ct);
     /// <inheritdoc />
     public ValueTask<Result<TResponse>> DispatchAsync<TResponse>(IServiceProvider provider, ICommand<TResponse> command, CancellationToken ct = default) => _mediator.SendAsync(provider, command, ct);
+
+    /// <inheritdoc />
+    public ValueTask<Result<TResponse>> SafeDispatchAsync<TResponse>(ICommand<Result<TResponse>> command, CancellationToken ct = default) => _mediator.SafeSendAsync(command, ct);
+    /// <inheritdoc />
+    public ValueTask<Result<TResponse>> SafeDispatchAsync<TResponse>(IServiceProvider provider, ICommand<Result<TResponse>> command, CancellationToken ct = default) => _mediator.SafeSendAsync(provider, command, ct);
 }

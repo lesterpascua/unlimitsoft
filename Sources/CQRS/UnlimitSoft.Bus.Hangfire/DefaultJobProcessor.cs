@@ -137,7 +137,7 @@ public sealed class DefaultJobProcessor<TProps> : IJobProcessor
                 await _onError(exc);
 
             var error = command.ErrorResponse(_errorBody);
-            response = Result<object>.FromError(error);
+            response = Result.FromError<object>(error);
         }
 
         if (_completionService is not null)

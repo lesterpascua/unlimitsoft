@@ -25,6 +25,26 @@ public interface IResult
 /// <summary>
 /// 
 /// </summary>
+public readonly struct Result
+{
+    /// <summary>
+    /// Return a result from success
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Result<TResponse> FromOk<TResponse>(TResponse? value) => new(value, null);
+    /// <summary>
+    /// Return a result from error
+    /// </summary>
+    /// <param name="error"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Result<TResponse> FromError<TResponse>(IResponse error) => new(default, error);
+}
+/// <summary>
+/// 
+/// </summary>
 /// <typeparam name="TResponse"></typeparam>
 public readonly struct Result<TResponse> : IResult
 {
@@ -33,7 +53,7 @@ public readonly struct Result<TResponse> : IResult
     /// </summary>
     /// <param name="value"></param>
     /// <param name="error"></param>
-    private Result(TResponse? value, IResponse? error)
+    internal Result(TResponse? value, IResponse? error)
     {
         Value = value;
         Error = error;
@@ -63,21 +83,6 @@ public readonly struct Result<TResponse> : IResult
 
     /// <inheritdoc />
     public override string ToString() => $"Value: {Value}, Error: {Error}";
-
-    /// <summary>
-    /// Return a result from success
-    /// </summary>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Result<TResponse> FromOk(TResponse? value) => new(value, null);
-    /// <summary>
-    /// Return a result from error
-    /// </summary>
-    /// <param name="error"></param>
-    /// <returns></returns>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Result<TResponse> FromError(IResponse error) => new(default, error);
 
     #region Private Methods
     object? IResult.GetValue() => Value;
