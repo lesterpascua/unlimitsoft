@@ -1,4 +1,7 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Runtime.CompilerServices;
 
 namespace UnlimitSoft.Message;
 
@@ -34,6 +37,7 @@ public readonly struct Result
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Result<TResponse> FromOk<TResponse>(TResponse? value) => new(value, null);
+
     /// <summary>
     /// Return a result from error
     /// </summary>
@@ -41,6 +45,47 @@ public readonly struct Result
     /// <returns></returns>
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static Result<TResponse> FromError<TResponse>(IResponse error) => new(default, error);
+    /// <summary>
+    /// Return a result from error
+    /// </summary>
+    /// <param name="err"></param>
+    /// <param name="field"></param>
+    /// <param name="code"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Result<TResponse> FromError<TResponse, T>(T err, string? field = null, HttpStatusCode code = HttpStatusCode.BadRequest)
+        where T : struct, Enum
+    {
+        return FromError<TResponse>(new[] { $"{err:D}" }, field, code);
+    }
+    /// <summary>
+    /// Return a result from error
+    /// </summary>
+    /// <param name="err"></param>
+    /// <param name="field"></param>
+    /// <param name="code"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Result<TResponse> FromError<TResponse>(string err, string? field = null, HttpStatusCode code = HttpStatusCode.BadRequest)
+    {
+        return FromError<TResponse>(new[] { err }, field, code);
+    }
+    /// <summary>
+    /// Return a result from error
+    /// </summary>
+    /// <param name="errs"></param>
+    /// <param name="field"></param>
+    /// <param name="code"></param>
+    /// <returns></returns>
+    public static Result<TResponse> FromError<TResponse>(string[] errs, string? field = null, HttpStatusCode code = HttpStatusCode.BadRequest)
+    {
+        field ??= string.Empty;
+
+        var body = new Dictionary<string, string[]> { [field] = errs };
+        var result = new ErrorResponse(code, body);
+
+        return FromError<TResponse>(result);
+    }
 }
 /// <summary>
 /// 
