@@ -58,11 +58,20 @@ public class EFRepository<TContext, TEntity> : EFQueryRepository<TContext, TEnti
         DbContext.Set<TEntity>().Remove(entity);
         return entity;
     }
-
     /// <inheritdoc />
-    public TEntity Update(TEntity entity)
+    public TEntity Update(TEntity entity, bool force = false)
     {
-        DbContext.Set<TEntity>().Update(entity);
+        var update = force;
+        if (!update)
+        {
+            var curr = DbContext.ChangeTracker
+                .Entries<TEntity>()
+                .FirstOrDefault(x => ReferenceEquals(x.Entity, entity));
+            update = curr is null || curr.State == EntityState.Detached;
+        }
+        if (update)
+            DbContext.Set<TEntity>().Update(entity);
+
         return entity;
     }
 
