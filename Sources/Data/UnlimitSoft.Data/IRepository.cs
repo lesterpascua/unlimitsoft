@@ -30,11 +30,12 @@ public interface IRepository<TEntity> : IQueryRepository<TEntity>
     TEntity Remove(TEntity entity);
 
     /// <summary>
-    /// Update entity in repository.
+    /// Update entity in repository. This will indicate the entity should be tracked complete.
     /// </summary>
     /// <param name="entity"></param>
+    /// <param name="force">If false the system will keep only the properties updated in the repositoty</param>
     /// <returns></returns>
-    TEntity Update(TEntity entity);
+    TEntity Update(TEntity entity, bool force = false);
 
     /// <summary>
     /// 
