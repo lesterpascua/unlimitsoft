@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Reflection.Emit;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Linq;
 using UnlimitSoft.Mediator.Pipeline;
 using UnlimitSoft.Message;
 
@@ -59,54 +61,57 @@ public static class InvokerCache
         lock (metadata)
         {
             cli = metadata.HandlerCLI;
-            if (cli is null)
-            {
-                var method = metadata
-                    .HandlerImplementType
-                    .GetMethod(HandleMethod, new[] { requestType, typeof(CancellationToken) }) ?? throw new MissingMethodException($"Can't find {HandleMethod} in {requestType}");
+            if (cli is not null)
+                return (Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>)cli;                         // Return function
 
-                var name = $"{HandleMethod}_{requestType.FullName}";
+            var method = metadata
+                .HandlerImplementType
+                .GetMethod(HandleMethod, new[] { requestType, typeof(CancellationToken) }) ?? throw new MissingMethodException($"Can't find {HandleMethod} in {requestType}");
+
+            var name = $"{HandleMethod}_{requestType.FullName}";
 
 #if EMIT_NATIVE
-                var returnType = typeof(ValueTask<TResponse>);
-                var parameterTypes = new[] { typeof(IRequestHandler), typeof(IRequest<TResponse>), typeof(CancellationToken) };
-                var dynamicMethod = new DynamicMethod(name, returnType, parameterTypes, typeof(ServiceProviderMediator).Module);    // Create a dynamic method
+            var returnType = typeof(ValueTask<TResponse>);
+            var parameterTypes = new[] { typeof(IRequestHandler), typeof(IRequest<TResponse>), typeof(CancellationToken) };
+            var dynamicMethod = new DynamicMethod(name, returnType, parameterTypes, typeof(ServiceProviderMediator).Module);    // Create a dynamic method
 
-                var il = dynamicMethod.GetILGenerator();                        // Get a ILGenerator to emit the method body
+            var il = dynamicMethod.GetILGenerator();                        // Get a ILGenerator to emit the method body
 
-                il.Emit(OpCodes.Ldarg_0);                                       // Load the first argument (IRequestHandler) onto the evaluation stack
-                il.Emit(OpCodes.Castclass, metadata.HandlerImplementType);      // Cast the IRequestHandler to handlerType (assuming handlerType is the specific type)
-                il.Emit(OpCodes.Ldarg_1);                                       // Load the second argument (IRequest<TResponse>) onto the evaluation stack
-                il.Emit(OpCodes.Castclass, requestType);                        // Cast the IRequest<TResponse> to requestType (assuming SomeType is the specific type)
-                il.Emit(OpCodes.Ldarg_2);                                       // Load the third  argument (CancellationToken onto the evaluation stack
-                il.Emit(OpCodes.Call, method);                                  // Call handler
-                il.Emit(OpCodes.Ret);                                           // Return the result
+            il.Emit(OpCodes.Ldarg_0);                                       // Load the first argument (IRequestHandler) onto the evaluation stack
+            il.Emit(OpCodes.Castclass, metadata.HandlerImplementType);      // Cast the IRequestHandler to handlerType (assuming handlerType is the specific type)
+            il.Emit(OpCodes.Ldarg_1);                                       // Load the second argument (IRequest<TResponse>) onto the evaluation stack
+            il.Emit(OpCodes.Castclass, requestType);                        // Cast the IRequest<TResponse> to requestType (assuming SomeType is the specific type)
+            il.Emit(OpCodes.Ldarg_2);                                       // Load the third  argument (CancellationToken onto the evaluation stack
+            il.Emit(OpCodes.Call, method);                                  // Call handler
+            il.Emit(OpCodes.Ret);                                           // Return the result
 
-                // Create a delegate from the dynamic method
-                var tmp = dynamicMethod.CreateDelegate(typeof(Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>));
-                metadata.HandlerCLI = tmp;
+            // Create a delegate from the dynamic method
+            var tmp = dynamicMethod.CreateDelegate(typeof(Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>));
+            metadata.HandlerCLI = tmp;
 
-                return (Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>)tmp;
+            return (Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>)tmp;
 #else
-                var tmp = Emit<Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>>
-                    .NewDynamicMethod(name)
-                    .LoadArgument(0).CastClass(metadata.HandlerImplementType)
-                    .LoadArgument(1).CastClass(requestType)
-                    .LoadArgument(2)
-                    .Call(method)
-                    .Return()
-                    .CreateDelegate();
+            var tmp = Emit<Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>>
+                .NewDynamicMethod(name)
+                .LoadArgument(0).CastClass(metadata.HandlerImplementType)
+                .LoadArgument(1).CastClass(requestType)
+                .LoadArgument(2)
+                .Call(method)
+                .Return()
+                .CreateDelegate();
 
-                metadata.HandlerCLI = tmp;
-                return tmp;
+            metadata.HandlerCLI = tmp;
+            return tmp;
 #endif
-            }
         }
-
-        // Return function
-        return (Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>)cli;
     }
-
+    /// <summary>
+    /// Get wrapper function to invoque the <see cref="IRequestHandlerValidator{TRequest}.ValidatorAsync(TRequest, Validation.RequestValidator{TRequest}, CancellationToken)" /> asociate to the request.
+    /// </summary>
+    /// <param name="requestType"></param>
+    /// <param name="metadata"></param>
+    /// <returns></returns>
+    /// <exception cref="MissingMethodException"></exception>
     internal static Func<IRequestHandler, IRequest, IValidator, CancellationToken, ValueTask<IResponse>> GetValidator(Type requestType, RequestMetadata metadata)
     {
         var cli = metadata.ValidatorCLI;
@@ -125,8 +130,33 @@ public static class InvokerCache
                 .HandlerImplementType
                 .GetMethod(ValidatorMethod, new[] { requestType, validatorType, typeof(CancellationToken) }) ?? throw new MissingMethodException($"Can't find {ValidatorMethod} in {requestType}");
 
+            var name = $"{ValidatorMethod}_{requestType.FullName}";
+
+#if EMIT_NATIVE
+            var returnType = typeof(ValueTask<IResponse>);
+            var parameterTypes = new[] { typeof(IRequestHandler), typeof(IRequest), typeof(IValidator), typeof(CancellationToken) };
+            var dynamicMethod = new DynamicMethod(name, returnType, parameterTypes, typeof(ServiceProviderMediator).Module);    // Create a dynamic method
+
+            var il = dynamicMethod.GetILGenerator();                        // Get a ILGenerator to emit the method body
+
+            il.Emit(OpCodes.Ldarg_0);                                       // Load the first argument (IRequestHandler) onto the evaluation stack
+            il.Emit(OpCodes.Castclass, metadata.HandlerImplementType);      // Cast the IRequestHandler to handlerType (assuming handlerType is the specific type)
+            il.Emit(OpCodes.Ldarg_1);                                       // Load the second argument (IRequest<TResponse>) onto the evaluation stack
+            il.Emit(OpCodes.Castclass, requestType);                        // Cast the IRequest<TResponse> to requestType (assuming SomeType is the specific type)
+            il.Emit(OpCodes.Ldarg_2);                                       // Load the third  argument (IValidator) onto the evaluation stack
+            il.Emit(OpCodes.Castclass, validatorType);                      // Cast the IValidator to validatorType (assuming SomeType is the specific type)
+            il.Emit(OpCodes.Ldarg_3);                                       // Load the third  argument (CancellationToken onto the evaluation stack
+            il.Emit(OpCodes.Call, method);                                  // Call handler
+            il.Emit(OpCodes.Ret);                                           // Return the result
+
+            // Create a delegate from the dynamic method
+            var tmp = dynamicMethod.CreateDelegate(typeof(Func<IRequestHandler, IRequest, IValidator, CancellationToken, ValueTask<IResponse>>));
+            metadata.ValidatorCLI = (Func<IRequestHandler, IRequest, IValidator, CancellationToken, ValueTask<IResponse>>)tmp;
+
+            return metadata.ValidatorCLI;
+#else
             var tmp = Emit<Func<IRequestHandler, IRequest, IValidator, CancellationToken, ValueTask<IResponse>>>
-                .NewDynamicMethod($"{ValidatorMethod}_{requestType.FullName}")
+                .NewDynamicMethod(name)
                 .LoadArgument(0).CastClass(metadata.HandlerImplementType)
                 .LoadArgument(1).CastClass(requestType)
                 .LoadArgument(2).CastClass(validatorType)
@@ -137,8 +167,16 @@ public static class InvokerCache
 
             metadata.ValidatorCLI = tmp;
             return tmp;
+#endif
         }
     }
+    /// <summary>
+    /// Get wrapper function to invoque the <see cref="IRequestHandlerCompliance{TRequest}.ComplianceAsync(TRequest, CancellationToken)"/> asociate to the request.
+    /// </summary>
+    /// <param name="requestType"></param>
+    /// <param name="metadata"></param>
+    /// <returns></returns>
+    /// <exception cref="MissingMethodException"></exception>
     internal static Func<IRequestHandler, IRequest, CancellationToken, ValueTask<IResponse>> GetCompliance(Type requestType, RequestMetadata metadata)
     {
         var cli = metadata.ComplianceCLI;
@@ -148,28 +186,58 @@ public static class InvokerCache
         lock (metadata)
         {
             cli = metadata.ComplianceCLI;
-            if (cli is null)
-            {
-                var method = metadata
-                    .HandlerImplementType
-                    .GetMethod(ComplianceMethod, new[] { requestType, typeof(CancellationToken) }) ?? throw new MissingMethodException($"Can't find {ComplianceMethod} in {requestType}");
-                var tmp = Emit<Func<IRequestHandler, IRequest, CancellationToken, ValueTask<IResponse>>>
-                    .NewDynamicMethod($"{ComplianceMethod}_{requestType.FullName}")
-                    .LoadArgument(0).CastClass(metadata.HandlerImplementType)
-                    .LoadArgument(1).CastClass(requestType)
-                    .LoadArgument(2)
-                    .Call(method)
-                    .Return()
-                    .CreateDelegate();
+            if (cli is not null)
+                return cli;                         // Return function
 
-                metadata.ComplianceCLI = tmp;
-                return tmp;
-            }
+            var method = metadata
+                .HandlerImplementType
+                .GetMethod(ComplianceMethod, new[] { requestType, typeof(CancellationToken) }) ?? throw new MissingMethodException($"Can't find {ComplianceMethod} in {requestType}");
+
+            var name = $"{ComplianceMethod}_{requestType.FullName}";
+
+#if EMIT_NATIVE
+            var returnType = typeof(ValueTask<IResponse>);
+            var parameterTypes = new[] { typeof(IRequestHandler), typeof(IRequest), typeof(CancellationToken) };
+            var dynamicMethod = new DynamicMethod(name, returnType, parameterTypes, typeof(ServiceProviderMediator).Module);    // Create a dynamic method
+
+            var il = dynamicMethod.GetILGenerator();                        // Get a ILGenerator to emit the method body
+
+            il.Emit(OpCodes.Ldarg_0);                                       // Load the first argument (IRequestHandler) onto the evaluation stack
+            il.Emit(OpCodes.Castclass, metadata.HandlerImplementType);      // Cast the IRequestHandler to handlerType (assuming handlerType is the specific type)
+            il.Emit(OpCodes.Ldarg_1);                                       // Load the second argument (IRequest<TResponse>) onto the evaluation stack
+            il.Emit(OpCodes.Castclass, requestType);                        // Cast the IRequest<TResponse> to requestType (assuming SomeType is the specific type)
+            il.Emit(OpCodes.Ldarg_2);                                       // Load the third  argument (CancellationToken onto the evaluation stack
+            il.Emit(OpCodes.Call, method);                                  // Call handler
+            il.Emit(OpCodes.Ret);                                           // Return the result
+
+            // Create a delegate from the dynamic method
+            cli = (Func<IRequestHandler, IRequest, CancellationToken, ValueTask<IResponse>>)dynamicMethod.CreateDelegate(
+                typeof(Func<IRequestHandler, IRequest, CancellationToken, ValueTask<IResponse>>)
+            );
+            metadata.ComplianceCLI = cli;
+            return cli;
+#else
+            cli = Emit<Func<IRequestHandler, IRequest, CancellationToken, ValueTask<IResponse>>>
+                .NewDynamicMethod(name)
+                .LoadArgument(0).CastClass(metadata.HandlerImplementType)
+                .LoadArgument(1).CastClass(requestType)
+                .LoadArgument(2)
+                .Call(method)
+                .Return()
+                .CreateDelegate();
+
+            metadata.ComplianceCLI = cli;
+            return cli;
+#endif
         }
-
-        // Return function
-        return cli;
     }
+    /// <summary>
+    /// Get wrapper function to invoque the <see cref="IRequestHandlerLifeCycle{TRequest}.InitAsync(TRequest, CancellationToken)"/> asociate to the request.
+    /// </summary>
+    /// <param name="requestType"></param>
+    /// <param name="metadata"></param>
+    /// <returns></returns>
+    /// <exception cref="MissingMethodException"></exception>
     internal static Func<IRequestHandler, IRequest, CancellationToken, ValueTask> GetInit(Type requestType, RequestMetadata metadata)
     {
         var cli = metadata.InitCLI;
@@ -186,8 +254,32 @@ public static class InvokerCache
                 .HandlerImplementType
                 .GetMethod(InitMethod, new[] { requestType, typeof(CancellationToken) }) ?? throw new MissingMethodException($"Can't find {InitMethod} in {requestType}");
 
+            var name = $"{InitMethod}_{requestType.FullName}";
+
+#if EMIT_NATIVE
+            var returnType = typeof(ValueTask);
+            var parameterTypes = new[] { typeof(IRequestHandler), typeof(IRequest), typeof(CancellationToken) };
+            var dynamicMethod = new DynamicMethod(name, returnType, parameterTypes, typeof(ServiceProviderMediator).Module);    // Create a dynamic method
+
+            var il = dynamicMethod.GetILGenerator();                        // Get a ILGenerator to emit the method body
+
+            il.Emit(OpCodes.Ldarg_0);                                       // Load the first argument (IRequestHandler) onto the evaluation stack
+            il.Emit(OpCodes.Castclass, metadata.HandlerImplementType);      // Cast the IRequestHandler to handlerType (assuming handlerType is the specific type)
+            il.Emit(OpCodes.Ldarg_1);                                       // Load the second argument (IRequest<TResponse>) onto the evaluation stack
+            il.Emit(OpCodes.Castclass, requestType);                        // Cast the IRequest<TResponse> to requestType (assuming SomeType is the specific type)
+            il.Emit(OpCodes.Ldarg_2);                                       // Load the third  argument (CancellationToken onto the evaluation stack
+            il.Emit(OpCodes.Call, method);                                  // Call handler
+            il.Emit(OpCodes.Ret);                                           // Return the result
+
+            // Create a delegate from the dynamic method
+            cli = (Func<IRequestHandler, IRequest, CancellationToken, ValueTask>)dynamicMethod.CreateDelegate(
+                typeof(Func<IRequestHandler, IRequest, CancellationToken, ValueTask>)
+            );
+            metadata.InitCLI = cli;
+            return cli;
+#else
             cli = Emit<Func<IRequestHandler, IRequest, CancellationToken, ValueTask>>
-                .NewDynamicMethod($"{InitMethod}_{requestType.FullName}")
+                .NewDynamicMethod(name)
                 .LoadArgument(0).CastClass(metadata.HandlerImplementType)
                 .LoadArgument(1).CastClass(requestType)
                 .LoadArgument(2)
@@ -196,11 +288,17 @@ public static class InvokerCache
                 .CreateDelegate();
 
             metadata.InitCLI = cli;
+            return cli
+#endif
         }
-
-        // Return function
-        return cli;
     }
+    /// <summary>
+    /// Get wrapper function to invoque the <see cref="IRequestHandlerLifeCycle{TRequest}.EndAsync(TRequest, CancellationToken)"/> asociate to the request.
+    /// </summary>
+    /// <param name="requestType"></param>
+    /// <param name="metadata"></param>
+    /// <returns></returns>
+    /// <exception cref="MissingMethodException"></exception>
     internal static Func<IRequestHandler, IRequest, CancellationToken, ValueTask> GetEnd(Type requestType, RequestMetadata metadata)
     {
         var cli = metadata.EndCLI;
@@ -217,8 +315,32 @@ public static class InvokerCache
                 .HandlerImplementType
                 .GetMethod(EndMethod, new[] { requestType, typeof(CancellationToken) }) ?? throw new MissingMethodException($"Can't find {EndMethod} in {requestType}");
 
+            var name = $"{EndMethod}_{requestType.FullName}";
+
+#if EMIT_NATIVE
+            var returnType = typeof(ValueTask);
+            var parameterTypes = new[] { typeof(IRequestHandler), typeof(IRequest), typeof(CancellationToken) };
+            var dynamicMethod = new DynamicMethod(name, returnType, parameterTypes, typeof(ServiceProviderMediator).Module);    // Create a dynamic method
+
+            var il = dynamicMethod.GetILGenerator();                        // Get a ILGenerator to emit the method body
+
+            il.Emit(OpCodes.Ldarg_0);                                       // Load the first argument (IRequestHandler) onto the evaluation stack
+            il.Emit(OpCodes.Castclass, metadata.HandlerImplementType);      // Cast the IRequestHandler to handlerType (assuming handlerType is the specific type)
+            il.Emit(OpCodes.Ldarg_1);                                       // Load the second argument (IRequest<TResponse>) onto the evaluation stack
+            il.Emit(OpCodes.Castclass, requestType);                        // Cast the IRequest<TResponse> to requestType (assuming SomeType is the specific type)
+            il.Emit(OpCodes.Ldarg_2);                                       // Load the third  argument (CancellationToken onto the evaluation stack
+            il.Emit(OpCodes.Call, method);                                  // Call handler
+            il.Emit(OpCodes.Ret);                                           // Return the result
+
+            // Create a delegate from the dynamic method
+            cli = (Func<IRequestHandler, IRequest, CancellationToken, ValueTask>)dynamicMethod.CreateDelegate(
+                typeof(Func<IRequestHandler, IRequest, CancellationToken, ValueTask>)
+            );
+            metadata.EndCLI = cli;
+            return cli;
+#else
             cli = Emit<Func<IRequestHandler, IRequest, CancellationToken, ValueTask>>
-                .NewDynamicMethod($"{EndMethod}_{requestType.FullName}")
+                .NewDynamicMethod(name)
                 .LoadArgument(0).CastClass(metadata.HandlerImplementType)
                 .LoadArgument(1).CastClass(requestType)
                 .LoadArgument(2)
@@ -227,10 +349,8 @@ public static class InvokerCache
                 .CreateDelegate();
 
             metadata.EndCLI = cli;
+#endif
         }
-
-        // Return function
-        return cli;
     }
     /// <summary>
     /// Get a function to execute the commmand handler validator without use a dynamic methods (faster)

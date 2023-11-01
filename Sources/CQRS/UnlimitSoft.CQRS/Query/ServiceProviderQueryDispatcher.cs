@@ -36,4 +36,6 @@ public sealed class ServiceProviderQueryDispatcher : IQueryDispatcher
 
     /// <inheritdoc />
     public ValueTask<Result<TResponse>> DispatchAsync<TResponse>(IServiceProvider provider, IQuery<TResponse> query, CancellationToken ct = default) => _mediator.SendAsync(provider, query, ct);
+    /// <inheritdoc />
+    public ValueTask<Result<TResponse>> SafeDispatchAsync<TResponse>(IServiceProvider provider, IQuery<Result<TResponse>> query, CancellationToken ct = default) => _mediator.SafeSendAsync(provider, query, ct);
 }

@@ -35,7 +35,7 @@ public sealed class QueryController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<SearchModel<Customer>>> Get()
     {
-        var query = new TestQuery(this.GetIdentity());
+        var query = new TestQuery(this.GetIdentity()) { Name = "some name" };
         var result = await _queryDispatcher.DispatchAsync(_provider, query);
 
         return result.ToActionResult(this);
