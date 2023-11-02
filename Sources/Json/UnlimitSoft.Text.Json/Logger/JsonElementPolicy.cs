@@ -40,7 +40,7 @@ public sealed class JsonElementPolicy : IDestructuringPolicy
                         {
                             JsonValueKind.Array => entry.Value,
                             JsonValueKind.Object => entry.Value,
-                            JsonValueKind.Number => entry.Value.GetInt64(),
+                            JsonValueKind.Number => entry.Value.GetDecimal(),
                             JsonValueKind.String => entry.Value.GetString(),
                             JsonValueKind.False or JsonValueKind.True => entry.Value.GetBoolean(),
                             JsonValueKind.Null or JsonValueKind.Undefined => null,
