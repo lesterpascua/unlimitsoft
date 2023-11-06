@@ -37,10 +37,14 @@ public static class IServiceConnectionExtensions
     /// <param name="services"></param>
     /// <param name="typeResolverCache"></param>
     /// <param name="transform">Allow create custom name to the event.</param>
+    /// <param name="setupRegister"></param>
     /// <returns></returns>
-    public static IServiceCollection AddUnlimitSoftEventNameResolver(this IServiceCollection services, Assembly[] typeResolverCache, Func<Type, string>? transform = null)
+    public static IServiceCollection AddUnlimitSoftEventNameResolver(this IServiceCollection services, Assembly[] typeResolverCache, Func<Type, string>? transform = null, Action<Dictionary<string, Type>>? setupRegister = null)
     {
-        var register = GetTypesFromInterface<IEvent>(typeResolverCache).ToDictionary(k => transform?.Invoke(k) ?? k.FullName!);
+        var register = GetTypesFromInterface<IEvent>(typeResolverCache)
+            .ToDictionary(k => transform?.Invoke(k) ?? k.FullName!);
+        setupRegister?.Invoke(register);
+
         return services.AddSingleton<IEventNameResolver>(new DefaultEventCommandResolver(register));
 
         // =================================================================================================================================
