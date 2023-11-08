@@ -133,7 +133,7 @@ public sealed class DefaultJobProcessor<TProps> : IJobProcessor
             err = exc;
             _logger?.LogError(exc, "Error processing jobId: {JobId}, command: {@Command}", meta.Id, command);
 
-            if (_onError != null)
+            if (_onError is not null)
                 await _onError(exc);
 
             var error = command.ErrorResponse(_errorBody);

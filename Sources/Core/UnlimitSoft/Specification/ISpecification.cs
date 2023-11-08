@@ -13,6 +13,10 @@ namespace UnlimitSoft.Specification;
 public interface ISpecification<TEntity> where TEntity : class
 {
     /// <summary>
+    /// Function associate with the specification
+    /// </summary>
+    Func<TEntity, bool> Func { get; }
+    /// <summary>
     /// Include values in result.
     /// </summary>
     IEnumerable<string>? Includes { get; }
@@ -28,6 +32,8 @@ public interface ISpecification<TEntity> where TEntity : class
 public abstract class Specification<TEntity> : ISpecification<TEntity>
     where TEntity : class
 {
+    private Func<TEntity, bool>? _func;
+
     /// <summary>
     /// 
     /// </summary>
@@ -47,10 +53,13 @@ public abstract class Specification<TEntity> : ISpecification<TEntity>
     /// 
     /// </summary>
     public Expression<Func<TEntity, bool>> Criteria { get; }
+    /// <summary>
+    /// Get the compiled function
+    /// </summary>
+    public Func<TEntity, bool> Func => _func ??= Criteria.Compile();
 
 
     #region Static Methods
-
     /// <summary>
     /// 
     /// </summary>
@@ -80,6 +89,5 @@ public abstract class Specification<TEntity> : ISpecification<TEntity>
 
         return left.Union(right);
     }
-
     #endregion
 }
