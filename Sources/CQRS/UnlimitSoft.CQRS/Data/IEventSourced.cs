@@ -128,7 +128,6 @@ public abstract class EventSourced : AggregateRoot, IEventSourced
 
         return (IEvent)@event;
     }
-
     #endregion
 
     #region Nested Classes

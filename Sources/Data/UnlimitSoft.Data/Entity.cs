@@ -10,7 +10,7 @@ namespace UnlimitSoft.Data;
 public abstract class Entity<TKey> : IEntity where TKey : notnull
 {
     /// <inheritdoc/>
-    public TKey Id { get; set; } = default!;
+    public virtual TKey Id { get; set; } = default!;
 
     /// <inheritdoc/>
     public bool IsTransient()
@@ -20,8 +20,6 @@ public abstract class Entity<TKey> : IEntity where TKey : notnull
 
         return false;
     }
-    /// <inheritdoc />
-    public object GetId() => Id;
     /// <inheritdoc />
     public override int GetHashCode()
     {
@@ -45,4 +43,8 @@ public abstract class Entity<TKey> : IEntity where TKey : notnull
         var item = (Entity<TKey>)obj;
         return !item.IsTransient() && !IsTransient() && item.Id.Equals(Id);
     }
+
+
+    /// <inheritdoc />
+    object IEntity.GetId() => Id;
 }
