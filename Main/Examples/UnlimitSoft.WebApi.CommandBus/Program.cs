@@ -64,7 +64,7 @@ WebApplication ConfigureServices(IServiceCollection services)
     services.AddUnlimitSoftCQRS(
         new CQRSSettings
         {
-            Assemblies = new [] { typeof(Program).Assembly },
+            Assemblies = [typeof(Program).Assembly],
             ICommandHandler = typeof(ICommandHandler<,>),
         }
     );

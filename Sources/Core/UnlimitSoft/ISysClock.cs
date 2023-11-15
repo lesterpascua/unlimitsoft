@@ -27,9 +27,53 @@ public sealed class SysClock : ISysClock
     private static ISysClock? _default;
 
     /// <inheritdoc />
-    public DateTime Now => DateTime.Now;
+    public DateTime Now
+    {
+        get
+        {
+#if NET8_0_OR_GREATER
+            return TimeProvider.System.GetLocalNow().DateTime;
+#else
+            return DateTime.Now;
+#endif
+        }
+    }
     /// <inheritdoc />
-    public DateTime UtcNow => DateTime.UtcNow;
+    public DateTime UtcNow
+    {
+        get
+        {
+#if NET8_0_OR_GREATER
+            return TimeProvider.System.GetUtcNow().DateTime;
+#else
+            return DateTime.Now;
+#endif
+        }
+    }
+    /// <inheritdoc />
+    public DateTimeOffset OffsetNow
+    {
+        get
+        {
+#if NET8_0_OR_GREATER
+            return TimeProvider.System.GetLocalNow();
+#else
+            return DateTimeOffset.Now;
+#endif
+        }
+    }
+    /// <inheritdoc />
+    public DateTimeOffset OffsetUtcNow
+    {
+        get
+        {
+#if NET8_0_OR_GREATER
+            return TimeProvider.System.GetUtcNow();
+#else
+            return DateTimeOffset.UtcNow;
+#endif
+        }
+    }
 
     /// <summary>
     /// Singlenton asignation of the clock in the system. 
