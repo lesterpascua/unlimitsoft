@@ -5,12 +5,13 @@ namespace UnlimitSoft;
 
 
 /// <summary>
-/// 
+/// Allow get the system time
 /// </summary>
 public interface ISysClock
 {
     /// <summary>
-    /// Gets the current date
+    /// Gets a <see cref="DateTime"/> object that is set to the current date and time on this
+    /// computer, expressed as Local Time.
     /// </summary>
     DateTime Now { get; }
     /// <summary>
@@ -18,9 +19,19 @@ public interface ISysClock
     /// computer, expressed as the Coordinated Universal Time (UTC).
     /// </summary>
     DateTime UtcNow { get; }
+    /// <summary>
+    /// Gets a <see cref="DateTimeOffset"/> object that is set to the current date and time on this
+    /// computer, expressed as Local Time.
+    /// </summary>
+    public DateTimeOffset OffsetNow { get; }
+    /// <summary>
+    /// Gets a <see cref="DateTimeOffset"/> object that is set to the current date and time on this
+    /// computer, expressed as the Coordinated Universal Time (UTC).
+    /// </summary>
+    public DateTimeOffset OffsetUtcNow { get; }
 }
 /// <summary>
-/// 
+/// Default implementation of the system time
 /// </summary>
 public sealed class SysClock : ISysClock
 {
