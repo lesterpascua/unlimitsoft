@@ -12,12 +12,12 @@ public interface IRequestHandler { }
 /// <summary>
 /// 
 /// </summary>
-/// <typeparam name="TRequest"></typeparam>
-/// <typeparam name="TResponse"></typeparam>
+/// <typeparam name="TRequest">Type of the request where this handler is associate.</typeparam>
+/// <typeparam name="TResponse">Type of the response of the command</typeparam>
 public interface IRequestHandler<in TRequest, TResponse> : IRequestHandler where TRequest : IRequest<TResponse>
 {
     /// <summary>
-    /// 
+    /// Define all logic asociate to the implemented <paramref name="request"/>.
     /// </summary>
     /// <param name="request"></param>
     /// <param name="ct"></param>
