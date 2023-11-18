@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using System.Data.Common;
 using UnlimitSoft.CQRS.Data;
-using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Data.EntityFramework.Utility;
 using UnlimitSoft.Json;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Benchmark.SoftUnlimit.CQRS;
 

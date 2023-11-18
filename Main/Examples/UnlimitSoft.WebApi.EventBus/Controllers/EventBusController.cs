@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.Json;
+using UnlimitSoft.Message;
 using UnlimitSoft.WebApi.EventBus.EventBus;
 
 namespace UnlimitSoft.WebApi.EventBus.Controllers;

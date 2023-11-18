@@ -1,7 +1,7 @@
 ﻿using System;
 using UnlimitSoft.Message;
 
-namespace UnlimitSoft.CQRS.Event;
+namespace UnlimitSoft.Message;
 
 
 /// <summary>

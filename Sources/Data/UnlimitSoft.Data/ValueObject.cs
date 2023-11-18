@@ -1,9 +1,9 @@
-﻿namespace UnlimitSoft.Data
+﻿namespace UnlimitSoft.Data;
+
+
+/// <summary>
+/// 
+/// </summary>
+public abstract class ValueObject
 {
-    /// <summary>
-    /// 
-    /// </summary>
-    public abstract class ValueObject
-    {
-    }
 }
