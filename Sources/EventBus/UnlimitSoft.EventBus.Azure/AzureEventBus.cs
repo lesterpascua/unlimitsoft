@@ -93,7 +93,7 @@ public class AzureEventBus<TAlias, TEventPayload> : IEventBus, IAsyncDisposable
         _client = CreateClient();
 
 #if NETSTANDARD2_0
-        return ValueTaskExtensions.CompletedTask;
+        return default;
 #else
         return ValueTask.CompletedTask;
 #endif

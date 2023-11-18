@@ -14,6 +14,7 @@ using UnlimitSoft.CQRS.Data;
 using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.Data;
+using UnlimitSoft.Message;
 using UnlimitSoft.Web.Model;
 using Xunit;
 using Xunit.Abstractions;

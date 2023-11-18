@@ -9,6 +9,7 @@ using UnlimitSoft.EventBus.DotNetMQ;
 using UnlimitSoft.Json;
 using UnlimitSoft.Logger.Configuration;
 using UnlimitSoft.Logger.DependencyInjection;
+using UnlimitSoft.Message;
 using UnlimitSoft.Text.Json;
 using UnlimitSoft.WebApi.EventBus;
 using UnlimitSoft.WebApi.EventBus.EventBus;

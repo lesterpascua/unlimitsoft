@@ -12,6 +12,7 @@ using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Data.EntityFramework.Utility;
+using UnlimitSoft.Message;
 using Xunit;
 
 namespace UnlimitSoft.Tests.UnlimitSoft.CQRS.Event;

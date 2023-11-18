@@ -80,7 +80,7 @@ public sealed class SemaphoreSlimSysLock : ISysLock
 #if NET5_0_OR_GREATER
             return ValueTask.CompletedTask;
 #else
-            return ValueTaskExtensions.CompletedTask;
+            return default;
 #endif
         }
 

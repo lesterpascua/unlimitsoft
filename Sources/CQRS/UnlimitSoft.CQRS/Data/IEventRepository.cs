@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.Json;
+using UnlimitSoft.Message;
 using UnlimitSoft.Web.Model;
 
 namespace UnlimitSoft.CQRS.Data;
@@ -137,7 +138,6 @@ public static class IEventRepositoryExtensions
     /// <typeparam name="TEntity"></typeparam>
     /// <param name="this"></param>
     /// <param name="entity"></param>
-    /// <param name="serializer"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
     public static async ValueTask AddOrUpdateAsync<TEventPayload, TEntity>(this IEventRepository<TEventPayload> @this, TEntity entity, CancellationToken ct = default)

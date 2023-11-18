@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.Logging;
 using UnlimitSoft.CQRS.Data;
-using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Json;
+using UnlimitSoft.Message;
 using UnlimitSoft.WebApi.Sources.Data;
 
 namespace UnlimitSoft.WebApi.Sources.CQRS.Event;

@@ -7,8 +7,8 @@ using System;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.Data.Seed;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Data.EntityFramework.Utility;
 

@@ -11,11 +11,11 @@ public static class TimeSpanUtility
     /// <summary>
     /// Maximun retry time.
     /// </summary>
-    public static TimeSpan MaxRetryTime = TimeSpan.FromMinutes(10);
+    public static readonly TimeSpan MaxRetryTime = TimeSpan.FromMinutes(10);
     /// <summary>
     /// Default initial retry time.
     /// </summary>
-    public static TimeSpan InitialRetryTime = TimeSpan.FromSeconds(4);
+    public static readonly TimeSpan InitialRetryTime = TimeSpan.FromSeconds(4);
 
     /// <summary>
     /// Duplicate the time of retry. 

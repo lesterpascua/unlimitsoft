@@ -1,8 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
-using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.WebApi.Sources.CQRS.Event;
 

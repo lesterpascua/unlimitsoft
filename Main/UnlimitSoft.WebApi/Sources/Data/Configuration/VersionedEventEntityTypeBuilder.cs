@@ -1,6 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore.Metadata.Builders;
-using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.Data.EntityFramework.Utility;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.WebApi.Sources.Data.Configuration;
 

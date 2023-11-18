@@ -9,6 +9,7 @@ using UnlimitSoft.CQRS.Data;
 using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Query;
 using UnlimitSoft.Json;
+using UnlimitSoft.Message;
 using UnlimitSoft.Web.Model;
 
 namespace UnlimitSoft.CQRS.Event.Json;
