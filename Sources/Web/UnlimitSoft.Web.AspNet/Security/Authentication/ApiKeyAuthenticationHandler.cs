@@ -54,9 +54,12 @@ public class ApiKeyAuthenticationHandler<TOption> : AuthenticationHandler<TOptio
             return AuthenticateResult.NoResult();
 
         var apiKey = headerValues.FirstOrDefault();
-        if (string.IsNullOrWhiteSpace(apiKey) && Options.RequireApiKey)
+        var existApiKey = !string.IsNullOrWhiteSpace(apiKey);
+
+        if (Options.RequireApiKey && !existApiKey)
             return AuthenticateResult.NoResult();
-        if (Options.ApiKey is not null && apiKey != Options.ApiKey)
+
+        if ((existApiKey || Options.RequireApiKey) && apiKey != Options.ApiKey)
             return AuthenticateResult.Fail(Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidAPIKey) ?? "Invalid API Key");
 
         try
