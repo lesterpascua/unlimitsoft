@@ -37,6 +37,10 @@ public abstract class ApiKeyAuthenticationOptions : AuthenticationSchemeOptions
     /// </summary>
     public string? ApiKey { get; set; }
     /// <summary>
+    /// Indicate the api key is required
+    /// </summary>
+    public bool RequireApiKey { get; set; } = true;
+    /// <summary>
     /// Supplied error code and get string representation.
     /// </summary>
     protected internal Func<ApiKeyError, string>? ErrorBuilder { get; }
@@ -48,5 +52,5 @@ public abstract class ApiKeyAuthenticationOptions : AuthenticationSchemeOptions
     /// <param name="httpRequest"></param>
     /// <param name="apiKey"></param>
     /// <returns></returns>
-    protected internal abstract ValueTask<IEnumerable<Claim>?> CreateClaims(IServiceProvider provider, HttpRequest httpRequest, string apiKey);
+    protected internal abstract ValueTask<IEnumerable<Claim>?> CreateClaims(IServiceProvider provider, HttpRequest httpRequest, string? apiKey);
 }
