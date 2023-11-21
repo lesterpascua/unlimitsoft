@@ -50,11 +50,11 @@ public class ApiKeyAuthenticationHandler<TOption> : AuthenticationHandler<TOptio
     /// <returns></returns>
     protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
-        if (!Request.Headers.TryGetValue(ApiKeyAuthenticationOptions.HeaderName, out var headerValues))
+        if (!Request.Headers.TryGetValue(ApiKeyAuthenticationOptions.HeaderName, out var headerValues) && Options.RequireApiKey)
             return AuthenticateResult.NoResult();
 
         var apiKey = headerValues.FirstOrDefault();
-        if (string.IsNullOrWhiteSpace(apiKey))
+        if (string.IsNullOrWhiteSpace(apiKey) && Options.RequireApiKey)
             return AuthenticateResult.NoResult();
         if (Options.ApiKey is not null && apiKey != Options.ApiKey)
             return AuthenticateResult.Fail(Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidAPIKey) ?? "Invalid API Key");
