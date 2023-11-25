@@ -57,7 +57,7 @@ public sealed class SysClock : ISysClock
 #if NET8_0_OR_GREATER
             return TimeProvider.System.GetUtcNow().DateTime;
 #else
-            return DateTime.Now;
+            return DateTime.UtcNow;
 #endif
         }
     }
