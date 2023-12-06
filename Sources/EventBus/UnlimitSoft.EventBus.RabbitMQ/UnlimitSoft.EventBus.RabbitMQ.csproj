@@ -23,11 +23,11 @@
 	</PropertyGroup>
 	
 	<ItemGroup>
-		<PackageReference Include="PolySharp" Version="1.13.2">
+		<PackageReference Include="PolySharp" Version="1.14.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="RabbitMQ.Client" Version="6.6.0" />
+		<PackageReference Include="RabbitMQ.Client" Version="6.7.0" />
 		<!--<PackageReference Include="UnlimitSoft.EventBus" Version="3.3.0-preview.3.3.0.17" />-->
 	</ItemGroup>
 	<ItemGroup>
