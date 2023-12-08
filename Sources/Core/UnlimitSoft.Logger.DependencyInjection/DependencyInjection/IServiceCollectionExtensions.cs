@@ -20,6 +20,7 @@ public static class IServiceCollectionExtensions
     /// <param name="environment"></param>
     /// <param name="setup"></param>
     /// <returns></returns>
+    [Obsolete("Use LoggerHelper.Configure")]
     public static IServiceCollection AddUnlimitSofLogger(this IServiceCollection services, LoggerOption config, string environment, Action<LoggerConfiguration>? setup = null)
     {
         if (Log.Logger != null)
