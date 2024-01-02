@@ -4,7 +4,6 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Logging;
-using UnlimitSoft.Event;
 using UnlimitSoft.Json;
 using UnlimitSoft.Message;
 
@@ -23,9 +22,10 @@ public static class EventUtility
     /// <param name="eventName"></param>
     /// <param name="envelop"></param>
     /// <param name="args"></param>
+    /// <param name="extraArgs">Extra parameter required to supplied to on error function</param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async ValueTask<IResponse?> ProcessAsync<TEvent>(string? eventName, MessageEnvelop envelop, Args<TEvent> args, CancellationToken ct = default) where TEvent : class, IEvent
+    public static async ValueTask<IResponse?> ProcessAsync<TEvent>(string? eventName, MessageEnvelop envelop, Args<TEvent> args, object? extraArgs, CancellationToken ct = default) where TEvent : class, IEvent
     {
         TEvent? curr = null;
         IResponse? responses = null;
@@ -52,7 +52,7 @@ public static class EventUtility
             }
 
             curr = @event;
-            args.BeforeProcess?.Invoke(curr!);
+            args.BeforeProcess?.Invoke(curr!, extraArgs);
             responses = await DispatchEvent(args.Dispatcher, args.Logger, curr!, ct);
 
             // Log error if fail
@@ -69,7 +69,7 @@ public static class EventUtility
             args.Logger?.ErrorHandlingEvent(ex, envelop.MsgType, curr?.CorrelationId, envelop.Msg, responses);
 
             if (args.OnError is not null)
-                await args.OnError(ex, curr, envelop, ct);
+                await args.OnError(ex, curr, envelop, extraArgs, ct);
         }
         return responses;
     }
@@ -98,6 +98,6 @@ Response: {@Response}", @event, responses);
     /// <param name="OnError"></param>
     /// <param name="NotFoundAsWarning">If no handler attached just log a warning don't thread as an error</param>
     /// <param name="Logger"></param>
-    public sealed record Args<TEvent>(IJsonSerializer Serializer, IEventDispatcher Dispatcher, IEventNameResolver Resolver, Action<TEvent>? BeforeProcess = null, Func<Exception, TEvent?, MessageEnvelop, CancellationToken, ValueTask>? OnError = null, bool NotFoundAsWarning = true, ILogger? Logger = null);
+    public sealed record Args<TEvent>(IJsonSerializer Serializer, IEventDispatcher Dispatcher, IEventNameResolver Resolver, Action<TEvent, object?>? BeforeProcess = null, Func<Exception, TEvent?, MessageEnvelop, object?, CancellationToken, ValueTask>? OnError = null, bool NotFoundAsWarning = true, ILogger? Logger = null);
     #endregion
 }

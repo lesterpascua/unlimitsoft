@@ -178,8 +178,8 @@ public static class IServiceCollectionExtensions
         AzureEventBusOptions<QueueIdentifier> options,
         Func<IServiceProvider, QueueIdentifier, string, object, bool> filter,
         Func<IServiceProvider, QueueIdentifier, string, object, object> transform,
-        Action<TEvent>? beforeProcess = null,
-        Func<IServiceProvider, Exception, TEvent?, MessageEnvelop, CancellationToken, Task>? onError = null,
+        Action<TEvent, object?>? beforeProcess = null,
+        Func<IServiceProvider, Exception, TEvent?, MessageEnvelop, object?, CancellationToken, Task>? onError = null,
         int maxConcurrentCalls = 1
     )
         where TUnitOfWork : IUnitOfWork
@@ -248,9 +248,9 @@ public static class IServiceCollectionExtensions
                 var serializer = provider.GetRequiredService<IJsonSerializer>();
                 var logger = provider.GetRequiredService<ILogger<AzureEventListener<QueueIdentifier>>>();
 
-                Func<Exception, TEvent?, MessageEnvelop, CancellationToken, ValueTask>? listenerOnError = null;
+                Func<Exception, TEvent?, MessageEnvelop, object?, CancellationToken, ValueTask>? listenerOnError = null;
                 if (onError is not null)
-                    listenerOnError = async (ex, @event, messageEnvelop, ct) => await onError(provider, ex, @event, messageEnvelop, ct);
+                    listenerOnError = async (ex, @event, messageEnvelop, extraArgs, ct) => await onError(provider, ex, @event, messageEnvelop, extraArgs, ct);
 
                 var depencyArgs = new EventUtility.Args<TEvent>(serializer, eventDispatcher, resolver, beforeProcess, listenerOnError, Logger: logger);
                 return new AzureEventListener<QueueIdentifier>(
