@@ -47,7 +47,10 @@ public sealed class PublishEventInfo : IComparable<PublishEventInfo>
         var date1 = Scheduled ?? Created;
         var date2 = other.Scheduled ?? other.Created;
 
-        return date1.CompareTo(date2);
+        var value = date1.CompareTo(date2);
+        if (value == 0)
+            return Id.CompareTo(other.Id);
+        return value;
     }
     /// <inheritdoc />
     public override int GetHashCode()
