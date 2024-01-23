@@ -44,7 +44,7 @@ public static class IServiceCollectionExtensions
         Func<Type, ServiceLifetime>? lifeTimeResolver = null,
         bool scanPreloadAssemblies = false,
         Func<IServiceProvider, Type, IApiClient, IApiService?>? serviceFactory = null,
-        Func<Type, object?>? resolver = null,
+        Func<Type, Type, object?>? resolver = null,
         Action<Assembly, HttpClient>? httpClientBuilder = null,
         Action<Assembly, IHttpClientBuilder>? httpBuilder = null,
         Func<Type, HttpClient, IJsonSerializer, IApiClient>? apiClientFactory = null,
@@ -151,7 +151,7 @@ public static class IServiceCollectionExtensions
 
                                 if (options.Resolver is null)
                                     return null;
-                                return options.Resolver(parameter.ParameterType);
+                                return options.Resolver(typeInterface, parameter.ParameterType);
                             }
                         );
 

@@ -47,7 +47,7 @@ public class AndSpecification<TEntity> : Specification<TEntity>
         if (elements.Count() == 1)
             return elements.Single();
 
-        var eType = Expression.Parameter(typeof(TEntity), "obj");
+        var eType = Expression.Parameter(typeof(TEntity), "x");
 
         Expression first = elements.First();
         foreach (var second in elements.Skip(1))
@@ -63,12 +63,12 @@ public class AndSpecification<TEntity> : Specification<TEntity>
     /// <returns></returns>
     public static Expression<Func<TEntity, bool>> BuildExpression(Expression<Func<TEntity, bool>> left, Expression<Func<TEntity, bool>> right)
     {
-        if (left == null)
+        if (left is null)
             return right;
-        if (right == null)
+        if (right is null)
             return left;
 
-        var eType = Expression.Parameter(typeof(TEntity), "obj");
+        var eType = Expression.Parameter(typeof(TEntity), "x");
         var expression = Expression.AndAlso(Expression.Invoke(left, eType),  Expression.Invoke(right, eType));
 
         return Expression.Lambda<Func<TEntity, bool>>(expression, eType);

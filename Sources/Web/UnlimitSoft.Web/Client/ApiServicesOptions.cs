@@ -32,9 +32,9 @@ public sealed class ApiServicesOptions
     /// </summary>
     public Func<IServiceProvider, Type, IApiClient, IApiService?>? ServiceFactory { get; set; }
     /// <summary>
-    /// 
+    /// (Type typeInterface, Type typeToResolve) => object
     /// </summary>
-    public Func<Type, object?>? Resolver { get; set; }
+    public Func<Type, Type, object?>? Resolver { get; set; }
     /// <summary>
     /// 
     /// </summary>
