@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Polly;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -116,23 +117,30 @@ public class EventDbContextRepository<TEventPayload> : IEventRepository<TEventPa
     /// <inheritdoc />
     public virtual async Task<List<TEventPayload>> GetEventsAsync(Guid[] ids, CancellationToken ct = default)
     {
-        if (_getEvents is null)
-            Interlocked.CompareExchange(
-                ref _getEvents,
-                EF.CompileAsyncQuery(
-                    (DbContext dbContext, Guid[] ids) => dbContext.Set<TEventPayload>()
-                        .Where(p => ids.Contains(p.Id))
-                        .OrderBy(k => k.Created)
-                        .AsQueryable()
-                ),
-                null
-            );
+        if (_optimize)
+        {
+            if (_getEvents is null)
+                Interlocked.CompareExchange(
+                    ref _getEvents,
+                    EF.CompileAsyncQuery(
+                        (DbContext dbContext, Guid[] ids) => dbContext.Set<TEventPayload>()
+                            .Where(p => ids.Contains(p.Id))
+                            .OrderBy(k => k.Created)
+                            .AsQueryable()
+                    ),
+                    null
+                );
 
-        var list = new List<TEventPayload>();
-        await foreach (var item in _getEvents(_dbContext, ids))
-            list.Add(item);
+            var list = new List<TEventPayload>();
+            await foreach (var item in _getEvents(_dbContext, ids))
+                list.Add(item);
 
-        return list;
+            return list;
+        }
+        return await _dbContext.Set<TEventPayload>()
+            .Where(p => ids.Contains(p.Id))
+            .OrderBy(k => k.Created)
+            .ToListAsync(ct);
     }
 
     /// <inheritdoc />
