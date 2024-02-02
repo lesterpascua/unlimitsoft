@@ -55,8 +55,7 @@ public sealed class QueueEventPublishWorkerTests
             TimeSpan.Zero,
             TimeSpan.Zero,
             10,
-            true,
-            null
+            true
         );
         await publishWorker.StartAsync(true);
 
@@ -85,9 +84,9 @@ public sealed class QueueEventPublishWorkerTests
         // Arrange
         var publish = new List<EventPayload>();
         var data = new EventPayload[] {
-            new EventPayload{ Id = Guid.NewGuid(), Created = new DateTime(1, 12, 31), IsPubliched = true, Scheduled = DateTime.MaxValue },
-            new EventPayload{ Id = Guid.NewGuid(), Created = new DateTime(2021, 10, 10), Scheduled = new DateTime(2021, 10, 12) },
-            new EventPayload{ Id = Guid.NewGuid(), Created = new DateTime(2021, 10, 11), Scheduled = null },
+            new() { Id = Guid.NewGuid(), Created = new DateTime(1, 12, 31), IsPubliched = true, Scheduled = DateTime.MaxValue },
+            new() { Id = Guid.NewGuid(), Created = new DateTime(2021, 10, 10), Scheduled = new DateTime(2021, 10, 12) },
+            new() { Id = Guid.NewGuid(), Created = new DateTime(2021, 10, 11), Scheduled = null },
         };
 
         using var scope = Mock(data, null, publish, out var eventBus, out var factory);
@@ -99,8 +98,7 @@ public sealed class QueueEventPublishWorkerTests
             TimeSpan.Zero,
             TimeSpan.Zero,
             10,
-            true,
-            null
+            true
         );
 
 

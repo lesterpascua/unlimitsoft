@@ -22,7 +22,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Akka" Version="1.5.14" />
+		<PackageReference Include="Akka" Version="1.5.16" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -36,6 +36,11 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
     /// </summary>
     protected readonly bool _useEnvelop;
     /// <summary>
+    /// Delay time between iterations. To avoid extensive CPU consumtion
+    /// </summary>
+    protected readonly int _iterationDelay;
+
+    /// <summary>
     /// Clock for the system
     /// </summary>
     protected readonly ISysClock _clock;
@@ -92,6 +97,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
     /// <param name="errorDelay">Wait time if some error happened in the bus, 20 second default time.</param>
     /// <param name="bachSize">Amount of pulling event for every iteration. 10 event by default.</param>
     /// <param name="useEnvelop">Use envelop when publish the event</param>
+    /// <param name="iterationDelay">Delay time between iterations. To avoid extensive CPU consumtion.</param>
     /// <param name="logger"></param>
     public QueueEventPublishWorker(
         ISysClock clock,
@@ -102,6 +108,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
         TimeSpan? errorDelay = null,
         int bachSize = 10,
         bool useEnvelop = true,
+        int iterationDelay = 0,
         ILogger<QueueEventPublishWorker<TEventSourcedRepository, TEventPayload>>? logger = null
     )
     {
@@ -116,7 +123,8 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
         _logger = logger;
         _bachSize = bachSize;
         _useEnvelop = useEnvelop;
-        _pending = new();
+        _iterationDelay = iterationDelay;
+        _pending = [];
         _lock = new(1, 1);
         _cts = new();
     }
@@ -238,8 +246,18 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
     /// <returns></returns>
     protected virtual bool ExistNewEvent()
     {
+        if (_iterationDelay != 0)
+        {
+            try
+            {
+                Task.Delay(_iterationDelay).Wait(_cts.Token);
+            }
+            catch { }       // Ignore exception
+        }
+
         if (_cts.Token.IsCancellationRequested)
             return true;
+
         if (_pending.Count == 0)
             return false;
 

@@ -14,8 +14,8 @@ public sealed class IPNetworkExtensionsTests
     [InlineData("9.255.0.0/17", 20, "9.255.128.0/17")]
     public void TestPreviousAndNextNetwork(string address, int count, string first)
     {
-        var list = new List<IPNetwork>();
-        var network = IPNetwork.Parse(address);
+        var list = new List<IPNetwork2>();
+        var network = IPNetwork2.Parse(address);
 
         list.Add(network);
         for (int i = 0; i < count; i++)
@@ -23,7 +23,7 @@ public sealed class IPNetworkExtensionsTests
             network = network.GetNextNetwork();
             list.Add(network);
             if (i == 0)
-                network.Should().Be(IPNetwork.Parse(first));
+                network.Should().Be(IPNetwork2.Parse(first));
         }
 
         for (int i = count - 1; i >= 0; i--)
