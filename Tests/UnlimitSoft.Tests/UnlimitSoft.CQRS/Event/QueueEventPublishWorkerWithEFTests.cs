@@ -145,8 +145,7 @@ public sealed class QueueEventPublishWorkerWithEFTests
                 startDelay,
                 TimeSpan.Zero,
                 10,
-                true,
-                null
+                true
             );
         });
         serviceCollection.AddSingleton(eventBus);

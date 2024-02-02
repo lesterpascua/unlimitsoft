@@ -13,7 +13,7 @@ public static class IPNetworkExtensions
     /// Get the previous network from the current. 
     /// </summary>
     /// <param name="this"></param>
-    public static IPNetwork GetNextNetwork(this IPNetwork @this)
+    public static IPNetwork2 GetNextNetwork(this IPNetwork2 @this)
     {
         var address = @this.Network.GetAddressBytes();
         Array.Reverse(address);
@@ -28,13 +28,13 @@ public static class IPNetworkExtensions
         Array.Reverse(result);
 
         var ip = new IPAddress(result);
-        return new IPNetwork(ip, @this.Cidr);
+        return new IPNetwork2(ip, @this.Cidr);
     }
     /// <summary>
     /// Get the previous network from the current. 
     /// </summary>
     /// <param name="this"></param>
-    public static IPNetwork GetPreviousNetwork(this IPNetwork @this)
+    public static IPNetwork2 GetPreviousNetwork(this IPNetwork2 @this)
     {
         var address = @this.Network.GetAddressBytes();
         Array.Reverse(address);
@@ -49,6 +49,6 @@ public static class IPNetworkExtensions
         Array.Reverse(result);
 
         var ip = new IPAddress(result);
-        return new IPNetwork(ip, @this.Cidr);
+        return new IPNetwork2(ip, @this.Cidr);
     }
 }

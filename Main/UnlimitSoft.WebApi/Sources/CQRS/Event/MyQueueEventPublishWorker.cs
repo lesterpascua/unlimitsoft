@@ -21,7 +21,7 @@ public class MyQueueEventPublishWorker : QueueEventPublishWorker<IMyEventSourced
     /// <param name="logger"></param>
     /// <param name="bachSize"></param>
     public MyQueueEventPublishWorker(ISysClock clock, IServiceScopeFactory factory, IEventBus eventBus, TimeSpan? startDelay = null, TimeSpan? errorDelay = null, int bachSize = 10, ILogger<MyQueueEventPublishWorker>? logger = null)
-        : base(clock, factory, eventBus, null, startDelay, errorDelay, bachSize, true, logger)
+        : base(clock, factory, eventBus, null, startDelay, errorDelay, bachSize, true, logger: logger)
     {
     }
 }
