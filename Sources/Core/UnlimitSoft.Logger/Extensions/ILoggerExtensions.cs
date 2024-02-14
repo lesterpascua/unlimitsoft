@@ -88,7 +88,7 @@ public static class ILoggerExtensions
     public static void LogInformation<T0>(this ILogger logger, string message, T0? arg0)
     {
         if (logger.IsEnabled(LogLevel.Information))
-            logger.LogInformation(message, args: new object?[] { arg0 });
+            logger.LogInformation(message, args: [arg0]);
     }
     /// <summary>
     /// Formats and writes an informational log message
