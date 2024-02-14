@@ -3,9 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
@@ -27,6 +25,22 @@ public class ApiKeyAuthenticationHandler<TOption> : AuthenticationHandler<TOptio
     private const string ContentType = "application/json";
 
 
+#if NET8_0_OR_GREATER
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="provider"></param>
+    /// <param name="options"></param>
+    /// <param name="serializer"></param>
+    /// <param name="logger"></param>
+    /// <param name="encoder"></param>
+    public ApiKeyAuthenticationHandler(IServiceProvider provider, IOptionsMonitor<TOption> options, IJsonSerializer serializer, ILoggerFactory logger, UrlEncoder encoder)
+        : base(options, logger, encoder)
+    {
+        _provider = provider;
+        _serializer = serializer;
+    }
+#else
     /// <summary>
     /// 
     /// </summary>
@@ -42,6 +56,7 @@ public class ApiKeyAuthenticationHandler<TOption> : AuthenticationHandler<TOptio
         _provider = provider;
         _serializer = serializer;
     }
+#endif
 
 
     /// <summary>

@@ -1,4 +1,5 @@
 ﻿using Serilog.Core;
+using Serilog.Events;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
@@ -17,9 +18,9 @@ public sealed class JsonElementPolicy : IDestructuringPolicy
         ILogEventPropertyValueFactory propertyValueFactory,
 #if NET6_0_OR_GREATER
         [NotNullWhen(true)]
-        out Serilog.Events.LogEventPropertyValue? result
+        out LogEventPropertyValue? result
 #else
-        out Serilog.Events.LogEventPropertyValue result
+        out LogEventPropertyValue result
 #endif
     )
     {
@@ -33,53 +34,48 @@ public sealed class JsonElementPolicy : IDestructuringPolicy
         {
             case JsonValueKind.Object:
                 {
-                    var properties = new List<Serilog.Events.LogEventProperty>();
-                    foreach (var entry in jElement.EnumerateObject())
+                    var properties = new List<LogEventProperty>();
+                    foreach (JsonProperty item in jElement.EnumerateObject())
                     {
-                        object? v = entry.Value.ValueKind switch
-                        {
-                            JsonValueKind.Array => entry.Value,
-                            JsonValueKind.Object => entry.Value,
-                            JsonValueKind.Number => entry.Value.GetDecimal(),
-                            JsonValueKind.String => entry.Value.GetString(),
-                            JsonValueKind.False or JsonValueKind.True => entry.Value.GetBoolean(),
-                            JsonValueKind.Null or JsonValueKind.Undefined => null,
-                            _ => entry.Value.ToString(),
-                        };
-                        if (v is null)
+                        var v = GetValue(item.Value);
+                        if (v is not null)
                             continue;
 
                         var propertyValue = propertyValueFactory.CreatePropertyValue(v, true);
-                        properties.Add(new Serilog.Events.LogEventProperty(entry.Name, propertyValue));
+                        properties.Add(new LogEventProperty(item.Name, propertyValue));
                     }
 
-                    result = new Serilog.Events.StructureValue(properties);
+                    result = new StructureValue(properties);
                     return true;
                 }
             case JsonValueKind.Array:
                 {
-                    var properties = new List<Serilog.Events.LogEventPropertyValue>();
+                    var properties = new List<LogEventPropertyValue>();
                     foreach (var entry in jElement.EnumerateArray())
                         properties.Add(propertyValueFactory.CreatePropertyValue(entry, true));
 
-                    result = new Serilog.Events.SequenceValue(properties);
+                    result = new SequenceValue(properties);
                     return true;
                 }
-            case JsonValueKind.Number:
-                result = new Serilog.Events.ScalarValue(jElement.GetInt64());
-                return true;
-            case JsonValueKind.String:
-                result = new Serilog.Events.ScalarValue(jElement.GetString());
-                return true;
-            case JsonValueKind.False or JsonValueKind.True:
-                result = new Serilog.Events.ScalarValue(jElement.GetBoolean());
-                return true;
-            case JsonValueKind.Null or JsonValueKind.Undefined:
-                result = new Serilog.Events.ScalarValue(null);
-                return true;
             default:
-                result = new Serilog.Events.ScalarValue(jElement.GetString());
+                result = new ScalarValue(GetValue(jElement));
                 return true;
         }
     }
+
+    #region Private Methods
+    private static object? GetValue(JsonElement item)
+    {
+        return item.ValueKind switch
+        {
+            JsonValueKind.String => item.GetString(),
+            JsonValueKind.Number => item.GetDecimal(),
+            JsonValueKind.True or JsonValueKind.False => item.GetBoolean(),
+            JsonValueKind.Undefined or JsonValueKind.Null => null,
+            JsonValueKind.Array => item,
+            JsonValueKind.Object => item,
+            _ => item.ToString(),
+        };
+    }
+    #endregion
 }
