@@ -4,7 +4,7 @@ using Serilog;
 using System.Collections.Generic;
 using UnlimitSoft.Logger.Configuration;
 
-namespace OneJN.Libs.AspNet.DependencyInjection;
+namespace UnlimitSoft.Logger;
 
 
 /// <summary>
