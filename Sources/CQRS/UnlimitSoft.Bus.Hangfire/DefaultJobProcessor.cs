@@ -23,7 +23,7 @@ public sealed class DefaultJobProcessor<TProps> : IJobProcessor
 {
     private readonly IServiceProvider _provider;
     private readonly ICommandDispatcher _dispatcher;
-    private readonly Func<Exception, Task>? _onError;
+    private readonly Func<ICommand, Exception, Task>? _onError;
     private readonly ICommandCompletionService? _completionService;
     private readonly ProcessCommandMiddleware? _middleware;
     private readonly ILogger<DefaultJobProcessor<TProps>>? _logger;
@@ -67,7 +67,7 @@ public sealed class DefaultJobProcessor<TProps> : IJobProcessor
         IServiceProvider provider,
         ICommandDispatcher dispatcher,
         string? errorCode = null,
-        Func<Exception, Task>? onError = null,
+        Func<ICommand, Exception, Task>? onError = null,
         ICommandCompletionService? completionService = null,
         ProcessCommandMiddleware? middleware = null,
         ILogger<DefaultJobProcessor<TProps>>? logger = null
@@ -134,7 +134,7 @@ public sealed class DefaultJobProcessor<TProps> : IJobProcessor
             _logger?.LogError(exc, "Error processing jobId: {JobId}, command: {@Command}", meta.Id, command);
 
             if (_onError is not null)
-                await _onError(exc);
+                await _onError(command, exc);
 
             var error = command.ErrorResponse(_errorBody);
             response = Result.FromError<object>(error);
