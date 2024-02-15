@@ -39,7 +39,7 @@ public static class IServiceCollectionExtensions
         string? errorCode = null,
         Func<IServiceProvider, ICommand, Task>? preeSendCommand = null,
         ProcessCommandMiddleware? middleware = null,
-        Func<IServiceProvider, Exception, Task>? onError = null,
+        Func<IServiceProvider, ICommand, Exception, Task>? onError = null,
         bool addLoggerFilter = false,
         Func<IServiceProvider, JobActivator>? activatorFactory = null,
         Func<IServiceProvider, IServiceProvider>? providerFactory = null,
@@ -96,9 +96,9 @@ public static class IServiceCollectionExtensions
             })
             .AddScoped<IJobProcessor>(provider =>
             {
-                Func<Exception, Task>? interOnError = null;
+                Func<ICommand, Exception, Task>? interOnError = null;
                 if (onError is not null)
-                    interOnError = exc => onError(provider, exc);
+                    interOnError = (command, exc) => onError(provider, command, exc);
 
                 var dispatcher = provider.GetRequiredService<ICommandDispatcher>();
                 var logger = provider.GetRequiredService<ILogger<DefaultJobProcessor<TProps>>>();
