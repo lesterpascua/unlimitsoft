@@ -56,14 +56,15 @@ public static class ISchedulerCommandExtensions
     /// <param name="logger"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async Task<object?> ErrorRetryAsync(this ISchedulerCommand @this, ICommandBus bus, Exception ex, Func<TimeSpan, Task>? action, TimeSpan? maxDelay = null, ILogger? logger = null, CancellationToken ct = default)
+    public static async Task<object?> ErrorRetryAsync(this ISchedulerCommand @this, ICommandBus bus, Exception? ex, Func<TimeSpan, Task>? action, TimeSpan? maxDelay = null, ILogger? logger = null, CancellationToken ct = default)
     {
-        logger?.LogError(
-            ex,
-            "Error trying to execute operation {Type} using arguments: {@Command}",
-            @this.GetType().FullName,
-            @this
-        );
+        if (ex is not null)
+            logger?.LogError(
+                ex,
+                "Error trying to execute operation {Type} using arguments: {@Command}",
+                @this.GetType().FullName,
+                @this
+            );
 
         var delay = TimeSpanUtility.DuplicateRetryTime(@this.GetDelay(), maxDelay);
         @this.SetDelay(delay);
