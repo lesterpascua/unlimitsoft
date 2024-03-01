@@ -81,7 +81,7 @@ public sealed class DefaultJobProcessor<TProps> : IJobProcessor
         _completionService = completionService;
 
         _errorCode = errorCode ?? DefaultErrorCode;
-        _errorBody = new Dictionary<string, string[]> { [string.Empty] = new string[] { _errorCode } };
+        _errorBody = new Dictionary<string, string[]> { { string.Empty, [_errorCode] } };
 
         Context = null!;        // This will be assigned in the creator parent.
     }

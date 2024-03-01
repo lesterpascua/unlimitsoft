@@ -111,7 +111,7 @@ public static class EntityBuilderUtility
     /// <param name="ct"></param>
     public static async Task ExecuteSeedAndMigrationAsync(
         IServiceProvider provider, 
-        Type unitOfWorkType, 
+        Type? unitOfWorkType, 
         Assembly[]? assemblies = null, 
         int retryCount = 3, 
         Func<Type, bool>? condition = null,
@@ -120,11 +120,17 @@ public static class EntityBuilderUtility
         CancellationToken ct = default
     )
     {
-        var unitOfWork = (IUnitOfWork)provider.GetRequiredService(unitOfWorkType);
+        if (unitOfWorkType is null)
+            return;
+
+        var unitOfWork = (IUnitOfWork?)provider.GetService(unitOfWorkType);
+        if (unitOfWork is null)
+            return;
+
         await SeedHelper.SeedAsync(
             provider,
             unitOfWork,
-            assemblies ?? new [] { unitOfWorkType.Assembly },
+            assemblies ?? [unitOfWorkType.Assembly],
             (unitOfWork, ct) =>
             {
                 if (unitOfWork is not IDbContextWrapper dbContext || dbContext.GetDbContext().Database.IsInMemory())
