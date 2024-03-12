@@ -26,10 +26,7 @@ public static class AssemblyExtenssion
     {
         var typesToRegister =
             from type in assembly.GetTypes()
-            where !string.IsNullOrEmpty(type.Namespace)
-                && type.BaseType != null
-                && type.BaseType.IsGenericType
-                && type.BaseType.GetGenericTypeDefinition() == entityTypeBuilder
+            where IsInstanceOf(type, type, entityTypeBuilder!)
             select type;
 
         foreach (var type in typesToRegister)
@@ -54,4 +51,17 @@ public static class AssemblyExtenssion
             yield return new RepositoriesAvailables(serviceType, serviceQueryType, implementationType, implementationQueryType);
         }
     }
+
+    #region Private Methods
+    private static bool IsInstanceOf(Type original, Type type, Type baseType)
+    {
+        if (string.IsNullOrEmpty(type.Namespace))
+            return false;
+        if (original.IsAbstract || type.BaseType is null || type.BaseType == typeof(object))
+            return false;
+        if (type.BaseType.IsGenericType && type.BaseType.GetGenericTypeDefinition() == baseType)
+            return true;
+        return IsInstanceOf(original, type.BaseType, baseType);
+    }
+    #endregion
 }
