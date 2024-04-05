@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using UnlimitSoft.Bus.Hangfire.Activator;
 using UnlimitSoft.Bus.Hangfire.Filter;
 using UnlimitSoft.CQRS.Command;
-using UnlimitSoft.CQRS.Message;
 
 namespace UnlimitSoft.Bus.Hangfire.DependencyInjection;
 
@@ -22,10 +21,8 @@ public static class IServiceCollectionExtensions
     /// </summary>
     /// <param name="services"></param>
     /// <param name="options"></param>
-    /// <param name="errorCode">Error code in case some exception happened. If null in the body will arrive the exception.</param>
     /// <param name="preeSendCommand">Invoke this function before send any command to the bus.</param>
     /// <param name="middleware">Before sent the command to the dispatcher execute this function to custome add more information to the command.</param>
-    /// <param name="onError"></param>
     /// <param name="addLoggerFilter"></param>
     /// <param name="providerFactory"></param>
     /// <param name="activatorFactory">Custom activator creator.</param>
@@ -36,10 +33,8 @@ public static class IServiceCollectionExtensions
     /// <returns></returns>
     public static IServiceCollection AddHangfireCommandBus<TProps>(this IServiceCollection services,
         HangfireOptions options,
-        string? errorCode = null,
         Func<IServiceProvider, ICommand, Task>? preeSendCommand = null,
         ProcessCommandMiddleware? middleware = null,
-        Func<IServiceProvider, ICommand, Exception, Task>? onError = null,
         bool addLoggerFilter = false,
         Func<IServiceProvider, JobActivator>? activatorFactory = null,
         Func<IServiceProvider, IServiceProvider>? providerFactory = null,
@@ -96,23 +91,10 @@ public static class IServiceCollectionExtensions
             })
             .AddScoped<IJobProcessor>(provider =>
             {
-                Func<ICommand, Exception, Task>? interOnError = null;
-                if (onError is not null)
-                    interOnError = (command, exc) => onError(provider, command, exc);
-
                 var dispatcher = provider.GetRequiredService<ICommandDispatcher>();
                 var logger = provider.GetRequiredService<ILogger<DefaultJobProcessor<TProps>>>();
-                var commandCompletionService = provider.GetService<ICommandCompletionService>();
 
-                return new DefaultJobProcessor<TProps>(
-                    provider,
-                    dispatcher, 
-                    errorCode: errorCode,
-                    completionService: commandCompletionService,
-                    onError: interOnError, 
-                    middleware: middleware,
-                    logger: logger
-                );
+                return new DefaultJobProcessor<TProps>(provider, dispatcher, middleware, logger);
             })
             .AddSingleton<ICommandBus>(provider =>
             {
