@@ -17,4 +17,4 @@ namespace UnlimitSoft.Bus.Hangfire;
 /// <param name="next"></param>
 /// <param name="ct"></param>
 /// <returns></returns>
-public delegate Task<IResult> ProcessCommandMiddleware(IServiceProvider provider, ICommand command, JobActivatorContext meta, Func<ICommand, CancellationToken, Task<IResult>> next, CancellationToken ct = default);
+public delegate Task<IResult> ProcessCommandMiddleware(IServiceProvider provider, ICommand command, JobActivatorContext meta, Func<ICommand, CancellationToken, ValueTask<IResult>> next, CancellationToken ct = default);

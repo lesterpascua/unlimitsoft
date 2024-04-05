@@ -20,7 +20,6 @@ using UnlimitSoft.Bus.Hangfire.DependencyInjection;
 using UnlimitSoft.CQRS.DependencyInjection;
 using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.CQRS.Memento;
-using UnlimitSoft.CQRS.Message;
 using UnlimitSoft.Data.EntityFramework.Configuration;
 using UnlimitSoft.Data.EntityFramework.DependencyInjection;
 using UnlimitSoft.Data.EntityFramework.Utility;
@@ -182,7 +181,6 @@ public class Startup
         #endregion
 
         #region Hangfire
-        services.AddScoped<ICommandCompletionService, MyCommandCompletionService>();
         var hangfireOptions = new HangfireOptions
         {
             ConnectionString = connString,

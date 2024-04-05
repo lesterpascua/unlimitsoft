@@ -7,7 +7,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.AkkaBus.Properties;
 using UnlimitSoft.CQRS.Command;
-using UnlimitSoft.CQRS.Message;
 using UnlimitSoft.Mediator;
 using UnlimitSoft.Message;
 
@@ -27,7 +26,6 @@ public class AkkaCommandBus : ICommandBus
     /// 
     /// </summary>
     /// <param name="dispatcher"></param>
-    /// <param name="completionService"></param>
     /// <param name="process">Perform proceess command operation if null the behaivor is default.</param>
     /// <param name="factory">If null create new actor system, in other case use the stablish actor system.</param>
     /// <param name="instances"></param>
@@ -36,8 +34,7 @@ public class AkkaCommandBus : ICommandBus
     /// <param name="preeSendCommand">Before send the command invoke this method.</param>
     public AkkaCommandBus(
         ICommandDispatcher dispatcher, 
-        ICommandCompletionService completionService, 
-        Func<ICommandDispatcher, CommandEnvelopment, IActorRef, ICommandCompletionService, ILogger, Task> process = null,
+        Func<ICommandDispatcher, CommandEnvelopment, IActorRef, ILogger, Task> process = null,
         IActorRefFactory factory = null, 
         int instances = 2, 
         ILogger<AkkaCommandBus> logger = null,
@@ -49,8 +46,7 @@ public class AkkaCommandBus : ICommandBus
         Factory = factory ?? ActorSystem.Create("CommandBus");
         _preeSendCommand = preeSendCommand;
         Default = Factory.ActorOf(
-            Props.Create(() => new CoordinatorActor(
-                dispatcher, completionService, process ?? ProcessCommand, logger, instances)));
+            Props.Create(() => new CoordinatorActor(dispatcher, process ?? ProcessCommand, logger, instances)));
 
         if (options != null)
             options.Invoke(Factory);
@@ -98,10 +94,9 @@ public class AkkaCommandBus : ICommandBus
     /// <param name="dispatcher"></param>
     /// <param name="envelopment"></param>
     /// <param name="sender"></param>
-    /// <param name="completionService"></param>
     /// <param name="logger"></param>
     /// <returns></returns>
-    public static async Task ProcessCommand(ICommandDispatcher dispatcher, CommandEnvelopment envelopment, IActorRef sender, ICommandCompletionService completionService, ILogger logger)
+    public static async Task ProcessCommand(ICommandDispatcher dispatcher, CommandEnvelopment envelopment, IActorRef sender, ILogger logger)
     {
         Exception err = null;
         IResult response;
@@ -117,8 +112,6 @@ public class AkkaCommandBus : ICommandBus
 
         if (envelopment.IsAsk)
             sender.Tell(response);
-        if (completionService is not null)
-            await completionService.CompleteAsync(envelopment.Command, response, err);
     }
 
     #endregion
@@ -137,19 +130,17 @@ public class AkkaCommandBus : ICommandBus
         /// 
         /// </summary>
         /// <param name="dispatcher">Command dispatcher.</param>
-        /// <param name="completionService">Send response throw this service.</param>
         /// <param name="instances">Number of worker child used for this actor.</param>
         /// <param name="commandAction"></param>
         /// <param name="logger"></param>
         public CoordinatorActor(
             ICommandDispatcher dispatcher,
-            ICommandCompletionService completionService,
-            Func<ICommandDispatcher, CommandEnvelopment, IActorRef, ICommandCompletionService, ILogger, Task> commandAction,
+            Func<ICommandDispatcher, CommandEnvelopment, IActorRef, ILogger, Task> commandAction,
             ILogger logger,
             int instances)
         {
             _router = Context.ActorOf(
-                Props.Create(() => new WorkerActor(dispatcher, completionService, commandAction, logger))
+                Props.Create(() => new WorkerActor(dispatcher, commandAction, logger))
                     .WithRouter(new SmallestMailboxPool(instances)),
                 "child");
 
@@ -163,28 +154,23 @@ public class AkkaCommandBus : ICommandBus
     {
         private readonly ILogger _logger;
         private readonly ICommandDispatcher _dispatcher;
-        private readonly ICommandCompletionService _completionService;
 
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="dispatcher">Command dispatcher.</param>
-        /// <param name="completionService">Send response throw this service.</param>
         /// <param name="action"></param>
         /// <param name="logger"></param>
         public WorkerActor(
             ICommandDispatcher dispatcher,
-            ICommandCompletionService completionService,
-            Func<ICommandDispatcher, CommandEnvelopment, IActorRef, ICommandCompletionService, ILogger, Task> action,
+            Func<ICommandDispatcher, CommandEnvelopment, IActorRef, ILogger, Task> action,
             ILogger logger)
         {
             _logger = logger;
             _dispatcher = dispatcher;
-            _completionService = completionService;
 
-            ReceiveAsync<CommandEnvelopment>(envelopment =>
-                action.Invoke(_dispatcher, envelopment, Sender, _completionService, _logger));
+            ReceiveAsync<CommandEnvelopment>(envelopment => action.Invoke(_dispatcher, envelopment, Sender, _logger));
         }
     }
 

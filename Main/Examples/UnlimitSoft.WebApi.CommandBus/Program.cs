@@ -6,7 +6,6 @@ using UnlimitSoft.Bus.Hangfire;
 using UnlimitSoft.Bus.Hangfire.DependencyInjection;
 using UnlimitSoft.CQRS.Command;
 using UnlimitSoft.CQRS.DependencyInjection;
-using UnlimitSoft.CQRS.Message;
 using UnlimitSoft.Json;
 using UnlimitSoft.Logger.Configuration;
 using UnlimitSoft.Logger.DependencyInjection;
@@ -70,7 +69,6 @@ WebApplication ConfigureServices(IServiceCollection services)
     );
     #endregion
     #region Command Bus
-    services.AddScoped<ICommandCompletionService, CommandCompletionService>();
     var hangfireOptions = new HangfireOptions
     {
         ConnectionString = connString,
