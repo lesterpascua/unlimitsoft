@@ -19,7 +19,7 @@ namespace UnlimitSoft.Bus.Hangfire;
 public sealed class HangfireCommandBus : ICommandBus
 {
     private readonly bool _incIfRetryDetect;
-    private readonly IBackgroundJobClient _client;
+    private readonly IBackgroundJobClientV2 _client;
     private readonly Func<ICommand, Task>? _preeSend;
     private readonly ILogger<HangfireCommandBus>? _logger;
 
@@ -49,7 +49,7 @@ public sealed class HangfireCommandBus : ICommandBus
     /// <param name="preeSendCommand">Before enqueue the command execute this function.</param>
     /// <param name="incIfRetryDetect">Indicate increment the retry command counter if detect a retry.</param>
     /// <param name="logger"></param>
-    public HangfireCommandBus(IBackgroundJobClient client, Func<ICommand, Task>? preeSendCommand = null, bool incIfRetryDetect = true, ILogger<HangfireCommandBus>? logger = null)
+    public HangfireCommandBus(IBackgroundJobClientV2 client, Func<ICommand, Task>? preeSendCommand = null, bool incIfRetryDetect = true, ILogger<HangfireCommandBus>? logger = null)
     {
         _client = client;
         _preeSend = preeSendCommand;
@@ -124,7 +124,6 @@ public sealed class HangfireCommandBus : ICommandBus
     /// <param name="jobId"></param>
     /// <param name="delay"></param>
     /// <param name="retry"></param>
-    /// <param name="props"></param>
     /// <returns></returns>
     private static string UpdateJobParameters(IStorageConnection connection, string jobId, TimeSpan delay, int retry)
     {

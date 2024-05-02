@@ -1,4 +1,5 @@
 ﻿using Hangfire;
+using Hangfire.Server;
 using Hangfire.SqlServer;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -98,7 +99,7 @@ public static class IServiceCollectionExtensions
             })
             .AddSingleton<ICommandBus>(provider =>
             {
-                var client = provider.GetRequiredService<IBackgroundJobClient>();
+                var client = provider.GetRequiredService<IBackgroundJobClientV2>();
                 var logger = provider.GetRequiredService<ILogger<HangfireCommandBus>>();
 
                 Func<ICommand, Task>? innerPreeSendCommand = null;
@@ -107,6 +108,17 @@ public static class IServiceCollectionExtensions
 
                 return new HangfireCommandBus(client, innerPreeSendCommand, logger: logger);
             });
+
+        if (!options.WithoutServer)
+        {
+            services
+                .AddHangfireServer(config =>
+                {
+                    config.ServerName = Environment.MachineName;
+                    config.WorkerCount = options.WorkerCount;
+                    config.SchedulePollingInterval = options.SchedulePollingInterval;
+                });
+        }
 
         return services;
     }

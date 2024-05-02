@@ -23,8 +23,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Hangfire" Version="1.8.10" />
-		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.1.5" />
+		<PackageReference Include="Hangfire" Version="1.8.12" />
+		<PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
 	</ItemGroup>
 
@@ -39,7 +39,7 @@
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
 		<PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.0" />
 		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.0" />
-		<PackageReference Include="System.Text.Json" Version="8.0.2" />
+		<PackageReference Include="System.Text.Json" Version="8.0.3" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'net6.0'">
 		<PackageReference Include="System.Text.Json" Version="6.0.9" />
@@ -48,7 +48,7 @@
 		<PackageReference Include="System.Text.Json" Version="7.0.4" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
-		<PackageReference Include="System.Text.Json" Version="8.0.2" />
+		<PackageReference Include="System.Text.Json" Version="8.0.3" />
 	</ItemGroup>
 	
 	<ItemGroup>

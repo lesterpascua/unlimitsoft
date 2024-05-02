@@ -1,5 +1,4 @@
-﻿#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-using Hangfire.Logging;
+﻿using Hangfire.Logging;
 using System;
 
 namespace UnlimitSoft.Bus.Hangfire;
@@ -13,21 +12,25 @@ public class HangfireOptions
     /// <summary>
     /// Database scheme
     /// </summary>
-    public string Scheme { get; set; }
+    public string Scheme { get; set; } = default!;
     /// <summary>
     /// Database connection string.
     /// </summary>
-    public string ConnectionString { get; set; }
+    public string ConnectionString { get; set; } = default!;
     /// <summary>
     /// 
     /// </summary>
-    public TimeSpan SchedulePollingInterval { get; set; }
+    public TimeSpan SchedulePollingInterval { get; set; } = TimeSpan.FromSeconds(30);
     /// <summary>
     /// 
     /// </summary>
-    public int WorkerCount { get; set; }
+    public int WorkerCount { get; set; } = 1;
     /// <summary>
     /// Hangfire logger level.
     /// </summary>
     public LogLevel Logger { get; set; }
+    /// <summary>
+    /// Create hangfire publisher but not up the server
+    /// </summary>
+    public bool WithoutServer { get; set; }
 }
