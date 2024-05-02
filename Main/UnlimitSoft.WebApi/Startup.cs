@@ -323,7 +323,6 @@ public class Startup
 
         app.UseAuthentication();
         app.UseAuthorization();
-        app.UseCommandBusHangfireServer(1, TimeSpan.FromSeconds(15));
 
         app.UseEndpoints(endpoint => {
             endpoint.MapControllers().RequireAuthorization();

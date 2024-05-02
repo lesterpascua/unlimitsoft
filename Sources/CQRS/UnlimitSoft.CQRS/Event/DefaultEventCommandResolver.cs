@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using UnlimitSoft.Message;
 
+#if NET8_0_OR_GREATER
+using System.Collections.Frozen;
+#endif
+
 namespace UnlimitSoft.CQRS.Event;
 
 
@@ -23,9 +27,12 @@ public sealed class DefaultEventCommandResolver : IEventNameResolver
         var aux = typeResolverCache
             .ToDictionary(k => k.Value, v => (v.Key, v.Value.GetProperty(nameof(Event<object>.Body))!.PropertyType));
 
-#if NET7_0_OR_GREATER
+#if NET7_0
         _typeResolverCache = typeResolverCache.ToDictionary(k => k.Key, v => v.Value).AsReadOnly();
         _eventNameResolverCache = aux.AsReadOnly();
+#elif NET8_0_OR_GREATER
+        _typeResolverCache = typeResolverCache.ToDictionary(k => k.Key, v => v.Value).ToFrozenDictionary();
+        _eventNameResolverCache = aux.ToFrozenDictionary();
 #else
         _typeResolverCache = typeResolverCache.ToDictionary(k => k.Key, v => v.Value);
         _eventNameResolverCache = aux;

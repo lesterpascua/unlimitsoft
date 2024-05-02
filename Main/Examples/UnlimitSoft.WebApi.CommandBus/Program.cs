@@ -122,7 +122,5 @@ void Configure(WebApplication app)
     app.UseAuthorization();
     app.MapControllers();
 
-    app.UseCommandBusHangfireServer(1, TimeSpan.FromSeconds(15));
-
     app.Run();
 }
