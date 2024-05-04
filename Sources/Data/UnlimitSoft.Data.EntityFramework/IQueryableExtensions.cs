@@ -1,12 +1,13 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using UnlimitSoft.CQRS.Query;
-using UnlimitSoft.Web.Model;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Linq.Expressions;
+using System.Transactions;
+using UnlimitSoft.CQRS.Query;
+using UnlimitSoft.Web.Model;
 
 namespace UnlimitSoft.Data.EntityFramework;
 
@@ -92,7 +93,7 @@ public static class IQueryableExtensions
 
         var searchTask = @this.ApplySearch(pagging, ordered).ToArrayAsync(ct);
 
-        Task.WaitAll(new Task[] { searchTask, countTask }, ct);
+        Task.WaitAll([searchTask, countTask], ct);
         return ValueTask.FromResult((countTask.Result, searchTask.Result));
     }
     /// <summary>
@@ -131,7 +132,7 @@ public static class IQueryableExtensions
 
         var searchTask = @this.ApplySearch(pagging, ordered).Select(selector).ToArrayAsync(ct);
 
-        Task.WaitAll(new Task[] { searchTask, countTask }, ct);
+        Task.WaitAll([searchTask, countTask], ct);
         return ValueTask.FromResult((countTask.Result, searchTask.Result));
     }
 }
