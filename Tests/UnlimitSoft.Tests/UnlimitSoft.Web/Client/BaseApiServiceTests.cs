@@ -14,7 +14,7 @@ using Xunit;
 namespace UnlimitSoft.Tests.UnlimitSoft.Web.Client;
 
 
-public class BaseApiServiceTests
+public sealed class BaseApiServiceTests
 {
     [Fact]
     public async Task LazyCache_With50ConcurrencyCall_MakeOnlyOneCallToService()
@@ -43,14 +43,11 @@ public class BaseApiServiceTests
 
         // Act
         //var result = await service.GetAsync();
-        await Parallel.ForEachAsync(
-            Enumerable.Range(1, 50),
-            async (_, ct) =>
-            {
-                var result = await service.GetAsync();
-                values.Add(result);
-            }
-        );
+        await Parallel.ForEachAsync(Enumerable.Range(1, 50), async (_, ct) =>
+        {
+            var result = await service.GetAsync();
+            values.Add(result);
+        });
 
         // Assert
         service.Counter.Should().NotBe(1);
@@ -90,12 +87,15 @@ public class BaseApiServiceTests
             _expiration = expiration;
         }
 
-        public async ValueTask<TResult> GetOrCreateAsync<TResult>(object key, Func<object, Task<TResult>> factory)
+        public async ValueTask<TResult> GetOrCreateAsync<TResult>(string key, ICache.Operation<TResult> action, ICache.Setup? setup)
         {
-            return await _cachingService.GetOrAddAsync(key.ToString(), cacheKey =>
+            return await _cachingService.GetOrAddAsync(key, cacheKey =>
             {
-                cacheKey.AbsoluteExpirationRelativeToNow = _expiration;
-                return factory(cacheKey);
+                var entry = new ICache.Config(key, cacheKey) { AbsoluteExpirationRelativeToNow = _expiration };
+                if (setup is not null && setup(ref entry))
+                    cacheKey.AbsoluteExpirationRelativeToNow = entry.AbsoluteExpirationRelativeToNow;
+
+                return action(key);
             });
         }
     }
@@ -110,20 +110,24 @@ public class BaseApiServiceTests
             _expiration = expiration;
         }
 
-        public async ValueTask<TResult> GetOrCreateAsync<TResult>(object key, Func<object, Task<TResult>> factory)
+        public async ValueTask<TResult> GetOrCreateAsync<TResult>(string key, ICache.Operation<TResult> action, ICache.Setup? setup)
         {
-            return await _cachingService.GetOrCreateAsync(key, entry =>
+            var v = await _cachingService.GetOrCreateAsync(key, cacheKey =>
             {
-                entry.AbsoluteExpirationRelativeToNow = _expiration;
-                return factory(entry);
+                var entry = new ICache.Config(key, cacheKey) { AbsoluteExpirationRelativeToNow = _expiration };
+                if (setup is not null && setup(ref entry))
+                    cacheKey.AbsoluteExpirationRelativeToNow = entry.AbsoluteExpirationRelativeToNow;
+
+                return action(key);
             });
+            return v!;
         }
     }
     private sealed class MyApiService : BaseApiService
     {
         private int _counter;
 
-        public MyApiService(ICache cache) : base(null, cache)
+        public MyApiService(ICache cache) : base(null!, cache)
         {
             _counter = 0;
         }

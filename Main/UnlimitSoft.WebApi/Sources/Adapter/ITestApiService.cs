@@ -12,7 +12,7 @@ public record TestApiResponse
 {
     public int StatusCode { get; set; }
     [IsSensitive]
-    public string Description { get; set; }
+    public string? Description { get; set; }
 }
 
 public interface ITestApiService : IApiService
@@ -34,8 +34,8 @@ public interface ITestApiService : IApiService
 }
 public class TestService : BaseApiService, ITestApiService
 {
-    public TestService(IApiClient apiClient, ICache cache, bool ignorePrevCache = false)
-        : base(apiClient, cache, ignorePrevCache)
+    public TestService(IApiClient apiClient, ICache cache)
+        : base(apiClient, cache)
     {
     }
 
