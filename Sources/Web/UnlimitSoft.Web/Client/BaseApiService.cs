@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Concurrent;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace UnlimitSoft.Web.Client;
@@ -13,9 +14,9 @@ public abstract class BaseApiService : IApiService, IDisposable
 {
     private readonly IApiClient _apiClient;
     private readonly ICache? _cache;
-    private readonly ConcurrentDictionary<object, object?>? _prevCache;
+    private readonly bool _ignorePrevCache;
     private readonly ILogger? _logger;
-
+    private static ConcurrentDictionary<string, object?>? _prevCache;
 
     /// <summary>
     /// 
@@ -28,9 +29,22 @@ public abstract class BaseApiService : IApiService, IDisposable
     {
         _apiClient = apiClient;
         _cache = cache;
+        this._ignorePrevCache = ignorePrevCache;
         _logger = logger;
-        if (!ignorePrevCache)
-            _prevCache = new ConcurrentDictionary<object, object?>();
+    }
+
+    /// <summary>
+    /// Get the prev cache in memory object this consume more resource but warantine alwasy a result after the first attempt
+    /// </summary>
+    protected static ConcurrentDictionary<string, object?> PrevCache
+    {
+        get
+        {
+            if (_prevCache is not null)
+                return _prevCache;
+            Interlocked.CompareExchange(ref _prevCache, new ConcurrentDictionary<string, object?>(), null);
+            return _prevCache;
+        }
     }
 
 
@@ -43,14 +57,9 @@ public abstract class BaseApiService : IApiService, IDisposable
     /// </summary>
     protected IApiClient ApiClient => _apiClient;
     /// <summary>
-    /// If false save the previous value in the cache to in case the service is not available return this value.
-    /// </summary>
-    protected bool IgnorePrevCache => _prevCache is not null;
-    /// <summary>
     /// Logger used in the service
     /// </summary>
     protected ILogger? Logger => _logger;
-
 
     /// <inheritdoc />
     public void Dispose()
@@ -58,6 +67,7 @@ public abstract class BaseApiService : IApiService, IDisposable
         _apiClient.Dispose();
         GC.SuppressFinalize(this);
     }
+
     /// <summary>
     /// Try to get data from cache if not exist execute function and update cache object.
     /// </summary>
@@ -65,32 +75,40 @@ public abstract class BaseApiService : IApiService, IDisposable
     /// If the endpoint is not available and the cache was load in some time alwais return the old cache data.
     /// </remarks>
     /// <typeparam name="TResult"></typeparam>
-    /// <param name="factory"></param>
+    /// <param name="action"></param>
+    /// <param name="setup">action used to setup the cache arguments</param>
     /// <param name="key"></param>
     /// <returns></returns>
-    protected async ValueTask<TResult> TryCacheFirst<TResult>(Func<object, Task<TResult>> factory, object? key = null)
+    protected ValueTask<TResult> TryCacheFirst<TResult>(ICache.Operation<TResult> action, ICache.Setup? setup = null, string? key = null)
     {
         if (_cache is null)
             throw new InvalidOperationException("Cache is not set");
 
-        var cacheKey = key ?? typeof(TResult).FullName!;
-        if (_prevCache is null)
-            return await _cache.GetOrCreateAsync(cacheKey, factory);
+        key ??= typeof(TResult).FullName!;
+        if (_ignorePrevCache)
+            return _cache.GetOrCreateAsync(key, action, setup);
 
         try
         {
-            return await _cache.GetOrCreateAsync(cacheKey, async cacheKey =>
-            {
-                var value = await factory(cacheKey);
-                _prevCache[cacheKey] = value;
-                return value;
-            });
+            return _cache.GetOrCreateAsync(
+                key,
+                (k) => action(k).ContinueWith(c =>
+                {
+                    PrevCache[k] = c.Result;
+                    return c.Result;
+                }),
+                setup
+            );
         }
         catch (Exception ex)
         {
             _logger?.LogWarning(ex, "Error retrieving cache");
-            if (_prevCache.TryGetValue(cacheKey, out var value) && value is not null)
-                return (TResult)value;
+            if (PrevCache.TryGetValue(key, out var value) && value is not null)
+#if NETSTANDARD
+                return new ValueTask<TResult>((TResult)value);
+#else
+                return ValueTask.FromResult((TResult)value);
+#endif
 
             throw;
         }
