@@ -26,7 +26,11 @@ public sealed class JsonElementPolicy : IDestructuringPolicy
     {
         if (value is not JsonElement jElement)
         {
+#if NET6_0_OR_GREATER
+            result = null;
+#else
             result = null!;
+#endif
             return false;
         }
 
@@ -35,16 +39,12 @@ public sealed class JsonElementPolicy : IDestructuringPolicy
             case JsonValueKind.Object:
                 {
                     var properties = new List<LogEventProperty>();
-                    foreach (JsonProperty item in jElement.EnumerateObject())
+                    foreach (var item in jElement.EnumerateObject())
                     {
                         var v = GetValue(item.Value);
-                        if (v is not null)
-                            continue;
-
                         var propertyValue = propertyValueFactory.CreatePropertyValue(v, true);
                         properties.Add(new LogEventProperty(item.Name, propertyValue));
                     }
-
                     result = new StructureValue(properties);
                     return true;
                 }
@@ -64,18 +64,14 @@ public sealed class JsonElementPolicy : IDestructuringPolicy
     }
 
     #region Private Methods
-    private static object? GetValue(JsonElement item)
+    private static object? GetValue(JsonElement item) => item.ValueKind switch
     {
-        return item.ValueKind switch
-        {
-            JsonValueKind.String => item.GetString(),
-            JsonValueKind.Number => item.GetDecimal(),
-            JsonValueKind.True or JsonValueKind.False => item.GetBoolean(),
-            JsonValueKind.Undefined or JsonValueKind.Null => null,
-            JsonValueKind.Array => item,
-            JsonValueKind.Object => item,
-            _ => item.ToString(),
-        };
-    }
+        JsonValueKind.String => item.GetString(),
+        JsonValueKind.Number => item.GetDecimal(),
+        JsonValueKind.True or JsonValueKind.False => item.GetBoolean(),
+        JsonValueKind.Undefined or JsonValueKind.Null => null,
+        JsonValueKind.Array or JsonValueKind.Object => item,
+        _ => item.ToString(),
+    };
     #endregion
 }

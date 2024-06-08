@@ -16,13 +16,13 @@ public interface ICache
     /// <typeparam name="TResult"></typeparam>
     /// <param name="key"></param>
     /// <param name="setup"></param>
-    /// <param name="getValue"></param>
+    /// <param name="action"></param>
     /// <returns></returns>
-    ValueTask<TResult> GetOrCreateAsync<TResult>(string key, Operation<TResult> getValue, Setup? setup = null);
+    ValueTask<TResult> GetOrCreateAsync<TResult>(string key, Operation<TResult> action, Setup? setup = null);
 
     #region Nested Classes
     /// <summary>
-    /// 
+    /// Cache entry configuration
     /// </summary>
     public struct Config
     {
@@ -44,14 +44,13 @@ public interface ICache
         /// Original cache parameter from the specific platform used
         /// </summary>
         public object? CacheEntryObject { get; }
-
         /// <summary>
         /// Time of the cache expiration relative from the current date.
         /// </summary>
         public TimeSpan? AbsoluteExpirationRelativeToNow { get; set; }
     }
     /// <summary>
-    /// 
+    /// Allow configure the cache information like life time, etc.
     /// </summary>
     /// <param name="config"></param>
     /// <returns></returns>

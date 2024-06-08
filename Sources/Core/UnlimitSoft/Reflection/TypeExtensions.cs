@@ -55,21 +55,20 @@ public static class TypeExtensions
         return instance;
 
         // ==============================================================================================================
-        static object?[] GetArgs(IServiceProvider provider, Func<ParameterInfo, object?>? resolver, ConstructorInfo? ctor)
+        static object[] GetArgs(IServiceProvider provider, Func<ParameterInfo, object?>? resolver, ConstructorInfo? ctor)
         {
             if (ctor is null)
-                return Array.Empty<object>();
+                return [];
 
             var tmp = new List<object?>();
             foreach (var parameter in ctor.GetParameters())
             {
                 var instance = provider.GetService(parameter.ParameterType);
-                if (instance is null)
-                    instance = resolver?.Invoke(parameter);
+                instance ??= resolver?.Invoke(parameter);
 
                 tmp.Add(instance);
             }
-            return tmp.ToArray();
+            return [.. tmp];
         }
     }
 }

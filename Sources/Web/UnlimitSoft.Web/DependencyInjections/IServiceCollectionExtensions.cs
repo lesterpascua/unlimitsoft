@@ -142,6 +142,9 @@ public static class IServiceCollectionExtensions
                             apiClient = CreateApiClient(provider, options.ApiClientFactory, key, typeInterface, factory);
                             service = options.ServiceFactory(provider, typeInterface, apiClient);
                         }
+                        /// TODO: use this insteah
+                        //ActivatorUtilities.CreateInstance(null, null,)
+
                         service ??= serviceType.CreateInstance(
                             provider,
                             resolver: (parameter) =>
