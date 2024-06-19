@@ -103,6 +103,7 @@ public static class TestFactory
         if (factory is null)
         {
             services.AddSingleton(provider => new EventPublishWorkerFake(provider.GetRequiredService<IEventBus>()));
+            services.AddSingleton<IEventPublishWorker>(provider => provider.GetRequiredService<EventPublishWorkerFake>());
         }
         else
             services.AddSingleton(factory);
