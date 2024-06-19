@@ -14,7 +14,7 @@
 		<Authors>Lester Pastrana</Authors>
 		<Company>Private</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">3.3.0.0</Version>
+		<Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">3.4.1.5</Version>
 		<Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
 		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
 		<Description>Core library for all package saga</Description>

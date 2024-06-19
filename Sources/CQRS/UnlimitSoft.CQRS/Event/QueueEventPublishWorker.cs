@@ -161,8 +161,12 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
     /// <inheritdoc />
     public async Task RetryPublishAsync(Guid id, CancellationToken ct = default)
     {
+#if NET7_0_OR_GREATER
+        ObjectDisposedException.ThrowIf(_disposed, this);
+#else
         if (_disposed)
             throw new ObjectDisposedException(GetType().FullName);
+#endif
 
         var key = new PublishEventInfo(id, _clock.UtcNow, null);
         await _lock.WaitAsync(ct);
@@ -178,8 +182,12 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
     /// <inheritdoc />
     public async Task PublishAsync(IEnumerable<IEvent> events, CancellationToken ct = default)
     {
+#if NET7_0_OR_GREATER
+        ObjectDisposedException.ThrowIf(_disposed, this);
+#else
         if (_disposed)
             throw new ObjectDisposedException(GetType().FullName);
+#endif
 
         await _lock.WaitAsync(ct);
         try
@@ -202,8 +210,12 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
     /// <inheritdoc />
     public async Task PublishAsync(IEnumerable<PublishEventInfo> events, CancellationToken ct = default)
     {
+#if NET7_0_OR_GREATER
+        ObjectDisposedException.ThrowIf(_disposed, this);
+#else
         if (_disposed)
             throw new ObjectDisposedException(GetType().FullName);
+#endif
 
         await _lock.WaitAsync(ct);
         try
@@ -222,8 +234,12 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
     /// <inheritdoc />
     public async Task StartAsync(bool loadEvent, int bachSize = 1000, CancellationToken ct = default)
     {
+#if NET7_0_OR_GREATER
+        ObjectDisposedException.ThrowIf(_disposed, this);
+#else
         if (_disposed)
             throw new ObjectDisposedException(GetType().FullName);
+#endif
         if (Worker is not null)
             throw new InvalidProgramException("Already initialized");
 
