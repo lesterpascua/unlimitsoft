@@ -29,7 +29,7 @@ public abstract class BaseApiService : IApiService, IDisposable
     {
         _apiClient = apiClient;
         _cache = cache;
-        this._ignorePrevCache = ignorePrevCache;
+        _ignorePrevCache = ignorePrevCache;
         _logger = logger;
     }
 

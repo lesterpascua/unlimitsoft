@@ -12,6 +12,7 @@ using System;
 using System.Linq;
 using UnlimitSoft.Json;
 using Microsoft.Extensions.Logging;
+using UnlimitSoft.Distribute;
 
 namespace UnlimitSoft.Web.AspNet.Testing;
 
@@ -62,20 +63,49 @@ public static class TestFactory
 
         return services;
     }
+    /// <summary>
+    /// Replace event listener for fake listener
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="noLock"></param>
+    /// <returns></returns>
+    public static IServiceCollection ReplaceSysLock(this IServiceCollection services, bool noLock = true)
+    {
+        if (!services.Any(p => p.ServiceType == typeof(ISysLock)))
+            return services;
 
+        services.RemoveAll<ISysLock>();
+        if (noLock)
+        {
+            services.AddSingleton<ISysLock>(SysLockFake.Instance);
+            services.AddSingleton(p => p.GetRequiredService<SysLockFake>());
+        }
+        else
+        {
+            services.AddSingleton<ISysLock>(new SemaphoreSlimSysLock());
+            services.AddSingleton(p => p.GetRequiredService<SemaphoreSlimSysLock>());
+        }
+
+        return services;
+    }
     /// <summary>
     /// Replace event listener for fake listener
     /// </summary>
     /// <param name="services"></param>
     /// <param name="factory"></param>
     /// <returns></returns>
-    public static IServiceCollection ReplaceEventPublishWorker(this IServiceCollection services, Func<IServiceProvider, IEventPublishWorker> factory)
+    public static IServiceCollection ReplaceEventPublishWorker(this IServiceCollection services, Func<IServiceProvider, IEventPublishWorker>? factory = null)
     {
         if (!services.Any(p => p.ServiceType == typeof(IEventPublishWorker)))
             return services;
 
         services.RemoveAll<IEventPublishWorker>();
-        services.AddSingleton(factory);
+        if (factory is null)
+        {
+            services.AddSingleton(provider => new EventPublishWorkerFake(provider.GetRequiredService<IEventBus>()));
+        }
+        else
+            services.AddSingleton(factory);
 
         return services;
     }
@@ -87,7 +117,7 @@ public static class TestFactory
     /// <param name="services"></param>
     /// <param name="name"></param>
     /// <returns></returns>
-    public static IServiceCollection ReplaceDbContextForInMemory<TDbContextRead, TDbContextWrite>(this IServiceCollection services, string name = null)
+    public static IServiceCollection ReplaceDbContextForInMemory<TDbContextRead, TDbContextWrite>(this IServiceCollection services, string? name = null)
         where TDbContextRead : DbContext
         where TDbContextWrite : DbContext
     {
@@ -133,7 +163,7 @@ public static class TestFactory
     /// <param name="removeHostedService"></param>
     /// <param name="setup"></param>
     /// <returns></returns>
-    public static WebApplicationFactory<TStartup> Factory<TStartup>(bool removeHostedService = true, Action<IServiceCollection> setup = null) where TStartup : class => Factory<TStartup>(null, removeHostedService, setup);
+    public static WebApplicationFactory<TStartup> Factory<TStartup>(bool removeHostedService = true, Action<IServiceCollection>? setup = null) where TStartup : class => Factory<TStartup>(null, removeHostedService, setup);
     /// <summary>
     /// Build in memory server.
     /// </summary>
@@ -142,13 +172,13 @@ public static class TestFactory
     /// <param name="removeHostedService"></param>
     /// <param name="setup"></param>
     /// <returns></returns>
-    public static WebApplicationFactory<TStartup> Factory<TStartup>(Action<IWebHostBuilder> setupBuilder, bool removeHostedService = true, Action<IServiceCollection> setup = null)
+    public static WebApplicationFactory<TStartup> Factory<TStartup>(Action<IWebHostBuilder>? setupBuilder, bool removeHostedService = true, Action<IServiceCollection>? setup = null)
         where TStartup : class
     {
         var appFactory = new WebApplicationFactory<TStartup>()
             .WithWebHostBuilder(builder =>
             {
-                setupBuilder(builder);
+                setupBuilder?.Invoke(builder);
                 builder.ConfigureServices(services =>
                 {
                     //services.ReplaceEventBus();
