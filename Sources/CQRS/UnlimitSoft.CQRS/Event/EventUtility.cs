@@ -78,9 +78,7 @@ public static class EventUtility
     private static async ValueTask<IResponse?> DispatchEvent(IEventDispatcher eventDispatcher, ILogger? logger, IEvent @event, CancellationToken ct)
     {
         var (responses, error) = await eventDispatcher.DispatchAsync(@event, ct);
-        logger?.LogInformation(@"Procesed
-Event: {@Event} 
-Response: {@Response}", @event, responses);
+        logger?.LogInformation("Procesed Event: {@Event} Response: {@Response}", @event, responses);
 
         return error ?? responses;
     }
