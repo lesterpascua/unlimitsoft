@@ -73,8 +73,8 @@ public sealed class DefaultJobProcessor<TProps> : IJobProcessor
         // Only assign if props is not null and is scheduler command.
         if (command is ISchedulerCommand scheduler)
         {
-            scheduler.SetRetry(props.Retry);
-            scheduler.SetDelay(props.Delay);
+            scheduler.SetRetry(props?.Retry ?? 0);
+            scheduler.SetDelay(props?.Delay ?? TimeSpan.FromSeconds(1));
             scheduler.SetJobId(Context.BackgroundJob.Id);
         }
 
