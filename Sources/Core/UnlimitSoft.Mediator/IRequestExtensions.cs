@@ -71,7 +71,7 @@ public static class IRequestExtensions
     /// <param name="key"></param>
     /// <param name="error"></param>
     /// <returns></returns>
-    public static IResponse BadResponse(this IRequest _, string key, string error) => ResponseUtil.GetError(HttpStatusCode.BadRequest, key, error);
+    public static IResponse BadResponse(this IRequest _, string key, string error) => Message.ErrorResponse.GetError(HttpStatusCode.BadRequest, key, error);
     /// <summary>
     /// 
     /// </summary>
@@ -79,7 +79,7 @@ public static class IRequestExtensions
     /// <param name="key"></param>
     /// <param name="error"></param>
     /// <returns></returns>
-    public static IResponse BadResponse(this IRequest _, string key, int error) => ResponseUtil.GetError(HttpStatusCode.BadRequest, key, error);
+    public static IResponse BadResponse(this IRequest _, string key, int error) => Message.ErrorResponse.GetError(HttpStatusCode.BadRequest, key, error);
     /// <summary>
     /// 
     /// </summary>
@@ -87,7 +87,7 @@ public static class IRequestExtensions
     /// <param name="key"></param>
     /// <param name="error"></param>
     /// <returns></returns>
-    public static IResponse BadResponse<TError>(this IRequest _, string key, TError error) where TError : Enum => ResponseUtil.GetError(HttpStatusCode.BadRequest, key, error);
+    public static IResponse BadResponse<TError>(this IRequest _, string key, TError error) where TError : Enum => Message.ErrorResponse.GetError(HttpStatusCode.BadRequest, key, error);
     #endregion
 
     #region 404
