@@ -8,7 +8,7 @@ namespace UnlimitSoft.Message;
 /// <summary>
 /// Indicate special exception in the response.
 /// </summary>
-public sealed class ResponseException : Exception
+public class ResponseException : Exception
 {
     /// <summary>
     /// 

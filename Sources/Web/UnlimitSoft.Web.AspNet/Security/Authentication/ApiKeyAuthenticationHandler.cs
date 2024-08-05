@@ -106,7 +106,7 @@ public class ApiKeyAuthenticationHandler<TOption> : AuthenticationHandler<TOptio
         Response.ContentType = ContentType;
         Response.StatusCode = StatusCodes.Status401Unauthorized;
 
-        var response = ResponseUtil.GetError(
+        var response = ErrorResponse.GetError(
             string.Empty, 
             Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidAPIKey) ?? "Invalid API Key"
         );
@@ -124,7 +124,7 @@ public class ApiKeyAuthenticationHandler<TOption> : AuthenticationHandler<TOptio
         Response.ContentType = ContentType;
         Response.StatusCode = StatusCodes.Status403Forbidden;
 
-        var response = ResponseUtil.GetError(
+        var response = ErrorResponse.GetError(
             string.Empty, 
             Options.ErrorBuilder?.Invoke(ApiKeyError.InvalidUserPermission) ?? "User no have permission for the operation"
         );
