@@ -11,6 +11,18 @@ namespace UnlimitSoft.Web.Client;
 public interface ICache
 {
     /// <summary>
+    /// Check if the key exists in the cache
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    ValueTask<bool> ExistAsync(string key);
+    /// <summary>
+    /// Remove existing value from the cache
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    ValueTask<bool> RemoveAsync(string key);
+    /// <summary>
     /// 
     /// </summary>
     /// <typeparam name="TResult"></typeparam>
@@ -62,4 +74,16 @@ public interface ICache
     /// <returns></returns>
     public delegate Task<TResult> Operation<TResult>(string key);
     #endregion
+}
+/// <summary>
+/// 
+/// </summary>
+public interface IAdvanceCache : ICache
+{
+    /// <summary>
+    /// Get how many time the key will be available in the cache
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    ValueTask<TimeSpan> GetRemaindTimeAsync(string key);
 }

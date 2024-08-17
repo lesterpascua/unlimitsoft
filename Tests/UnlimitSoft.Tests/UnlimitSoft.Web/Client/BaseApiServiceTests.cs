@@ -87,6 +87,17 @@ public sealed class BaseApiServiceTests
             _expiration = expiration;
         }
 
+
+        public ValueTask<bool> ExistAsync(string key)
+        {
+            var exist = _cachingService.Get<object?>(key) is not null;
+            return ValueTask.FromResult(exist);
+        }
+        public ValueTask<bool> RemoveAsync(string key)
+        {
+            _cachingService.Remove(key);
+            return ValueTask.FromResult(true);
+        }
         public async ValueTask<TResult> GetOrCreateAsync<TResult>(string key, ICache.Operation<TResult> action, ICache.Setup? setup)
         {
             return await _cachingService.GetOrAddAsync(key, cacheKey =>
@@ -110,6 +121,16 @@ public sealed class BaseApiServiceTests
             _expiration = expiration;
         }
 
+        public ValueTask<bool> ExistAsync(string key)
+        {
+            var exist = _cachingService.Get(key) is not null;
+            return ValueTask.FromResult(exist);
+        }
+        public ValueTask<bool> RemoveAsync(string key)
+        {
+            _cachingService.Remove(key);
+            return ValueTask.FromResult(true);
+        }
         public async ValueTask<TResult> GetOrCreateAsync<TResult>(string key, ICache.Operation<TResult> action, ICache.Setup? setup)
         {
             var v = await _cachingService.GetOrCreateAsync(key, cacheKey =>

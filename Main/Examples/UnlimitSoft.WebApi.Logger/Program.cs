@@ -1,7 +1,5 @@
-using Elasticsearch.Net;
 using Serilog;
 using Serilog.Events;
-using Serilog.Formatting.Elasticsearch;
 using Serilog.Sinks.SystemConsole.Themes;
 using UnlimitSoft.Logger.AspNet;
 using UnlimitSoft.Logger.Configuration;
@@ -46,19 +44,19 @@ WebApplication ConfigureServices(IServiceCollection services)
             );
 
 
-            var builder = new ConnectionConfiguration(new Uri("https://localhost:9200"))
-                .ServerCertificateValidationCallback((sender, certificate, chain, sslPolicyErrors) => true)
-                .BasicAuthentication("elastic", "testelastic");
+            //var builder = new ConnectionConfiguration(new Uri("https://localhost:9200"))
+            //    .ServerCertificateValidationCallback((sender, certificate, chain, sslPolicyErrors) => true)
+            //    .BasicAuthentication("elastic", "testelastic");
 
-            var options = new Serilog.Sinks.Elasticsearch.ElasticsearchSinkOptions
-            {
-                AutoRegisterTemplate = true,
-                IndexFormat = "log-{0:yyyy.MM.dd}",
-                CustomFormatter = new ExceptionAsObjectJsonFormatter(renderMessage: true),
-                MinimumLogEventLevel = LogEventLevel.Information,
-                ModifyConnectionSettings = config => builder
-            };
-            setup.WriteTo.Elasticsearch(options);
+            //var options = new Serilog.Sinks.Elasticsearch.ElasticsearchSinkOptions
+            //{
+            //    AutoRegisterTemplate = true,
+            //    IndexFormat = "log-{0:yyyy.MM.dd}",
+            //    CustomFormatter = new ExceptionAsObjectJsonFormatter(renderMessage: true),
+            //    MinimumLogEventLevel = LogEventLevel.Information,
+            //    ModifyConnectionSettings = config => builder
+            //};
+            //setup.WriteTo.Elasticsearch(options);
         }
     );
     services.AddSingleton<ICorrelationTrusted, SysCallCorrelationTrusted>();
