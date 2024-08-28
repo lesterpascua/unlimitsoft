@@ -30,6 +30,7 @@
 
 	<ItemGroup>
 		<ProjectReference Include="..\..\Core\UnlimitSoft\UnlimitSoft.csproj" />
+		<ProjectReference Include="..\..\Web\UnlimitSoft.Web\UnlimitSoft.Web.csproj" />
 	</ItemGroup>
 
 </Project>
