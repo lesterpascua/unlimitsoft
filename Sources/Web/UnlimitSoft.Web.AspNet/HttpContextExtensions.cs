@@ -57,4 +57,22 @@ public static class HttpContextExtensions
             return controller.StatusCode((int)code, result.Value);
         return controller.StatusCode((int)result.Error.Code, result.Error.GetBody());
     }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="TIn"></typeparam>
+    /// <typeparam name="TOut"></typeparam>
+    /// <param name="value"></param>
+    /// <param name="controller"></param>
+    /// <param name="transform"></param>
+    /// <param name="code"></param>
+    /// <returns></returns>
+    public static ActionResult<TOut> ToActionResult<TIn, TOut>(this in Result<TIn> value, ControllerBase controller, Func<TIn, TOut> transform, HttpStatusCode code = HttpStatusCode.OK)
+    {
+        if (!value.IsSuccess)
+            return Result.FromError<TOut>(value.Error!).ToActionResult(controller, code);
+
+        var v = transform(value.Value!);
+        return Result.FromOk(v).ToActionResult(controller, code);
+    }
 }
