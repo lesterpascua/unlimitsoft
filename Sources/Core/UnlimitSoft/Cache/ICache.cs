@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace UnlimitSoft.Web.Client;
+namespace UnlimitSoft.Cache;
 
 
 
@@ -23,12 +23,12 @@ public interface ICache
     /// <returns></returns>
     ValueTask<bool> RemoveAsync(string key);
     /// <summary>
-    /// 
+    /// Get the value from the cache if not found will execute the action to get the value
     /// </summary>
     /// <typeparam name="TResult"></typeparam>
-    /// <param name="key"></param>
-    /// <param name="setup"></param>
-    /// <param name="action"></param>
+    /// <param name="key">Key to represent the cache</param>
+    /// <param name="action">Deletage to return the data from the source</param>
+    /// <param name="setup">Method to configure the time to live of the cache</param>
     /// <returns></returns>
     ValueTask<TResult> GetOrCreateAsync<TResult>(string key, Operation<TResult> action, Setup? setup = null);
 
@@ -36,7 +36,7 @@ public interface ICache
     /// <summary>
     /// Cache entry configuration
     /// </summary>
-    public struct Config
+    public ref struct Config
     {
         /// <summary>
         /// 
@@ -65,13 +65,13 @@ public interface ICache
     /// Allow configure the cache information like life time, etc.
     /// </summary>
     /// <param name="config"></param>
-    /// <returns></returns>
+    /// <returns>True indicate to take the data from the configuration, false to ignore.</returns>
     public delegate bool Setup(ref Config config);
     /// <summary>
     /// Function to resolve the value and also indicate the cache time
     /// </summary>
-    /// <typeparam name="TResult"></typeparam>
-    /// <returns></returns>
+    /// <typeparam name="TResult">Type of the data to be cache</typeparam>
+    /// <returns>Data to be cache</returns>
     public delegate Task<TResult> Operation<TResult>(string key);
     #endregion
 }

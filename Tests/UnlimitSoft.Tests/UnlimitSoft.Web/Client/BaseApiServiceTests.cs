@@ -10,6 +10,8 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+using UnlimitSoft.Cache;
+using static UnlimitSoft.Cache.ICache;
 
 namespace UnlimitSoft.Tests.UnlimitSoft.Web.Client;
 
@@ -98,7 +100,7 @@ public sealed class BaseApiServiceTests
             _cachingService.Remove(key);
             return ValueTask.FromResult(true);
         }
-        public async ValueTask<TResult> GetOrCreateAsync<TResult>(string key, ICache.Operation<TResult> action, ICache.Setup? setup)
+        public async ValueTask<TResult> GetOrCreateAsync<TResult>(string key, Operation<TResult> action, Setup? setup)
         {
             return await _cachingService.GetOrAddAsync(key, cacheKey =>
             {

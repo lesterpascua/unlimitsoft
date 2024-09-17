@@ -1,0 +1,38 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net8.0;net7.0;net6.0;netstandard2.0</TargetFrameworks>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<PropertyGroup>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+		<Authors>Lester Pastrana</Authors>
+		<Company>Private</Company>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">3.4.1.11</Version>
+		<Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
+		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+		<Description>Export caches in memory</Description>
+		<PackageLicenseFile>License.txt</PackageLicenseFile>
+		<RepositoryUrl>https://github.com/lesterpascua/unlimitsoft</RepositoryUrl>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="PolySharp" Version="1.14.1">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="NRedisStack" Version="0.13.0" />
+		<PackageReference Include="StackExchange.Redis" Version="2.8.16" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Core\UnlimitSoft\UnlimitSoft.csproj" />
+	</ItemGroup>
+
+</Project>
