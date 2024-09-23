@@ -22,7 +22,7 @@ public static class SearchValidatorsExtensions
         return builder.ChildRules(cr =>
         {
             cr.RuleFor(p => p.Page).GreaterThanOrEqualTo(@default?.Page ?? 0);
-            cr.RuleFor(p => p.PageSize).GreaterThanOrEqualTo(@default?.PageSize ?? 10);
+            cr.RuleFor(p => p.PageSize).LessThanOrEqualTo(@default?.PageSize ?? 10);
         });
     }
 
