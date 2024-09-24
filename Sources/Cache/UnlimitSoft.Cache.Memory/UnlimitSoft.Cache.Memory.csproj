@@ -31,6 +31,13 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Include="License.txt">
+			<Pack>True</Pack>
+			<PackagePath></PackagePath>
+		</None>
+	</ItemGroup>
+	
+	<ItemGroup>
 	  <ProjectReference Include="..\..\Core\UnlimitSoft\UnlimitSoft.csproj" />
 	</ItemGroup>
 </Project>
