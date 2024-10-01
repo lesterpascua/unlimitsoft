@@ -1,5 +1,4 @@
 ﻿using System.Net.Http;
-using System.Threading.Tasks;
 using UnlimitSoft.Json;
 
 namespace UnlimitSoft.Web.Client;
@@ -16,13 +15,13 @@ public static class ObjectUtils
     /// <param name="serializer"></param>
     /// <param name="obj"></param>
     /// <returns></returns>
-    public static Task<string> ToQueryString(IJsonSerializer serializer, object obj)
+    public static string ToQueryString(IJsonSerializer serializer, object obj)
     {
         var keyValueContent = serializer.ToKeyValue(obj);
         if (keyValueContent is null)
-            return Task.FromResult(string.Empty);
+            return string.Empty;
 
         using var formUrlEncodedContent = new FormUrlEncodedContent(keyValueContent);
-        return formUrlEncodedContent.ReadAsStringAsync();
+        return formUrlEncodedContent.ReadAsStringAsync().Result;
     }
 }

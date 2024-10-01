@@ -21,7 +21,10 @@
 		<PackageLicenseFile>License.txt</PackageLicenseFile>
 		<RepositoryUrl>https://github.com/lesterpascua/unlimitsoft</RepositoryUrl>
 	</PropertyGroup>
-
+	
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
+		<PackageReference Include="System.Text.Json" Version="8.0.4" />
+	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="PolySharp" Version="1.14.1">
 			<PrivateAssets>all</PrivateAssets>

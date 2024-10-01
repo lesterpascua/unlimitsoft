@@ -1,7 +1,7 @@
-﻿using System.Net.Http;
+﻿using Microsoft.Extensions.Logging;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using UnlimitSoft.Cache;
 using UnlimitSoft.Logger;
 using UnlimitSoft.Web.Client;
 
@@ -34,8 +34,8 @@ public interface ITestApiService : IApiService
 }
 public class TestService : BaseApiService, ITestApiService
 {
-    public TestService(IApiClient apiClient, ICache cache)
-        : base(apiClient, cache)
+    public TestService(IApiClient apiClient, ILogger<TestService> logger)
+        : base(apiClient, logger: logger)
     {
     }
 

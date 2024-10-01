@@ -18,7 +18,8 @@
 		<Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
 		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
 		<Description>Memory event bus integration.</Description>
-		<PackageLicenseFile>License.txt</PackageLicenseFile> <RepositoryUrl>https://github.com/lesterpascua/unlimitsoft</RepositoryUrl>
+		<PackageLicenseFile>License.txt</PackageLicenseFile>
+		<RepositoryUrl>https://github.com/lesterpascua/unlimitsoft</RepositoryUrl>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -44,16 +45,17 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <PackageReference Include="DotNetMQ" Version="1.0.4" />
-	  <PackageReference Include="log4net" Version="3.0.0" />
-	  <PackageReference Include="System.Net.Http" Version="4.3.4" />
-	  <PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.0" />
-	  <PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.1" />
-	  <PackageReference Include="System.Text.Encodings.Web" Version="8.0.0" />
+		<PackageReference Include="System.Formats.Asn1" Version="8.0.1" />
+		<PackageReference Include="DotNetMQ" Version="1.0.4" />
+		<PackageReference Include="log4net" Version="3.0.1" />
+		<PackageReference Include="System.Net.Http" Version="4.3.4" />
+		<PackageReference Include="System.Security.Cryptography.Pkcs" Version="8.0.0" />
+		<PackageReference Include="System.Security.Cryptography.Xml" Version="8.0.1" />
+		<PackageReference Include="System.Text.Encodings.Web" Version="8.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\..\CQRS\UnlimitSoft.CQRS\UnlimitSoft.CQRS.csproj" />
-	  <ProjectReference Include="..\UnlimitSoft.EventBus\UnlimitSoft.EventBus.csproj" />
+		<ProjectReference Include="..\..\CQRS\UnlimitSoft.CQRS\UnlimitSoft.CQRS.csproj" />
+		<ProjectReference Include="..\UnlimitSoft.EventBus\UnlimitSoft.EventBus.csproj" />
 	</ItemGroup>
 </Project>

@@ -249,7 +249,7 @@ public class Startup
             opt =>
             {
                 opt.AssemblyFilter = assembly => "https://mock.codes/";
-                opt.ExtraAssemblies = new[] { typeof(Sources.Adapter.ITestApiService).Assembly };
+                opt.ExtraAssemblies = [typeof(Sources.Adapter.ITestApiService).Assembly];
             }
         );
         #endregion
