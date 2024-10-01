@@ -20,7 +20,7 @@ public class DefaultApiClient : IApiClient
 {
     private readonly HttpClient _httpClient;
     private readonly IJsonSerializer _serializer;
-    private readonly ILogger<DefaultApiClient>? _logger;
+    private ILogger? _logger;
 
 
     /// <summary>
@@ -30,11 +30,10 @@ public class DefaultApiClient : IApiClient
     /// <param name="serializer"></param>
     /// <param name="baseUrl"></param>
     /// <param name="logger"></param>
-    public DefaultApiClient(HttpClient httpClient, IJsonSerializer serializer, string? baseUrl = null, ILogger<DefaultApiClient>? logger = null)
+    public DefaultApiClient(HttpClient httpClient, IJsonSerializer serializer, string? baseUrl = null)
     {
         _httpClient = httpClient;
         _serializer = serializer;
-        _logger = logger;
         if (!string.IsNullOrEmpty(baseUrl))
         {
             if (baseUrl![^1] != '/')
@@ -74,29 +73,19 @@ public class DefaultApiClient : IApiClient
     /// <inheritdoc/>
     public async Task<(TModel?, HttpStatusCode)> SendAsync<TModel>(HttpMethod method, string uri, Action<HttpRequestMessage>? setup = null, object? model = null, IJsonSerializer? serializer = null, CancellationToken ct = default)
     {
-        string completeUri = uri;
-        string? jsonContent = null;
-        var jsonSerialize = serializer ?? _serializer;
+        serializer ??= _serializer;
+        var completeUri = GetUri(serializer, method, model, uri, out var jsonContent);
 
-        if (model is not null)
-        {
-            if (HttpMethod.Get == method)
-            {
-                var qs = await ObjectUtils.ToQueryString(_serializer, model);
-                completeUri = $"{completeUri}?{qs}";
-            }
-            else
-                jsonContent = jsonSerialize.Serialize(model);
-        }
         HttpContent? httpContent = null;
         try
         {
-            _logger?.LogInformation("HttpRequest for {Url}, Body = {Json}", completeUri, jsonContent);
             if (jsonContent is not null)
                 httpContent = new StringContent(jsonContent, Encoding.UTF8, "application/json");
 
             var (json, code) = await SendWithContentAsync(method, completeUri, httpContent, setup, ct);
-            var result = jsonSerialize.Deserialize<TModel>(json);
+            var result = serializer.Deserialize<TModel>(json);
+
+            _logger?.LogInformation("HttpResponse for {Url}, Result = {Code}, Body = {@Body}", completeUri, code, result);
 
             return (result, code);
         }
@@ -121,17 +110,44 @@ public class DefaultApiClient : IApiClient
 
         _logger?.LogInformation("HttpRequest for {Url}", completeUri);
         if (qs != null)
-            completeUri += string.Concat('?', await ObjectUtils.ToQueryString(_serializer, qs));
+            completeUri += string.Concat('?', ObjectUtils.ToQueryString(_serializer, qs));
 
         var (json, code) = await SendWithContentAsync(method, completeUri, content, setup, ct);
         var result = jsonSerialize.Deserialize<TModel>(json);
 
+        _logger?.LogInformation("HttpResponse for {Url}, Result = {Code}, Body = {@Body}", completeUri, code, result);
+
         return (result, code);
     }
 
-
+    #region Internal Methods
+    internal void SetLogger(ILogger logger) => _logger = logger;
+    #endregion
 
     #region Private Methods
+    private string GetUri(IJsonSerializer serializer, HttpMethod method, object? model, string uri, out string? content)
+    {
+        if (model is null)
+        {
+            content = null;
+            _logger?.LogInformation("HttpRequest for {Url}", uri);
+            return uri;
+        }
+
+        if (HttpMethod.Get == method)
+        {
+            content = null;
+            var qs = ObjectUtils.ToQueryString(serializer, model);
+
+            uri = $"{uri}?{qs}";
+            _logger?.LogInformation("HttpRequest for {Url}", uri);
+            return uri;
+        }
+
+        _logger?.LogInformation("HttpRequest for {Url}, Body = {@Body}", uri, model);
+        content = serializer.Serialize(model);
+        return uri;
+    }
     private async Task<(string, HttpStatusCode)> SendWithContentAsync(HttpMethod method, string completeUri, HttpContent? content, Action<HttpRequestMessage>? setup, CancellationToken ct = default)
     {
         using var message = new HttpRequestMessage(method, completeUri);
@@ -147,12 +163,10 @@ public class DefaultApiClient : IApiClient
         string body = await response.Content.ReadAsStringAsync(ct);
 #endif
 
-        _logger?.LogInformation("HttpResponse for {Url}, Result = {Code}, Body = {Json}", completeUri, response.StatusCode, body);
-
         if (!response.IsSuccessStatusCode)
             throw new HttpException(response.StatusCode, response.ToString(), body);
 
         return (body, response.StatusCode);
     }
-#endregion
+    #endregion
 }

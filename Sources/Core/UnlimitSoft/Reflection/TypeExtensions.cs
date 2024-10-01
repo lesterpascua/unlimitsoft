@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -45,26 +46,25 @@ public static class TypeExtensions
 
         //
         // Resolve constructor argument using Service Provider.
-        object?[] args;
-        var ctor = constructors.FirstOrDefault();
-        args = GetArgs(provider, resolver, ctor);
+        var ctor = constructors[0];
+        //var args = GetArgs(provider, resolver, ctor);
+        var args = resolver is not null ? GetArgsByResolver(resolver, ctor) : [];
 
-        var instance = Activator.CreateInstance(type, args);
-        if (instance is null)
-            throw new InvalidOperationException($"Error creating instance of type {type}");
+        var instance = ActivatorUtilities.CreateInstance(provider, type, args) ?? throw new InvalidOperationException($"Error creating instance of type {type}");
         return instance;
 
         // ==============================================================================================================
-        static object[] GetArgs(IServiceProvider provider, Func<ParameterInfo, object?>? resolver, ConstructorInfo? ctor)
+        static object[] GetArgsByResolver(Func<ParameterInfo, object?> resolver, ConstructorInfo? ctor)
         {
             if (ctor is null)
                 return [];
 
-            var tmp = new List<object?>();
+            var tmp = new List<object>();
             foreach (var parameter in ctor.GetParameters())
             {
-                var instance = provider.GetService(parameter.ParameterType);
-                instance ??= resolver?.Invoke(parameter);
+                var instance = resolver?.Invoke(parameter);
+                if (instance is null)
+                    continue;
 
                 tmp.Add(instance);
             }

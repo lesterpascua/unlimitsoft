@@ -68,7 +68,7 @@ public static class IServiceConnectionExtensions
         {
             if (settings.DbContextRead is not null)
             {
-                if (settings.ReadConnString?.Any() != true)
+                if (settings.ReadConnString is null || settings.ReadConnString.Length == 0)
                     throw new InvalidOperationException("Read connection string need to be not null");
 
                 int connIndex = 0;
@@ -86,13 +86,13 @@ public static class IServiceConnectionExtensions
                 {
                     addDbContextMethod
                         .MakeGenericMethod(settings.DbContextRead)
-                        .Invoke(null, new object[] { services, action, ServiceLifetime.Scoped, ServiceLifetime.Scoped });
+                        .Invoke(null, [services, action, ServiceLifetime.Scoped, ServiceLifetime.Scoped]);
                 }
                 else
                 {
                     addDbContextPoolMethod
                         .MakeGenericMethod(settings.DbContextRead)
-                        .Invoke(null, new object[] { services, action, settings.PoolSizeForRead });
+                        .Invoke(null, [services, action, settings.PoolSizeForRead]);
                 }
             }
         }
@@ -114,13 +114,13 @@ public static class IServiceConnectionExtensions
                 {
                     addDbContextMethod
                         .MakeGenericMethod(settings.DbContextWrite)
-                        .Invoke(null, new object[] { services, action, ServiceLifetime.Scoped, ServiceLifetime.Scoped });
+                        .Invoke(null, [services, action, ServiceLifetime.Scoped, ServiceLifetime.Scoped]);
                 }
                 else
                 {
                     addDbContextPoolMethod
                         .MakeGenericMethod(settings.DbContextWrite)
-                        .Invoke(null, new object[] { services, action, settings.PoolSizeForWrite });
+                        .Invoke(null, [services, action, settings.PoolSizeForWrite]);
                 }
             }
         }

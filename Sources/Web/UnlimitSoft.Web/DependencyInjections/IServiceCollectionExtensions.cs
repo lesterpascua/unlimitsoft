@@ -142,21 +142,25 @@ public static class IServiceCollectionExtensions
                             apiClient = CreateApiClient(provider, options.ApiClientFactory, key, typeInterface, factory);
                             service = options.ServiceFactory(provider, typeInterface, apiClient);
                         }
-                        /// TODO: use this insteah
-                        //ActivatorUtilities.CreateInstance(null, null,)
-
                         service ??= serviceType.CreateInstance(
                             provider,
                             resolver: (parameter) =>
                             {
                                 if (parameter.ParameterType == typeof(IApiClient))
-                                    return apiClient ?? CreateApiClient(provider, options.ApiClientFactory, key, typeInterface, factory);
+                                    return apiClient ??= CreateApiClient(provider, options.ApiClientFactory, key, typeInterface, factory);
 
                                 if (options.Resolver is null)
                                     return null;
                                 return options.Resolver(typeInterface, parameter.ParameterType);
                             }
                         );
+                        if (apiClient is DefaultApiClient defaultApiClient)
+                        {
+                            var loggerType = typeof(ILogger<>).MakeGenericType(service.GetType());
+                            var logger = provider.GetService(loggerType);
+                            if (logger is not null)
+                                defaultApiClient.SetLogger((ILogger)logger);
+                        }
 
                         return service;
                     },
@@ -175,7 +179,7 @@ public static class IServiceCollectionExtensions
         var jsonSerializer = provider.GetRequiredService<IJsonSerializer>();
 
         if (apiClientFactory is null)
-            return new DefaultApiClient(httpClient, jsonSerializer, logger: provider.GetService<ILogger<DefaultApiClient>>());
+            return new DefaultApiClient(httpClient, jsonSerializer);
 
         return apiClientFactory(serviceType, httpClient, jsonSerializer);
     }
