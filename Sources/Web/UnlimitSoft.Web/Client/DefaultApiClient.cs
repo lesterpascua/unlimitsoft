@@ -164,7 +164,10 @@ public class DefaultApiClient : IApiClient
 #endif
 
         if (!response.IsSuccessStatusCode)
+        {
+            _logger?.LogWarning("HttpResponse for {Url}, Result = {Code}, Body = {Body}", completeUri, response.StatusCode, body);
             throw new HttpException(response.StatusCode, response.ToString(), body);
+        }
 
         return (body, response.StatusCode);
     }
