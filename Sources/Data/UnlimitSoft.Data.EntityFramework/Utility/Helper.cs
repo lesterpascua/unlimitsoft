@@ -11,7 +11,7 @@ namespace UnlimitSoft.Data.EntityFramework.Utility;
 /// Provides utility methods for working with generic types.
 /// </summary>
 /// <typeparam name="T">The generic type parameter.</typeparam>
-internal static class Helper<T> where T : notnull
+public static class Helper<T> where T : notnull
 {
     private static Func<string, T>? _parse;
 
