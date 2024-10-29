@@ -13,6 +13,7 @@ using System.Linq;
 using UnlimitSoft.Json;
 using Microsoft.Extensions.Logging;
 using UnlimitSoft.Distribute;
+using System.Threading;
 
 namespace UnlimitSoft.Web.AspNet.Testing;
 
@@ -110,49 +111,61 @@ public static class TestFactory
 
         return services;
     }
+
     /// <summary>
-    /// 
+    /// Replace TDbContext for in memory database.
+    /// </summary>
+    /// <typeparam name="TDbContext"></typeparam>
+    /// <param name="services"></param>
+    /// <param name="allowWrite"></param>
+    /// <param name="inMemoryDatabaseRoot"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public static IServiceCollection ReplaceDbContextForInMemory<TDbContext>(this IServiceCollection services, bool allowWrite, InMemoryDatabaseRoot? inMemoryDatabaseRoot = null, string? name = null)
+        where TDbContext : DbContext
+    {
+        services.RemoveAll<TDbContext>();
+        services.RemoveAll<DbContextOptions>();
+        services.RemoveAll<DbContextOptions<TDbContext>>();
+#pragma warning disable EF1001 // Internal EF Core API usage.
+        services.RemoveAll<IDbContextPool<TDbContext>>();
+        services.RemoveAll<IScopedDbContextLease<TDbContext>>();
+#pragma warning restore EF1001 // Internal EF Core API usage.
+
+        var dbName = name;
+        if (string.IsNullOrEmpty(dbName))
+            dbName = Guid.NewGuid().ToString();
+
+        inMemoryDatabaseRoot ??= new InMemoryDatabaseRoot();
+        services.AddDbContext<TDbContext>(options =>
+        {
+            if (!allowWrite)
+                options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
+            options.UseInMemoryDatabase(dbName, inMemoryDatabaseRoot);
+            options.ConfigureWarnings(x => x.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning));
+        });
+        return services;
+    }
+    /// <summary>
+    /// Replace TDbContextRead and TDbContextWrite for in memory database.
     /// </summary>
     /// <typeparam name="TDbContextRead"></typeparam>
     /// <typeparam name="TDbContextWrite"></typeparam>
     /// <param name="services"></param>
+    /// <param name="inMemoryDatabaseRoot"></param>
     /// <param name="name"></param>
     /// <returns></returns>
-    public static IServiceCollection ReplaceDbContextForInMemory<TDbContextRead, TDbContextWrite>(this IServiceCollection services, string? name = null)
+    public static IServiceCollection ReplaceDbContextForInMemory<TDbContextRead, TDbContextWrite>(this IServiceCollection services, InMemoryDatabaseRoot? inMemoryDatabaseRoot = null, string ? name = null)
         where TDbContextRead : DbContext
         where TDbContextWrite : DbContext
     {
-        services.RemoveAll<TDbContextRead>();
-        services.RemoveAll<DbContextOptions>();
-        services.RemoveAll<DbContextOptions<TDbContextRead>>();
-#pragma warning disable EF1001 // Internal EF Core API usage.
-        services.RemoveAll<IDbContextPool<TDbContextRead>>();
-        services.RemoveAll<IScopedDbContextLease<TDbContextRead>>();
-#pragma warning restore EF1001 // Internal EF Core API usage.
-
-        services.RemoveAll<TDbContextWrite>();
-        services.RemoveAll<DbContextOptions>();
-        services.RemoveAll<DbContextOptions<TDbContextWrite>>();
-#pragma warning disable EF1001 // Internal EF Core API usage.
-        services.RemoveAll<IDbContextPool<TDbContextWrite>>();
-        services.RemoveAll<IScopedDbContextLease<TDbContextWrite>>();
-#pragma warning restore EF1001 // Internal EF Core API usage.
-
         var dbName = name;
-        if (string.IsNullOrEmpty(name))
+        if (string.IsNullOrEmpty(dbName))
             dbName = Guid.NewGuid().ToString();
 
-        var inMemoryDatabaseRoot = new InMemoryDatabaseRoot();
-        services.AddDbContext<TDbContextRead>(options =>
-        {
-            options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking).UseInMemoryDatabase(dbName, inMemoryDatabaseRoot);
-            options.ConfigureWarnings(x => x.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning));
-        });
-        services.AddDbContext<TDbContextWrite>(options =>
-        {
-            options.UseInMemoryDatabase(dbName, inMemoryDatabaseRoot);
-            options.ConfigureWarnings(x => x.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning));
-        });
+        inMemoryDatabaseRoot ??= new InMemoryDatabaseRoot();
+        services.ReplaceDbContextForInMemory<TDbContextRead>(false, inMemoryDatabaseRoot, dbName);
+        services.ReplaceDbContextForInMemory<TDbContextWrite>(true, inMemoryDatabaseRoot, dbName);
 
         return services;
     }
