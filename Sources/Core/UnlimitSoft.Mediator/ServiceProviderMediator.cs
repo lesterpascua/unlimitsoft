@@ -191,13 +191,13 @@ public sealed class ServiceProviderMediator : IMediator
 
     private static Result<TOut> Transform<TOut>(TOut result)
     {
-        return Result.FromOk(result);
+        return Result.Ok(result);
     }
     private static Result<TOut> TransformWithResult<TOut>(Result<TOut> result)
     {
         if (result.IsSuccess)
-            return Result.FromOk(result.Value);
-        return Result.FromError<TOut>(result.Error!);
+            return Result.Ok(result.Value);
+        return Result.Err<TOut>(result.Error!);
     }
     private async ValueTask<Result<TOut>> InternalSendAsync<TResponse, TOut>(IServiceProvider provider, IRequest<TResponse> request, Func<TResponse?, Result<TOut>> transform, CancellationToken ct)
     {
@@ -211,7 +211,7 @@ public sealed class ServiceProviderMediator : IMediator
 
         var handler = BuildHandlerMetadata(provider, requestType, responseType, out var metadata);
         if (handler is null)
-            return Result.FromError<TOut>(request.NotFoundResponse());
+            return Result.Err<TOut>(request.NotFoundResponse());
 
         if (metadata.HasLifeCycle)
             await InitAsync(handler, request, requestType, metadata, ct);
@@ -224,13 +224,13 @@ public sealed class ServiceProviderMediator : IMediator
                 {
                     var error = await ValidationAsync(handler, request, requestType, metadata, ct);
                     if (error is not null)
-                        return Result.FromError<TOut>(error);
+                        return Result.Err<TOut>(error);
                 }
                 if (metadata.HasCompliance)
                 {
                     var error = await ComplianceAsync(handler, request, requestType, metadata, ct);
                     if (error is not null)
-                        return Result.FromError<TOut>(error);
+                        return Result.Err<TOut>(error);
                 }
             }
             var response = await HandlerAsync(handler, request, requestType, metadata, ct);

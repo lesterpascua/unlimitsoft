@@ -81,7 +81,6 @@ public readonly struct Result
     }
 
 
-
     /// <summary>
     /// Return a result from success
     /// </summary>
@@ -188,4 +187,17 @@ public readonly struct Result<TResponse> : IResult
     #region Private Methods
     object? IResult.GetValue() => Value;
     #endregion
+}
+/// <summary>
+/// Extension method for <see cref="Result{TResponse}"/>
+/// </summary>
+public static class ResultExtensions
+{
+    /// <summary>
+    /// Return a result from success
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Result<TOut> ErrTo<TIn, TOut>(this in Result<TIn> value) => Result.Err<TOut>(value.Error!);
 }
