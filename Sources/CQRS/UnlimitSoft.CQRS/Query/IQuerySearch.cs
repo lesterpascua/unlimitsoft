@@ -18,3 +18,14 @@ public interface IQuerySearch
     /// </summary>
     IReadOnlyList<ColumnName> Order { get; init; }
 }
+/// <summary>
+/// 
+/// </summary>
+/// <typeparam name="TFilter"></typeparam>
+public interface IQuerySearch<TFilter> : IQuerySearch
+{
+    /// <summary>
+    /// 
+    /// </summary>
+    TFilter? Filter { get; init; }
+}
