@@ -23,14 +23,14 @@
 	</PropertyGroup>
 	
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-		<PackageReference Include="System.Text.Json" Version="8.0.4" />
+		<PackageReference Include="System.Text.Json" Version="9.0.0" />
 	</ItemGroup>
 	<ItemGroup>
 		<PackageReference Include="PolySharp" Version="1.14.1">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="NRedisStack" Version="0.13.0" />
+		<PackageReference Include="NRedisStack" Version="0.13.1" />
 		<PackageReference Include="StackExchange.Redis" Version="2.8.16" />
 	</ItemGroup>
 

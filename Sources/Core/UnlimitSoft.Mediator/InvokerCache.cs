@@ -1,12 +1,9 @@
 ﻿using FluentValidation;
-using Sigil;
 using System;
 using System.Collections.Generic;
 using System.Reflection.Emit;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
-using System.Xml.Linq;
 using UnlimitSoft.Mediator.Pipeline;
 using UnlimitSoft.Message;
 
@@ -18,6 +15,12 @@ namespace UnlimitSoft.Mediator;
 /// </summary>
 public static class InvokerCache
 {
+#if NET9_0_OR_GREATER
+    internal static readonly Lock Sync = new();                    // Object used as a monitor for threads synchronization.
+#else
+    internal static readonly object Sync = new();                  // Object used as a monitor for threads synchronization.
+#endif
+
     private static Dictionary<Type, RequestMetadata>? _cache;
 
     internal const string
@@ -29,7 +32,6 @@ public static class InvokerCache
         EndMethod = nameof(IRequestHandlerLifeCycle<IRequest>.EndAsync);
 
 
-
     /// <summary>
     /// Return an instance of the cache object. Cache is share between all instance of the Mediator to avoid wasted memory and processing.
     /// </summary>
@@ -39,9 +41,13 @@ public static class InvokerCache
         {
             if (_cache is not null)
                 return _cache;
-            Interlocked.CompareExchange(ref _cache, new Dictionary<Type, RequestMetadata>(), null);
+            Interlocked.CompareExchange(ref _cache, [], null);
             return _cache;
         }
+    }
+    internal static void UnsafeAdd(Type requestType, RequestMetadata metadata)
+    {
+        Cache.Add(requestType, metadata);
     }
 
     /// <summary>
@@ -54,23 +60,18 @@ public static class InvokerCache
     /// <exception cref="MissingMethodException"></exception>
     internal static Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>> GetHandler<TResponse>(Type requestType, RequestMetadata metadata)
     {
-        var cli = metadata.HandlerCLI;
-        if (cli is not null)
-            return (Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>)cli;
-
-        lock (metadata)
+        lock (metadata.Sync)
         {
-            cli = metadata.HandlerCLI;
+            var cli = metadata.HandlerCLI;
             if (cli is not null)
                 return (Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>)cli;                         // Return function
 
             var method = metadata
                 .HandlerImplementType
-                .GetMethod(HandleMethod, new[] { requestType, typeof(CancellationToken) }) ?? throw new MissingMethodException($"Can't find {HandleMethod} in {requestType}");
+                .GetMethod(HandleMethod, [requestType, typeof(CancellationToken)]) ?? throw new MissingMethodException($"Can't find {HandleMethod} in {requestType}");
 
             var name = $"{HandleMethod}_{requestType.FullName}";
 
-#if EMIT_NATIVE
             var returnType = typeof(ValueTask<TResponse>);
             var parameterTypes = new[] { typeof(IRequestHandler), typeof(IRequest<TResponse>), typeof(CancellationToken) };
             var dynamicMethod = new DynamicMethod(name, returnType, parameterTypes, typeof(ServiceProviderMediator).Module);    // Create a dynamic method
@@ -90,19 +91,6 @@ public static class InvokerCache
             metadata.HandlerCLI = tmp;
 
             return (Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>)tmp;
-#else
-            var tmp = Emit<Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>>
-                .NewDynamicMethod(name)
-                .LoadArgument(0).CastClass(metadata.HandlerImplementType)
-                .LoadArgument(1).CastClass(requestType)
-                .LoadArgument(2)
-                .Call(method)
-                .Return()
-                .CreateDelegate();
-
-            metadata.HandlerCLI = tmp;
-            return tmp;
-#endif
         }
     }
     /// <summary>
@@ -118,7 +106,7 @@ public static class InvokerCache
         if (cli is not null)
             return cli;
 
-        lock (metadata)
+        lock (metadata.Sync)
         {
             cli = metadata.ValidatorCLI;
             if (cli is not null)
@@ -128,11 +116,10 @@ public static class InvokerCache
 
             var method = metadata
                 .HandlerImplementType
-                .GetMethod(ValidatorMethod, new[] { requestType, validatorType, typeof(CancellationToken) }) ?? throw new MissingMethodException($"Can't find {ValidatorMethod} in {requestType}");
+                .GetMethod(ValidatorMethod, [requestType, validatorType, typeof(CancellationToken)]) ?? throw new MissingMethodException($"Can't find {ValidatorMethod} in {requestType}");
 
             var name = $"{ValidatorMethod}_{requestType.FullName}";
 
-#if EMIT_NATIVE
             var returnType = typeof(ValueTask<IResponse>);
             var parameterTypes = new[] { typeof(IRequestHandler), typeof(IRequest), typeof(IValidator), typeof(CancellationToken) };
             var dynamicMethod = new DynamicMethod(name, returnType, parameterTypes, typeof(ServiceProviderMediator).Module);    // Create a dynamic method
@@ -154,20 +141,6 @@ public static class InvokerCache
             metadata.ValidatorCLI = (Func<IRequestHandler, IRequest, IValidator, CancellationToken, ValueTask<IResponse>>)tmp;
 
             return metadata.ValidatorCLI;
-#else
-            var tmp = Emit<Func<IRequestHandler, IRequest, IValidator, CancellationToken, ValueTask<IResponse>>>
-                .NewDynamicMethod(name)
-                .LoadArgument(0).CastClass(metadata.HandlerImplementType)
-                .LoadArgument(1).CastClass(requestType)
-                .LoadArgument(2).CastClass(validatorType)
-                .LoadArgument(3)
-                .Call(method)
-                .Return()
-                .CreateDelegate();
-
-            metadata.ValidatorCLI = tmp;
-            return tmp;
-#endif
         }
     }
     /// <summary>
@@ -183,7 +156,7 @@ public static class InvokerCache
         if (cli is not null)
             return cli;
 
-        lock (metadata)
+        lock (metadata.Sync)
         {
             cli = metadata.ComplianceCLI;
             if (cli is not null)
@@ -191,11 +164,10 @@ public static class InvokerCache
 
             var method = metadata
                 .HandlerImplementType
-                .GetMethod(ComplianceMethod, new[] { requestType, typeof(CancellationToken) }) ?? throw new MissingMethodException($"Can't find {ComplianceMethod} in {requestType}");
+                .GetMethod(ComplianceMethod, [requestType, typeof(CancellationToken)]) ?? throw new MissingMethodException($"Can't find {ComplianceMethod} in {requestType}");
 
             var name = $"{ComplianceMethod}_{requestType.FullName}";
 
-#if EMIT_NATIVE
             var returnType = typeof(ValueTask<IResponse>);
             var parameterTypes = new[] { typeof(IRequestHandler), typeof(IRequest), typeof(CancellationToken) };
             var dynamicMethod = new DynamicMethod(name, returnType, parameterTypes, typeof(ServiceProviderMediator).Module);    // Create a dynamic method
@@ -216,19 +188,6 @@ public static class InvokerCache
             );
             metadata.ComplianceCLI = cli;
             return cli;
-#else
-            cli = Emit<Func<IRequestHandler, IRequest, CancellationToken, ValueTask<IResponse>>>
-                .NewDynamicMethod(name)
-                .LoadArgument(0).CastClass(metadata.HandlerImplementType)
-                .LoadArgument(1).CastClass(requestType)
-                .LoadArgument(2)
-                .Call(method)
-                .Return()
-                .CreateDelegate();
-
-            metadata.ComplianceCLI = cli;
-            return cli;
-#endif
         }
     }
     /// <summary>
@@ -244,7 +203,7 @@ public static class InvokerCache
         if (cli is not null)
             return cli;
 
-        lock (metadata)
+        lock (metadata.Sync)
         {
             cli = metadata.InitCLI;
             if (cli is not null)
@@ -252,11 +211,10 @@ public static class InvokerCache
 
             var method = metadata
                 .HandlerImplementType
-                .GetMethod(InitMethod, new[] { requestType, typeof(CancellationToken) }) ?? throw new MissingMethodException($"Can't find {InitMethod} in {requestType}");
+                .GetMethod(InitMethod, [requestType, typeof(CancellationToken)]) ?? throw new MissingMethodException($"Can't find {InitMethod} in {requestType}");
 
             var name = $"{InitMethod}_{requestType.FullName}";
 
-#if EMIT_NATIVE
             var returnType = typeof(ValueTask);
             var parameterTypes = new[] { typeof(IRequestHandler), typeof(IRequest), typeof(CancellationToken) };
             var dynamicMethod = new DynamicMethod(name, returnType, parameterTypes, typeof(ServiceProviderMediator).Module);    // Create a dynamic method
@@ -277,19 +235,6 @@ public static class InvokerCache
             );
             metadata.InitCLI = cli;
             return cli;
-#else
-            cli = Emit<Func<IRequestHandler, IRequest, CancellationToken, ValueTask>>
-                .NewDynamicMethod(name)
-                .LoadArgument(0).CastClass(metadata.HandlerImplementType)
-                .LoadArgument(1).CastClass(requestType)
-                .LoadArgument(2)
-                .Call(method)
-                .Return()
-                .CreateDelegate();
-
-            metadata.InitCLI = cli;
-            return cli
-#endif
         }
     }
     /// <summary>
@@ -305,7 +250,7 @@ public static class InvokerCache
         if (cli is not null)
             return cli;
 
-        lock (metadata)
+        lock (metadata.Sync)
         {
             cli = metadata.EndCLI;
             if (cli is not null)
@@ -313,11 +258,10 @@ public static class InvokerCache
 
             var method = metadata
                 .HandlerImplementType
-                .GetMethod(EndMethod, new[] { requestType, typeof(CancellationToken) }) ?? throw new MissingMethodException($"Can't find {EndMethod} in {requestType}");
+                .GetMethod(EndMethod, [requestType, typeof(CancellationToken)]) ?? throw new MissingMethodException($"Can't find {EndMethod} in {requestType}");
 
             var name = $"{EndMethod}_{requestType.FullName}";
 
-#if EMIT_NATIVE
             var returnType = typeof(ValueTask);
             var parameterTypes = new[] { typeof(IRequestHandler), typeof(IRequest), typeof(CancellationToken) };
             var dynamicMethod = new DynamicMethod(name, returnType, parameterTypes, typeof(ServiceProviderMediator).Module);    // Create a dynamic method
@@ -338,62 +282,50 @@ public static class InvokerCache
             );
             metadata.EndCLI = cli;
             return cli;
-#else
-            cli = Emit<Func<IRequestHandler, IRequest, CancellationToken, ValueTask>>
-                .NewDynamicMethod(name)
-                .LoadArgument(0).CastClass(metadata.HandlerImplementType)
-                .LoadArgument(1).CastClass(requestType)
-                .LoadArgument(2)
-                .Call(method)
-                .Return()
-                .CreateDelegate();
-
-            metadata.EndCLI = cli;
-#endif
         }
     }
-    /// <summary>
-    /// Get a function to execute the commmand handler validator without use a dynamic methods (faster)
-    /// </summary>
-    /// <param name="requestType"></param>
-    /// <param name="metadata"></param>
-    /// <param name="postPipelineMetadata"></param>
-    /// <returns></returns>
-    /// <exception cref="KeyNotFoundException"></exception>
-    internal static Func<IRequestHandlerPostPipeline, IRequest, IRequestHandler, TResponse, CancellationToken, Task> GetPostPipeline<TResponse>(Type requestType, RequestMetadata metadata, PostPipelineMetadata postPipelineMetadata)
-    {
-        var cli = postPipelineMetadata.CLI;
-        if (cli is not null)
-            return (Func<IRequestHandlerPostPipeline, IRequest, IRequestHandler, TResponse, CancellationToken, Task>)cli;
+    ///// <summary>
+    ///// Get a function to execute the commmand handler validator without use a dynamic methods (faster)
+    ///// </summary>
+    ///// <param name="requestType"></param>
+    ///// <param name="metadata"></param>
+    ///// <param name="postPipelineMetadata"></param>
+    ///// <returns></returns>
+    ///// <exception cref="KeyNotFoundException"></exception>
+    //internal static Func<IRequestHandlerPostPipeline, IRequest, IRequestHandler, TResponse, CancellationToken, Task> GetPostPipeline<TResponse>(Type requestType, RequestMetadata metadata, PostPipelineMetadata postPipelineMetadata)
+    //{
+    //    var cli = postPipelineMetadata.CLI;
+    //    if (cli is not null)
+    //        return (Func<IRequestHandlerPostPipeline, IRequest, IRequestHandler, TResponse, CancellationToken, Task>)cli;
 
-        lock (metadata)
-        {
-            cli = postPipelineMetadata.CLI;
-            if (cli is null)
-            {
-                var handlerType = metadata.HandlerImplementType;
-                var postPipelineType = postPipelineMetadata.ImplementType!;
+    //    lock (metadata.Sync)
+    //    {
+    //        cli = postPipelineMetadata.CLI;
+    //        if (cli is null)
+    //        {
+    //            var handlerType = metadata.HandlerImplementType;
+    //            var postPipelineType = postPipelineMetadata.ImplementType!;
 
-                var method = postPipelineType
-                    .GetMethod(PostPipelineMethod, new[] { requestType, handlerType, typeof(TResponse), typeof(CancellationToken) }) ?? throw new MissingMethodException($"Can't find {PostPipelineMethod} in {requestType}");
+    //            var method = postPipelineType
+    //                .GetMethod(PostPipelineMethod, new[] { requestType, handlerType, typeof(TResponse), typeof(CancellationToken) }) ?? throw new MissingMethodException($"Can't find {PostPipelineMethod} in {requestType}");
 
-                var tmp = Emit<Func<IRequestHandlerPostPipeline, IRequest, IRequestHandler, TResponse, CancellationToken, Task>>
-                    .NewDynamicMethod($"{PostPipelineMethod}_{handlerType.FullName}")
-                    .LoadArgument(0).CastClass(postPipelineType)
-                    .LoadArgument(1).CastClass(requestType)
-                    .LoadArgument(2).CastClass(handlerType)
-                    .LoadArgument(3)
-                    .LoadArgument(4)
-                    .Call(method)
-                    .Return()
-                    .CreateDelegate();
-                postPipelineMetadata.CLI = tmp;
+    //            var tmp = Emit<Func<IRequestHandlerPostPipeline, IRequest, IRequestHandler, TResponse, CancellationToken, Task>>
+    //                .NewDynamicMethod($"{PostPipelineMethod}_{handlerType.FullName}")
+    //                .LoadArgument(0).CastClass(postPipelineType)
+    //                .LoadArgument(1).CastClass(requestType)
+    //                .LoadArgument(2).CastClass(handlerType)
+    //                .LoadArgument(3)
+    //                .LoadArgument(4)
+    //                .Call(method)
+    //                .Return()
+    //                .CreateDelegate();
+    //            postPipelineMetadata.CLI = tmp;
 
-                return tmp;
-            }
-        }
+    //            return tmp;
+    //        }
+    //    }
 
-        // Return function
-        return (Func<IRequestHandlerPostPipeline, IRequest, IRequestHandler, TResponse, CancellationToken, Task>)cli;
-    }
+    //    // Return function
+    //    return (Func<IRequestHandlerPostPipeline, IRequest, IRequestHandler, TResponse, CancellationToken, Task>)cli;
+    //}
 }

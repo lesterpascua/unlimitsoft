@@ -65,6 +65,7 @@ public static class Helper<T> where T : notnull
 
         try
         {
+            /// TODO: optimize for .net 9 using span array
             return value
                 .Split(',', StringSplitOptions.RemoveEmptyEntries)
                 .Select(_parse)

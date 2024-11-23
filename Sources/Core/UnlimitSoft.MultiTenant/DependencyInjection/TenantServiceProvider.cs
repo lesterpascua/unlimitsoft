@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace UnlimitSoft.MultiTenant.DependencyInjection;
 
@@ -12,7 +13,12 @@ namespace UnlimitSoft.MultiTenant.DependencyInjection;
 /// </summary>
 public sealed class TenantServiceProvider : IServiceProvider, IDisposable
 {
-    private readonly object _lock;
+#if NET9_0_OR_GREATER
+    private readonly Lock _sync = new();                    // Object used as a monitor for threads synchronization.
+#else
+    private readonly object _sync = new();                  // Object used as a monitor for threads synchronization.
+#endif
+
     private readonly IServiceProvider _root;                                            // root provider.
     private readonly ServiceDescriptor[] _descriptors;                                  // root service descriptos.
     private readonly Dictionary<Guid, IServiceProvider> _tenantProviders;               // Keeps track of all of the tenant scopes that we have created
@@ -26,8 +32,8 @@ public sealed class TenantServiceProvider : IServiceProvider, IDisposable
     /// <param name="options"></param>
     public TenantServiceProvider(IServiceCollection services, ServiceProviderOptions options)
     {
-        _lock = new();
-        _tenantProviders = new();
+        _sync = new();
+        _tenantProviders = [];
         _descriptors = services.ToArray();
         _root = services.BuildServiceProvider(options);
 
@@ -58,7 +64,7 @@ public sealed class TenantServiceProvider : IServiceProvider, IDisposable
     {
         IServiceProvider? tenantProvider = null;
         if (_tenantProviders.ContainsKey(tenant.Id))
-            lock (_lock)
+            lock (_sync)
                 if (_tenantProviders.TryGetValue(tenant.Id, out tenantProvider))
                     _tenantProviders.Remove(tenant.Id);
         if (tenantProvider is IDisposable disposable)
@@ -96,7 +102,7 @@ public sealed class TenantServiceProvider : IServiceProvider, IDisposable
         if (_tenantProviders.TryGetValue(tenantId, out var provider))
             return provider;
 
-        lock (_lock)
+        lock (_sync)
         {
             if (_tenantProviders.TryGetValue(tenantId, out provider))
                 return provider;

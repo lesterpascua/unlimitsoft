@@ -1,22 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net9.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 	</PropertyGroup>
 
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
-		<PackageReference Include="Serilog.AspNetCore" Version="8.0.2" />
+		<PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
 		<PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.8.1" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="7.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\..\Sources\Core\UnlimitSoft.Logger.DependencyInjection\UnlimitSoft.Logger.DependencyInjection.csproj" />
 		<ProjectReference Include="..\..\..\Sources\Core\UnlimitSoft.Logger\UnlimitSoft.Logger.csproj" />
-		<ProjectReference Include="..\..\..\Sources\CQRS\UnlimitSoft.CQRS.DependencyInjection\UnlimitSoft.CQRS.DependencyInjection.csproj" />
 		<ProjectReference Include="..\..\..\Sources\EventBus\UnlimitSoft.EventBus.Azure\UnlimitSoft.EventBus.Azure.csproj" />
 		<ProjectReference Include="..\..\..\Sources\EventBus\UnlimitSoft.EventBus.DotNetMQ\UnlimitSoft.EventBus.DotNetMQ.csproj" />
 		<ProjectReference Include="..\..\..\Sources\Json\UnlimitSoft.Text.Json\UnlimitSoft.Text.Json.csproj" />

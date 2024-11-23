@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net8.0;net7.0;net6.0;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>net9.0;net8.0;net6.0;netstandard2.0</TargetFrameworks>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<LangVersion>latest</LangVersion>
 		<NoWarn>1701;1702;8002</NoWarn>
@@ -22,7 +22,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Akka" Version="1.5.28" />
+		<PackageReference Include="Akka" Version="1.5.31" />
 	</ItemGroup>
 
 	<ItemGroup>

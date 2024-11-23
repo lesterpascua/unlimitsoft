@@ -23,7 +23,12 @@ namespace UnlimitSoft.Security.Cryptography;
 public class MicroServiceGenerator : IIdGenerator<Guid>, IServiceMetadata
 {
     private readonly ulong _startEpoch;
-    private readonly object _sync = new();                      // Object used as a monitor for threads synchronization.
+
+#if NET9_0_OR_GREATER
+    private readonly Lock _sync = new();                    // Object used as a monitor for threads synchronization.
+#else
+    private readonly object _sync = new();                  // Object used as a monitor for threads synchronization.
+#endif
 
     private int _sequence;                                      // The sequence within the same tick.
     private ulong _lastTimestamp;

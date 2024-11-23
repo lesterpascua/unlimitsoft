@@ -122,7 +122,7 @@ public sealed class ServiceProviderMediator : IMediator
         }
 
         // Handler
-        lock (InvokerCache.Cache)
+        lock (InvokerCache.Sync)
         {
             if (InvokerCache.Cache.TryGetValue(requestType, out metadata!))
                 return (IRequestHandler)provider.GetRequiredService(metadata.HandlerInterfaceType);             // Resolve service
@@ -132,7 +132,7 @@ public sealed class ServiceProviderMediator : IMediator
             var handler = (IRequestHandler?)provider.GetService(handlerInterfaceType);
             if (handler is null)
             {
-                InvokerCache.Cache.Add(requestType, new RequestMetadata());
+                InvokerCache.UnsafeAdd(requestType, RequestMetadata.Empty ??= new());
                 return null;
             }
 
@@ -183,7 +183,7 @@ public sealed class ServiceProviderMediator : IMediator
                     .ToArray();
             }
 
-            InvokerCache.Cache.Add(requestType, metadata);
+            InvokerCache.UnsafeAdd(requestType, metadata);
             return handler;
         }
     }
@@ -237,7 +237,10 @@ public sealed class ServiceProviderMediator : IMediator
 
             // Run existing post operations
             if (metadata.PostPipeline is not null)
-                PostPipelineHandlerAsync(provider, requestType, request, handler, response, metadata, ct);
+            {
+                throw new NotSupportedException("Will be migrate to native compiler");
+                //PostPipelineHandlerAsync(provider, requestType, request, handler, response, metadata, ct);
+            }
 
             return transform(response);
         }
@@ -249,10 +252,14 @@ public sealed class ServiceProviderMediator : IMediator
     }
 
 
-    private static async ValueTask<TResponse?> HandlerAsync<TResponse>(IRequestHandler handler, IRequest<TResponse> request, Type requestType, RequestMetadata metadata, CancellationToken ct)
+    private static ValueTask<TResponse> HandlerAsync<TResponse>(IRequestHandler handler, IRequest<TResponse> request, Type requestType, RequestMetadata metadata, CancellationToken ct)
     {
+        var cli = metadata.HandlerCLI;
+        if (cli is not null)
+            return ((Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>)cli).Invoke(handler, request, ct);
+
         var method = InvokerCache.GetHandler<TResponse>(requestType, metadata);
-        return await method(handler, request, ct);
+        return method(handler, request, ct);
     }
     /// <summary>
     /// Execute validator
@@ -310,36 +317,36 @@ public sealed class ServiceProviderMediator : IMediator
         return method(handler, request, ct);
     }
 
-    /// <summary>
-    /// Handler post async operations
-    /// </summary>
-    /// <param name="provider"></param>
-    /// <param name="requestType"></param>
-    /// <param name="request"></param>
-    /// <param name="handler"></param>
-    /// <param name="response"></param>
-    /// <param name="metadata"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
-    private static void PostPipelineHandlerAsync<TResponse>(IServiceProvider provider, Type requestType, IRequest request, IRequestHandler handler, TResponse response, RequestMetadata metadata, CancellationToken ct)
-    {
-        var span = metadata.PostPipeline.AsSpan();
-        for (var i = 0; i < span.Length; i++)
-        {
-            var group = span[i].AsSpan();
-            var tasks = new Task[group.Length];
-            for (var j = 0; j < group.Length; j++)
-            {
-                var pipelineMetadata = group[j];
-                var pipeline = (IRequestHandlerPostPipeline)provider.GetRequiredService(pipelineMetadata.InterfaceType);
+    ///// <summary>
+    ///// Handler post async operations
+    ///// </summary>
+    ///// <param name="provider"></param>
+    ///// <param name="requestType"></param>
+    ///// <param name="request"></param>
+    ///// <param name="handler"></param>
+    ///// <param name="response"></param>
+    ///// <param name="metadata"></param>
+    ///// <param name="ct"></param>
+    ///// <returns></returns>
+    //private static void PostPipelineHandlerAsync<TResponse>(IServiceProvider provider, Type requestType, IRequest request, IRequestHandler handler, TResponse response, RequestMetadata metadata, CancellationToken ct)
+    //{
+    //    var span = metadata.PostPipeline.AsSpan();
+    //    for (var i = 0; i < span.Length; i++)
+    //    {
+    //        var group = span[i].AsSpan();
+    //        var tasks = new Task[group.Length];
+    //        for (var j = 0; j < group.Length; j++)
+    //        {
+    //            var pipelineMetadata = group[j];
+    //            var pipeline = (IRequestHandlerPostPipeline)provider.GetRequiredService(pipelineMetadata.InterfaceType);
 
-                pipelineMetadata.ImplementType ??= pipeline.GetType();
-                var method = InvokerCache.GetPostPipeline<TResponse>(requestType, metadata, pipelineMetadata);
+    //            pipelineMetadata.ImplementType ??= pipeline.GetType();
+    //            var method = InvokerCache.GetPostPipeline<TResponse>(requestType, metadata, pipelineMetadata);
 
-                tasks[j] = method(pipeline, request, handler, response, ct);
-            }
-            Task.WaitAll(tasks, ct);
-        }
-    }
+    //            tasks[j] = method(pipeline, request, handler, response, ct);
+    //        }
+    //        Task.WaitAll(tasks, ct);
+    //    }
+    //}
     #endregion
 }

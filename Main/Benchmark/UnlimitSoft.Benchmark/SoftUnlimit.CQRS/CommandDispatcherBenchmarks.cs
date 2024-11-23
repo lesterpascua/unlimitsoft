@@ -1,9 +1,8 @@
 ﻿using BenchmarkDotNet.Attributes;
-using System.Threading.Tasks;
+using UnlimitSoft.Benchmark.SoftUnlimit.CQRS.Labs;
 using UnlimitSoft.Benchmark.UnlimitSoft.CQRS.Labs;
-using UnlimitSoft.Mediator;
 
-namespace UnlimitSoft.Benchmark.UnlimitSoft.CQRS;
+namespace UnlimitSoft.Benchmark.SoftUnlimit.CQRS;
 
 
 [MemoryDiagnoser]
@@ -18,14 +17,14 @@ public class CommandBenchmark
         _unlimitSoft = new CommandDispatcherLab(false);
     }
 
-    //[Benchmark]
-    //public async Task MediatR()
-    //{
-    //    await _mediatR.DispatchCommand();
-    //}
     [Benchmark]
-    public async Task UnlimitSoft()
+    public async Task<string> MediatR()
     {
-        await _unlimitSoft.Dispatch();
+        return await _mediatR.DispatchCommand();
+    }
+    [Benchmark]
+    public async Task<string?> UnlimitSoft()
+    {
+        return await _unlimitSoft.Dispatch();
     }
 }
