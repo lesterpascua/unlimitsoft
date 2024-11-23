@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
 	<PropertyGroup>
-		<TargetFramework>net8.0</TargetFramework>
+		<TargetFramework>net9.0</TargetFramework>
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
@@ -12,28 +12,25 @@
 
 	<ItemGroup>
 		<PackageReference Include="DistributedLock.SqlServer" Version="1.0.5" />
-		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="8.0.0" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="8.0.0" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="8.0.8" />
-		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="8.0.8">
+		<PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="9.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="9.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
+		<PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.0">
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="Serilog.AspNetCore" Version="8.0.2" />
+		<PackageReference Include="Serilog.AspNetCore" Version="8.0.3" />
 		<PackageReference Include="Serilog.Sinks.Console" Version="6.0.0" />
-		<PackageReference Include="Swashbuckle.AspNetCore" Version="6.8.1" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="7.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>
-		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.AutoMapper.DependencyInjection\UnlimitSoft.AutoMapper.DependencyInjection.csproj" />
 		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.AutoMapper\UnlimitSoft.AutoMapper.csproj" />
 		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.Logger.AspNet\UnlimitSoft.Logger.AspNet.csproj" />
-		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.Logger.DependencyInjection\UnlimitSoft.Logger.DependencyInjection.csproj" />
 		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.Logger\UnlimitSoft.Logger.csproj" />
 		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft\UnlimitSoft.csproj" />
 		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.AkkaBus\UnlimitSoft.AkkaBus.csproj" />
 		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.Bus.Hangfire\UnlimitSoft.Bus.Hangfire.csproj" />
-		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.CQRS.DependencyInjection\UnlimitSoft.CQRS.DependencyInjection.csproj" />
 		<ProjectReference Include="..\..\Sources\CQRS\UnlimitSoft.CQRS\UnlimitSoft.CQRS.csproj" />
 		<ProjectReference Include="..\..\Sources\Data\UnlimitSoft.Data.EntityFramework\UnlimitSoft.Data.EntityFramework.csproj" />
 		<ProjectReference Include="..\..\Sources\Data\UnlimitSoft.Data\UnlimitSoft.Data.csproj" />

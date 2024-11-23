@@ -1,5 +1,6 @@
 ﻿using BenchmarkDotNet.Running;
-using UnlimitSoft.Benchmark.UnlimitSoft.CQRS;
+using UnlimitSoft.Benchmark.SoftUnlimit.CQRS;
+
 
 
 //var command = new CommandDispatcherLab.Command { Name = "Test" };
@@ -11,6 +12,11 @@ using UnlimitSoft.Benchmark.UnlimitSoft.CQRS;
 //);
 //var result = await wrapInvoker(handler, command, default);
 //Console.WriteLine(result);
+
+
+//var bm = new CommandBenchmark();
+//await bm.UnlimitSoft();
+//await bm.UnlimitSoft();
 
 BenchmarkRunner.Run<CommandBenchmark>();
 

@@ -7,7 +7,7 @@ using UnlimitSoft.Mediator.Validation;
 using UnlimitSoft.Message;
 using UnlimitSoft.Web.Client;
 
-namespace UnlimitSoft.Benchmark.UnlimitSoft.CQRS.Labs;
+namespace UnlimitSoft.Benchmark.SoftUnlimit.CQRS.Labs;
 
 
 
@@ -17,7 +17,6 @@ namespace UnlimitSoft.Benchmark.UnlimitSoft.CQRS.Labs;
 public sealed class CommandDispatcherLab
 {
     private readonly IServiceProvider _provider;
-    private readonly ICommandDispatcher _dispatcher;
     private readonly IMediator _mediator;
 
     public CommandDispatcherLab(bool validate)
@@ -26,28 +25,15 @@ public sealed class CommandDispatcherLab
 
         services.AddSingleton<IMediator>(provider => new ServiceProviderMediator(provider, validate));
         services.AddScoped<IRequestHandler<Command, string>, CommandHandler>();
-        services.AddScoped<IRequestHandlerPostPipeline<Command, CommandHandler, string, CommandHandlerPipeline1>, CommandHandlerPipeline1>();
-        services.AddScoped<IRequestHandlerPostPipeline<Command, CommandHandler, string, CommandHandlerPipeline2>, CommandHandlerPipeline2>();
-
-        services.AddCommandHandler(null, typeof(ICommandHandler<,>), validate, typeof(Program).Assembly);
-
 
         _provider = services.BuildServiceProvider();
-        _dispatcher = _provider.GetRequiredService<ICommandDispatcher>();
         _mediator = _provider.GetRequiredService<IMediator>();
     }
 
     public async Task<string?> Dispatch()
     {
         var command = new Command { Name = "Lester Pastrana" };
-        var result = await _dispatcher.DispatchAsync(_provider, command);
-
-        return result.Value;
-    }
-    public async Task<string?> DispatchCommand()
-    {
-        var command = new Command { Name = "Lester Pastrana" };
-        var result = await _dispatcher.DispatchAsync(_provider, command);
+        var result = await _mediator.SendAsync(_provider, command);
 
         return result.Value;
     }
@@ -56,8 +42,6 @@ public sealed class CommandDispatcherLab
     /// <summary>
     /// 
     /// </summary>
-    //[PostPipeline<CommandHandlerPipeline1>(0)]
-    //[PostPipeline<CommandHandlerPipeline2>(1)]
     public class Command : Command<string, CommandProps>
     {
         /// <summary>
@@ -65,21 +49,20 @@ public sealed class CommandDispatcherLab
         /// </summary>
         public string? Name { get; init; }
     }
-    public class CommandHandler : ICommandHandler<Command, string>, ICommandHandlerValidator<Command>, ICommandHandlerCompliance<Command>
+    public class CommandHandler : ICommandHandler<Command, string> //, ICommandHandlerValidator<Command>, ICommandHandlerCompliance<Command>
     {
         public ValueTask<string> HandleAsync(Command request, CancellationToken ct = default)
         {
-            var result = $"{request.Name} - {SysClock.GetUtcNow()}";
-            return ValueTask.FromResult(result);
+            return ValueTask.FromResult($"{request.Name} - {SysClock.GetUtcNow()}");
         }
-        public ValueTask<IResponse> ValidatorAsync(Command request, RequestValidator<Command> validator, CancellationToken ct = default)
-        {
-            return ValueTask.FromResult(request.OkResponse());
-        }
-        public ValueTask<IResponse> ComplianceAsync(Command request, CancellationToken ct = default)
-        {
-            return ValueTask.FromResult(request.OkResponse());
-        }
+        //public ValueTask<IResponse> ValidatorAsync(Command request, RequestValidator<Command> validator, CancellationToken ct = default)
+        //{
+        //    return ValueTask.FromResult(request.OkResponse());
+        //}
+        //public ValueTask<IResponse> ComplianceAsync(Command request, CancellationToken ct = default)
+        //{
+        //    return ValueTask.FromResult(request.OkResponse());
+        //}
     }
     #endregion
 

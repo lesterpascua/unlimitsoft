@@ -13,7 +13,12 @@ public class Custom64BitGenerator : IIdGenerator<ulong>
 {
     private const ulong Mask = 18446744073709551615L;       // -1L
 
+#if NET9_0_OR_GREATER
+    private readonly Lock _sync = new();                    // Object used as a monitor for threads synchronization.
+#else
     private readonly object _sync = new();                  // Object used as a monitor for threads synchronization.
+#endif
+
     private readonly DateTime _startEpoch;
     private readonly int _timestampLeftShift;
     private readonly int _sequenceBits, _identifierBits;
@@ -98,16 +103,13 @@ public class Custom64BitGenerator : IIdGenerator<ulong>
     }
 
     #region Private Properties
-
     private ulong CurrentTime
     {
         get { return (ulong)(SysClock.GetUtcNow() - _startEpoch).TotalMilliseconds; }
     }
-
     #endregion
 
     #region Private Methods
-
     private ulong NextId()
     {
         var timestamp = CurrentTime;
@@ -131,6 +133,5 @@ public class Custom64BitGenerator : IIdGenerator<ulong>
 
         return timestamp;
     }
-
     #endregion
 }

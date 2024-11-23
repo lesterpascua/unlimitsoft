@@ -72,7 +72,7 @@ public sealed class DatabaseController : ControllerBase
     {
         using var scope = _factory.CreateScope();
         var unitOfWork = scope.ServiceProvider.GetRequiredService<IMyUnitOfWork>();
-        var lockRepository = scope.ServiceProvider.GetRequiredService<IMyRepository<Lock>>();
+        var lockRepository = scope.ServiceProvider.GetRequiredService<IMyRepository<Sources.Data.Model.Lock>>();
         var customerRepository = scope.ServiceProvider.GetRequiredService<IMyRepository<Customer>>();
 
 
@@ -89,7 +89,7 @@ public sealed class DatabaseController : ControllerBase
         var lockObject = await lockRepository.FindAll().FirstOrDefaultAsync(cancellationToken: ct);
         if (lockObject == null)
         {
-            lockObject = new Lock { Id = 1, DateTime = SysClock.GetUtcNow() };
+            lockObject = new Sources.Data.Model.Lock { Id = 1, DateTime = SysClock.GetUtcNow() };
             await lockRepository.AddAsync(lockObject, ct);
         }
         else
