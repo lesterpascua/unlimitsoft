@@ -26,7 +26,7 @@ name: 3.4.1$(Rev:.r)
 steps:
 - task: UseDotNet@2
   inputs:
-    version: '8.0.x'
+    version: '9.0.x'
     
 - task: DotNetCoreCLI@2
   displayName: Restore
