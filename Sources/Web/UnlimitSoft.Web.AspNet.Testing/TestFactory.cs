@@ -2,18 +2,19 @@
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Internal;
 using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
-using UnlimitSoft.CQRS.Event;
+using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
-using UnlimitSoft.Json;
-using Microsoft.Extensions.Logging;
+using System.Reflection;
+using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.Distribute;
-using System.Threading;
+using UnlimitSoft.Json;
 
 namespace UnlimitSoft.Web.AspNet.Testing;
 
@@ -35,7 +36,7 @@ public static class TestFactory
 
         services.RemoveAll<IEventBus>();
 
-        services.AddSingleton<IEventBus>(provider => provider.GetService<EventBusFake>());
+        services.AddSingleton<IEventBus>(provider => provider.GetRequiredService<EventBusFake>());
         services.AddSingleton(provider => new EventBusFake());
 
         return services;
@@ -60,7 +61,7 @@ public static class TestFactory
 
             return new ListenerFake(serializer, eventDispatcher, resolver, logger);
         });
-        services.AddSingleton<IEventListener>(p => p.GetService<ListenerFake>());
+        services.AddSingleton<IEventListener>(p => p.GetRequiredService<ListenerFake>());
 
         return services;
     }
@@ -113,59 +114,64 @@ public static class TestFactory
     }
 
     /// <summary>
-    /// Replace TDbContext for in memory database.
+    /// Replace dbContext fore read and write for in memory database.
     /// </summary>
-    /// <typeparam name="TDbContext"></typeparam>
     /// <param name="services"></param>
+    /// <param name="dbContextRead"></param>
+    /// <param name="dbContextWrite"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public static IServiceCollection ReplaceDbContextForInMemory(this IServiceCollection services, Type? dbContextRead, Type? dbContextWrite, string? name = null)
+    {
+        name ??= Guid.NewGuid().ToString();
+        var inMemoryDatabaseRoot = new InMemoryDatabaseRoot();
+
+        if (dbContextRead is not null)
+            services.ReplaceDbContextForInMemory(dbContextRead, false, inMemoryDatabaseRoot, name);
+        if (dbContextWrite is not null)
+            services.ReplaceDbContextForInMemory(dbContextWrite, true, inMemoryDatabaseRoot, name);
+        return services;
+    }
+    /// <summary>
+    /// Replace dbContext for in memory database.
+    /// </summary>
+    /// <param name="services"></param>
+    /// <param name="dbContext"></param>
     /// <param name="allowWrite"></param>
     /// <param name="inMemoryDatabaseRoot"></param>
     /// <param name="name"></param>
     /// <returns></returns>
-    public static IServiceCollection ReplaceDbContextForInMemory<TDbContext>(this IServiceCollection services, bool allowWrite, InMemoryDatabaseRoot? inMemoryDatabaseRoot = null, string? name = null)
-        where TDbContext : DbContext
+    public static IServiceCollection ReplaceDbContextForInMemory(this IServiceCollection services, Type dbContext, bool allowWrite, InMemoryDatabaseRoot? inMemoryDatabaseRoot = null, string? name = null)
     {
-        services.RemoveAll<TDbContext>();
+        services.RemoveAll(dbContext);
         services.RemoveAll<DbContextOptions>();
-        services.RemoveAll<DbContextOptions<TDbContext>>();
+        services.RemoveAll(typeof(DbContextOptions<>).MakeGenericType(dbContext));
+#if NET9_0_OR_GREATER
+        services.RemoveAll(typeof(IDbContextOptionsConfiguration<>).MakeGenericType(dbContext));
+#endif
 #pragma warning disable EF1001 // Internal EF Core API usage.
-        services.RemoveAll<IDbContextPool<TDbContext>>();
-        services.RemoveAll<IScopedDbContextLease<TDbContext>>();
+        services.RemoveAll(typeof(IDbContextPool<>).MakeGenericType(dbContext));
+        services.RemoveAll(typeof(IScopedDbContextLease<>).MakeGenericType(dbContext));
 #pragma warning restore EF1001 // Internal EF Core API usage.
 
-        var dbName = name;
-        if (string.IsNullOrEmpty(dbName))
-            dbName = Guid.NewGuid().ToString();
-
-        inMemoryDatabaseRoot ??= new InMemoryDatabaseRoot();
-        services.AddDbContext<TDbContext>(options =>
+        Action<DbContextOptionsBuilder>? options = options =>
         {
             if (!allowWrite)
                 options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
-            options.UseInMemoryDatabase(dbName, inMemoryDatabaseRoot);
+            options.UseInMemoryDatabase(name, inMemoryDatabaseRoot);
             options.ConfigureWarnings(x => x.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning));
-        });
-        return services;
-    }
-    /// <summary>
-    /// Replace TDbContextRead and TDbContextWrite for in memory database.
-    /// </summary>
-    /// <typeparam name="TDbContextRead"></typeparam>
-    /// <typeparam name="TDbContextWrite"></typeparam>
-    /// <param name="services"></param>
-    /// <param name="inMemoryDatabaseRoot"></param>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    public static IServiceCollection ReplaceDbContextForInMemory<TDbContextRead, TDbContextWrite>(this IServiceCollection services, InMemoryDatabaseRoot? inMemoryDatabaseRoot = null, string ? name = null)
-        where TDbContextRead : DbContext
-        where TDbContextWrite : DbContext
-    {
-        var dbName = name;
-        if (string.IsNullOrEmpty(dbName))
-            dbName = Guid.NewGuid().ToString();
-
-        inMemoryDatabaseRoot ??= new InMemoryDatabaseRoot();
-        services.ReplaceDbContextForInMemory<TDbContextRead>(false, inMemoryDatabaseRoot, dbName);
-        services.ReplaceDbContextForInMemory<TDbContextWrite>(true, inMemoryDatabaseRoot, dbName);
+        };
+        typeof(EntityFrameworkServiceCollectionExtensions)
+            .GetMethod(
+                nameof(EntityFrameworkServiceCollectionExtensions.AddDbContext),
+                genericParameterCount: 1,
+                bindingAttr: BindingFlags.Public | BindingFlags.Static,
+                binder: null,
+                types: [typeof(IServiceCollection), typeof(Action<DbContextOptionsBuilder>), typeof(ServiceLifetime), typeof(ServiceLifetime)],
+                modifiers: null
+            )!
+            .MakeGenericMethod(dbContext)
+            .Invoke(null, [services, options, ServiceLifetime.Scoped, ServiceLifetime.Scoped]);
 
         return services;
     }
