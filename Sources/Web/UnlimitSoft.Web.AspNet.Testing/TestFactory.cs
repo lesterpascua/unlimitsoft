@@ -143,6 +143,8 @@ public static class TestFactory
     /// <returns></returns>
     public static IServiceCollection ReplaceDbContextForInMemory(this IServiceCollection services, Type dbContext, bool allowWrite, InMemoryDatabaseRoot? inMemoryDatabaseRoot = null, string? name = null)
     {
+        name ??= Guid.NewGuid().ToString();
+
         services.RemoveAll(dbContext);
         services.RemoveAll<DbContextOptions>();
         services.RemoveAll(typeof(DbContextOptions<>).MakeGenericType(dbContext));
