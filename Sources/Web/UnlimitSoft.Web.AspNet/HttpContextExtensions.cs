@@ -2,7 +2,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using System;
-using System.Linq;
 using System.Net;
 using UnlimitSoft.Message;
 
@@ -70,9 +69,9 @@ public static class HttpContextExtensions
     public static ActionResult<TOut> ToActionResult<TIn, TOut>(this in Result<TIn> value, ControllerBase controller, Func<TIn, TOut> transform, HttpStatusCode code = HttpStatusCode.OK)
     {
         if (!value.IsSuccess)
-            return Result.FromError<TOut>(value.Error!).ToActionResult(controller, code);
+            return Result.Err<TOut>(value.Error!).ToActionResult(controller, code);
 
         var v = transform(value.Value!);
-        return Result.FromOk(v).ToActionResult(controller, code);
+        return Result.Ok(v).ToActionResult(controller, code);
     }
 }

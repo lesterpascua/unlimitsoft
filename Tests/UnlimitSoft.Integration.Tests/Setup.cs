@@ -73,7 +73,7 @@ public static class Setup
             setup: services =>
             {
                 if (useInMemContext)
-                    services.ReplaceDbContextForInMemory<TDbRead, TDbWrite>();
+                    services.ReplaceDbContextForInMemory(typeof(TDbRead), typeof(TDbWrite));
 
                 if (replaceEventBus)
                     services.ReplaceEventBus();
