@@ -28,8 +28,15 @@ public static class Helper<T> where T : notnull
         try
         {
             var sb = new StringBuilder();
+            if (typeof(string) != typeof(T))
+            {
+                foreach (var item in value)
+                    sb.Append(item.GetHashCode()).Append(',');
+                return sb.ToString(0, sb.Length - 1);
+            }
+
             foreach (var item in value)
-                sb.Append(item.GetHashCode()).Append(',');
+                sb.Append(item).Append(',');
             return sb.ToString(0, sb.Length - 1);
         }
         catch { }
