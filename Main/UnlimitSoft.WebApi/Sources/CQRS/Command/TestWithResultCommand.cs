@@ -6,10 +6,6 @@ using UnlimitSoft.Mediator;
 using UnlimitSoft.Mediator.Validation;
 using UnlimitSoft.Message;
 using UnlimitSoft.Web.Security;
-using UnlimitSoft.WebApi.Sources.CQRS.Event;
-using UnlimitSoft.WebApi.Sources.Data;
-using UnlimitSoft.WebApi.Sources.Data.Model;
-using UnlimitSoft.WebApi.Sources.Security.Cryptography;
 
 namespace UnlimitSoft.WebApi.Sources.CQRS.Command;
 
@@ -26,7 +22,7 @@ public class TestWithResultCommandHandler : IMyCommandHandler<TestWithResultComm
     public async ValueTask<Result<string>> HandleAsync(TestWithResultCommand command, CancellationToken ct = default)
     {
         await ValueTask.CompletedTask;
-        var r = Result.FromOk("Command ok");
+        var r = Result.Ok("Command ok");
         return r;
     }
 

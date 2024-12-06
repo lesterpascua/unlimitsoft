@@ -1,5 +1,5 @@
 ﻿using BenchmarkDotNet.Running;
-using UnlimitSoft.Benchmark.SoftUnlimit.CQRS;
+using UnlimitSoft.Benchmark.UnlimitSoft.Data.EntityFramework.Utility;
 
 
 
@@ -18,7 +18,10 @@ using UnlimitSoft.Benchmark.SoftUnlimit.CQRS;
 //await bm.UnlimitSoft();
 //await bm.UnlimitSoft();
 
-BenchmarkRunner.Run<CommandBenchmark>();
+var bm = new StringToArrayConverterBenchmarks();
+bm.StringToArrayParse();
+
+BenchmarkRunner.Run<StringToArrayConverterBenchmarks>();
 
 //var lab = new DelegateVsFunctBenchmarks();
 

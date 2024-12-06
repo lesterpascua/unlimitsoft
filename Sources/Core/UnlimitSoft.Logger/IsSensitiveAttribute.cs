@@ -25,7 +25,7 @@ public sealed class IsSensitiveAttribute : Attribute, IPropertyDestructuringAttr
     /// <param name="propertyValueFactory"></param>
     /// <param name="property"></param>
     /// <returns></returns>
-    public bool TryCreateLogEventProperty(string name, object value, ILogEventPropertyValueFactory propertyValueFactory, out LogEventProperty property)
+    public bool TryCreateLogEventProperty(string name, object? value, ILogEventPropertyValueFactory propertyValueFactory, out LogEventProperty property)
     {
         property = new LogEventProperty(
             name: name, 
