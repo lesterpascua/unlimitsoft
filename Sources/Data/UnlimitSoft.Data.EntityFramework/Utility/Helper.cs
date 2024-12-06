@@ -48,8 +48,6 @@ public static class Helper<T> where T : notnull
 
         if (_parse is null)
             CreateParse();
-        if (_parse is null)
-            return null;
 
         try
         {
@@ -67,7 +65,7 @@ public static class Helper<T> where T : notnull
                 if (entry.IsWhiteSpace())
                     continue;
 
-                list[i++] = _parse(entry);
+                list[i++] = _parse!(entry);
             }
             if (i == list.Length)
                 return list;
@@ -75,7 +73,7 @@ public static class Helper<T> where T : notnull
 #else
             return value
                 .Split(',', StringSplitOptions.RemoveEmptyEntries)
-                .Select(s => _parse(s))
+                .Select(s => _parse!(s))
                 .ToArray();
 #endif
         }
@@ -118,7 +116,7 @@ public static class Helper<T> where T : notnull
 
         Interlocked.CompareExchange(ref _parse, tmp, null);
     }
-#endregion
+    #endregion
 
     #region Nested Classes
     private delegate T ParseDelegate(ReadOnlySpan<char> value);

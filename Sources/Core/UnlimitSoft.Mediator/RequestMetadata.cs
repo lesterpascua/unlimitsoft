@@ -21,8 +21,8 @@ internal sealed class RequestMetadata
     public Type? Validator;
     public Func<IRequestHandler, IRequest, IValidator, CancellationToken, ValueTask<IResponse>>? ValidatorCLI;
 
-    public Type HandlerInterfaceType;
-    public Type HandlerImplementType;
+    public Type HandlerInterfaceType = default!;
+    public Type HandlerImplementType = default!;
     public object? HandlerCLI;
 
     public bool HasCompliance;

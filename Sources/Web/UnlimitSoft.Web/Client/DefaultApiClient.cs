@@ -29,7 +29,6 @@ public class DefaultApiClient : IApiClient
     /// <param name="httpClient"></param>
     /// <param name="serializer"></param>
     /// <param name="baseUrl"></param>
-    /// <param name="logger"></param>
     public DefaultApiClient(HttpClient httpClient, IJsonSerializer serializer, string? baseUrl = null)
     {
         _httpClient = httpClient;

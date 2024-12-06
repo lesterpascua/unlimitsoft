@@ -21,7 +21,7 @@ public class MyAuthenticationOptions : ApiKeyAuthenticationOptions
     public const string AuthorizationHeader = "Authorization";
 
     /// <inheritdoc />
-    protected override ValueTask<IEnumerable<Claim>?> CreateClaims(IServiceProvider provider, HttpRequest httpRequest, string apiKey)
+    protected override ValueTask<IEnumerable<Claim>?> CreateClaims(IServiceProvider provider, HttpRequest httpRequest, string? apiKey)
     {
         if (!httpRequest.Headers.TryGetValue(AuthorizationHeader, out StringValues value))
             return ValueTask.FromResult<IEnumerable<Claim>?>(null);
