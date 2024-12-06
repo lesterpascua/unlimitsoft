@@ -69,7 +69,9 @@ public sealed class QueueEventPublishWorkerTests
         // Act
         var start = Stopwatch.GetTimestamp();
         SpinWait.SpinUntil(() => publish.Count == collection.Count, TimeSpan.FromMinutes(15));
+#if NET7_0_OR_GREATER
         _output.WriteLine("Publish {0} after {1} time", publish.Count, Stopwatch.GetElapsedTime(start));
+#endif
 
         // Assert
         publish.Count.Should().Be(collection.Count);
