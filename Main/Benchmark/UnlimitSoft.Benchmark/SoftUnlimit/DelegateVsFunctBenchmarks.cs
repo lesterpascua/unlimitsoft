@@ -62,7 +62,7 @@ public class DelegateVsFunctBenchmarks
         public async Task<IResult> RunAsync(ICommand command, CancellationToken ct)
         {
             await Task.CompletedTask;
-            return Result.FromOk(true);
+            return Result.Ok(true);
         }
     }
     #endregion
