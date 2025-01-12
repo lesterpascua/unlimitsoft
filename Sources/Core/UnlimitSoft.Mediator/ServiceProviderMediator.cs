@@ -147,17 +147,17 @@ public sealed class ServiceProviderMediator : IMediator
 
             // LiveCycle
             var liveCycleHandlerType = typeof(IRequestHandlerLifeCycle<>).MakeGenericType(requestType);
-            if (interfaces.Any(type => type == liveCycleHandlerType))
+            if (Array.IndexOf(interfaces, liveCycleHandlerType) != -1)
                 metadata.HasLifeCycle = true;
 
             // Validator
             var validationHandlerType = typeof(IRequestHandlerValidator<>).MakeGenericType(requestType);
-            if (interfaces.Any(type => type == validationHandlerType))
+            if (Array.IndexOf(interfaces, validationHandlerType) != -1)
                 metadata.Validator = typeof(RequestValidator<>).MakeGenericType(requestType);
 
             // Compliance
             var complianceHandlerType = typeof(IRequestHandlerCompliance<>).MakeGenericType(requestType);
-            if (interfaces.Any(type => type == complianceHandlerType))
+            if (Array.IndexOf(interfaces, complianceHandlerType) != -1)
                 metadata.HasCompliance = true;
 
             // PostPipeline
