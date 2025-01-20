@@ -110,7 +110,7 @@ public static class IServiceCollectionExtensions
             // Get all services implemented in the assembly
             var servicesTypes = assembly
                 .GetExportedTypes()
-                .Where(p => p.IsClass && !p.IsAbstract && p.GetInterface(typeof(IApiService).Name, true) != null);
+                .Where(p => p.IsClass && !p.IsAbstract && p.GetInterface(typeof(IApiService).Name, true) is not null);
             foreach (var serviceType in servicesTypes)
             {
                 var typeInterfaces = serviceType.GetInterfaces()
