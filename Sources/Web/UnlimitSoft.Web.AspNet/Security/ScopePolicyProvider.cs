@@ -34,10 +34,25 @@ public class ScopePolicyProvider : IAuthorizationPolicyProvider
     {
         if (policyName.StartsWith(ScopePolicyPrefix, StringComparison.OrdinalIgnoreCase))
         {
-            var scope = policyName[ScopePolicyPrefix.Length..];
+#if NET9_0_OR_GREATER
+            var value = policyName.AsSpan()[ScopePolicyPrefix.Length..];
+
+            var data = value.Split(',');
+            var length = value.Count(',') + 1;
+
+            var scopes = new string[length];
+            for (var i = 0; i < length; i++)
+            {
+                data.MoveNext();
+                scopes[i] = value[data.Current].ToString();
+            }
+#else
+            var value = policyName[ScopePolicyPrefix.Length..];
+            var scopes = value.Split(',', StringSplitOptions.RemoveEmptyEntries);
+#endif
 
             var policy = new AuthorizationPolicyBuilder();
-            policy.AddRequirements(new ScopeAuthorizationRequirement(new string[] { scope }));
+            policy.AddRequirements(new ScopeAuthorizationRequirement(scopes));
 
             return await Task.FromResult(policy.Build());
         }

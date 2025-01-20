@@ -42,7 +42,7 @@ public sealed class ScopeAuthorizationRequirementHandler : AuthorizationHandler<
             .Where(p => string.Equals(p.Type, ScopePolicyProvider.ClaimName, StringComparison.CurrentCultureIgnoreCase))
             .Select(s => s.Value);
 
-        if (scopes is not null && requirement.RequiredScopes.All(s => scopes.Contains(s)))
+        if (scopes is not null && requirement.RequiredScopes.Any(s => scopes.Contains(s)))
             context.Succeed(requirement);
 
         return Task.CompletedTask;
