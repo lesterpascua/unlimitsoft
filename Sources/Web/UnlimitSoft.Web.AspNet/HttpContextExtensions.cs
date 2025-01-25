@@ -22,6 +22,10 @@ public static class HttpContextExtensions
     /// </summary>
     public const string HeaderXRealIp = "x-real-ip";
     /// <summary>
+    /// Header where the client-ip is store when is forwarding using proxy
+    /// </summary>
+    public const string HeaderXClientIP = "client-ip";
+    /// <summary>
     /// 
     /// </summary>
     public const string HeaderXForwardedFor = "x-forwarded-for";
@@ -29,18 +33,23 @@ public static class HttpContextExtensions
     /// <summary>
     /// Get ip address for the client.
     /// </summary>
-    /// <param name="context"></param>
+    /// <param name="this"></param>
+    /// <param name="allowHeader">Allow get if from the headers</param>
     /// <returns>Ip where the request was made, <see cref="Unknow"/> if the ip can't be resolved.</returns>
-    public static string GetIpAddress(this HttpContext context)
+    public static string GetIpAddress(this HttpContext @this, AllowedHeader allowHeader = AllowedHeader.XForwardedFor)
     {
-        StringValues forwardedForOrProto = StringValues.Empty;
-        if (context.Request.Headers?.TryGetValue(HeaderXForwardedFor, out forwardedForOrProto) ?? false)
-            return forwardedForOrProto.ToString().Split(',', 2, StringSplitOptions.RemoveEmptyEntries)[0].Trim();
+        StringValues forwardedForOrProto;
 
-        if (context.Request.Headers?.TryGetValue(HeaderXRealIp, out forwardedForOrProto) ?? false)
-            return forwardedForOrProto.ToString().Split(',', 2, StringSplitOptions.RemoveEmptyEntries)[0].Trim();
+        if (allowHeader.HasFlag(AllowedHeader.XForwardedFor) && @this.Request.Headers.TryGetValue(HeaderXForwardedFor, out forwardedForOrProto))
+            return CleanIPAddress(forwardedForOrProto.ToString().Split(',', 2, StringSplitOptions.RemoveEmptyEntries)[0].Trim());
 
-        return context.Connection.RemoteIpAddress?.ToString() ?? Unknow;
+        if (allowHeader.HasFlag(AllowedHeader.XRealIP) && @this.Request.Headers.TryGetValue(HeaderXRealIp, out forwardedForOrProto))
+            return CleanIPAddress(forwardedForOrProto.ToString().Split(',', 2, StringSplitOptions.RemoveEmptyEntries)[0].Trim());
+
+        if (allowHeader.HasFlag(AllowedHeader.ClientIP) && @this.Request.Headers.TryGetValue(HeaderXClientIP, out forwardedForOrProto))
+            return CleanIPAddress(forwardedForOrProto.ToString().Split(',', 2, StringSplitOptions.RemoveEmptyEntries)[0].Trim());
+
+        return @this.Connection.RemoteIpAddress?.ToString() ?? Unknow;
     }
     /// <summary>
     /// Convert result into action result
@@ -73,5 +82,62 @@ public static class HttpContextExtensions
 
         var v = transform(value.Value!);
         return Result.Ok(v).ToActionResult(controller, code);
+    }
+
+    #region Private Methods
+    private static string CleanIPAddress(string ipAddress)
+    {
+        var span = ipAddress.AsSpan();
+
+        var update = false;
+        var end = span.IndexOf(']');
+        if (end != -1 && span[0] == '[')
+        {
+            update = true;
+            span = span[1..end];
+        }
+
+        var count = 0;
+        for (var i = 0; i < span.Length; i++)
+            if (span[i] == ':' && ++count > 1)
+                break;
+        if (count == 1)
+        {
+            update = true;
+            span = span[..span.LastIndexOf(':')];
+        }
+
+        if (update)
+            return span.ToString();
+        return ipAddress;
+    }
+    #endregion
+
+    /// <summary>
+    /// Headers allowed to get the ip address
+    /// </summary>
+    [Flags]
+    public enum AllowedHeader
+    {
+        /// <summary>
+        /// None header allowed
+        /// </summary>
+        None = 0,
+        /// <summary>
+        /// 
+        /// </summary>
+        XForwardedFor = 1,
+        /// <summary>
+        /// 
+        /// </summary>
+        XRealIP = 2,
+        /// <summary>
+        /// 
+        /// </summary>
+        ClientIP = 4,
+        /// <summary>
+        /// Cheall all availables headers
+        /// </summary>
+        All = XForwardedFor | XRealIP | ClientIP
     }
 }
