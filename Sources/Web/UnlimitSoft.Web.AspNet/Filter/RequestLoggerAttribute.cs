@@ -19,6 +19,7 @@ namespace UnlimitSoft.Web.AspNet.Filter;
 public sealed class RequestLoggerAttribute : ActionFilterAttribute
 {
     private readonly Options _options;
+    private readonly ITrustedIPResolver? _ipResolver;
     private readonly ILogger<RequestLoggerAttribute> _logger;
 
     /// <summary>
@@ -34,10 +35,12 @@ public sealed class RequestLoggerAttribute : ActionFilterAttribute
     /// 
     /// </summary>
     /// <param name="options"></param>
+    /// <param name="ipResolver"></param>
     /// <param name="logger"></param>
-    public RequestLoggerAttribute(IOptions<Options> options, ILogger<RequestLoggerAttribute> logger)
+    public RequestLoggerAttribute(IOptions<Options> options, ITrustedIPResolver? ipResolver, ILogger<RequestLoggerAttribute> logger)
     {
         _options = options.Value;
+        _ipResolver = ipResolver;
         _logger = logger;
     }
 
@@ -95,8 +98,9 @@ public sealed class RequestLoggerAttribute : ActionFilterAttribute
 
         var actionArguments = GetActionArguments(context);
         var url = $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}";
+        var ip = _ipResolver?.GetIPAddress(httpContext) ?? httpContext.GetIpAddress();
 
-        _logger.Log(_options.LogLevel, RequestTemplate, httpContext.TraceIdentifier, httpContext.GetIpAddress(), request.Method, url, actionArguments, headers);
+        _logger.Log(_options.LogLevel, RequestTemplate, httpContext.TraceIdentifier, ip, request.Method, url, actionArguments, headers);
     }
 
     #region Private Methods
