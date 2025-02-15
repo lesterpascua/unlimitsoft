@@ -14,42 +14,25 @@ namespace UnlimitSoft.Web.AspNet;
 public static class HttpContextExtensions
 {
     /// <summary>
-    /// Unknow ip name
-    /// </summary>
-    public const string Unknow = "unknow";
-    /// <summary>
-    /// Header where the real ip is store when is forwarding using proxy
-    /// </summary>
-    public const string HeaderXRealIp = "x-real-ip";
-    /// <summary>
-    /// Header where the client-ip is store when is forwarding using proxy
-    /// </summary>
-    public const string HeaderXClientIP = "client-ip";
-    /// <summary>
-    /// 
-    /// </summary>
-    public const string HeaderXForwardedFor = "x-forwarded-for";
-
-    /// <summary>
     /// Get ip address for the client.
     /// </summary>
     /// <param name="this"></param>
     /// <param name="allowHeader">Allow get if from the headers</param>
-    /// <returns>Ip where the request was made, <see cref="Unknow"/> if the ip can't be resolved.</returns>
+    /// <returns>Ip where the request was made, <see cref="TrustedIPResolver.Unknow"/> if the ip can't be resolved.</returns>
     public static string GetIpAddress(this HttpContext @this, AllowedHeader allowHeader = AllowedHeader.XForwardedFor)
     {
         StringValues forwardedForOrProto;
 
-        if (allowHeader.HasFlag(AllowedHeader.XForwardedFor) && @this.Request.Headers.TryGetValue(HeaderXForwardedFor, out forwardedForOrProto))
+        if (allowHeader.HasFlag(AllowedHeader.XForwardedFor) && @this.Request.Headers.TryGetValue(TrustedIPResolver.HeaderXForwardedFor, out forwardedForOrProto))
             return CleanIPAddress(forwardedForOrProto.ToString().Split(',', 2, StringSplitOptions.RemoveEmptyEntries)[0].Trim());
 
-        if (allowHeader.HasFlag(AllowedHeader.XRealIP) && @this.Request.Headers.TryGetValue(HeaderXRealIp, out forwardedForOrProto))
+        if (allowHeader.HasFlag(AllowedHeader.XRealIP) && @this.Request.Headers.TryGetValue(TrustedIPResolver.HeaderXRealIp, out forwardedForOrProto))
             return CleanIPAddress(forwardedForOrProto.ToString().Split(',', 2, StringSplitOptions.RemoveEmptyEntries)[0].Trim());
 
-        if (allowHeader.HasFlag(AllowedHeader.ClientIP) && @this.Request.Headers.TryGetValue(HeaderXClientIP, out forwardedForOrProto))
+        if (allowHeader.HasFlag(AllowedHeader.ClientIP) && @this.Request.Headers.TryGetValue(TrustedIPResolver.HeaderXClientIP, out forwardedForOrProto))
             return CleanIPAddress(forwardedForOrProto.ToString().Split(',', 2, StringSplitOptions.RemoveEmptyEntries)[0].Trim());
 
-        return @this.Connection.RemoteIpAddress?.ToString() ?? Unknow;
+        return @this.Connection.RemoteIpAddress?.ToString() ?? TrustedIPResolver.Unknow;
     }
     /// <summary>
     /// Convert result into action result

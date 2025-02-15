@@ -12,7 +12,9 @@ using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.CQRS.Event.Json;
 using UnlimitSoft.Data.EntityFramework.Utility;
+using UnlimitSoft.Json;
 using UnlimitSoft.Message;
+using UnlimitSoft.Text.Json;
 using Xunit;
 
 namespace UnlimitSoft.Tests.UnlimitSoft.CQRS.Event;
@@ -129,7 +131,9 @@ public sealed class QueueEventPublishWorkerWithEFTests
 
         serviceCollection.AddLogging();
         serviceCollection.AddDbContext<MyDbContext>(opt => opt.UseInMemoryDatabase(dbName));
+        serviceCollection.AddScoped<DbContext>(p => p.GetRequiredService<MyDbContext>());
         serviceCollection.AddSingleton<ISysClock, SysClock>();
+        serviceCollection.AddSingleton<IJsonSerializer, DefaultJsonSerializer>();
         serviceCollection.AddScoped<IEventRepository<EventPayload>, EventDbContextRepository<EventPayload>>();
 
         serviceCollection.AddSingleton<IEventPublishWorker>(provider =>

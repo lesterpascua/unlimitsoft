@@ -37,6 +37,7 @@
 		<ProjectReference Include="..\..\Sources\Json\UnlimitSoft.NewtonSoft\UnlimitSoft.NewtonSoft.csproj" />
 		<ProjectReference Include="..\..\Sources\Json\UnlimitSoft.Text.Json\UnlimitSoft.Text.Json.csproj" />
 		<ProjectReference Include="..\..\Sources\Utility\UnlimitSoft.Network\UnlimitSoft.Network.csproj" />
+		<ProjectReference Include="..\..\Sources\Web\UnlimitSoft.Web.AspNet\UnlimitSoft.Web.AspNet.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
