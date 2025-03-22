@@ -37,7 +37,7 @@
 		<PackageReference Include="Microsoft.Extensions.Http" Version="8.0.0" />
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
-		<PackageReference Include="Microsoft.Extensions.Http" Version="9.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Http" Version="9.0.3" />
 	</ItemGroup>
 	<ItemGroup>
 	  <PackageReference Include="PolySharp" Version="1.15.0">

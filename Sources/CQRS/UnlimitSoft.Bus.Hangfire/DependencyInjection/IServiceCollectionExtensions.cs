@@ -75,7 +75,13 @@ public static class IServiceCollectionExtensions
 
                 var sqlServerStorageOptions = new SqlServerStorageOptions
                 {
+#if NETSTANDARD
                     SqlClientFactory = Microsoft.Data.SqlClient.SqlClientFactory.Instance,
+#elif NET6_0
+                    SqlClientFactory = Microsoft.Data.SqlClient.SqlClientFactory.Instance,
+#else
+                    SqlClientFactory = Microsoft.Data.SqlClient.SqlClientFactory.Instance,
+#endif
                     SchemaName = options.Scheme,
                     CommandBatchMaxTimeout = TimeSpan.FromMinutes(5.0),
                     SlidingInvisibilityTimeout = TimeSpan.FromMinutes(5.0),

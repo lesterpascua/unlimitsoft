@@ -47,8 +47,8 @@ public class DelegateVsFunctBenchmarks
 
     private sealed class FuncDelegateClass
     {
-        public MyDelegate TestDelegate { get; set; }
-        public Func<IServiceProvider, ICommand, object, Func<ICommand, CancellationToken, Task<IResult>>, CancellationToken, Task<IResult>> TestFunc { get; set; }
+        public MyDelegate TestDelegate { get; set; } = default!;
+        public Func<IServiceProvider, ICommand, object, Func<ICommand, CancellationToken, Task<IResult>>, CancellationToken, Task<IResult>> TestFunc { get; set; } = default!;
 
         public async Task CallFunc()
         {

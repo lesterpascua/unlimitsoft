@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.Event;
 using UnlimitSoft.Json;
+using UnlimitSoft.Mediator;
 using UnlimitSoft.Message;
 using UnlimitSoft.Security;
 
@@ -20,7 +21,7 @@ public sealed class ListenerFake : IEventListener
     private readonly IJsonSerializer _serializer;
     private readonly IEventDispatcher _eventDispatcher;
     private readonly IEventNameResolver _nameResolver;
-    private readonly ILogger<ListenerFake> _logger;
+    private readonly ILogger<ListenerFake>? _logger;
 
     /// <summary>
     /// 
@@ -63,7 +64,7 @@ public sealed class ListenerFake : IEventListener
             null, 
             false, 
             body
-        );
+        )!;
         return @event;
     }
     /// <summary>
@@ -82,7 +83,8 @@ public sealed class ListenerFake : IEventListener
             eventName, 
             envelop, 
             new EventUtility.Args<TEvent>(_serializer, _eventDispatcher, _nameResolver, Logger: _logger),
-            ct
-        );
+            null,
+            ct: ct
+        ) ?? @event.NotFoundResponse();
     }
 }
