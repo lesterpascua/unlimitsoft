@@ -15,12 +15,12 @@ public class LoggerMock : ILogger
         _logLevel = logLevel;
     }
 
-    public string Message { get; set; }
+    public string Message { get; set; } = default!;
     public int CallLog { get; set; } = 0;
     public LogLevel LogLevel { get; set; }
     public int CallLogLevel { get; set; } = 0;
 
-    public IDisposable BeginScope<TState>(TState state) => throw new NotImplementedException();
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => throw new NotImplementedException();
 
     public bool IsEnabled(LogLevel logLevel)
     {
@@ -28,7 +28,7 @@ public class LoggerMock : ILogger
         LogLevel = logLevel;
         return _logLevel <= logLevel;
     }
-    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
         CallLog++;
         Message = formatter(state, exception);

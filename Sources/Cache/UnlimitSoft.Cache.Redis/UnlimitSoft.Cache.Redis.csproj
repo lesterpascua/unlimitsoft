@@ -30,8 +30,8 @@
 			<PrivateAssets>all</PrivateAssets>
 			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
 		</PackageReference>
-		<PackageReference Include="NRedisStack" Version="0.13.1" />
-		<PackageReference Include="StackExchange.Redis" Version="2.8.24" />
+		<PackageReference Include="NRedisStack" Version="0.13.2" />
+		<PackageReference Include="StackExchange.Redis" Version="2.8.31" />
 	</ItemGroup>
 
 	<ItemGroup>

@@ -38,22 +38,20 @@ WebApplication ConfigureServices(IServiceCollection services)
 
     // Add services to the container.
     #region Logger
-    services.AddUnlimitSofLogger(
+    var loggerConfiguration = new LoggerConfiguration();
+    loggerConfiguration.WriteTo.Console(
+        restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information,
+        theme: AnsiConsoleTheme.Code,
+        outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{IdentityId} {CorrelationId}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}"
+    );
+    UnlimitSoft.Logger.LoggerHelper.Configure(
         new LoggerOption
         {
-            Override = new Dictionary<string, LogLevel> {
-                { "Microsoft", LogLevel.Warning }
-            }
+            Override = new Dictionary<string, LogLevel> { { "Microsoft", LogLevel.Warning } }
         },
-        builder.Environment.EnvironmentName,
-        setup =>
-        {
-            setup.WriteTo.Console(
-                restrictedToMinimumLevel: Serilog.Events.LogEventLevel.Information,
-                theme: AnsiConsoleTheme.Code,
-                outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{IdentityId} {CorrelationId}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}"
-            );
-        }
+        loggerConfiguration,
+        1,
+        builder.Environment.EnvironmentName
     );
     #endregion
 

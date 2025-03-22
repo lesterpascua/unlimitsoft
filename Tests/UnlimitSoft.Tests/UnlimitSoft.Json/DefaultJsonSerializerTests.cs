@@ -16,7 +16,7 @@ public sealed class DefaultJsonSerializerTests
         var serializer = new Text.Json.DefaultJsonSerializer();
 
         // Act
-        var qs = serializer.ToKeyValue(new { a = "a", b = "b", c = "c", obj = new { a = "a", b = "b" } });
+        var qs = serializer.ToKeyValue(new { a = "a", b = "b", c = "c", obj = new { a = "a", b = "b" } })!;
 
         // Assert
         qs.Should().NotBeNull();
