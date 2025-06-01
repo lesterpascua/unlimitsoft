@@ -65,7 +65,7 @@ public static class AssemblyExtenssion
     {
         if (string.IsNullOrEmpty(type.Namespace))
             return false;
-        if (original.IsAbstract || type.BaseType is null || type.BaseType == typeof(object))
+        if (original.IsAbstract || type.BaseType is null || type == typeof(object))
             return false;
 
         if (baseType.IsInterface)
