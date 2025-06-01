@@ -59,8 +59,22 @@ public static class AssemblyExtenssion
             return false;
         if (original.IsAbstract || type.BaseType is null || type.BaseType == typeof(object))
             return false;
-        if (type.BaseType.IsGenericType && type.BaseType.GetGenericTypeDefinition() == baseType)
-            return true;
+
+        if (baseType.IsInterface)
+        {
+            var isValid = type
+                .GetInterfaces()
+                .Any(i => i.IsGenericType ? i.GetGenericTypeDefinition() == baseType : i == baseType);
+            return isValid;
+        }
+        if (baseType.IsClass)
+        {
+            if (type.BaseType == baseType)
+                return true;
+            if (type.BaseType.IsGenericType && type.BaseType.GetGenericTypeDefinition() == baseType)
+                return true;
+        }
+
         return IsInstanceOf(original, type.BaseType, baseType);
     }
     #endregion

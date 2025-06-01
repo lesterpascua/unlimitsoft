@@ -162,6 +162,7 @@ public static class TestFactory
                 options.UseQueryTrackingBehavior(QueryTrackingBehavior.NoTracking);
             options.UseInMemoryDatabase(name, inMemoryDatabaseRoot);
             options.ConfigureWarnings(x => x.Ignore(CoreEventId.ManyServiceProvidersCreatedWarning));
+            options.ConfigureWarnings(x => x.Ignore(CoreEventId.PossibleIncorrectRequiredNavigationWithQueryFilterInteractionWarning));
         };
         typeof(EntityFrameworkServiceCollectionExtensions)
             .GetMethod(

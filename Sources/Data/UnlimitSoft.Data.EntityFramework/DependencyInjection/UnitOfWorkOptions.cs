@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using System;
+using System.Reflection;
 using UnlimitSoft.Data.EntityFramework.Configuration;
 
 namespace UnlimitSoft.Data.EntityFramework.DependencyInjection;
@@ -54,6 +55,10 @@ public sealed class UnitOfWorkOptions
     /// Type of base entity builder class
     /// </summary>
     public Type EntityTypeBuilder { get; set; } = default!;
+    /// <summary>
+    /// Assembly where the <see cref="EntityTypeBuilder"/> are defined. This is used to register the entity type builder in the DI container.
+    /// </summary>
+    public Assembly? EntityTypeBuilderAssembly { get; set; }
     /// <summary>
     /// Type for repository interface
     /// </summary>

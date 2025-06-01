@@ -131,13 +131,15 @@ public static class IServiceConnectionExtensions
         services.AddScoped(settings.IUnitOfWork, settings.UnitOfWork);
 
         #region Register Repositories
-        var collection = settings.EntityTypeBuilder.Assembly.FindAllRepositories(
+        var assembly = settings.EntityTypeBuilderAssembly ?? settings.EntityTypeBuilder.Assembly;
+        var collection = assembly.FindAllRepositories(
             settings.EntityTypeBuilder,
             settings.IRepository,
             settings.IQueryRepository,
             settings.Repository,
             settings.QueryRepository,
             checkContrains: settings.RepositoryContrains ?? IsEventSourceContrain);
+
         foreach (var entry in collection)
         {
             // Write Context
