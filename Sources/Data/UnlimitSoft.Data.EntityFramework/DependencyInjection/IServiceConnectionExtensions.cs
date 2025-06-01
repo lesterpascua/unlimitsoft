@@ -138,7 +138,8 @@ public static class IServiceConnectionExtensions
             settings.IQueryRepository,
             settings.Repository,
             settings.QueryRepository,
-            checkContrains: settings.RepositoryContrains ?? IsEventSourceContrain);
+            checkContrains: settings.RepositoryContrains ?? IsEventSourceContrain
+        );
 
         foreach (var entry in collection)
         {

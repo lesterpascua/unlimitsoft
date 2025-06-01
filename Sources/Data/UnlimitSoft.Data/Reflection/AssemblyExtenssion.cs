@@ -22,33 +22,41 @@ public static class AssemblyExtenssion
     /// <param name="repositoryQueryType"></param>
     /// <param name="checkContrains">Extra check used to validate the entity can used to create repository of this.</param>
     /// <returns></returns>
-    public static IEnumerable<RepositoriesAvailables> FindAllRepositories(this Assembly assembly, Type? entityTypeBuilder, Type? interfaceRepositoryType, Type? interfaceQueryRepositoryType, Type? repositoryType, Type? repositoryQueryType, Func<Type, bool>? checkContrains = null)
+    public static IEnumerable<RepositoriesAvailables> FindAllRepositories(this Assembly assembly, Type entityTypeBuilder, Type? interfaceRepositoryType, Type? interfaceQueryRepositoryType, Type? repositoryType, Type? repositoryQueryType, Func<Type, bool>? checkContrains = null)
     {
         var typesToRegister =
             from type in assembly.GetTypes()
-            where IsInstanceOf(type, type, entityTypeBuilder!)
+            where IsInstanceOf(type, type, entityTypeBuilder)
             select type;
 
         foreach (var type in typesToRegister)
         {
-            var entity = type.BaseType!.GetGenericArguments().Single();
+            var entityType = GetEntityType(entityTypeBuilder, type);
 
             Type? serviceType = null, implementationType = null;
-            if (interfaceRepositoryType is not null && repositoryType is not null && (checkContrains is null || checkContrains(entity)))
+            if (interfaceRepositoryType is not null && repositoryType is not null && (checkContrains is null || checkContrains(entityType)))
             {
-                serviceType = interfaceRepositoryType.MakeGenericType(entity);
-                implementationType = repositoryType.MakeGenericType(entity);
+                serviceType = interfaceRepositoryType.MakeGenericType(entityType);
+                implementationType = repositoryType.MakeGenericType(entityType);
             }
             Type? serviceQueryType = null, implementationQueryType = null;
             if (interfaceQueryRepositoryType is not null && repositoryQueryType is not null)
             {
-                serviceQueryType = interfaceQueryRepositoryType.MakeGenericType(entity);
-                implementationQueryType = repositoryQueryType.MakeGenericType(entity);
+                serviceQueryType = interfaceQueryRepositoryType.MakeGenericType(entityType);
+                implementationQueryType = repositoryQueryType.MakeGenericType(entityType);
             }
             if (serviceQueryType is null && serviceType is null)
                 continue;
 
             yield return new RepositoriesAvailables(serviceType, serviceQueryType, implementationType, implementationQueryType);
+        }
+
+        // ================================================================================================================================================================
+        static Type GetEntityType(Type entityTypeBuilder, Type type)
+        {
+            if (entityTypeBuilder.IsClass)
+                return type.BaseType!.GetGenericArguments().Single();
+            return type.GetInterfaces().Single(i => i.GetGenericTypeDefinition() == entityTypeBuilder).GetGenericArguments().Single();
         }
     }
 
