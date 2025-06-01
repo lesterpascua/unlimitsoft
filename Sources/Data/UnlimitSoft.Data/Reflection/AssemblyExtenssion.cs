@@ -72,7 +72,7 @@ public static class AssemblyExtenssion
         {
             var isValid = type
                 .GetInterfaces()
-                .Any(i => i.IsGenericType ? i.GetGenericTypeDefinition() == baseType : i == baseType);
+                .Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == baseType);
             return isValid;
         }
         if (baseType.IsClass)
