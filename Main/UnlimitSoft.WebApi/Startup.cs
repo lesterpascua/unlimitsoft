@@ -113,7 +113,8 @@ public class Startup
                         MaxRetryCount = 3,
                         MaxRetryDelay = 1
                     },
-                    EntityTypeBuilder = typeof(_EntityTypeBuilder<>),
+                    EntityTypeBuilder = typeof(IEntityTypeConfiguration<>),
+                    EntityTypeBuilderAssembly = typeof(_EntityTypeBuilder<>).Assembly,
                     QueryRepository = typeof(MyQueryRepository<>),
                     Repository = typeof(MyRepository<>),
                     IQueryRepository = typeof(IMyQueryRepository<>),
