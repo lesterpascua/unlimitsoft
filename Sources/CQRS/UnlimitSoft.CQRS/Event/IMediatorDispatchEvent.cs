@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Data;
@@ -82,25 +83,26 @@ public abstract class MediatorDispatchEvent<TEventPayload> : IMediatorDispatchEv
     /// <inheritdoc />
     public virtual async Task DispatchEventsAsync(IEnumerable<IEvent> events, bool forceSave, bool stopCreation, CancellationToken ct)
     {
-        var eventsPayload = new List<TEventPayload>();
+        var eventRepository = EventRepository;
+        var eventsPayload = (eventRepository is not null && !stopCreation) ? new List<TEventPayload>() : null;
+
         foreach (var @event in events)
         {
             var payload = Create(@event);
-            eventsPayload.Add(payload);
+            eventsPayload?.Add(payload);
 
             var eventDispatcher = EventDispatcher;
             if (eventDispatcher is null || (!@event.IsDomainEvent && !DirectlyDispatchNotDomainEvents))
                 continue;
 
             var (response, error) = await eventDispatcher.DispatchAsync(Provider, @event, ct);
-            if (error is null)
+            if (error is null || error.Code == HttpStatusCode.NotFound)
                 continue;
 
             var msg = "Error when executed events";
             throw new AggregateException(msg, error.GetBody<Exception>() ?? throw new InvalidOperationException(msg));
         }
-        var eventRepository = EventRepository;
-        if (eventRepository is not null && !stopCreation)
+        if (eventsPayload is not null && eventRepository is not null)
             await eventRepository.CreateAsync(eventsPayload, forceSave, ct);
     }
     /// <summary>
