@@ -58,7 +58,7 @@ public sealed class UnitOfWorkOptions
     /// <summary>
     /// Assembly where the <see cref="EntityTypeBuilder"/> are defined. This is used to register the entity type builder in the DI container.
     /// </summary>
-    public Assembly? EntityTypeBuilderAssembly { get; set; }
+    public Assembly[]? EntityTypeBuilderAssemblies { get; set; }
     /// <summary>
     /// Type for repository interface
     /// </summary>

@@ -131,25 +131,28 @@ public static class IServiceConnectionExtensions
         services.AddScoped(settings.IUnitOfWork, settings.UnitOfWork);
 
         #region Register Repositories
-        var assembly = settings.EntityTypeBuilderAssembly ?? settings.EntityTypeBuilder.Assembly;
-        var collection = assembly.FindAllRepositories(
-            settings.EntityTypeBuilder,
-            settings.IRepository,
-            settings.IQueryRepository,
-            settings.Repository,
-            settings.QueryRepository,
-            checkContrains: settings.RepositoryContrains ?? IsEventSourceContrain
-        );
-
-        foreach (var entry in collection)
+        var assemblies = settings.EntityTypeBuilderAssemblies ?? [settings.EntityTypeBuilder.Assembly];
+        foreach (var assembly in assemblies)
         {
-            // Write Context
-            if (entry.ServiceType is not null && entry.ImplementationType is not null)
-                services.AddScoped(entry.ServiceType, provider => entry.ImplementationType.CreateInstance(provider));
+            var collection = assembly.FindAllRepositories(
+                settings.EntityTypeBuilder,
+                settings.IRepository,
+                settings.IQueryRepository,
+                settings.Repository,
+                settings.QueryRepository,
+                checkContrains: settings.RepositoryContrains ?? IsEventSourceContrain
+            );
 
-            // Read Context
-            if (entry.ServiceQueryType is not null && entry.ImplementationQueryType is not null)
-                services.AddScoped(entry.ServiceQueryType, provider => entry.ImplementationQueryType.CreateInstance(provider));
+            foreach (var entry in collection)
+            {
+                // Write Context
+                if (entry.ServiceType is not null && entry.ImplementationType is not null)
+                    services.AddScoped(entry.ServiceType, provider => entry.ImplementationType.CreateInstance(provider));
+
+                // Read Context
+                if (entry.ServiceQueryType is not null && entry.ImplementationQueryType is not null)
+                    services.AddScoped(entry.ServiceQueryType, provider => entry.ImplementationQueryType.CreateInstance(provider));
+            }
         }
         #endregion
 
