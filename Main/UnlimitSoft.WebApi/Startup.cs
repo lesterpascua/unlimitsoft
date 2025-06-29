@@ -106,7 +106,7 @@ public class Startup
         var inMemoryDatabaseRoot = new InMemoryDatabaseRoot();
         services.AddCQRS(
             serviceId,
-            new UnitOfWorkOptions[] {
+            [
                 new UnitOfWorkOptions {
                     Database = new DatabaseOptions {
                         EnableSensitiveDataLogging = true,
@@ -114,7 +114,7 @@ public class Startup
                         MaxRetryDelay = 1
                     },
                     EntityTypeBuilder = typeof(IEntityTypeConfiguration<>),
-                    EntityTypeBuilderAssembly = typeof(_EntityTypeBuilder<>).Assembly,
+                    EntityTypeBuilderAssemblies = [typeof(_EntityTypeBuilder<>).Assembly],
                     QueryRepository = typeof(MyQueryRepository<>),
                     Repository = typeof(MyRepository<>),
                     IQueryRepository = typeof(IMyQueryRepository<>),
@@ -126,7 +126,7 @@ public class Startup
                     PoolSizeForRead = 128,
                     DbContextWrite = typeof(DbContextWrite),
                     PoolSizeForWrite = 128,
-                    ReadConnString = new string[] { connString },
+                    ReadConnString = [connString],
                     WriteConnString = connString,
                     ReadBuilder = (settings, options, connString) =>
                     {
@@ -151,7 +151,7 @@ public class Startup
                     MediatorDispatchEvent = typeof(MyMediatorDispatchEvent),
                     IMediatorDispatchEvent = typeof(IMediatorDispatchEvent),
                 }
-            },
+            ],
             new CQRSSettings
             {
                 Assemblies = new Assembly[] { typeof(Startup).Assembly },
