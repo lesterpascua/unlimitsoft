@@ -17,7 +17,7 @@ public static class ObjectUtils
     /// <returns></returns>
     public static string ToQueryString(IJsonSerializer serializer, object obj)
     {
-        var keyValueContent = serializer.ToKeyValue(obj);
+        var keyValueContent = serializer.ToKeyValue(obj, clean: true);
         if (keyValueContent is null)
             return string.Empty;
 

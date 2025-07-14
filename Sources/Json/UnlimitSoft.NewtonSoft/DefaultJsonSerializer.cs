@@ -192,7 +192,7 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
     }
     
     /// <inheritdoc />
-    public IDictionary<string, string?>? ToKeyValue(object? obj, string? prefix = null)
+    public IDictionary<string, string?>? ToKeyValue(object? obj, string? prefix = null, bool clean = false)
     {
         if (obj is null)
             return null;
@@ -206,7 +206,7 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
             foreach (var child in token.Children())
             {
                 var childContent = ToKeyValue(child);
-                if (childContent != null)
+                if (childContent is not null)
                     contentData = contentData.Concat(childContent).ToDictionary(k => k.Key, v => v.Value);
             }
 
@@ -218,10 +218,10 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
             return null;
 
         var value = jValue?.Type == global::Newtonsoft.Json.Linq.JTokenType.Date ? jValue?.ToString("o", CultureInfo.InvariantCulture) : jValue?.ToString(CultureInfo.InvariantCulture);
-        return new Dictionary<string, string?>
-        {
-            [token.Path] = value
-        };
+        if (!clean || !string.IsNullOrEmpty(value))
+            return new Dictionary<string, string?> { [token.Path] = value };
+
+        return new Dictionary<string, string?>();
     }
 
     /// <inheritdoc />

@@ -16,7 +16,7 @@ public sealed class DefaultJsonSerializerTests
         var serializer = new Text.Json.DefaultJsonSerializer();
 
         // Act
-        var qs = serializer.ToKeyValue(new { a = "a", b = "b", c = "c", obj = new { a = "a", b = "b" } })!;
+        var qs = serializer.ToKeyValue(new { a = "a", b = "b", c = "c", obj = new { a = "a", b = "b" } }, null, false)!;
 
         // Assert
         qs.Should().NotBeNull();
@@ -26,6 +26,76 @@ public sealed class DefaultJsonSerializerTests
         qs["c"].Should().Be("c");
         qs["obj.a"].Should().Be("a");
         qs["obj.b"].Should().Be("b");
+    }
+    [Theory]
+    [InlineData(typeof(Text.Json.DefaultJsonSerializer))]
+    [InlineData(typeof(Newtonsoft.DefaultJsonSerializer))]
+    public void ToKeyValue_WithObjectWithEmptyPropertiesAndCleanSetTrue_DictionaryWillReturn(Type type)
+    {
+        // Arrange
+        var value = new
+        {
+            wrapperElement = new
+            {
+                data = (string?)null,
+                count = 2,
+                elementName = new[] {
+                    new { id = 3, name = "value1" },
+                    new { id = 4, name  = "value2" },
+                }
+            }
+        };
+        var serializer = (IJsonSerializer)Activator.CreateInstance(type)!;
+
+
+        // Act
+        var data = serializer.ToKeyValue(value, clean: true)!;
+
+
+        // Assert
+        data.Should().HaveCount(5);
+        data.ContainsKey("wrapperElement.data").Should().BeFalse();
+
+        data["wrapperElement.count"].Should().Be("2");
+        data["wrapperElement.elementName[0].id"].Should().Be("3");
+        data["wrapperElement.elementName[0].name"].Should().Be("value1");
+        data["wrapperElement.elementName[1].id"].Should().Be("4");
+        data["wrapperElement.elementName[1].name"].Should().Be("value2");
+    }
+    [Theory]
+    [InlineData(typeof(Text.Json.DefaultJsonSerializer))]
+    [InlineData(typeof(Newtonsoft.DefaultJsonSerializer))]
+    public void ToKeyValue_WithObjectWithEmptyPropertiesAndCleanSetFalse_DictionaryWillReturn(Type type)
+    {
+        // Arrange
+        var value = new
+        {
+            wrapperElement = new
+            {
+                data = "",
+                count = 2,
+                elementName = new[] {
+                    new { id = 3, name = "value1" },
+                    new { id = 4, name  = "value2" },
+                }
+            }
+        };
+        var serializer = (IJsonSerializer)Activator.CreateInstance(type)!;
+
+
+        // Act
+        var data = serializer.ToKeyValue(value, clean: false)!;
+
+
+        // Assert
+        data.Should().HaveCount(6);
+
+        data["wrapperElement.data"].Should().Be("");
+        data["wrapperElement.count"].Should().Be("2");
+        data["wrapperElement.elementName[0].id"].Should().Be("3");
+        data["wrapperElement.elementName[0].name"].Should().Be("value1");
+        data["wrapperElement.elementName[1].id"].Should().Be("4");
+        data["wrapperElement.elementName[1].name"].Should().Be("value2");
     }
 
     [Theory]
@@ -154,4 +224,6 @@ public sealed class DefaultJsonSerializerTests
         array.Should().HaveCount(2);
         #endregion
     }
+
+
 }
