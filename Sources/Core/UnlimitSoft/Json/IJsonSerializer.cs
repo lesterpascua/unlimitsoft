@@ -103,8 +103,9 @@ public interface IJsonSerializer
     /// </summary>
     /// <param name="obj"></param>
     /// <param name="prefix"></param>
+    /// <param name="clean">If the values is null or empty the key will be not added to the dictionary</param>
     /// <returns></returns>
-    IDictionary<string, string?>? ToKeyValue(object obj, string? prefix = null);
+    IDictionary<string, string?>? ToKeyValue(object obj, string? prefix = null, bool clean = false);
 
     /// <summary>
     /// Add extra value

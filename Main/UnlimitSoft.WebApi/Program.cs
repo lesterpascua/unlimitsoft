@@ -34,7 +34,7 @@ public class Program
         //{
         //    if (array[0].CompareTo(array[1]) == -1)
         //        continue;
-            
+
         //    Console.WriteLine("not generate ascending");
         //}
 

@@ -240,51 +240,52 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
     }
 
     /// <inheritdoc />
-    public IDictionary<string, string?>? ToKeyValue(object? obj, string? prefix = null)
+    public IDictionary<string, string?>? ToKeyValue(object? obj, string? prefix, bool clean)
     {
         if (obj is null)
             return null;
 
+        var data = new Dictionary<string, string?>();
+        InternalToKeyValue(data, obj, prefix, clean);
+        return data;
+    }
+
+    private static void InternalToKeyValue(Dictionary<string, string?> data, object obj, string? prefix, bool clean)
+    {
         if (obj is not JsonElement token)
         {
             var element = JsonSerializer.Serialize(obj);
-            obj = JsonSerializer.Deserialize<object>(element);
-            return ToKeyValue(obj, prefix);
+            obj = JsonSerializer.Deserialize<object>(element)!;
+            InternalToKeyValue(data, obj, prefix, clean);
+            return;
         }
 
-
-        var data = new Dictionary<string, string?>();
         switch (token.ValueKind)
         {
             case JsonValueKind.Object:
                 foreach (var child in token.EnumerateObject())
                 {
                     var currPrefix = string.IsNullOrEmpty(prefix) ? child.Name : $"{prefix}.{child.Name}";
-                    var childContent = ToKeyValue(child.Value, currPrefix);
-                    if (childContent is not null)
-                        data = data.Concat(childContent).ToDictionary(k => k.Key, v => v.Value);
+                    InternalToKeyValue(data, child.Value, currPrefix, clean);
                 }
-
-                return data;
+                return;
             case JsonValueKind.Array:
                 int index = 0;
                 var array = token.EnumerateArray();
                 foreach (var child in array)
                 {
                     var currPrefix = string.IsNullOrEmpty(prefix) ? $"[{index}]" : $"{prefix}[{index}]";
-                    var childContent = ToKeyValue(child, currPrefix);
-                    if (childContent is not null)
-                        data = data.Concat(childContent).ToDictionary(k => k.Key, v => v.Value);
-
+                    InternalToKeyValue(data, child, currPrefix, clean);
                     index++;
                 }
-                return data;
+                return;
         }
         if (prefix is null)
-            return data;
+            return;
 
-        data[prefix] = token.ToString();
-        return data;
+        var value = token.ToString();
+        if (!clean || !string.IsNullOrEmpty(value))
+            data[prefix] = value;
     }
 
     /// <inheritdoc />
