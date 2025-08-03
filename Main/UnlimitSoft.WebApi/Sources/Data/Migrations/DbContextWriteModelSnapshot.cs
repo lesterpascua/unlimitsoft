@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UnlimitSoft.WebApi.Sources.Data;
 
+#nullable disable
+
 namespace UnlimitSoft.WebApi.Sources.Data.Migrations
 {
     [DbContext(typeof(DbContextWrite))]
@@ -16,47 +18,75 @@ namespace UnlimitSoft.WebApi.Sources.Data.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasDefaultSchema("dbo")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128)
-                .HasAnnotation("ProductVersion", "5.0.12")
-                .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+                .HasAnnotation("ProductVersion", "9.0.3")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
-            modelBuilder.Entity("UnlimitSoft.CQRS.EventSourcing.Json.JsonVersionedEventPayload", b =>
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("UnlimitSoft.Message.EventPayload", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("uniqueidentifier")
+                        .HasComment("Event unique identifier");
+
+                    b.Property<string>("Body")
+                        .HasColumnType("nvarchar(max)")
+                        .HasComment("Json with the body serialized");
 
                     b.Property<string>("CorrelationId")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)")
+                        .HasComment("Operation correlation identifier");
 
                     b.Property<DateTime>("Created")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime2")
+                        .HasComment("Date when the event was created");
 
-                    b.Property<string>("EventName")
-                        .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
+                    b.Property<bool>("IsDomainEvent")
+                        .HasColumnType("bit")
+                        .HasComment("Specify if an event belown to domain. This have optimization propouse");
 
                     b.Property<bool>("IsPubliched")
-                        .HasColumnType("bit");
+                        .HasColumnType("bit")
+                        .HasComment("Indicate if the event was already published");
 
-                    b.Property<string>("Payload")
+                    b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasComment("Name of the event. This is use to identified the event type");
 
                     b.Property<DateTime?>("Scheduled")
-                        .HasColumnType("datetime2");
+                        .HasColumnType("datetime2")
+                        .HasComment("Date when the event was scheduled to publish");
 
-                    b.Property<string>("SourceId")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("nvarchar(36)");
+                    b.Property<int>("ServiceId")
+                        .HasColumnType("int")
+                        .HasComment("Identifier of the service where the event below");
+
+                    b.Property<Guid>("SourceId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasComment("PKey of the identity where event was attached");
 
                     b.Property<long>("Version")
-                        .HasColumnType("bigint");
+                        .HasColumnType("bigint")
+                        .HasComment("Version or order of the event in the stream. Este valor lo asigna la entidad que lo genero y \r\n    /// es el que ella poseia en el instante en que fue generado el evento");
+
+                    b.Property<string>("WorkerId")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasComment("Identifier of the worker were the event is create");
 
                     b.HasKey("Id");
 
-                    b.ToTable("VersionedEvent");
+                    b.HasIndex("Created");
+
+                    b.HasIndex("IsPubliched");
+
+                    b.ToTable("VersionedEvent", "dbo", t =>
+                        {
+                            t.HasComment("Store the event generated for the service. All event will be taken from here and publish");
+                        });
                 });
 
             modelBuilder.Entity("UnlimitSoft.WebApi.Sources.Data.Model.Customer", b =>
@@ -66,6 +96,7 @@ namespace UnlimitSoft.WebApi.Sources.Data.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Name")
+                        .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
@@ -74,7 +105,7 @@ namespace UnlimitSoft.WebApi.Sources.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Customer");
+                    b.ToTable("Customer", "dbo");
                 });
 
             modelBuilder.Entity("UnlimitSoft.WebApi.Sources.Data.Model.Lock", b =>
@@ -87,7 +118,7 @@ namespace UnlimitSoft.WebApi.Sources.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Lock");
+                    b.ToTable("Lock", "dbo");
                 });
 #pragma warning restore 612, 618
         }
