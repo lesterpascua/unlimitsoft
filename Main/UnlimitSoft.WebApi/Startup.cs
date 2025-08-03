@@ -17,6 +17,7 @@ using System.Reflection;
 using UnlimitSoft.AutoMapper.DependencyInjection;
 using UnlimitSoft.Bus.Hangfire;
 using UnlimitSoft.Bus.Hangfire.DependencyInjection;
+using UnlimitSoft.CQRS.Command;
 using UnlimitSoft.CQRS.DependencyInjection;
 using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.CQRS.Memento;
@@ -75,7 +76,7 @@ public class Startup
     public void ConfigureServices(IServiceCollection services)
     {
         ushort serviceId = 1;
-        var connString = _configuration.GetConnectionString("Local");
+        var connString = _configuration.GetConnectionString("Local")!;
         var endpoint = _configuration.GetConnectionString("Endpoint");
 
         //var loggerSettings = _configuration.GetSection("Logger").Get<LoggerSettings>();
@@ -255,6 +256,14 @@ public class Startup
         );
         #endregion
 
+        services.AddSingleton<ICommandBusUtility>(provider => {
+            return new HangfireCommandBusUtility(
+                provider.GetRequiredService<IJsonSerializer>(),
+                provider.GetRequiredService<IBackgroundJobClient>(),
+                provider.GetRequiredService<IRecurringJobManager>()
+            );
+        });
+
         services.AddControllers();
         services.AddSwaggerGen(c =>
         {
@@ -271,6 +280,11 @@ public class Startup
         ILogger<Startup> logger
     )
     {
+        var utility = app.ApplicationServices.GetRequiredService<ICommandBusUtility>();
+        var aa = utility.SearchAsync(_ => true, BusQueue.Scheduled | BusQueue.Processing | BusQueue.Succeeded).Result;
+        utility.CleanUnusedRecurringJobAsync([]).Wait();
+
+
 #if DEBUG
         const string compilation = "DEBUG";
 #else

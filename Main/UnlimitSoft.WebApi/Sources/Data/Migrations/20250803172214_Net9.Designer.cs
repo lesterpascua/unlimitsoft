@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using UnlimitSoft.WebApi.Sources.Data;
 
@@ -11,9 +12,11 @@ using UnlimitSoft.WebApi.Sources.Data;
 namespace UnlimitSoft.WebApi.Sources.Data.Migrations
 {
     [DbContext(typeof(DbContextWrite))]
-    partial class DbContextWriteModelSnapshot : ModelSnapshot
+    [Migration("20250803172214_Net9")]
+    partial class Net9
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
