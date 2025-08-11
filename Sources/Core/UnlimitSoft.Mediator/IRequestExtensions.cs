@@ -12,8 +12,10 @@ namespace UnlimitSoft.Mediator;
 public static class IRequestExtensions
 {
     private static readonly IResponse _200 = new Response<object?>(HttpStatusCode.OK, null) { _isNotMutable = true };
-    private static readonly IResponse _400 = new Response<object?>(HttpStatusCode.BadRequest, null) { _isNotMutable = true };
     private static readonly IResponse _202 = new Response<object?>(HttpStatusCode.Accepted, null) { _isNotMutable = true };
+    private static readonly IResponse _400 = new Response<object?>(HttpStatusCode.BadRequest, null) { _isNotMutable = true };
+    private static readonly IResponse _401 = new Response<object?>(HttpStatusCode.Unauthorized, null) { _isNotMutable = true };
+    private static readonly IResponse _403 = new Response<object?>(HttpStatusCode.Forbidden, null) { _isNotMutable = true };
     private static readonly IResponse _404 = new Response<object?>(HttpStatusCode.NotFound, null) { _isNotMutable = true };
     private static readonly IResponse _500 = new Response<object?>(HttpStatusCode.InternalServerError, null) { _isNotMutable = true };
 
@@ -88,6 +90,38 @@ public static class IRequestExtensions
     /// <param name="error"></param>
     /// <returns></returns>
     public static IResponse BadResponse<TError>(this IRequest _, string key, TError error) where TError : Enum => Message.ErrorResponse.GetError(HttpStatusCode.BadRequest, key, error);
+    #endregion
+
+    #region 401
+    /// <summary>
+    /// Use this to move over validation and compliance step to avoid memory allocation
+    /// </summary>
+    /// <param name="_"></param>
+    /// <returns></returns>
+    public static IResponse UnauthorizedResponse(this IRequest _) => _401;
+    /// <summary>
+    /// Generate a not found response using command data.
+    /// </summary>
+    /// <param name="_"></param>
+    /// <param name="body"></param>
+    /// <returns></returns>
+    public static IResponse UnauthorizedResponse(this IRequest _, IDictionary<string, string[]> body) => new ErrorResponse(HttpStatusCode.Unauthorized, body);
+    #endregion
+
+    #region 403
+    /// <summary>
+    /// Use this to move over validation and compliance step to avoid memory allocation
+    /// </summary>
+    /// <param name="_"></param>
+    /// <returns></returns>
+    public static IResponse ForbiddenResponse(this IRequest _) => _403;
+    /// <summary>
+    /// Generate a not found response using command data.
+    /// </summary>
+    /// <param name="_"></param>
+    /// <param name="body"></param>
+    /// <returns></returns>
+    public static IResponse ForbiddenResponse(this IRequest _, IDictionary<string, string[]> body) => new ErrorResponse(HttpStatusCode.Forbidden, body);
     #endregion
 
     #region 404
