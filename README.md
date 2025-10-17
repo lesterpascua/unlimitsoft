@@ -1,24 +1,26 @@
 # Licence
-Copyright (C) 2020  Lester Pastrana Cuanda
+Copyright (C) 2020 Lester Pastrana Cuanda
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or any later version.
+This program is free software: you can redistribute it and/or modify 
+it under the terms of the GNU General Public License as published by 
+the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+See the GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
+along with this program. If not, see <https://www.gnu.org/licenses/>
 
 # Introduction 
-This project pretends the creation of bases for any project. Define several design patterns and methodologies for start to build different projects. 
-I create well know patters like Unit Of Work, Repository, Command Pattern, Service, Adapter, Factory Creator, etc. The objective was not to recreate 
-new implementation of all patterns, the idea was to join multiples libraries that already implement these patters join all and create a framework. 
-For validation, we propose to use [FluentValidator](https://fluentvalidation.net) , for access database [EntityFramework](https://docs.microsoft.com/en-us/ef/), 
-for paralleling processing [Akka.NET](http://akka.net). 
+This project aims to provide a foundational framework for building various types of applications. It defines several design patterns 
+and methodologies to help developers start new projects efficiently.
+It includes well-known patterns such as Unit of Work, Repository, Command, Service, Adapter, and Factory Creator, among others. The goal is 
+not to reinvent existing implementations of these patterns, but rather to integrate multiple libraries that already implement them into a 
+cohesive framework.
+For validation, the project uses [FluentValidator](https://fluentvalidation.net); for database access, 
+it leverages [EntityFramework](https://docs.microsoft.com/en-us/ef/); and for parallel processing, it integrates [Akka.NET](http://akka.net).
 
 # Example (How to use AutoMapper Attributes)
 ```
