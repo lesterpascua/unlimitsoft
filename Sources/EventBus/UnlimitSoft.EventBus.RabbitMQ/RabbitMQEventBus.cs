@@ -7,7 +7,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using UnlimitSoft.CQRS.Data.Dto;
 using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.Json;
 using UnlimitSoft.Message;
@@ -201,7 +200,7 @@ public class RabbitMQEventBus<TAlias, TEventPayload> : IEventBus, IDisposable
         properties.MessageId = id.ToString();
 
         properties.Headers ??= new Dictionary<string, object>();
-        properties.Headers[UnlimitSoft.Constants.HeaderCorrelation] = correlationId;
+        properties.Headers[Constants.HeaderCorrelation] = correlationId;
         properties.Headers[Constants.HeaderEventName] = eventName;
         properties.Headers[Constants.HeaderHasEnvelop] = useEnvelop;
 

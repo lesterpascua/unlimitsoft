@@ -54,6 +54,17 @@ public sealed class LazyMemoryCache : ICache
         return ValueTask.FromResult(exist);
 #endif
     }
+
+    /// <inheritdoc />
+    public ValueTask<TResult> GetAync<TResult>(string key)
+    {
+        var data = _appCache.Get<TResult>(key);
+#if NETSTANDARD
+        return new ValueTask<TResult>(data);
+#else
+        return ValueTask.FromResult(data);
+#endif
+    }
     /// <inheritdoc />
     public async ValueTask<TResult> GetOrCreateAsync<TResult>(string key, Operation<TResult> action, Setup? setup = null)
     {

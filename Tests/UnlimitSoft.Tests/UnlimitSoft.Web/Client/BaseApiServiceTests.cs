@@ -100,6 +100,11 @@ public sealed class BaseApiServiceTests
             _cachingService.Remove(key);
             return ValueTask.FromResult(true);
         }
+
+        public async ValueTask<TResult> GetAync<TResult>(string key)
+        {
+            return await _cachingService.GetAsync<TResult>(key);
+        }
         public async ValueTask<TResult> GetOrCreateAsync<TResult>(string key, Operation<TResult> action, Setup? setup)
         {
             return await _cachingService.GetOrAddAsync(key, cacheKey =>
@@ -132,6 +137,11 @@ public sealed class BaseApiServiceTests
         {
             _cachingService.Remove(key);
             return ValueTask.FromResult(true);
+        }
+
+        public ValueTask<TResult> GetAync<TResult>(string key)
+        {
+            return ValueTask.FromResult(_cachingService.Get<TResult>(key)!);
         }
         public async ValueTask<TResult> GetOrCreateAsync<TResult>(string key, ICache.Operation<TResult> action, ICache.Setup? setup)
         {

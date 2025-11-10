@@ -23,6 +23,12 @@ public interface ICache
     /// <returns></returns>
     ValueTask<bool> RemoveAsync(string key);
     /// <summary>
+    /// Get cache element associate with the key. If not found will return default value of the type.
+    /// </summary>
+    /// <param name="key"></param>
+    /// <returns></returns>
+    public ValueTask<TResult> GetAync<TResult>(string key);
+    /// <summary>
     /// Get the value from the cache if not found will execute the action to get the value
     /// </summary>
     /// <typeparam name="TResult"></typeparam>

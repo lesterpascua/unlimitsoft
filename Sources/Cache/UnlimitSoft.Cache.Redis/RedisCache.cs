@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using UnlimitSoft.Distribute;
 using UnlimitSoft.Json;
@@ -60,6 +61,21 @@ public sealed class RedisCache : ICache, IDisposable
     {
         await using var _ = await _sysLock.AcquireAsync(GetLock(key));
         return await _database.KeyDeleteAsync(key);
+    }
+    /// <inheritdoc />
+    public async ValueTask<TResult> GetAync<TResult>(string key)
+    {
+        if (_prefix is not null)
+            key = $"{_prefix}_{key}";
+
+        // Try to get data from cache
+        var redisValueWithExpiry = await _database.StringGetWithExpiryAsync(key);
+        var redisValue = redisValueWithExpiry.Value;
+
+        if (!redisValue.IsNull && TryToGetDataFromCache<TResult>(redisValue, out var result))
+            return result;
+
+        return default!;
     }
     /// <inheritdoc />
     public async ValueTask<TResult> GetOrCreateAsync<TResult>(string key, Operation<TResult> action, Setup? setup = null)
@@ -123,7 +139,7 @@ public sealed class RedisCache : ICache, IDisposable
             return config.AbsoluteExpirationRelativeToNow;
         return _defaultExpiration;
     }
-    private bool TryToGetDataFromCache<TResult>(RedisValue redisValue, out TResult? value)
+    private bool TryToGetDataFromCache<TResult>(RedisValue redisValue, [NotNullWhen(true)] out TResult? value)
     {
         try
         {
