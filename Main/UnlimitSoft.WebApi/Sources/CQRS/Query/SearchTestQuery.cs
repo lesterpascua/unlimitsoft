@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Query;
 using UnlimitSoft.Data.EntityFramework;
+using UnlimitSoft.Map;
 using UnlimitSoft.Web.Model;
 using UnlimitSoft.Web.Security;
 using UnlimitSoft.WebApi.Model;
@@ -35,7 +36,7 @@ public class SearchTestQueryHandler : IMyQueryHandler<SearchTestQuery, SearchMod
 {
     private readonly IMyQueryRepository<Customer> _customerQueryRepository;
 
-    public SearchTestQueryHandler(IMyQueryRepository<Customer> customerQueryRepository)
+    public SearchTestQueryHandler(IMapper mapper, IMyQueryRepository<Customer> customerQueryRepository)
     {
         _customerQueryRepository = customerQueryRepository;
     }

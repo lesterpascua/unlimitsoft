@@ -3,7 +3,6 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-using UnlimitSoft.Event;
 using UnlimitSoft.Mediator;
 using UnlimitSoft.Message;
 
@@ -36,4 +35,9 @@ public class ServiceProviderEventDispatcher : IEventDispatcher
     public ValueTask<Result<IResponse>> DispatchAsync(IEvent @event, CancellationToken ct = default) => _mediator.SendAsync(@event, ct);
     /// <inheritdoc />
     public ValueTask<Result<IResponse>> DispatchAsync(IServiceProvider provider, IEvent @event, CancellationToken ct = default) => _mediator.SendAsync(provider, @event, ct);
+
+    /// <inheritdoc />
+    public ValueTask<AgregateResult<IResponse>> MultiDispatchAsync(IEvent @event, CancellationToken ct = default) => _mediator.MultiSendAsync(@event, ct);
+    /// <inheritdoc />
+    public ValueTask<AgregateResult<IResponse>> DispatchMultiAsync(IServiceProvider provider, IEvent @event, CancellationToken ct = default) => _mediator.MultiSendAsync(provider, @event, ct);
 }

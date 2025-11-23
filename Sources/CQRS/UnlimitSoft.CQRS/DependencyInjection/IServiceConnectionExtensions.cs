@@ -7,7 +7,6 @@ using UnlimitSoft.CQRS.Command;
 using UnlimitSoft.CQRS.Command.Pipeline;
 using UnlimitSoft.CQRS.Event;
 using UnlimitSoft.CQRS.Query;
-using UnlimitSoft.Event;
 using UnlimitSoft.Mediator;
 using UnlimitSoft.Message;
 
@@ -248,9 +247,15 @@ public static class IServiceConnectionExtensions
 
                 services.AddScoped(handlerInterface, handlerImplementation);
                 if (currHandlerInterface != handlerInterface)
-                    services.AddScoped(currHandlerInterface, provider => provider.GetRequiredService(handlerInterface));
+                    services.AddScoped(currHandlerInterface, handlerImplementation);
                 if (requestHandlerInterface != handlerInterface)
-                    services.AddScoped(requestHandlerInterface, provider => provider.GetRequiredService(handlerInterface));
+                    services.AddScoped(requestHandlerInterface, handlerImplementation);
+
+                //services.AddScoped(handlerInterface, handlerImplementation);
+                //if (currHandlerInterface != handlerInterface)
+                //    services.AddScoped(currHandlerInterface, provider => provider.GetRequiredService(handlerInterface));
+                //if (requestHandlerInterface != handlerInterface)
+                //    services.AddScoped(requestHandlerInterface, provider => provider.GetRequiredService(handlerInterface));
             }
         }
         #endregion

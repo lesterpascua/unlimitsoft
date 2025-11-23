@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net9.0;net8.0;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>net10.0;net9.0;net8.0;netstandard2.0</TargetFrameworks>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<LangVersion>latest</LangVersion>
 	</PropertyGroup>
@@ -13,7 +13,7 @@
 		<Authors>Lester Pastrana</Authors>
 		<Company>Private</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">3.3.0.0</Version>
+		<Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">3.4.1.57</Version>
 		<Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
 		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
 		<Description>Tenant library to build tenant infrastructure.</Description>
@@ -48,6 +48,12 @@
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="9.0.3" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.3" />
 		<PackageReference Include="Microsoft.Extensions.Options" Version="9.0.3" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Options" Version="10.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

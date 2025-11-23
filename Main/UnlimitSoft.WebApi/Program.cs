@@ -1,48 +1,39 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 using Serilog;
+using UnlimitSoft.WebApi;
 
-namespace UnlimitSoft.WebApi;
+//var gen1 = new MicroServiceGenerator(40);
+//var gen2 = new MicroServiceGenerator(35);
+//var gen3 = new MicroServiceGenerator(45);
 
+//var array = Enumerable
+//    .Range(0, 100)
+//    .Select((s, i) =>
+//    {
+//        Task.Delay(100).Wait();
+//        var gen = (i % 3) switch
+//        {
+//            0 => gen1,
+//            1 => gen2,
+//            2 => gen3,
+//            _ => gen1
+//        };
 
-public class Program
-{
-    public static void Main(string[] args)
-    {
-        //var gen1 = new MicroServiceGenerator(40);
-        //var gen2 = new MicroServiceGenerator(35);
-        //var gen3 = new MicroServiceGenerator(45);
+//        return gen.GenerateId();
+//    })
+//    .ToArray();
 
-        //var array = Enumerable
-        //    .Range(0, 100)
-        //    .Select((s, i) =>
-        //    {
-        //        Task.Delay(100).Wait();
-        //        var gen = (i % 3) switch
-        //        {
-        //            0 => gen1,
-        //            1 => gen2,
-        //            2 => gen3,
-        //            _ => gen1
-        //        };
+//for (var i = 1; i < array.Length; i++)
+//{
+//    if (array[0].CompareTo(array[1]) == -1)
+//        continue;
 
-        //        return gen.GenerateId();
-        //    })
-        //    .ToArray();
+//    Console.WriteLine("not generate ascending");
+//}
+CreateHostBuilder(args).Build().Run();
 
-        //for (var i = 1; i < array.Length; i++)
-        //{
-        //    if (array[0].CompareTo(array[1]) == -1)
-        //        continue;
-
-        //    Console.WriteLine("not generate ascending");
-        //}
-
-        CreateHostBuilder(args).Build().Run();
-    }
-
-    public static IHostBuilder CreateHostBuilder(string[] args) =>
-        Host.CreateDefaultBuilder(args)
-            .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>())
-            .UseSerilog();
-}
+static IHostBuilder CreateHostBuilder(string[] args) =>
+   Host.CreateDefaultBuilder(args)
+       .ConfigureWebHostDefaults(webBuilder => webBuilder.UseStartup<Startup>())
+       .UseSerilog();

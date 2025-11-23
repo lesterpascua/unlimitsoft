@@ -67,6 +67,15 @@ public sealed class ServiceProviderMediator : IMediator
         using var scope = _provider.CreateScope();
         return await SafeSendAsync(scope.ServiceProvider, request, ct);
     }
+    /// <inheritdoc />
+    public async ValueTask<AgregateResult<TResponse>> MultiSendAsync<TResponse>(IRequest<TResponse> request, CancellationToken ct = default)
+    {
+        if (!_useScope)
+            return await MultiSendAsync(_provider, request, ct);
+
+        using var scope = _provider.CreateScope();
+        return await MultiSendAsync(scope.ServiceProvider, request, ct);
+    }
 
     /// <inheritdoc />
     public ValueTask<Result<TResponse>> SendAsync<TResponse>(IServiceProvider provider, IRequest<TResponse> request, CancellationToken ct = default)
@@ -88,6 +97,72 @@ public sealed class ServiceProviderMediator : IMediator
             ct
         );
     }
+    /// <inheritdoc />
+    public async ValueTask<AgregateResult<TResponse>> MultiSendAsync<TResponse>(IServiceProvider provider, IRequest<TResponse> request, CancellationToken ct = default)
+    {
+        _logger?.LogProcessRequest(request);
+
+        //
+        // Get handler and execute command.
+        var requestType = request.GetType();
+        var responseType = typeof(TResponse);
+        _logger?.LogExecuteRequestType(requestType, responseType);
+
+        var handlers = BuildHandlerMetadata(provider, requestType, responseType, out var metadatas);
+        if (handlers is null)
+            return new AgregateResult<TResponse>([Result.Err<TResponse>(request.NotFoundResponse())]);
+
+        var index = 0;
+        var responses = new Result<TResponse>[handlers.Length];
+        for (var i = 0; i < handlers.Length; i++)
+        {
+            var handler = handlers[i];
+
+            var metadata = metadatas[index];
+            if (metadata.HasLifeCycle)
+                await InitAsync(handler, request, requestType, metadata, ct);
+
+            try
+            {
+                if (_validate)
+                {
+                    if (metadata.Validator is not null)
+                    {
+                        var error = await ValidationAsync(handler, request, requestType, metadata, ct);
+                        if (error is not null)
+                        {
+                            responses[i] = Result.Err<TResponse>(error);
+                            continue;
+                        }
+                    }
+                    if (metadata.HasCompliance)
+                    {
+                        var error = await ComplianceAsync(handler, request, requestType, metadata, ct);
+                        if (error is not null)
+                        {
+                            responses[i] = Result.Err<TResponse>(error);
+                            continue;
+                        }
+                    }
+                }
+                var response = await HandlerAsync(handler, request, requestType, metadata, ct);
+                if (response is IResult result)
+                {
+                    responses[i] = result.IsSuccess ? Result.Ok((TResponse)result.GetValue()!) : Result.Err<TResponse>(result.Error!);
+                    continue;
+                }
+                responses[i] = Result.Ok(response);
+            }
+            finally
+            {
+                if (metadata.HasLifeCycle)
+                    await EndAsync(handler, request, requestType, metadata, ct);
+            }
+            index++;
+        }
+        return new AgregateResult<TResponse>(responses);
+    }
+
 
 
     /// <summary>
@@ -112,79 +187,85 @@ public sealed class ServiceProviderMediator : IMediator
 
 
     #region Private Methods
-    private static IRequestHandler? BuildHandlerMetadata(IServiceProvider provider, Type requestType, Type responseType, out RequestMetadata metadata)
+    private static IRequestHandler[]? BuildHandlerMetadata(IServiceProvider provider, Type requestType, Type responseType, out RequestMetadata[] metadatas)
     {
-        if (InvokerCache.Cache.TryGetValue(requestType, out metadata!))
+        if (InvokerCache.Cache.TryGetValue(requestType, out metadatas!))
         {
-            if (metadata.HandlerInterfaceType is not null)
-                return (IRequestHandler)provider.GetRequiredService(metadata.HandlerInterfaceType);
+            if (metadatas[0].HandlerInterfaceType is not null)
+                return (IRequestHandler[])provider.GetServices(metadatas[0].HandlerInterfaceType);
             return null;
         }
 
         // Handler
         lock (InvokerCache.Sync)
         {
-            if (InvokerCache.Cache.TryGetValue(requestType, out metadata!))
-                return (IRequestHandler)provider.GetRequiredService(metadata.HandlerInterfaceType);             // Resolve service
+            if (InvokerCache.Cache.TryGetValue(requestType, out metadatas!))
+                return (IRequestHandler[])provider.GetServices(metadatas[0].HandlerInterfaceType);             // Resolve service
 
             // Create Handler
             var handlerInterfaceType = typeof(IRequestHandler<,>).MakeGenericType(requestType, responseType);
-            var handler = (IRequestHandler?)provider.GetService(handlerInterfaceType);
-            if (handler is null)
+            var handlers = (IRequestHandler[])provider.GetServices(handlerInterfaceType);
+            if (handlers.Length == 0)
             {
-                InvokerCache.UnsafeAdd(requestType, RequestMetadata.Empty ??= new());
+                InvokerCache.UnsafeAdd(requestType, [RequestMetadata.Empty ??= new()]);
                 return null;
             }
 
-            // Features implemented by this command
-            var handleType = handler.GetType();
-            metadata = new RequestMetadata
+            metadatas = new RequestMetadata[handlers.Length];
+            for (var i = 0; i < handlers.Length; i++)
             {
-                HandlerInterfaceType = handlerInterfaceType,
-                HandlerImplementType = handleType,
-            };
-            var interfaces = handleType.GetInterfaces();
+                var handler = handlers[i];
 
-            // LiveCycle
-            var liveCycleHandlerType = typeof(IRequestHandlerLifeCycle<>).MakeGenericType(requestType);
-            if (Array.IndexOf(interfaces, liveCycleHandlerType) != -1)
-                metadata.HasLifeCycle = true;
-
-            // Validator
-            var validationHandlerType = typeof(IRequestHandlerValidator<>).MakeGenericType(requestType);
-            if (Array.IndexOf(interfaces, validationHandlerType) != -1)
-                metadata.Validator = typeof(RequestValidator<>).MakeGenericType(requestType);
-
-            // Compliance
-            var complianceHandlerType = typeof(IRequestHandlerCompliance<>).MakeGenericType(requestType);
-            if (Array.IndexOf(interfaces, complianceHandlerType) != -1)
-                metadata.HasCompliance = true;
-
-            // PostPipeline
-            var attrs = requestType.GetCustomAttributes(typeof(IPostPipelineAttribute), true);
-            if (attrs is not null && attrs.Length != 0)
-            {
-                var list = new List<(Type Pipeline, int Order)>();
-                var requestHandlerType = typeof(IRequestHandlerPostPipeline<,,,>);
-                for (var i = 0; i < attrs.Length; i++)
+                // Features implemented by this command
+                var handleType = handler.GetType();
+                var metadata = metadatas[i] = new RequestMetadata
                 {
-                    var attr = (IPostPipelineAttribute)attrs[i];
-                    var type = requestHandlerType.MakeGenericType(requestType, handleType, responseType, attr.Pipeline);
-                    var collection = attr.Pipeline.GetInterfaces()
-                        .Where(p => p == type)
-                        .Select(s => (Type: type, attr.Order));
+                    HandlerInterfaceType = handlerInterfaceType,
+                    HandlerImplementType = handleType,
+                };
+                var interfaces = handleType.GetInterfaces();
 
-                    list.AddRange(collection);
+                // LiveCycle
+                var liveCycleHandlerType = typeof(IRequestHandlerLifeCycle<>).MakeGenericType(requestType);
+                if (Array.IndexOf(interfaces, liveCycleHandlerType) != -1)
+                    metadata.HasLifeCycle = true;
+
+                // Validator
+                var validationHandlerType = typeof(IRequestHandlerValidator<>).MakeGenericType(requestType);
+                if (Array.IndexOf(interfaces, validationHandlerType) != -1)
+                    metadata.Validator = typeof(RequestValidator<>).MakeGenericType(requestType);
+
+                // Compliance
+                var complianceHandlerType = typeof(IRequestHandlerCompliance<>).MakeGenericType(requestType);
+                if (Array.IndexOf(interfaces, complianceHandlerType) != -1)
+                    metadata.HasCompliance = true;
+
+                // PostPipeline
+                var attrs = requestType.GetCustomAttributes(typeof(IPostPipelineAttribute), true);
+                if (attrs is not null && attrs.Length != 0)
+                {
+                    var list = new List<(Type Pipeline, int Order)>();
+                    var requestHandlerType = typeof(IRequestHandlerPostPipeline<,,,>);
+                    for (var j = 0; j < attrs.Length; j++)
+                    {
+                        var attr = (IPostPipelineAttribute)attrs[j];
+                        var type = requestHandlerType.MakeGenericType(requestType, handleType, responseType, attr.Pipeline);
+                        var collection = attr.Pipeline.GetInterfaces()
+                            .Where(p => p == type)
+                            .Select(s => (Type: type, attr.Order));
+
+                        list.AddRange(collection);
+                    }
+                    metadata.PostPipeline = [.. list
+                        .GroupBy(k => k.Order, s => s.Pipeline)
+                        .OrderBy(k => k.Key)
+                        .Select(type => type.Select(s => new PostPipelineMetadata { InterfaceType = s }).ToArray())
+                    ];
                 }
-                metadata.PostPipeline = list
-                    .GroupBy(k => k.Order, s => s.Pipeline)
-                    .OrderBy(k => k.Key)
-                    .Select(type => type.Select(s => new PostPipelineMetadata { InterfaceType = s }).ToArray())
-                    .ToArray();
             }
 
-            InvokerCache.UnsafeAdd(requestType, metadata);
-            return handler;
+            InvokerCache.UnsafeAdd(requestType, metadatas);
+            return handlers;
         }
     }
 
@@ -201,18 +282,20 @@ public sealed class ServiceProviderMediator : IMediator
     }
     private async ValueTask<Result<TOut>> InternalSendAsync<TResponse, TOut>(IServiceProvider provider, IRequest<TResponse> request, Func<TResponse?, Result<TOut>> transform, CancellationToken ct)
     {
-        _logger?.LogDebug(10, "Process request: {@Request}", request);
+        _logger?.LogProcessRequest(request);
 
         //
         // Get handler and execute command.
         var requestType = request.GetType();
         var responseType = typeof(TResponse);
-        _logger?.LogDebug(12, "Execute request type {Request} with response {Response}", requestType, responseType);
+        _logger?.LogExecuteRequestType(requestType, responseType);
 
-        var handler = BuildHandlerMetadata(provider, requestType, responseType, out var metadata);
-        if (handler is null)
+        var handlers = BuildHandlerMetadata(provider, requestType, responseType, out var metadatas);
+        if (handlers is null || handlers.Length == 0)
             return Result.Err<TOut>(request.NotFoundResponse());
 
+        var handler = handlers[0];
+        var metadata = metadatas[0];
         if (metadata.HasLifeCycle)
             await InitAsync(handler, request, requestType, metadata, ct);
 
@@ -272,7 +355,7 @@ public sealed class ServiceProviderMediator : IMediator
     /// <returns></returns>
     private async ValueTask<IResponse?> ValidationAsync(IRequestHandler handler, IRequest request, Type requestType, RequestMetadata metadata, CancellationToken ct)
     {
-        _logger?.LogDebug("Request {Request} handler implement internal validation", request);
+        _logger?.LogRequestHandlerImplementInternalValidation(request);
 
         var validator = (IValidator)Activator.CreateInstance(metadata.Validator!)!;
         var method = InvokerCache.GetValidator(requestType, metadata);
@@ -284,7 +367,7 @@ public sealed class ServiceProviderMediator : IMediator
         var valContext = new ValidationContext<IRequest>(request);
         var errors = await validator.ValidateAsync(valContext, ct);
 
-        _logger?.LogDebug(11, "Evaluate validator process result: {@Errors}", errors);
+        _logger?.LogEvaluateValidatorProcessResult(errors);
         if (errors?.IsValid != false)
             return null;
 
@@ -293,7 +376,7 @@ public sealed class ServiceProviderMediator : IMediator
     }
     private async ValueTask<IResponse?> ComplianceAsync(IRequestHandler handler, IRequest request, Type requestType, RequestMetadata metadata, CancellationToken ct)
     {
-        _logger?.LogDebug("Request {Request} handler implement internal compliance", request);
+        _logger?.LogRequestHandlerImplementInternalCompliance(request);
 
         var method = InvokerCache.GetCompliance(requestType, metadata);
         var response = await method(handler, request, ct);
@@ -304,14 +387,14 @@ public sealed class ServiceProviderMediator : IMediator
     }
     private ValueTask InitAsync<TResponse>(IRequestHandler handler, IRequest<TResponse> request, Type requestType, RequestMetadata metadata, CancellationToken ct)
     {
-        _logger?.LogDebug("Request {Request} handler implement internal life cycle", request);
+        _logger?.LogRequestHandlerImplementInternalInitLifeCycle(request);
 
         var method = InvokerCache.GetInit(requestType, metadata);
         return method(handler, request, ct);
     }
     private ValueTask EndAsync<TResponse>(IRequestHandler handler, IRequest<TResponse> request, Type requestType, RequestMetadata metadata, CancellationToken ct)
     {
-        _logger?.LogDebug("Request {Request} handler implement internal life cycle", request);
+        _logger?.LogRequestHandlerImplementInternalEndLifeCycle(request);
 
         var method = InvokerCache.GetEnd(requestType, metadata);
         return method(handler, request, ct);
@@ -349,4 +432,21 @@ public sealed class ServiceProviderMediator : IMediator
     //    }
     //}
     #endregion
+}
+internal static partial class ServiceProviderMediatorLogger
+{
+    [LoggerMessage(EventId = 10, Message = "Process request: {Request}", Level = LogLevel.Debug, SkipEnabledCheck = true)]
+    public static partial void LogProcessRequest(this ILogger logger, IRequest request);
+    [LoggerMessage(EventId = 11, Message = "Execute request type {RequestType} with response {ResponseType}", Level = LogLevel.Debug, SkipEnabledCheck = true)]
+    public static partial void LogExecuteRequestType(this ILogger logger, Type requestType, Type responseType);
+    [LoggerMessage(EventId = 12, Message = "Request {Request} handler implement internal validation", Level = LogLevel.Debug, SkipEnabledCheck = true)] 
+    public static partial void LogRequestHandlerImplementInternalValidation(this ILogger logger, IRequest request);
+    [LoggerMessage(EventId = 13, Message = "Evaluate validator process result: {Errors}", Level = LogLevel.Debug, SkipEnabledCheck = true)]
+    public static partial void LogEvaluateValidatorProcessResult(this ILogger logger, ValidationResult? errors);
+    [LoggerMessage(EventId = 14, Message = "Request {Request} handler implement internal compliance", Level = LogLevel.Debug, SkipEnabledCheck = true)]
+    public static partial void LogRequestHandlerImplementInternalCompliance(this ILogger logger, IRequest request);
+    [LoggerMessage(EventId = 15, Message = "Request {Request} handler implement internal init life cycle", Level = LogLevel.Debug, SkipEnabledCheck = true)]
+    public static partial void LogRequestHandlerImplementInternalInitLifeCycle(this ILogger logger, IRequest request);
+    [LoggerMessage(EventId = 16, Message = "Request {Request} handler implement internal end life cycle", Level = LogLevel.Debug, SkipEnabledCheck = true)]
+    public static partial void LogRequestHandlerImplementInternalEndLifeCycle(this ILogger logger, IRequest request);
 }

@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 	<PropertyGroup>
-		<TargetFrameworks>net9.0;net8.0;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>net10.0;net9.0;net8.0;netstandard2.0</TargetFrameworks>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
@@ -13,7 +13,7 @@
 		<Authors>Lester Pastrana</Authors>
 		<Company>Private</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">3.3.0.0</Version>
+		<Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">3.4.1.57</Version>
 		<Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
 		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
 		<Description>include Json utilities for System.Test.Json</Description>
@@ -30,7 +30,7 @@
 
 	<ItemGroup>
 		<PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-		<PackageReference Include="Serilog" Version="4.1.0" />
+		<PackageReference Include="Serilog" Version="4.3.0" />
 	</ItemGroup>
 
 	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
@@ -41,6 +41,9 @@
 	</ItemGroup>
 	<ItemGroup Condition="'$(TargetFramework)' == 'net9.0'">
 		<PackageReference Include="System.Text.Json" Version="9.0.0" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+		<PackageReference Include="System.Text.Json" Version="10.0.0" />
 	</ItemGroup>
 
 	<ItemGroup>

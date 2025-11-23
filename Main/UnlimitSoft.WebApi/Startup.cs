@@ -227,7 +227,7 @@ public class Startup
         #endregion
 
         #region AutoMapper
-        services.AddMapper(new Assembly[] { typeof(Startup).Assembly });
+        services.AddMapper([typeof(Startup).Assembly]);
         #endregion
 
         #region ASP.NET

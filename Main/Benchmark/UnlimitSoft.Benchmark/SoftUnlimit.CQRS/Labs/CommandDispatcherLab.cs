@@ -34,6 +34,7 @@ public sealed class CommandDispatcherLab
     {
         var command = new Command { Name = "Lester Pastrana" };
         var result = await _mediator.SendAsync(_provider, command);
+        var result2 = await _mediator.SendAsync(_provider, command);
 
         return result.Value;
     }

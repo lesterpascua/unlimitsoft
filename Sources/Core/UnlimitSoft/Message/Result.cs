@@ -9,25 +9,6 @@ namespace UnlimitSoft.Message;
 /// <summary>
 /// 
 /// </summary>
-public interface IResult
-{
-    /// <summary>
-    /// Indicate if the operation finish successfully
-    /// </summary>
-    bool IsSuccess { get; }
-    /// <summary>
-    /// Error asociate to the result
-    /// </summary>
-    IResponse? Error { get; }
-
-    /// <summary>
-    /// Result if no error detected
-    /// </summary>
-    object? GetValue();
-}
-/// <summary>
-/// 
-/// </summary>
 public readonly struct Result
 {
     /// <summary>
@@ -79,68 +60,6 @@ public readonly struct Result
 
         return Err<TResponse>(result);
     }
-
-
-    /// <summary>
-    /// Return a result from success
-    /// </summary>
-    /// <param name="value"></param>
-    /// <returns></returns>
-    [Obsolete("Use Ok")]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Result<TResponse> FromOk<TResponse>(TResponse? value) => new(value, null);
-    /// <summary>
-    /// Return a result from error
-    /// </summary>
-    /// <param name="error"></param>
-    /// <returns></returns>
-    [Obsolete("Use Err")]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Result<TResponse> FromError<TResponse>(IResponse error) => new(default, error);
-    /// <summary>
-    /// Return a result from error
-    /// </summary>
-    /// <param name="err"></param>
-    /// <param name="field"></param>
-    /// <param name="code"></param>
-    /// <returns></returns>
-    [Obsolete("Use Err")]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Result<TResponse> FromError<TResponse, T>(T err, string? field = null, HttpStatusCode code = HttpStatusCode.BadRequest)
-        where T : struct, Enum
-    {
-        return FromError<TResponse>([$"{err:D}"], field, code);
-    }
-    /// <summary>
-    /// Return a result from error
-    /// </summary>
-    /// <param name="err"></param>
-    /// <param name="field"></param>
-    /// <param name="code"></param>
-    /// <returns></returns>
-    [Obsolete("Use Err")]
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    public static Result<TResponse> FromError<TResponse>(string err, string? field = null, HttpStatusCode code = HttpStatusCode.BadRequest)
-    {
-        return FromError<TResponse>([err], field, code);
-    }
-    /// <summary>
-    /// Return a result from error
-    /// </summary>
-    /// <param name="errs"></param>
-    /// <param name="field"></param>
-    /// <param name="code"></param>
-    /// <returns></returns>
-    [Obsolete("Use Err")]
-    public static Result<TResponse> FromError<TResponse>(string[] errs, string? field = null, HttpStatusCode code = HttpStatusCode.BadRequest)
-    {
-        field ??= string.Empty;
-
-        var body = new Dictionary<string, string[]> { [field] = errs };
-        var result = new ErrorResponse(code, body);
-
-        return FromError<TResponse>(result);
-    }
 }
 /// <summary>
 /// 
@@ -148,6 +67,9 @@ public readonly struct Result
 /// <typeparam name="TResponse"></typeparam>
 public readonly struct Result<TResponse> : IResult
 {
+    private readonly TResponse? _value;
+    private readonly IResponse? _error;
+
     /// <summary>
     /// Initialize Result
     /// </summary>
@@ -155,20 +77,20 @@ public readonly struct Result<TResponse> : IResult
     /// <param name="error"></param>
     internal Result(TResponse? value, IResponse? error)
     {
-        Value = value;
-        Error = error;
+        _value = value;
+        _error = error;
     }
 
     /// <summary>
     /// Result if no error detected
     /// </summary>
-    public TResponse? Value { get; }
+    public TResponse? Value => _value;
     /// <summary>
     /// Error asociate to the result
     /// </summary>
-    public IResponse? Error { get; }
+    public IResponse? Error => _error;
     /// <inheritdoc />
-    public bool IsSuccess => Error is null;
+    public bool IsSuccess => _error is null;
 
     /// <summary>
     /// Destructuring result

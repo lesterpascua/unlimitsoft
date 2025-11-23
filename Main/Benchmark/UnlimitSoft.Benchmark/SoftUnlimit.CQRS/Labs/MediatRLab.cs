@@ -18,9 +18,15 @@ public class MediatRLab
     public MediatRLab()
     {
         var services = new ServiceCollection();
-        services.AddMediatR(opt => opt.RegisterServicesFromAssemblyContaining<Program>());
+        services.AddMediatR(opt =>
+        {
+            opt.RegisterServicesFromAssemblyContaining<Program>();
+        });
+
 
         _provider = services.BuildServiceProvider();
+
+        var m = new MediatR.Mediator(_provider);
         _mediator = _provider.GetRequiredService<IMediator>();
     }
 

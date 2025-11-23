@@ -21,7 +21,7 @@ public static class InvokerCache
     internal static readonly object Sync = new();                  // Object used as a monitor for threads synchronization.
 #endif
 
-    private static Dictionary<Type, RequestMetadata>? _cache;
+    private static Dictionary<Type, RequestMetadata[]>? _cache;
 
     internal const string
         InitMethod = nameof(IRequestHandlerLifeCycle<IRequest>.InitAsync),
@@ -35,7 +35,7 @@ public static class InvokerCache
     /// <summary>
     /// Return an instance of the cache object. Cache is share between all instance of the Mediator to avoid wasted memory and processing.
     /// </summary>
-    internal static Dictionary<Type, RequestMetadata> Cache
+    internal static Dictionary<Type, RequestMetadata[]> Cache
     {
         get
         {
@@ -45,7 +45,7 @@ public static class InvokerCache
             return _cache;
         }
     }
-    internal static void UnsafeAdd(Type requestType, RequestMetadata metadata)
+    internal static void UnsafeAdd(Type requestType, RequestMetadata[] metadata)
     {
         Cache.Add(requestType, metadata);
     }
@@ -60,9 +60,13 @@ public static class InvokerCache
     /// <exception cref="MissingMethodException"></exception>
     internal static Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>> GetHandler<TResponse>(Type requestType, RequestMetadata metadata)
     {
+        var cli = metadata.HandlerCLI;
+        if (cli is not null)
+            return (Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>)cli;
+
         lock (metadata.Sync)
         {
-            var cli = metadata.HandlerCLI;
+            cli = metadata.HandlerCLI;
             if (cli is not null)
                 return (Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>)cli;                         // Return function
 

@@ -49,4 +49,24 @@ public interface IMediator
     /// <param name="ct"></param>
     /// <returns></returns>
     ValueTask<Result<TResponse>> SafeSendAsync<TResponse>(IServiceProvider provider, IRequest<Result<TResponse>> request, CancellationToken ct = default);
+
+    /// <summary>
+    /// Send a request and match this request with multiples handlers requests using the service root provider. If in the configuration is specified useScope a new scope will
+    /// be used for the request.
+    /// </summary>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="request"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    ValueTask<AgregateResult<TResponse>> MultiSendAsync<TResponse>(IRequest<TResponse> request, CancellationToken ct = default);
+    /// <summary>
+    /// Send a request and match this request with multiples handlers requests using the service root provider. If in the configuration is specified useScope a new scope will
+    /// be used for the request.
+    /// </summary>
+    /// <typeparam name="TResponse"></typeparam>
+    /// <param name="provider"></param>
+    /// <param name="request"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    ValueTask<AgregateResult<TResponse>> MultiSendAsync<TResponse>(IServiceProvider provider, IRequest<TResponse> request, CancellationToken ct = default);
 }

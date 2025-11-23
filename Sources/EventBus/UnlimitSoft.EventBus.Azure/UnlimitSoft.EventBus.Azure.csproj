@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net9.0;net8.0;netstandard2.0</TargetFrameworks>
+		<TargetFrameworks>net10.0;net9.0;net8.0;netstandard2.0</TargetFrameworks>
 		<GenerateDocumentationFile>true</GenerateDocumentationFile>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
@@ -14,7 +14,7 @@
 		<Authors>Lester Pastrana</Authors>
 		<Company>Private</Company>
 		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
-		<Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">3.3.0.0</Version>
+		<Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">3.4.1.57</Version>
 		<Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
 		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
 		<Description>Azure event bus integration.</Description>
@@ -43,9 +43,15 @@
 		</None>
 	</ItemGroup>
 
-	<ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
 		<PackageReference Include="Azure.Messaging.ServiceBus" Version="7.18.4" />
-		<PackageReference Include="Polly" Version="8.5.2" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)' == 'net10.0' or '$(TargetFramework)' == 'net9.0' or '$(TargetFramework)' == 'net8.0'">
+		<PackageReference Include="Azure.Messaging.ServiceBus" Version="7.20.1" />
+	</ItemGroup>
+	
+	<ItemGroup>
+		<PackageReference Include="Polly" Version="8.6.4" />
 	</ItemGroup>
 
 	<ItemGroup>

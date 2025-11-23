@@ -17,6 +17,7 @@ using UnlimitSoft.Benchmark.UnlimitSoft.Data.EntityFramework.Utility;
 
 BenchmarkRunner.Run<CommandBenchmark>();
 //var bm = new CommandBenchmark();
+//await bm.MediatR();
 //await bm.UnlimitSoft();
 //Console.WriteLine();
 //await bm.UnlimitSoft();
