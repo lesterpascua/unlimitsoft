@@ -37,7 +37,7 @@ public class ServiceProviderEventDispatcher : IEventDispatcher
     public ValueTask<Result<IResponse>> DispatchAsync(IServiceProvider provider, IEvent @event, CancellationToken ct = default) => _mediator.SendAsync(provider, @event, ct);
 
     /// <inheritdoc />
-    public ValueTask<AgregateResult<IResponse>> MultiDispatchAsync(IEvent @event, CancellationToken ct = default) => _mediator.MultiSendAsync(@event, ct);
+    public ValueTask<AgregateResult<IResponse>> PublishAsync(IEvent @event, CancellationToken ct = default) => _mediator.PublishAsync(@event, ct);
     /// <inheritdoc />
-    public ValueTask<AgregateResult<IResponse>> DispatchMultiAsync(IServiceProvider provider, IEvent @event, CancellationToken ct = default) => _mediator.MultiSendAsync(provider, @event, ct);
+    public ValueTask<AgregateResult<IResponse>> PublishAsync(IServiceProvider provider, IEvent @event, CancellationToken ct = default) => _mediator.PublishAsync(provider, @event, ct);
 }

@@ -33,7 +33,7 @@ public interface IEventDispatcher
     /// <param name="event"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    ValueTask<AgregateResult<IResponse>> MultiDispatchAsync(IEvent @event, CancellationToken ct = default);
+    ValueTask<AgregateResult<IResponse>> PublishAsync(IEvent @event, CancellationToken ct = default);
     /// <summary>
     /// Dispatch event to asociate with multiples register event handlers in the same scope of the parent.
     /// </summary>
@@ -41,5 +41,5 @@ public interface IEventDispatcher
     /// <param name="event"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    ValueTask<AgregateResult<IResponse>> DispatchMultiAsync(IServiceProvider provider, IEvent @event, CancellationToken ct = default);
+    ValueTask<AgregateResult<IResponse>> PublishAsync(IServiceProvider provider, IEvent @event, CancellationToken ct = default);
 }

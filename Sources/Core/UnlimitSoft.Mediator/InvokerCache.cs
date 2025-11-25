@@ -60,15 +60,13 @@ public static class InvokerCache
     /// <exception cref="MissingMethodException"></exception>
     internal static Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>> GetHandler<TResponse>(Type requestType, RequestMetadata metadata)
     {
-        var cli = metadata.HandlerCLI;
-        if (cli is not null)
-            return (Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>)cli;
+        if (metadata.HandlerCLI is not null)
+            return (Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>)metadata.HandlerCLI;
 
         lock (metadata.Sync)
         {
-            cli = metadata.HandlerCLI;
-            if (cli is not null)
-                return (Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>)cli;                         // Return function
+            if (metadata.HandlerCLI is not null)
+                return (Func<IRequestHandler, IRequest<TResponse>, CancellationToken, ValueTask<TResponse>>)metadata.HandlerCLI;                        // Return function
 
             var method = metadata
                 .HandlerImplementType

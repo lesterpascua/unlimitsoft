@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -68,37 +69,21 @@ public sealed class ServiceProviderMediator : IMediator
         return await SafeSendAsync(scope.ServiceProvider, request, ct);
     }
     /// <inheritdoc />
-    public async ValueTask<AgregateResult<TResponse>> MultiSendAsync<TResponse>(IRequest<TResponse> request, CancellationToken ct = default)
+    public async ValueTask<AgregateResult<TResponse>> PublishAsync<TResponse>(IRequest<TResponse> request, CancellationToken ct = default)
     {
         if (!_useScope)
-            return await MultiSendAsync(_provider, request, ct);
+            return await PublishAsync(_provider, request, ct);
 
         using var scope = _provider.CreateScope();
-        return await MultiSendAsync(scope.ServiceProvider, request, ct);
+        return await PublishAsync(scope.ServiceProvider, request, ct);
     }
 
     /// <inheritdoc />
-    public ValueTask<Result<TResponse>> SendAsync<TResponse>(IServiceProvider provider, IRequest<TResponse> request, CancellationToken ct = default)
-    {
-        return InternalSendAsync(
-            provider,
-            request,
-            Transform,
-            ct
-        );
-    }
+    public ValueTask<Result<TResponse>> SendAsync<TResponse>(IServiceProvider provider, IRequest<TResponse> request, CancellationToken ct = default) => InternalSendAsync<TResponse, TResponse>(provider, request, ct);
     /// <inheritdoc />
-    public ValueTask<Result<TResponse>> SafeSendAsync<TResponse>(IServiceProvider provider, IRequest<Result<TResponse>> request, CancellationToken ct = default)
-    {
-        return InternalSendAsync(
-            provider,
-            request,
-            TransformWithResult,
-            ct
-        );
-    }
+    public ValueTask<Result<TResponse>> SafeSendAsync<TResponse>(IServiceProvider provider, IRequest<Result<TResponse>> request, CancellationToken ct = default) => InternalSendAsync<Result<TResponse>, TResponse>(provider, request, ct);
     /// <inheritdoc />
-    public async ValueTask<AgregateResult<TResponse>> MultiSendAsync<TResponse>(IServiceProvider provider, IRequest<TResponse> request, CancellationToken ct = default)
+    public async ValueTask<AgregateResult<TResponse>> PublishAsync<TResponse>(IServiceProvider provider, IRequest<TResponse> request, CancellationToken ct = default)
     {
         _logger?.LogProcessRequest(request);
 
@@ -108,7 +93,7 @@ public sealed class ServiceProviderMediator : IMediator
         var responseType = typeof(TResponse);
         _logger?.LogExecuteRequestType(requestType, responseType);
 
-        var handlers = BuildHandlerMetadata(provider, requestType, responseType, out var metadatas);
+        var handlers = GetRequestHandlers(provider, requestType, responseType, out var metadatas);
         if (handlers is null)
             return new AgregateResult<TResponse>([Result.Err<TResponse>(request.NotFoundResponse())]);
 
@@ -117,8 +102,8 @@ public sealed class ServiceProviderMediator : IMediator
         for (var i = 0; i < handlers.Length; i++)
         {
             var handler = handlers[i];
+            var metadata = metadatas![index];
 
-            var metadata = metadatas[index];
             if (metadata.HasLifeCycle)
                 await InitAsync(handler, request, requestType, metadata, ct);
 
@@ -163,8 +148,6 @@ public sealed class ServiceProviderMediator : IMediator
         return new AgregateResult<TResponse>(responses);
     }
 
-
-
     /// <summary>
     /// Default function used to convert error transform to standard ASP.NET format
     /// </summary>
@@ -180,22 +163,49 @@ public sealed class ServiceProviderMediator : IMediator
 
         var result = new Dictionary<string, string[]>();
         foreach (var item in aux)
-            result.Add(item.Key, item.Value.ToArray());
+            result.Add(item.Key, [.. item.Value]);
 
         return result;
     }
 
 
     #region Private Methods
-    private static IRequestHandler[]? BuildHandlerMetadata(IServiceProvider provider, Type requestType, Type responseType, out RequestMetadata[] metadatas)
+    private static IRequestHandler? GetRequestHandler(IServiceProvider provider, Type requestType, Type responseType, out RequestMetadata? metadata)
     {
-        if (InvokerCache.Cache.TryGetValue(requestType, out metadatas!))
+        if (InvokerCache.Cache.TryGetValue(requestType, out var metadatas))
         {
-            if (metadatas[0].HandlerInterfaceType is not null)
-                return (IRequestHandler[])provider.GetServices(metadatas[0].HandlerInterfaceType);
+            metadata = metadatas[0];
+            if (metadata.HandlerInterfaceType is not null)
+                return (IRequestHandler? )provider.GetService(metadatas[0].HandlerInterfaceType);
             return null;
         }
 
+        var handlers = BuildRequestHandlerCache(provider, requestType, responseType, out metadatas);
+        if (handlers is not null)
+        {
+            metadata = metadatas![0];
+            return handlers?[0];
+        }
+
+        metadata = null;
+        return null;
+    }
+    private static IRequestHandler[]? GetRequestHandlers(IServiceProvider provider, Type requestType, Type responseType, out RequestMetadata[]? metadatas)
+    {
+        if (InvokerCache.Cache.TryGetValue(requestType, out metadatas))
+        {
+            if (metadatas[0].HandlerInterfaceType is not null)
+            {
+                var handlers = (IRequestHandler[])provider.GetServices(metadatas[0].HandlerInterfaceType);
+                if (handlers.Length != 0)
+                    return handlers;
+            }
+            return null;
+        }
+        return BuildRequestHandlerCache(provider, requestType, responseType, out metadatas);
+    }
+    private static IRequestHandler[]? BuildRequestHandlerCache(IServiceProvider provider, Type requestType, Type responseType, out RequestMetadata[]? metadatas)
+    {
         // Handler
         lock (InvokerCache.Sync)
         {
@@ -269,18 +279,7 @@ public sealed class ServiceProviderMediator : IMediator
         }
     }
 
-
-    private static Result<TOut> Transform<TOut>(TOut result)
-    {
-        return Result.Ok(result);
-    }
-    private static Result<TOut> TransformWithResult<TOut>(Result<TOut> result)
-    {
-        if (result.IsSuccess)
-            return Result.Ok(result.Value);
-        return Result.Err<TOut>(result.Error!);
-    }
-    private async ValueTask<Result<TOut>> InternalSendAsync<TResponse, TOut>(IServiceProvider provider, IRequest<TResponse> request, Func<TResponse?, Result<TOut>> transform, CancellationToken ct)
+    private async ValueTask<Result<TOut>> InternalSendAsync<TResponse, TOut>(IServiceProvider provider, IRequest<TResponse> request, CancellationToken ct)
     {
         _logger?.LogProcessRequest(request);
 
@@ -290,12 +289,10 @@ public sealed class ServiceProviderMediator : IMediator
         var responseType = typeof(TResponse);
         _logger?.LogExecuteRequestType(requestType, responseType);
 
-        var handlers = BuildHandlerMetadata(provider, requestType, responseType, out var metadatas);
-        if (handlers is null || handlers.Length == 0)
+        var handler = GetRequestHandler(provider, requestType, responseType, out var metadata);
+        if (handler is null || metadata is null)
             return Result.Err<TOut>(request.NotFoundResponse());
 
-        var handler = handlers[0];
-        var metadata = metadatas[0];
         if (metadata.HasLifeCycle)
             await InitAsync(handler, request, requestType, metadata, ct);
 
@@ -305,18 +302,18 @@ public sealed class ServiceProviderMediator : IMediator
             {
                 if (metadata.Validator is not null)
                 {
-                    var error = await ValidationAsync(handler, request, requestType, metadata, ct);
+                    var error = await ValidationAsync(handler, request, requestType, metadata, ct).ConfigureAwait(false);
                     if (error is not null)
                         return Result.Err<TOut>(error);
                 }
                 if (metadata.HasCompliance)
                 {
-                    var error = await ComplianceAsync(handler, request, requestType, metadata, ct);
+                    var error = await ComplianceAsync(handler, request, requestType, metadata, ct).ConfigureAwait(false);
                     if (error is not null)
                         return Result.Err<TOut>(error);
                 }
             }
-            var response = await HandlerAsync(handler, request, requestType, metadata, ct);
+            var response = await HandlerAsync(handler, request, requestType, metadata, ct).ConfigureAwait(false);
 
             // Run existing post operations
             if (metadata.PostPipeline is not null)
@@ -324,8 +321,16 @@ public sealed class ServiceProviderMediator : IMediator
                 throw new NotSupportedException("Will be migrate to native compiler");
                 //PostPipelineHandlerAsync(provider, requestType, request, handler, response, metadata, ct);
             }
+            if (response is null)
+                return Result.Ok<TOut>(default);
 
-            return transform(response);
+            if (response is Result<TOut> result)
+            {
+                if (result.IsSuccess)
+                    return Result.Ok(result.Value);
+                return Result.Err<TOut>(result.Error!);
+            }
+            return Result.Ok((TOut)(object)response);
         }
         finally
         {

@@ -1,11 +1,8 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using UnlimitSoft.CQRS.Command;
-using UnlimitSoft.CQRS.DependencyInjection;
 using UnlimitSoft.Mediator;
 using UnlimitSoft.Mediator.Pipeline;
-using UnlimitSoft.Mediator.Validation;
 using UnlimitSoft.Message;
-using UnlimitSoft.Web.Client;
 
 namespace UnlimitSoft.Benchmark.SoftUnlimit.CQRS.Labs;
 
@@ -25,6 +22,7 @@ public sealed class CommandDispatcherLab
 
         services.AddSingleton<IMediator>(provider => new ServiceProviderMediator(provider, validate));
         services.AddScoped<IRequestHandler<Command, string>, CommandHandler>();
+        services.AddScoped<IRequestHandler<SafeCommand, Result<string>>, SafeCommandHandler>();
 
         _provider = services.BuildServiceProvider();
         _mediator = _provider.GetRequiredService<IMediator>();
@@ -34,7 +32,13 @@ public sealed class CommandDispatcherLab
     {
         var command = new Command { Name = "Lester Pastrana" };
         var result = await _mediator.SendAsync(_provider, command);
-        var result2 = await _mediator.SendAsync(_provider, command);
+
+        return result.Value;
+    }
+    public async Task<string?> SafeDispatch()
+    {
+        var command = new SafeCommand { Name = "Lester Pastrana" };
+        var result = await _mediator.SafeSendAsync(_provider, command);
 
         return result.Value;
     }
@@ -55,6 +59,31 @@ public sealed class CommandDispatcherLab
         public ValueTask<string> HandleAsync(Command request, CancellationToken ct = default)
         {
             return ValueTask.FromResult($"{request.Name} - {SysClock.GetUtcNow()}");
+        }
+        //public ValueTask<IResponse> ValidatorAsync(Command request, RequestValidator<Command> validator, CancellationToken ct = default)
+        //{
+        //    return ValueTask.FromResult(request.OkResponse());
+        //}
+        //public ValueTask<IResponse> ComplianceAsync(Command request, CancellationToken ct = default)
+        //{
+        //    return ValueTask.FromResult(request.OkResponse());
+        //}
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    public class SafeCommand : Command<Result<string>, CommandProps>
+    {
+        /// <summary>
+        /// 
+        /// </summary>
+        public string? Name { get; init; }
+    }
+    public class SafeCommandHandler : ICommandHandler<SafeCommand, Result<string>> //, ICommandHandlerValidator<Command>, ICommandHandlerCompliance<Command>
+    {
+        public ValueTask<Result<string>> HandleAsync(SafeCommand request, CancellationToken ct = default)
+        {
+            return ValueTask.FromResult(Result.Ok($"{request.Name} - {SysClock.GetUtcNow()}"));
         }
         //public ValueTask<IResponse> ValidatorAsync(Command request, RequestValidator<Command> validator, CancellationToken ct = default)
         //{

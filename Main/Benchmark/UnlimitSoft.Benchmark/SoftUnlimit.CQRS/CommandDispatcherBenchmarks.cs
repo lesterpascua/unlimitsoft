@@ -27,4 +27,9 @@ public class CommandBenchmark
     {
         return await _unlimitSoft.Dispatch();
     }
+    [Benchmark]
+    public async Task<string?> SafeUnlimitSoft()
+    {
+        return await _unlimitSoft.SafeDispatch();
+    }
 }

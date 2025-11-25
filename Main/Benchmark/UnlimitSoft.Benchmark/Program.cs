@@ -1,6 +1,5 @@
 ﻿using BenchmarkDotNet.Running;
 using UnlimitSoft.Benchmark.SoftUnlimit.CQRS;
-using UnlimitSoft.Benchmark.UnlimitSoft.Data.EntityFramework.Utility;
 
 
 
@@ -18,7 +17,7 @@ using UnlimitSoft.Benchmark.UnlimitSoft.Data.EntityFramework.Utility;
 BenchmarkRunner.Run<CommandBenchmark>();
 //var bm = new CommandBenchmark();
 //await bm.MediatR();
-//await bm.UnlimitSoft();
+//await bm.SafeUnlimitSoft();
 //Console.WriteLine();
 //await bm.UnlimitSoft();
 
