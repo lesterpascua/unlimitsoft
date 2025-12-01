@@ -1,7 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using UnlimitSoft.CQRS.Command;
 using UnlimitSoft.Mediator;
-using UnlimitSoft.Mediator.Pipeline;
 using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Benchmark.SoftUnlimit.CQRS.Labs;
@@ -95,19 +94,4 @@ public sealed class CommandDispatcherLab
         //}
     }
     #endregion
-
-    public sealed class CommandHandlerPipeline1 : IRequestHandlerPostPipeline<Command, CommandHandler, string, CommandHandlerPipeline1>
-    {
-        public Task HandleAsync(Command command, CommandHandler handler, string response, CancellationToken ct)
-        {
-            return Task.CompletedTask;
-        }
-    }
-    public sealed class CommandHandlerPipeline2 : IRequestHandlerPostPipeline<Command, CommandHandler, string, CommandHandlerPipeline2>
-    {
-        public Task HandleAsync(Command command, CommandHandler handler, string response, CancellationToken ct)
-        {
-            return Task.CompletedTask;
-        }
-    }
 }

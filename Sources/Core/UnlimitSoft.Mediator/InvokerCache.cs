@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Reflection.Emit;
 using System.Threading;
 using System.Threading.Tasks;
-using UnlimitSoft.Mediator.Pipeline;
 using UnlimitSoft.Message;
 
 namespace UnlimitSoft.Mediator;
@@ -23,13 +22,13 @@ public static class InvokerCache
 
     private static Dictionary<Type, RequestMetadata[]>? _cache;
 
-    internal const string
-        InitMethod = nameof(IRequestHandlerLifeCycle<IRequest>.InitAsync),
-        HandleMethod = nameof(IRequestHandler<IRequest<object>, object>.HandleAsync),
-        ValidatorMethod = nameof(IRequestHandlerValidator<IRequest<object>>.ValidatorAsync),
-        ComplianceMethod = nameof(IRequestHandlerCompliance<IRequest<object>>.ComplianceAsync),
-        PostPipelineMethod = nameof(IRequestHandlerPostPipeline<IRequest<object>, IRequestHandler, object, IRequestHandlerPostPipeline>.HandleAsync),
-        EndMethod = nameof(IRequestHandlerLifeCycle<IRequest>.EndAsync);
+    private const string
+        InitMethod = nameof(IRequestHandlerLifeCycle<>.InitAsync),
+        HandleMethod = nameof(IRequestHandler<,>.HandleAsync),
+        ValidatorMethod = nameof(IRequestHandlerValidator<>.ValidatorAsync),
+        ComplianceMethod = nameof(IRequestHandlerCompliance<>.ComplianceAsync),
+        PostPipelineMethod = nameof(IRequestHandlerPipeline<,>.PostHandleAsync),
+        EndMethod = nameof(IRequestHandlerLifeCycle<>.EndAsync);
 
 
     /// <summary>

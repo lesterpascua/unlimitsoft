@@ -31,5 +31,18 @@ internal sealed class RequestMetadata
     public bool HasLifeCycle;
     public Func<IRequestHandler, IRequest, CancellationToken, ValueTask>? InitCLI, EndCLI;
 
-    public PostPipelineMetadata[][]? PostPipeline;
+    public PipelineM? Pipeline;
+
+    public sealed class PipelineM
+    {
+        public Impl[] Handlers = default!;
+        public Type InterfaceType = default!;
+
+
+        public sealed class Impl
+        {
+            public object? CLI;
+            public Type ImplementType = default!;
+        }
+    }
 }

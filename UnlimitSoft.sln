@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.0.31912.275
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11217.181 d18.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{91A68341-353D-4C30-86F8-50B2D19BBA38}"
 EndProject
@@ -107,6 +107,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnlimitSoft.Cache.Memory", "Sources\Cache\UnlimitSoft.Cache.Memory\UnlimitSoft.Cache.Memory.csproj", "{9252C12B-CB0C-4359-BDA7-00C66C164861}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnlimitSoft.Cache.Redis", "Sources\Cache\UnlimitSoft.Cache.Redis\UnlimitSoft.Cache.Redis.csproj", "{6B11CDF0-CBE7-498F-8220-AE351E2C108B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mediator", "Main\Mediator\Mediator.csproj", "{E0CF2ECF-FF1C-4058-AD4E-14F57BEF4676}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -246,6 +248,10 @@ Global
 		{6B11CDF0-CBE7-498F-8220-AE351E2C108B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6B11CDF0-CBE7-498F-8220-AE351E2C108B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6B11CDF0-CBE7-498F-8220-AE351E2C108B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E0CF2ECF-FF1C-4058-AD4E-14F57BEF4676}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E0CF2ECF-FF1C-4058-AD4E-14F57BEF4676}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E0CF2ECF-FF1C-4058-AD4E-14F57BEF4676}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E0CF2ECF-FF1C-4058-AD4E-14F57BEF4676}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -298,6 +304,7 @@ Global
 		{6B002555-00C0-45B8-B6FD-72113013593A} = {3A033475-D58A-4EF4-914A-6061B46493A1}
 		{9252C12B-CB0C-4359-BDA7-00C66C164861} = {6B002555-00C0-45B8-B6FD-72113013593A}
 		{6B11CDF0-CBE7-498F-8220-AE351E2C108B} = {6B002555-00C0-45B8-B6FD-72113013593A}
+		{E0CF2ECF-FF1C-4058-AD4E-14F57BEF4676} = {1E2F4303-FEFD-488D-AAEF-B55AEAC1F43F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {9B9451D6-06A9-4FE7-BD5A-062F758B8538}

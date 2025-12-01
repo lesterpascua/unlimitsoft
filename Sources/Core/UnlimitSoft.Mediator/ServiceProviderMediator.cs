@@ -4,11 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using UnlimitSoft.Mediator.Pipeline;
 using UnlimitSoft.Mediator.Validation;
 using UnlimitSoft.Message;
 
@@ -221,6 +219,9 @@ public sealed class ServiceProviderMediator : IMediator
                 return null;
             }
 
+            // Pipeline
+            var pipeline = GetPipeline(provider, requestType, responseType);
+
             metadatas = new RequestMetadata[handlers.Length];
             for (var i = 0; i < handlers.Length; i++)
             {
@@ -232,6 +233,7 @@ public sealed class ServiceProviderMediator : IMediator
                 {
                     HandlerInterfaceType = handlerInterfaceType,
                     HandlerImplementType = handleType,
+                    Pipeline = pipeline,
                 };
                 var interfaces = handleType.GetInterfaces();
 
@@ -249,33 +251,28 @@ public sealed class ServiceProviderMediator : IMediator
                 var complianceHandlerType = typeof(IRequestHandlerCompliance<>).MakeGenericType(requestType);
                 if (Array.IndexOf(interfaces, complianceHandlerType) != -1)
                     metadata.HasCompliance = true;
-
-                // PostPipeline
-                var attrs = requestType.GetCustomAttributes(typeof(IPostPipelineAttribute), true);
-                if (attrs is not null && attrs.Length != 0)
-                {
-                    var list = new List<(Type Pipeline, int Order)>();
-                    var requestHandlerType = typeof(IRequestHandlerPostPipeline<,,,>);
-                    for (var j = 0; j < attrs.Length; j++)
-                    {
-                        var attr = (IPostPipelineAttribute)attrs[j];
-                        var type = requestHandlerType.MakeGenericType(requestType, handleType, responseType, attr.Pipeline);
-                        var collection = attr.Pipeline.GetInterfaces()
-                            .Where(p => p == type)
-                            .Select(s => (Type: type, attr.Order));
-
-                        list.AddRange(collection);
-                    }
-                    metadata.PostPipeline = [.. list
-                        .GroupBy(k => k.Order, s => s.Pipeline)
-                        .OrderBy(k => k.Key)
-                        .Select(type => type.Select(s => new PostPipelineMetadata { InterfaceType = s }).ToArray())
-                    ];
-                }
             }
 
             InvokerCache.UnsafeAdd(requestType, metadatas);
             return handlers;
+        }
+
+        // ==========================================================================================================================
+        static RequestMetadata.PipelineM? GetPipeline(IServiceProvider provider, Type requestType, Type responseType)
+        {
+            var pipelineHandlerType = typeof(IRequestHandlerPipeline<,>).MakeGenericType(requestType, responseType);
+            var pipelinesServices = (IRequestHandlerPipeline[])provider.GetServices(pipelineHandlerType);
+            if (pipelinesServices.Length == 0)
+                return null;
+
+            return new RequestMetadata.PipelineM
+            {
+                InterfaceType = pipelineHandlerType,
+                Handlers = [.. pipelinesServices
+                    .OrderBy(x => x.Order)
+                    .Select(s => new RequestMetadata.PipelineM.Impl { ImplementType = s.GetType(), })
+                ]
+            };
         }
     }
 
@@ -293,9 +290,12 @@ public sealed class ServiceProviderMediator : IMediator
         if (handler is null || metadata is null)
             return Result.Err<TOut>(request.NotFoundResponse());
 
+        var pipelineHandlers = metadata.Pipeline is not null ? await PrePipelineAsync(provider, request, metadata, ct) : null;
+
         if (metadata.HasLifeCycle)
             await InitAsync(handler, request, requestType, metadata, ct);
 
+        TResponse response = default!;
         try
         {
             if (_validate)
@@ -313,33 +313,43 @@ public sealed class ServiceProviderMediator : IMediator
                         return Result.Err<TOut>(error);
                 }
             }
-            var response = await HandlerAsync(handler, request, requestType, metadata, ct).ConfigureAwait(false);
-
-            // Run existing post operations
-            if (metadata.PostPipeline is not null)
-            {
-                throw new NotSupportedException("Will be migrate to native compiler");
-                //PostPipelineHandlerAsync(provider, requestType, request, handler, response, metadata, ct);
-            }
-            if (response is null)
-                return Result.Ok<TOut>(default);
-
-            if (response is Result<TOut> result)
-            {
-                if (result.IsSuccess)
-                    return Result.Ok(result.Value);
-                return Result.Err<TOut>(result.Error!);
-            }
-            return Result.Ok((TOut)(object)response);
+            response = await HandlerAsync(handler, request, requestType, metadata, ct).ConfigureAwait(false);
         }
         finally
         {
             if (metadata.HasLifeCycle)
                 await EndAsync(handler, request, requestType, metadata, ct);
+            if (pipelineHandlers is not null)
+                response = await PostPipelineAsync(request, pipelineHandlers, response, ct);
         }
+
+        if (response is null)
+            return Result.Ok<TOut>(default);
+
+        if (response is Result<TOut> result)
+        {
+            if (result.IsSuccess)
+                return Result.Ok(result.Value);
+            return Result.Err<TOut>(result.Error!);
+        }
+        return Result.Ok((TOut)(object)response);
     }
 
 
+    private static async ValueTask<IRequestHandlerPipeline[]?> PrePipelineAsync<TResponse>(IServiceProvider provider, IRequest<TResponse> request, RequestMetadata metadata, CancellationToken ct)
+    {
+        /// TODO: pending to optimize with InvokerCache
+        var pipelineHandlers = new IRequestHandlerPipeline[metadata.Pipeline!.Handlers.Length];
+        for (var i = 0; i < metadata.Pipeline.Handlers.Length; i++)
+        {
+            var pipelineInfo = metadata.Pipeline.Handlers[i];
+            var pipelineHandler = pipelineHandlers[i] = (IRequestHandlerPipeline)ActivatorUtilities.GetServiceOrCreateInstance(provider, pipelineInfo.ImplementType);
+            var method = pipelineInfo.ImplementType.GetMethod(nameof(IRequestHandlerPipeline<,>.PreHandleAsync))!;
+            await (ValueTask)method.Invoke(pipelineHandler, [request, ct])!;
+        }
+
+        return pipelineHandlers;
+    }
     private static ValueTask<TResponse> HandlerAsync<TResponse>(IRequestHandler handler, IRequest<TResponse> request, Type requestType, RequestMetadata metadata, CancellationToken ct)
     {
         var cli = metadata.HandlerCLI;
@@ -349,15 +359,6 @@ public sealed class ServiceProviderMediator : IMediator
         var method = InvokerCache.GetHandler<TResponse>(requestType, metadata);
         return method(handler, request, ct);
     }
-    /// <summary>
-    /// Execute validator
-    /// </summary>
-    /// <param name="handler"></param>
-    /// <param name="request"></param>
-    /// <param name="requestType"></param>
-    /// <param name="metadata"></param>
-    /// <param name="ct"></param>
-    /// <returns></returns>
     private async ValueTask<IResponse?> ValidationAsync(IRequestHandler handler, IRequest request, Type requestType, RequestMetadata metadata, CancellationToken ct)
     {
         _logger?.LogRequestHandlerImplementInternalValidation(request);
@@ -404,38 +405,18 @@ public sealed class ServiceProviderMediator : IMediator
         var method = InvokerCache.GetEnd(requestType, metadata);
         return method(handler, request, ct);
     }
+    private static async ValueTask<TResponse> PostPipelineAsync<TResponse>(IRequest<TResponse> request, IRequestHandlerPipeline[] pipelineHandlers, TResponse response, CancellationToken ct)
+    {
+        /// TODO: pending to optimize with InvokerCache
+        for (var i = pipelineHandlers.Length - 1; i >= 0; i--)
+        {
+            var pipelineHandler = pipelineHandlers[i];
+            var method = pipelineHandler.GetType().GetMethod(nameof(IRequestHandlerPipeline<,>.PostHandleAsync))!;
+            response = await (ValueTask<TResponse>)method.Invoke(pipelineHandler, [request, response, ct])!;
+        }
 
-    ///// <summary>
-    ///// Handler post async operations
-    ///// </summary>
-    ///// <param name="provider"></param>
-    ///// <param name="requestType"></param>
-    ///// <param name="request"></param>
-    ///// <param name="handler"></param>
-    ///// <param name="response"></param>
-    ///// <param name="metadata"></param>
-    ///// <param name="ct"></param>
-    ///// <returns></returns>
-    //private static void PostPipelineHandlerAsync<TResponse>(IServiceProvider provider, Type requestType, IRequest request, IRequestHandler handler, TResponse response, RequestMetadata metadata, CancellationToken ct)
-    //{
-    //    var span = metadata.PostPipeline.AsSpan();
-    //    for (var i = 0; i < span.Length; i++)
-    //    {
-    //        var group = span[i].AsSpan();
-    //        var tasks = new Task[group.Length];
-    //        for (var j = 0; j < group.Length; j++)
-    //        {
-    //            var pipelineMetadata = group[j];
-    //            var pipeline = (IRequestHandlerPostPipeline)provider.GetRequiredService(pipelineMetadata.InterfaceType);
-
-    //            pipelineMetadata.ImplementType ??= pipeline.GetType();
-    //            var method = InvokerCache.GetPostPipeline<TResponse>(requestType, metadata, pipelineMetadata);
-
-    //            tasks[j] = method(pipeline, request, handler, response, ct);
-    //        }
-    //        Task.WaitAll(tasks, ct);
-    //    }
-    //}
+        return response;
+    }
     #endregion
 }
 internal static partial class ServiceProviderMediatorLogger
