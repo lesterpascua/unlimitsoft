@@ -6,6 +6,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Text.Json;
 using System.Xml.Linq;
 using UnlimitSoft.Json;
 
@@ -157,6 +158,8 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
     {
         if (data is null)
             return null;
+        if (data is JsonElement jsonElement)
+            data = jsonElement.ToString();
         return JsonConvert.SerializeObject(data, _serialize);
     }
 
