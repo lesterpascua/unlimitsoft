@@ -159,7 +159,7 @@ public sealed class DefaultJsonSerializer : IJsonSerializer
         if (data is null)
             return null;
         if (data is JsonElement jsonElement)
-            data = jsonElement.ToString();
+            data = jsonElement.GetRawText();
         return JsonConvert.SerializeObject(data, _serialize);
     }
 
