@@ -51,7 +51,7 @@ public class MicroServiceGenerator : IIdGenerator<Guid>, IServiceMetadata
 
     private int _sequence;                                      // The sequence within the same tick.
     private ulong _lastTimestamp;
-    private readonly byte _id0, _id1, _id2, _id3, _id4, _id5;   // store the individual bytes instead of an array so we do not incur the overhead of array indexing and bound checks when generating id values
+    private readonly byte _id0, _id1, _id2, _id3, _id4;   // store the individual bytes instead of an array so we do not incur the overhead of array indexing and bound checks when generating id values
 
 
     /// <summary>
@@ -88,7 +88,7 @@ public class MicroServiceGenerator : IIdGenerator<Guid>, IServiceMetadata
         WorkerId = Convert.ToBase64String(workerId);
 
         _id0 = workerId[0]; _id1 = workerId[1]; _id2 = workerId[2]; 
-        _id3 = workerId[3]; _id4 = workerId[4]; _id5 = workerId[5];
+        _id3 = workerId[3]; _id4 = workerId[4]; // _id5 = workerId[5];
 
         Id = Convert.ToBase64String([.. BitConverter.GetBytes(serviceId).Concat(workerId)]);
     }
