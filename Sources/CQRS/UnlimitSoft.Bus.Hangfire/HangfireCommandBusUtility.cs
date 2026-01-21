@@ -109,7 +109,7 @@ public sealed class HangfireCommandBusUtility : ICommandBusUtility
     /// </summary>
     /// <param name="predicate"></param>
     /// <param name="queueType"></param>
-    /// <param name="allowNext">Indicate if allow the process to continue to check the next item or should stop immediately</param>
+    /// <param name="allowNext">Indicate if allow the process to continue to check the next item or should stop immediately </param>
     /// <returns></returns>
     private bool Find(Predicate<object> predicate, BusQueue queueType, Func<string, object, bool> allowNext)
     {
