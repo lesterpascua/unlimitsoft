@@ -50,12 +50,11 @@ public sealed class MicroServiceGeneratorTests
         var gen = new MicroServiceGenerator(expectedServiceId);
 
         // Act & Assert
-        var expectedWithLostBits = (ushort)(expectedServiceId & 0x3CFF); // Clear bits 8-9
         for (int i = 0; i < 100; i++)
         {
             var generatedId = gen.GenerateId();
             var extractedServiceId = MicroServiceGenerator.GetServiceId(generatedId);
-            Assert.Equal(expectedWithLostBits, extractedServiceId);
+            Assert.Equal(expectedServiceId, extractedServiceId);
         }
     }
     [Theory]
@@ -64,7 +63,8 @@ public sealed class MicroServiceGeneratorTests
     [InlineData(42)]
     [InlineData(255)]      // 8 bits: 11111111
     [InlineData(1023)]     // 10 bits: 1111111111
-    [InlineData(16383)]    // 14 bits max: 11111111111111 (bits 8-9 will be lost)
+    [InlineData(16383)]    // 14 bits: 11111111111111
+    [InlineData(65535)]    // 16 bits max: 1111111111111111 (full ushort range)
     [InlineData(0x3CFF)]   // Test with bits 8-9 set: 0011110011111111
     public void GetServiceId_FromGeneratedGuid_ShouldReturnCorrectServiceId(ushort expectedServiceId)
     {
@@ -76,9 +76,8 @@ public sealed class MicroServiceGeneratorTests
         var generatedId = gen.GenerateId();
         var extractedServiceId = MicroServiceGenerator.GetServiceId(generatedId);
 
-        // Assert - Note: bits 8-9 are lost in encoding, so we need to mask them out
-        var expectedWithLostBits = (ushort)(expectedServiceId & 0x3CFF); // Clear bits 8-9
-        Assert.Equal(expectedWithLostBits, extractedServiceId);
+        // Assert - Full 16-bit serviceId is now preserved
+        Assert.Equal(expectedServiceId, extractedServiceId);
     }
     #endregion
 

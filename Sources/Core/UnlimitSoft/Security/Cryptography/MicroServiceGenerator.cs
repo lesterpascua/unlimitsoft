@@ -17,11 +17,11 @@ namespace UnlimitSoft.Security.Cryptography;
 /// <list>
 ///     <item>48-bit timestamp - milliseconds since the epoch (Jan 1 1970)</item>
 ///     <item>4-bit version (0111 = 7)</item>
-///     <item>12-bit rand_a - contains 8 bits from worker ID byte 0 (_id0) + 4 reserved bits</item>
+///     <item>12-bit rand_a - contains 8 bits from worker ID byte 0 (_id0) + 4 bits from serviceId (bits 8-11)</item>
 ///     <item>2-bit variant (10)</item>
 ///     <item>62-bit rand_b - contains:
 ///         <list type="bullet">
-///             <item>14 bits from serviceId (bits 0-7 and bits 10-15, bits 8-9 are lost)</item>
+///             <item>14 bits from serviceId (bits 0-7 and bits 12-15)</item>
 ///             <item>32 bits from worker ID bytes 1-4 (_id1, _id2, _id3, _id4)</item>
 ///             <item>16 bits from sequence counter</item>
 ///         </list>
@@ -30,14 +30,14 @@ namespace UnlimitSoft.Security.Cryptography;
 /// 
 /// Detailed bit allocation (Guid byte array representation):
 /// - Bytes 0-5 (48 bits): Timestamp in milliseconds since epoch
-/// - Bytes 6-7 (16 bits): Version (4 bits) + worker ID _id0 (8 bits) + reserved (4 bits)
+/// - Bytes 6-7 (16 bits): Version (4 bits) + worker ID _id0 (8 bits) + serviceId bits 8-11 (4 bits)
 /// - Bytes 8-11 (32 bits): Worker ID bytes 1-4 (_id1, _id2, _id3, _id4)
-/// - Byte 12 (8 bits): Variant (2 bits) + serviceId bits 10-15 (6 bits)
+/// - Byte 12 (8 bits): Variant (2 bits) + serviceId bits 12-15 (6 bits, upper 2 bits used for bits 12-13, lower 4 bits used for bits 14-15)
 /// - Byte 13 (8 bits): ServiceId bits 0-7 (8 bits)
 /// - Bytes 14-15 (16 bits): Sequence counter
 /// 
 /// Worker ID: 40 bits (5 bytes) are preserved (_id0-_id4), _id5 is not encoded
-/// ServiceId: 14 bits are preserved (bits 0-7 and 10-15), bits 8-9 are lost
+/// ServiceId: Full 16 bits are preserved (bits 0-7 in byte 13, bits 8-11 in byte 6-7, bits 12-15 in byte 12)
 /// </remarks>
 public class MicroServiceGenerator : IIdGenerator<Guid>, IServiceMetadata
 {
@@ -175,26 +175,32 @@ public class MicroServiceGenerator : IIdGenerator<Guid>, IServiceMetadata
     /// <param name="id">The Guid to extract the service identifier from.</param>
     /// <returns>The service identifier encoded in the Guid.</returns>
     /// <remarks>
-    /// The serviceId is encoded in bytes 12-13 of the Guid's byte array representation:
-    /// - Byte 12: variant (2 bits) + serviceId bits 10-15 (6 bits)
+    /// The serviceId is encoded across bytes 6-7, 12, and 13 of the Guid's byte array representation:
+    /// - Bytes 6-7 (rand_a): serviceId bits 8-11 (4 bits) in the lower 4 bits of the 12-bit rand_a field
+    /// - Byte 12: variant (2 bits) + serviceId bits 12-15 (4 bits in lower nibble)
     /// - Byte 13: serviceId bits 0-7 (8 bits)
-    /// This function reconstructs the 14-bit serviceId from these bytes (bits 0-7 and 10-15).
-    /// Note: bits 8-9 of the original serviceId are not preserved in the encoding.
+    /// This function reconstructs the full 16-bit serviceId from these bytes.
     /// </remarks>
     public static ushort GetServiceId(Guid id)
     {
         var bytes = id.ToByteArray();
 
-        // Byte 12: Extract the lower 6 bits (serviceId bits 10-15)
-        byte highBits = (byte)(bytes[12] & 0x3F);
-
         // Byte 13: Contains bits 0-7 of serviceId
-        byte lowBits = bytes[13];
+        byte bits0to7 = bytes[13];
 
-        // Reconstruct the 14-bit serviceId (bits 0-7 and 10-15)
-        // High 6 bits (10-15) shifted left by 10 bits, OR with low 8 bits (0-7)
-        // Note: bits 8-9 are lost in the encoding
-        ushort serviceId = (ushort)((highBits << 10) | lowBits);
+        // Bytes 6-7 (rand_a field): Extract bits 8-11 of serviceId
+        // Encoding: short timeHiAndVersion = (short)(0x7000 | (_id0 << 4) | ((ServiceId >> 8) & 0x0F))
+        // The lower 4 bits of this short contain serviceId bits 8-11
+        // In little-endian byte array representation:
+        // Byte 6 (low byte): Contains the lower 4 bits (serviceId bits 8-11)
+        byte bits8to11 = (byte)(bytes[6] & 0x0F);
+
+        // Byte 12: Extract bits 12-15 of serviceId (lower 4 bits after variant)
+        // Encoding: byte clkSeqHiAndReserved = (byte)(0x80 | ((ServiceId >> 12) & 0x0F))
+        byte bits12to15 = (byte)(bytes[12] & 0x0F);
+
+        // Reconstruct the full 16-bit serviceId
+        ushort serviceId = (ushort)(bits0to7 | (bits8to11 << 8) | (bits12to15 << 12));
 
         return serviceId;
     }
@@ -205,7 +211,7 @@ public class MicroServiceGenerator : IIdGenerator<Guid>, IServiceMetadata
     /// <returns>A partial 5-byte worker identifier encoded in the Guid (_id0-_id4).</returns>
     /// <remarks>
     /// The worker ID is encoded across multiple parts of the Guid's byte array representation:
-    /// - Bytes 6-7 (rand_a): _id0 (8 bits) - lower 4 bits in upper nibble of byte 6, upper 4 bits in lower nibble of byte 7
+    /// - Bytes 6-7 (rand_a): _id0 (8 bits) - bits 4-11 of the rand_a field (serviceId occupies bits 0-3)
     /// - Bytes 8-11: _id1, _id2, _id3, _id4 (32 bits)
     /// This function reconstructs 5 of the 6 bytes of the worker identifier.
     /// Note: _id5 is not preserved in the encoding.
@@ -221,10 +227,10 @@ public class MicroServiceGenerator : IIdGenerator<Guid>, IServiceMetadata
         byte id4 = bytes[11];
 
         // Extract _id0 from bytes 6-7
-        // Encoding: short timeHiAndVersion = (short)(0x7000 | (_id0 << 4))
+        // Encoding: short timeHiAndVersion = (short)(0x7000 | (_id0 << 4) | ((ServiceId >> 8) & 0x0F))
         // In little-endian byte array:
-        // Byte 6 (low byte): (_id0 << 4) & 0xFF - lower 4 bits of _id0 in upper nibble
-        // Byte 7 (high byte): 0x70 | (_id0 >> 4) - version (0x7) in upper nibble, upper 4 bits of _id0 in lower nibble
+        // Byte 6 (low byte): serviceId bits 8-9 in bits 0-1, lower 4 bits of _id0 in bits 4-7
+        // Byte 7 (high byte): version (0x7) in bits 4-7, upper 4 bits of _id0 in bits 0-3
         byte id0 = (byte)(((bytes[7] & 0x0F) << 4) | ((bytes[6] >> 4) & 0x0F));
 
         return [id0, id1, id2, id3, id4];
@@ -286,7 +292,7 @@ public class MicroServiceGenerator : IIdGenerator<Guid>, IServiceMetadata
 
         if (_lastTimestamp == timestamp)
         {
-            if (++_sequence > 0xFFFF)  // 16-bit max for the sequence
+            if (++_sequence > ushort.MaxValue)  // 16-bit max for the sequence
                 timestamp = TillNextMillis(_lastTimestamp);
         }
         else
@@ -311,11 +317,11 @@ public class MicroServiceGenerator : IIdGenerator<Guid>, IServiceMetadata
         // Custom encoding strategy:
         // - unix_ts_ms: 48-bit timestamp in milliseconds since epoch
         // - ver: 4-bit version = 0111 (7)
-        // - rand_a (12 bits): _id0 (8 bits) + reserved (4 bits = 0)
+        // - rand_a (12 bits): _id0 (8 bits) + serviceId bits 8-11 (4 bits)
         // - var: 2-bit variant = 10
         // - rand_b (62 bits):
         //   * Bytes 8-11: _id1, _id2, _id3, _id4 (32 bits from worker ID)
-        //   * Byte 12: variant (2 bits) + serviceId bits 10-15 (6 bits)
+        //   * Byte 12: variant (2 bits) + serviceId bits 12-15 (4 bits in lower nibble) + padding (2 bits)
         //   * Byte 13: serviceId bits 0-7 (8 bits)
         //   * Bytes 14-15: sequence counter (16 bits)
         //
@@ -326,39 +332,40 @@ public class MicroServiceGenerator : IIdGenerator<Guid>, IServiceMetadata
         //   Total: 40 bits of worker ID preserved (5 of 6 bytes)
         //
         // ServiceId encoding:
-        //   - bits 10-15 (6 bits) in byte 12
         //   - bits 0-7 (8 bits) in byte 13
-        //   - bits 8-9 are NOT preserved
-        //   Total: 14 bits of serviceId preserved
+        //   - bits 8-11 (4 bits) in rand_a (bytes 6-7)
+        //   - bits 12-15 (4 bits) in byte 12
+        //   Total: Full 16 bits of serviceId preserved
 
         // Build the GUID according to RFC 9562 Version 7:
         
         // Bytes 0-3: Most significant 32 bits of timestamp
-        int timeLow = (int)(timestamp >> 16);
-        
+        var timeLow = (int)(timestamp >> 16);
+
         // Bytes 4-5: Next 16 bits of timestamp
-        short timeMid = (short)(timestamp & 0xFFFF);
-        
-        // Bytes 6-7: Version (4 bits) + rand_a (12 bits with 8-bit worker ID from _id0)
-        // Version 7 = 0111, rand_a = _id0 (8 bits) + reserved (4 bits = 0)
-        short timeHiAndVersion = (short)(0x7000 | (_id0 << 4));
-        
-        // Byte 12 (passed as 5th byte parameter): variant (2 bits = 10) + serviceId bits 10-15
-        byte clkSeqHiAndReserved = (byte)(0x80 | ((ServiceId >> 10) & 0x3F));
-        
+        var timeMid = (short)(timestamp & 0xFFFF);
+
+        // Bytes 6-7: Version (4 bits) + rand_a (12 bits with 8-bit worker ID from _id0 + 4-bit serviceId bits 8-11)
+        // Version 7 = 0111, rand_a = _id0 (8 bits) + serviceId bits 8-11 (4 bits)
+        var timeHiAndVersion = (short)(0x7000 | (_id0 << 4) | ((ServiceId >> 8) & 0x0F));
+
+        // Byte 12 (passed as 5th byte parameter): variant (2 bits = 10) + serviceId bits 12-15 (4 bits) + padding (2 bits)
+        // Using only lower 4 bits for serviceId bits 12-15, keeping upper 2 bits for variant
+        var clkSeqHiAndReserved = (byte)(0x80 | ((ServiceId >> 12) & 0x0F));
+
         // Byte 13 (passed as 6th byte parameter): serviceId bits 0-7 (8 bits)
-        byte clkSeqLow = (byte)(ServiceId & 0xFF);
-        
+        var clkSeqLow = (byte)(ServiceId & 0xFF);
+
         // Bytes 8-11 (passed as 1st-4th byte parameters): worker ID bytes 1-4 (_id1, _id2, _id3, _id4)
         // Bytes 14-15 (passed as 7th-8th byte parameters): sequence counter (16 bits)
-        ushort extendedSequence = (ushort)(_sequence & 0xFFFF);
+        var extendedSequence = (ushort)(_sequence & 0xFFFF);
         
         return new Guid(
             timeLow,                    // bytes 0-3: timestamp high 32 bits
             timeMid,                    // bytes 4-5: timestamp mid 16 bits
-            timeHiAndVersion,           // bytes 6-7: version + rand_a (_id0 + 4 reserved bits)
+            timeHiAndVersion,           // bytes 6-7: version + rand_a (_id0 + serviceId bits 8-11)
             _id1, _id2, _id3, _id4,     // bytes 8-11: worker ID bytes 1-4
-            clkSeqHiAndReserved,        // byte 12: variant + serviceId bits 10-15
+            clkSeqHiAndReserved,        // byte 12: variant + serviceId bits 12-15
             clkSeqLow,                  // byte 13: serviceId bits 0-7
             (byte)(extendedSequence & 0xFF), (byte)(extendedSequence >> 8)  // bytes 14-15: sequence
         );

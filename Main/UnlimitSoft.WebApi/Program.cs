@@ -36,7 +36,7 @@ var array = Enumerable
         if (MicroServiceGenerator.GetSequence(id) > 30)
             ;
 
-            return id;
+        return id;
     })
     .ToArray();
 
