@@ -51,7 +51,7 @@ public class MicroServiceGenerator : IIdGenerator<Guid>, IServiceMetadata
 
     private int _sequence;                                      // The sequence within the same tick.
     private ulong _lastTimestamp;
-    private readonly byte _id0, _id1, _id2, _id3, _id4;   // store the individual bytes instead of an array so we do not incur the overhead of array indexing and bound checks when generating id values
+    private readonly byte _id0, _id1, _id2, _id3, _id4;         // store the individual bytes instead of an array so we do not incur the overhead of array indexing and bound checks when generating id values
 
 
     /// <summary>
