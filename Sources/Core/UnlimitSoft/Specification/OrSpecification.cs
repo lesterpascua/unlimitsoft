@@ -32,7 +32,6 @@ public class OrSpecification<TEntity> : Specification<TEntity>
     }
 
     #region Static Methods
-
     /// <summary>
     /// Create an OR expression between array of expressions.
     /// </summary>
@@ -40,19 +39,23 @@ public class OrSpecification<TEntity> : Specification<TEntity>
     /// <returns></returns>
     public static Expression<Func<TEntity, bool>> BuildExpression(IEnumerable<Expression<Func<TEntity, bool>>> elements)
     {
-        if (!elements.Any())
+        var iter = elements.GetEnumerator();
+        if (!iter.MoveNext())
             throw new ArgumentException("Elements can't be empty", nameof(elements));
 
-        if (elements.Count() == 1)
-            return elements.Single();
+        var curr = iter.Current;
+        if (!iter.MoveNext())
+            return curr;
 
         var eType = Expression.Parameter(typeof(TEntity), "obj");
+        Expression expression = new ParameterReplacer(curr.Parameters[0], eType).Visit(curr.Body);
+        do
+        {
+            var body = new ParameterReplacer(iter.Current.Parameters[0], eType).Visit(iter.Current.Body);
+            expression = Expression.OrElse(expression, body);
+        } while (iter.MoveNext());
 
-        Expression first = elements.First();
-        foreach (var second in elements.Skip(1))
-            first = Expression.OrElse(Expression.Invoke(first, eType), Expression.Invoke(second, eType));
-
-        return Expression.Lambda<Func<TEntity, bool>>(first, eType);
+        return Expression.Lambda<Func<TEntity, bool>>(expression, eType);
     }
     /// <summary>
     /// Create an OR expression between two expression
@@ -75,6 +78,22 @@ public class OrSpecification<TEntity> : Specification<TEntity>
 
         return Expression.Lambda<Func<TEntity, bool>>(expression, eType);
     }
+    #endregion
 
+    #region Nested Classes
+    private sealed class ParameterReplacer : ExpressionVisitor
+    {
+        private readonly ParameterExpression _old;
+        private readonly ParameterExpression _new;
+
+        public ParameterReplacer(ParameterExpression oldParameter, ParameterExpression newParameter)
+        {
+            _old = oldParameter;
+            _new = newParameter;
+        }
+
+        /// <inheritdoc />
+        protected override Expression VisitParameter(ParameterExpression node) => node == _old ? _new : node;
+    }
     #endregion
 }
