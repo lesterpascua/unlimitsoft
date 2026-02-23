@@ -6,7 +6,7 @@ namespace UnlimitSoft.Data.Reflection;
 /// <summary>
 /// Store information about repository and asociate type
 /// </summary>
-public sealed class RepositoriesAvailables 
+public sealed class AvailableRepository
 {
     /// <summary>
     /// 
@@ -15,7 +15,7 @@ public sealed class RepositoriesAvailables
     /// <param name="serviceQueryType">Interface reference to not mutable repository</param>
     /// <param name="implementationType">Type to implement the mutable and not mutable repository. If can't mutate the entity this value is null.</param>
     /// <param name="implementationQueryType">Type to implement the mutable and not mutable query repository</param>
-    public RepositoriesAvailables(Type? serviceType, Type? serviceQueryType, Type? implementationType, Type? implementationQueryType)
+    public AvailableRepository(Type? serviceType, Type? serviceQueryType, Type? implementationType, Type? implementationQueryType)
     {
         ServiceType = serviceType;
         ServiceQueryType = serviceQueryType;

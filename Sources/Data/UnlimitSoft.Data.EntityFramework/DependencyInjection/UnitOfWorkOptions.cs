@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Reflection;
 using UnlimitSoft.Data.EntityFramework.Configuration;
+using UnlimitSoft.Data.Reflection;
 
 namespace UnlimitSoft.Data.EntityFramework.DependencyInjection;
 
@@ -79,6 +80,10 @@ public sealed class UnitOfWorkOptions
     /// Extra check used to validate the entity can used to create repository of this. By Default only create repository of IEventSourced Entities.
     /// </summary>
     public Func<Type, bool>? RepositoryContrains { get; set; }
+    /// <summary>
+    /// Allow custom register repository in DI container. If this is not null the library will not register any repository in DI container and you need to do it by yourself in this action.
+    /// </summary>
+    public Action<IServiceCollection, AvailableRepository>? RepositoryRegister { get; set; }
 
     /// <summary>
     /// Map current DbContext. 

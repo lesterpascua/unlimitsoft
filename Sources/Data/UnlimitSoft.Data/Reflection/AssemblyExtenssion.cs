@@ -22,7 +22,7 @@ public static class AssemblyExtenssion
     /// <param name="repositoryQueryType"></param>
     /// <param name="checkContrains">Extra check used to validate the entity can used to create repository of this.</param>
     /// <returns></returns>
-    public static IEnumerable<RepositoriesAvailables> FindAllRepositories(this Assembly assembly, Type entityTypeBuilder, Type? interfaceRepositoryType, Type? interfaceQueryRepositoryType, Type? repositoryType, Type? repositoryQueryType, Func<Type, bool>? checkContrains = null)
+    public static IEnumerable<AvailableRepository> FindAllRepositories(this Assembly assembly, Type entityTypeBuilder, Type? interfaceRepositoryType, Type? interfaceQueryRepositoryType, Type? repositoryType, Type? repositoryQueryType, Func<Type, bool>? checkContrains = null)
     {
         var typesToRegister =
             from type in assembly.GetTypes()
@@ -48,7 +48,7 @@ public static class AssemblyExtenssion
             if (serviceQueryType is null && serviceType is null)
                 continue;
 
-            yield return new RepositoriesAvailables(serviceType, serviceQueryType, implementationType, implementationQueryType);
+            yield return new AvailableRepository(serviceType, serviceQueryType, implementationType, implementationQueryType);
         }
 
         // ================================================================================================================================================================

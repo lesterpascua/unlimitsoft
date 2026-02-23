@@ -129,6 +129,8 @@ public static class IServiceConnectionExtensions
         #endregion
 
         services.AddScoped(settings.IUnitOfWork, settings.UnitOfWork);
+        if (settings.IUnitOfWork != typeof(IUnitOfWork))
+            services.AddScoped(provider => (IUnitOfWork)provider.GetRequiredService(settings.IUnitOfWork));
 
         #region Register Repositories
         var assemblies = settings.EntityTypeBuilderAssemblies ?? [settings.EntityTypeBuilder.Assembly];
@@ -152,6 +154,10 @@ public static class IServiceConnectionExtensions
                 // Read Context
                 if (entry.ServiceQueryType is not null && entry.ImplementationQueryType is not null)
                     services.AddScoped(entry.ServiceQueryType, provider => entry.ImplementationQueryType.CreateInstance(provider));
+
+                if (settings.RepositoryRegister is null)
+                    continue;
+                settings.RepositoryRegister(services, entry);
             }
         }
         #endregion
