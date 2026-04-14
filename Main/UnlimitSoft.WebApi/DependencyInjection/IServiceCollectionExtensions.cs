@@ -207,9 +207,11 @@ public static class IServiceCollectionExtensions
 
                 return new AzureEventBus<QueueIdentifier, EventPayload>(
                     options.Endpoint, 
+                    false,
                     publishs, 
                     eventNameResolver,
                     serialize,
+                    false,
                     busFilter, 
                     busTransform,
                     setup: (graph, message) =>
@@ -294,7 +296,10 @@ public static class IServiceCollectionExtensions
                         }
                     },
                     serializer,
+                    (_) => [],
+                    false,
                     maxConcurrentCalls,
+                    0,
                     logger
                 );
             });

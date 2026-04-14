@@ -131,9 +131,11 @@ IServiceCollection AddAzureEventBus(IServiceCollection services)
 
         return new AzureEventBus<QueueIdentifier, EventPayload>(
            options.Endpoint,
+           false,
            options.PublishQueues,
            eventNameResolver,
            serialize,
+           true,
            null,
            null,
            setup: (graph, message) =>
@@ -155,7 +157,10 @@ IServiceCollection AddAzureEventBus(IServiceCollection services)
             options.ListenQueues,
             (arg, ct) => DefaultProcessor.ProcessAsync(arg, logger, ct),
             serialize,
+            (_) => [],
+            false,
             1,
+            0,
             logger
         );
     });
