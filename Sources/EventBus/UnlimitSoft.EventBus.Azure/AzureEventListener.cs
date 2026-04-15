@@ -103,7 +103,7 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
         {
             foreach (var queue in _queues.Where(x => x.Active == true))
             {
-                var events = _getBindingEvents(queue);
+                var events = _getBindingEvents!(queue);
                 foreach (var eventType in events)
                     await TopicHelper.CreateAsync(_adminClient, queue, eventType, ct);
             }
