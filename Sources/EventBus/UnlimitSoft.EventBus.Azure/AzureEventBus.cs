@@ -90,7 +90,7 @@ public class AzureEventBus<TAlias, TEventPayload> : IEventBus, IAsyncDisposable
         GC.SuppressFinalize(this);
     }
     /// <inheritdoc />
-    public ValueTask StartAsync(TimeSpan waitRetry, CancellationToken ct = default)
+    public virtual ValueTask StartAsync(TimeSpan waitRetry, CancellationToken ct = default)
     {
         if (_client is not null)
             throw new InvalidOperationException("Bus is already started");

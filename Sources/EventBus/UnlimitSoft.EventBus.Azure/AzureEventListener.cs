@@ -91,7 +91,7 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
         GC.SuppressFinalize(this);
     }
     /// <inheritdoc />
-    public async ValueTask ListenAsync(TimeSpan waitRetry, CancellationToken ct = default)
+    public async virtual ValueTask ListenAsync(TimeSpan waitRetry, CancellationToken ct = default)
     {
         _logger?.LogDebug("AzureEventListener start");
         if (waitRetry > TimeSpan.FromMinutes(5))
@@ -100,14 +100,12 @@ public class AzureEventListener<TAlias> : IEventListener, IAsyncDisposable
         _waitRetry = waitRetry;
         _client = CreateClient();
         if (_adminClient is not null)
-        {
             foreach (var queue in _queues.Where(x => x.Active == true))
             {
                 var events = _getBindingEvents!(queue);
                 foreach (var eventType in events)
                     await TopicHelper.CreateAsync(_adminClient, queue, eventType, ct);
             }
-        }
 
         var group = _queues.GroupBy(k => k.Queue).ToArray();
         _busProcessors = new ServiceBusProcessor[group.Length];
