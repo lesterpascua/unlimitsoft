@@ -9,6 +9,21 @@
 		<RootNamespace>OIU.Libs</RootNamespace>
 	</PropertyGroup>
 
+	<PropertyGroup>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+		<Authors>Lester Pastrana</Authors>
+		<Company>Private</Company>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">3.4.1.57</Version>
+		<Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
+		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+		<Description></Description>
+		<PackageLicenseFile>License.txt</PackageLicenseFile>
+		<RepositoryUrl>https://github.com/lesterpascua/unlimitsoft</RepositoryUrl>
+	</PropertyGroup>
+	
 	<ItemGroup>
 		<PackageReference Include="PolySharp" Version="1.15.0">
 			<PrivateAssets>all</PrivateAssets>

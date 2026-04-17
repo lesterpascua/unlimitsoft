@@ -8,6 +8,21 @@
 		<Nullable>enable</Nullable>
 	</PropertyGroup>
 
+	<PropertyGroup>
+		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>key.snk</AssemblyOriginatorKeyFile>
+		<Authors>Lester Pastrana</Authors>
+		<Company>Private</Company>
+		<GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+		<Version Condition=" '$(BUILD_BUILDNUMBER)' == '' ">3.4.1.57</Version>
+		<Version Condition=" '$(BUILD_BUILDNUMBER)' != '' ">$(BUILD_BUILDNUMBER)</Version>
+		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+		<Description></Description>
+		<PackageLicenseFile>License.txt</PackageLicenseFile>
+		<RepositoryUrl>https://github.com/lesterpascua/unlimitsoft</RepositoryUrl>
+	</PropertyGroup>
+	
 	<ItemGroup>
 	  <ProjectReference Include="..\..\Data\UnlimitSoft.Data.EntityFramework\UnlimitSoft.Data.EntityFramework.csproj" />
 	  <ProjectReference Include="..\OIU.Libs.X\OIU.Libs.X.csproj" />
