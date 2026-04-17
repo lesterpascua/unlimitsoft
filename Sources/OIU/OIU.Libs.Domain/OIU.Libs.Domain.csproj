@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net10.0</TargetFrameworks>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<LangVersion>latest</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="PolySharp" Version="1.15.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\..\Core\UnlimitSoft.Logger\UnlimitSoft.Logger.csproj" />
+	  <ProjectReference Include="..\..\CQRS\UnlimitSoft.CQRS\UnlimitSoft.CQRS.csproj" />
+	  <ProjectReference Include="..\OIU.Libs.Data\OIU.Libs.Data.csproj" />
+	  <ProjectReference Include="..\OIU.Libs.X\OIU.Libs.X.csproj" />
+	</ItemGroup>
+
+</Project>

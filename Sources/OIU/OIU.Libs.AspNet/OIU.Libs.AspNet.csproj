@@ -1,0 +1,37 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net10.0</TargetFrameworks>
+		<GenerateDocumentationFile>true</GenerateDocumentationFile>
+		<LangVersion>latest</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="9.0.0" />
+		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.3" />
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
+		<PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
+		<PackageReference Include="Elastic.Serilog.Sinks" Version="9.0.0" />
+		<PackageReference Include="PolySharp" Version="1.15.0">
+			<PrivateAssets>all</PrivateAssets>
+			<IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+		</PackageReference>
+		<PackageReference Include="Serilog.Sinks.ApplicationInsights" Version="5.0.0" />
+		<PackageReference Include="Serilog.Sinks.MSSqlServer" Version="9.0.3" />
+		<PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.4" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\Cache\UnlimitSoft.Cache.Memory\UnlimitSoft.Cache.Memory.csproj" />
+		<ProjectReference Include="..\..\Core\UnlimitSoft.Logger.AspNet\UnlimitSoft.Logger.AspNet.csproj" />
+		<ProjectReference Include="..\..\Json\UnlimitSoft.Text.Json\UnlimitSoft.Text.Json.csproj" />
+		<ProjectReference Include="..\..\Web\UnlimitSoft.Web.AspNet\UnlimitSoft.Web.AspNet.csproj" />
+		<ProjectReference Include="..\OIU.Libs.Data.PostgreSQL\OIU.Libs.Data.PostgreSQL.csproj" />
+		<ProjectReference Include="..\OIU.Libs.Data.SQLServer\OIU.Libs.Data.SQLServer.csproj" />
+		<ProjectReference Include="..\OIU.Libs.Distribute\OIU.Libs.Distribute.csproj" />
+		<ProjectReference Include="..\OIU.Libs.Domain\OIU.Libs.Domain.csproj" />
+	</ItemGroup>
+
+</Project>
