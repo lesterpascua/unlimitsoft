@@ -14,7 +14,7 @@ namespace UnlimitSoft.Cache.Memory;
 /// </summary>
 public sealed class LazyMemoryCache : ICache
 {
-    private readonly CachingService _appCache;
+    private CachingService _appCache;
     private readonly TimeSpan _expiration;
 
     /// <summary>
@@ -23,14 +23,7 @@ public sealed class LazyMemoryCache : ICache
     /// <param name="expiration"></param>
     public LazyMemoryCache(TimeSpan? expiration = null)
     {
-        _appCache = new CachingService(
-            new Lazy<ICacheProvider>(() =>
-            {
-                var options = new MemoryCacheOptions();
-                var cache = new MemoryCache(new OptionsWrapper<MemoryCacheOptions>(options));
-                return new MemoryCacheProvider(cache);
-            })
-        );
+        _appCache = Create();
         _expiration = expiration ?? TimeSpan.FromHours(1);
     }
 
@@ -39,6 +32,12 @@ public sealed class LazyMemoryCache : ICache
     /// </summary>
     public CachingService CachingService => _appCache;
 
+    /// <inheritdoc />
+    public ValueTask<bool> CleanAsync()
+    {
+        _appCache = Create();
+        return new ValueTask<bool>(true);
+    }
     /// <inheritdoc />
     public ValueTask<bool> RemoveAsync(string key)
     {
@@ -82,4 +81,14 @@ public sealed class LazyMemoryCache : ICache
             return action(key);
         });
     }
+
+    #region Private Methods
+    private static CachingService Create() => new (
+        new Lazy<ICacheProvider>(() =>
+        {
+            var options = new MemoryCacheOptions();
+            return new MemoryCacheProvider(new MemoryCache(Options.Create(options)));
+        })
+    );
+    #endregion
 }

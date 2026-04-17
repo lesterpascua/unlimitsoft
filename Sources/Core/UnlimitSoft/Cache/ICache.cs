@@ -11,6 +11,11 @@ namespace UnlimitSoft.Cache;
 public interface ICache
 {
     /// <summary>
+    /// Remove all the cache entries, this method should be used with care because it will remove all the cache entries and can cause performance issues if the cache is large.
+    /// </summary>
+    /// <returns></returns>
+    ValueTask<bool> CleanAsync();
+    /// <summary>
     /// Check if the key exists in the cache
     /// </summary>
     /// <param name="key"></param>

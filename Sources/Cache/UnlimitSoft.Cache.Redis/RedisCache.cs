@@ -2,6 +2,7 @@
 using StackExchange.Redis;
 using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading.Tasks;
 using UnlimitSoft.Distribute;
 using UnlimitSoft.Json;
@@ -24,19 +25,22 @@ public sealed class RedisCache : ICache, IDisposable
     private readonly TimeSpan _defaultExpiration;
     private readonly ILogger<RedisCache> _logger;
 
+    private const string LOCK_PREFIX = "__lock__";
+
     /// <summary>
     /// 
     /// </summary>
     /// <param name="hostName"></param>
+    /// <param name="db">DB index to be used, by default -1</param>
     /// <param name="prefix"></param>
     /// <param name="sysLock"></param>
     /// <param name="serializer"></param>
     /// <param name="defaultExpiration"></param>
     /// <param name="logger"></param>
-    public RedisCache(string hostName, string? prefix, ISysLock sysLock, IJsonSerializer serializer, TimeSpan defaultExpiration, ILogger<RedisCache> logger)
+    public RedisCache(string hostName, int db, string? prefix, ISysLock sysLock, IJsonSerializer serializer, TimeSpan defaultExpiration, ILogger<RedisCache> logger)
     {
         _connection = ConnectionMultiplexer.Connect(hostName);
-        _database = _connection.GetDatabase();
+        _database = _connection.GetDatabase(db);
         _prefix = prefix;
         _sysLock = sysLock;
         _serializer = serializer;
@@ -63,6 +67,30 @@ public sealed class RedisCache : ICache, IDisposable
     /// abstractions. The caller should not dispose of the returned connection.</remarks>
     public IConnectionMultiplexer Connection => _connection;
 
+    /// <inheritdoc />
+    public async ValueTask<bool> CleanAsync()
+    {
+        var found = false;
+        foreach (var endpoint in _connection.GetEndPoints())
+        {
+            RedisKey[] keys;
+            var server = _connection.GetServer(endpoint);
+            do
+            {
+                keys = [.. server.Keys(database: _database.Database, pattern: "*", pageSize: 1000).Where(x => !x.ToString().StartsWith(LOCK_PREFIX))];
+                foreach (var entry in keys)
+                {
+                    var key = entry.ToString();
+                    if (key is null)
+                        continue;
+
+                    found = true;
+                    await RemoveAsync(key);
+                }
+            } while (keys.Length != 0);
+        }
+        return found;
+    }
     /// <inheritdoc />
     public async ValueTask<bool> ExistAsync(string key)
     {
@@ -137,7 +165,7 @@ public sealed class RedisCache : ICache, IDisposable
     /// </summary>
     /// <param name="key"></param>
     /// <returns></returns>
-    private static string GetLock(string key) => $"lock_{key}";
+    private static string GetLock(string key) => $"{LOCK_PREFIX}{key}";
     /// <summary>
     /// 
     /// </summary>

@@ -1,16 +1,17 @@
 ﻿using FluentAssertions;
 using LazyCache;
 using LazyCache.Providers;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
-using UnlimitSoft.Web.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Xunit;
 using UnlimitSoft.Cache;
+using UnlimitSoft.Web.Client;
+using Xunit;
 using static UnlimitSoft.Cache.ICache;
 
 namespace UnlimitSoft.Tests.UnlimitSoft.Web.Client;
@@ -90,6 +91,11 @@ public sealed class BaseApiServiceTests
         }
 
 
+
+        public ValueTask<bool> CleanAsync()
+        {
+            return ValueTask.FromResult(true);
+        }
         public ValueTask<bool> ExistAsync(string key)
         {
             var exist = _cachingService.Get<object?>(key) is not null;
@@ -128,6 +134,10 @@ public sealed class BaseApiServiceTests
             _expiration = expiration;
         }
 
+        public ValueTask<bool> CleanAsync()
+        {
+            return ValueTask.FromResult(true);
+        }
         public ValueTask<bool> ExistAsync(string key)
         {
             var exist = _cachingService.Get(key) is not null;
