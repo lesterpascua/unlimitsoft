@@ -54,7 +54,7 @@ public static class MinHelper
     /// <param name="context"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async Task<Microsoft.AspNetCore.Http.IResult> DispatchQuery<TQuery, TResult>(TQuery request, HttpContext context, CancellationToken ct) where TQuery : OIUQuery<TResult>
+    public static async Task<Microsoft.AspNetCore.Http.IResult> DispatchQuery<TQuery, TResult>(TQuery request, HttpContext context, CancellationToken ct) where TQuery : IQuery<TResult>
     {
         var provider = context.RequestServices.GetRequiredService<IServiceProvider>();
         var dispatcher = context.RequestServices.GetRequiredService<IQueryDispatcher>();
@@ -70,7 +70,7 @@ public static class MinHelper
     /// <param name="context"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async Task<Microsoft.AspNetCore.Http.IResult> SafeDispatchQuery<TQuery, TResult>(TQuery request, HttpContext context, CancellationToken ct) where TQuery : OIUQuery<Result<TResult>>
+    public static async Task<Microsoft.AspNetCore.Http.IResult> SafeDispatchQuery<TQuery, TResult>(TQuery request, HttpContext context, CancellationToken ct) where TQuery : IQuery<Result<TResult>>
     {
         var provider = context.RequestServices.GetRequiredService<IServiceProvider>();
         var dispatcher = context.RequestServices.GetRequiredService<IQueryDispatcher>();
@@ -85,7 +85,7 @@ public static class MinHelper
     /// <param name="context"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async Task<Microsoft.AspNetCore.Http.IResult> DispatchCommand<TCommand, TResult>(TCommand request, HttpContext context, CancellationToken ct) where TCommand : OIUCommand<TResult>
+    public static async Task<Microsoft.AspNetCore.Http.IResult> DispatchCommand<TCommand, TResult>(TCommand request, HttpContext context, CancellationToken ct) where TCommand : ICommand<TResult>
     {
         var provider = context.RequestServices.GetRequiredService<IServiceProvider>();
         var dispatcher = context.RequestServices.GetRequiredService<ICommandDispatcher>();
@@ -101,7 +101,7 @@ public static class MinHelper
     /// <param name="code"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
-    public static async Task<Microsoft.AspNetCore.Http.IResult> SafeDispatchCommand<TCommand, TResult>(TCommand request, HttpContext context, HttpStatusCode? code = null, CancellationToken ct = default) where TCommand : OIUCommand<Result<TResult>>
+    public static async Task<Microsoft.AspNetCore.Http.IResult> SafeDispatchCommand<TCommand, TResult>(TCommand request, HttpContext context, HttpStatusCode? code = null, CancellationToken ct = default) where TCommand : ICommand<Result<TResult>>
     {
         var provider = context.RequestServices.GetRequiredService<IServiceProvider>();
         var dispatcher = context.RequestServices.GetRequiredService<ICommandDispatcher>();
