@@ -67,7 +67,16 @@ public sealed class RedisCache : ICache, IDisposable
     /// abstractions. The caller should not dispose of the returned connection.</remarks>
     public IConnectionMultiplexer Connection => _connection;
 
-    /// <inheritdoc />
+    /// <summary>
+    /// Asynchronously removes all keys from the Redis database that are not lock keys and match the configured prefix,
+    /// if any.
+    /// </summary>
+    /// <remarks>This method scans all endpoints in the Redis connection and deletes keys that are not lock
+    /// keys and, if a prefix is configured, only those that match the prefix. Lock keys and keys that do not match the
+    /// prefix are excluded from deletion. The operation may take longer to complete if the database contains a large
+    /// number of keys.</remarks>
+    /// <returns>A task that represents the asynchronous operation. The task result is <see langword="true"/> if any keys were
+    /// removed; otherwise, <see langword="false"/>.</returns>
     public async ValueTask<bool> CleanAsync()
     {
         var found = false;
@@ -77,7 +86,18 @@ public sealed class RedisCache : ICache, IDisposable
             var server = _connection.GetServer(endpoint);
             do
             {
-                keys = [.. server.Keys(database: _database.Database, pattern: "*", pageSize: 1000).Where(x => !x.ToString().StartsWith(LOCK_PREFIX))];
+                keys = [.. server.Keys(database: _database.Database, pattern: "*", pageSize: 1000)
+                    .Where(x => {
+                        var key = x.ToString();
+                        if (key.StartsWith(LOCK_PREFIX))
+                            return false;
+                        if (_prefix is not null && !key.StartsWith(_prefix))
+                            return false;
+                        if (key.StartsWith($"{LOCK_PREFIX}{_prefix}"))
+                            return false;
+                        return true;
+                    })
+                ];
                 foreach (var entry in keys)
                 {
                     var key = entry.ToString();
