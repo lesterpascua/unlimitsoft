@@ -81,6 +81,8 @@ public sealed class RedisCache : ICache, IDisposable
                 foreach (var entry in keys)
                 {
                     var key = entry.ToString();
+                    if (_prefix is not null)
+                        key = $"{_prefix}_{key}";
                     if (key is null)
                         continue;
 
@@ -94,11 +96,15 @@ public sealed class RedisCache : ICache, IDisposable
     /// <inheritdoc />
     public async ValueTask<bool> ExistAsync(string key)
     {
+        if (_prefix is not null)
+            key = $"{_prefix}_{key}";
         return await _database.KeyExistsAsync(key);
     }
     /// <inheritdoc />
     public async ValueTask<bool> RemoveAsync(string key)
     {
+        if (_prefix is not null)
+            key = $"{_prefix}_{key}";
         await using var _ = await _sysLock.AcquireAsync(GetLock(key));
         return await _database.KeyDeleteAsync(key);
     }
