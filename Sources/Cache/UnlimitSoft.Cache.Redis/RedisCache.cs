@@ -51,6 +51,18 @@ public sealed class RedisCache : ICache, IDisposable
         GC.SuppressFinalize(this);
     }
 
+    /// <summary>
+    /// Gets the database connection used by the current instance.
+    /// </summary>
+    public IDatabase Database => _database;
+    /// <summary>
+    /// Gets the underlying connection multiplexer used to communicate with the Redis server.
+    /// </summary>
+    /// <remarks>The returned connection multiplexer manages all network communication with the Redis server
+    /// and can be used to perform advanced operations or access low-level features not exposed by higher-level
+    /// abstractions. The caller should not dispose of the returned connection.</remarks>
+    public IConnectionMultiplexer Connection => _connection;
+
     /// <inheritdoc />
     public async ValueTask<bool> ExistAsync(string key)
     {

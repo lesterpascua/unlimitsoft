@@ -34,6 +34,11 @@ public sealed class LazyMemoryCache : ICache
         _expiration = expiration ?? TimeSpan.FromHours(1);
     }
 
+    /// <summary>
+    /// Gets the caching service used to store and retrieve application data in memory.
+    /// </summary>
+    public CachingService CachingService => _appCache;
+
     /// <inheritdoc />
     public ValueTask<bool> RemoveAsync(string key)
     {
