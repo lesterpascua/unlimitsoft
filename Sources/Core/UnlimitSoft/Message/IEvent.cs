@@ -90,7 +90,7 @@ public abstract class Event<TBody> : IEvent
         ServiceId = serviceId;
         WorkerId = workerId;
         CorrelationId = correlationId;
-        Name = GetType().FullName!;
+        Name = EventHelper.GetName(GetType());
 
         IsDomainEvent = isDomain;
         Body = body;

@@ -2,6 +2,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using UnlimitSoft.Message;
 
 namespace UnlimitSoft.EventBus.Azure;
 
@@ -50,7 +51,7 @@ public static class TopicHelper
     public static Task CreateAsync<TAlias>(ServiceBusAdministrationClient client, AzureQueueAlias<TAlias> queue, Type eventType, CancellationToken ct = default)
         where TAlias : struct, Enum
     {
-        var bind = new TopicQueueBind(eventType.FullName!, queue.Queue, queue.Subscription!);
+        var bind = new TopicQueueBind(EventHelper.GetName(eventType), queue.Queue, queue.Subscription!);
         return CreateAsync(client, bind, ct);
     }
 

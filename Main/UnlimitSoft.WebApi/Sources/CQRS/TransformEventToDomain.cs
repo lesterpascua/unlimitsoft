@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq;
+using UnlimitSoft.Message;
 using UnlimitSoft.WebApi.Sources.CQRS.Bus;
 using UnlimitSoft.WebApi.Sources.CQRS.Event;
 
@@ -11,9 +12,9 @@ namespace UnlimitSoft.WebApi.Sources.CQRS;
 /// </summary>
 public static class TransformEventToDomain
 {
-    private static readonly string[] MyTypes = new [] {
-        typeof(TestEvent).FullName!
-    };
+    private static readonly string[] MyTypes = [
+        EventHelper.GetName(typeof(TestEvent))
+    ];
 
     /// <summary>
     /// 
