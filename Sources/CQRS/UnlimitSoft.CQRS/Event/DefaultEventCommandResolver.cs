@@ -15,8 +15,13 @@ namespace UnlimitSoft.CQRS.Event;
 /// </summary>
 public sealed class DefaultEventCommandResolver : IEventNameResolver
 {
+#if NETSTANDARD2_0
     private readonly IReadOnlyDictionary<string, Type> _typeResolverCache;
     private readonly IReadOnlyDictionary<Type, (string Name, Type BodyType)> _eventNameResolverCache;
+#else
+    private readonly FrozenDictionary<string, Type> _typeResolverCache;
+    private readonly FrozenDictionary<Type, (string Name, Type BodyType)> _eventNameResolverCache;
+#endif
 
     /// <summary>
     /// 
@@ -25,13 +30,10 @@ public sealed class DefaultEventCommandResolver : IEventNameResolver
     public DefaultEventCommandResolver(IReadOnlyDictionary<string, Type> typeResolverCache)
     {
         var aux = typeResolverCache
-            .ToDictionary(k => k.Value, v => (v.Key, v.Value.GetProperty(nameof(Event<object>.Body))!.PropertyType));
+            .ToDictionary(k => k.Value, v => (v.Key, v.Value.GetProperty(nameof(Event<>.Body))!.PropertyType));
 
-#if NET7_0
-        _typeResolverCache = typeResolverCache.ToDictionary(k => k.Key, v => v.Value).AsReadOnly();
-        _eventNameResolverCache = aux.AsReadOnly();
-#elif NET8_0_OR_GREATER
-        _typeResolverCache = typeResolverCache.ToDictionary(k => k.Key, v => v.Value).ToFrozenDictionary();
+#if NET8_0_OR_GREATER
+        _typeResolverCache = typeResolverCache.ToFrozenDictionary(k => k.Key, v => v.Value);
         _eventNameResolverCache = aux.ToFrozenDictionary();
 #else
         _typeResolverCache = typeResolverCache.ToDictionary(k => k.Key, v => v.Value);
