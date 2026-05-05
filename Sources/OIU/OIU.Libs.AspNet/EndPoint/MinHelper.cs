@@ -289,8 +289,9 @@ public static class MinHelper
         {
             if (error is null)
             {
-                var value = (object?)result.Error ?? result.Value;
                 var statusCode = result.Error?.Code ?? HttpStatusCode.OK;
+                var value = result.IsSuccess ? result.Value : result.Error?.GetBody();
+
                 logger.Log(level, RESPONSE_MESSAGE, traceId, (int)statusCode, value);
             }
             else
