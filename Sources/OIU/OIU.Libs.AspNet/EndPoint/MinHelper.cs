@@ -116,6 +116,7 @@ public static class MinHelper
         var result = await dispatcher.SafeDispatchAsync(provider, request, ct);
         return GetResult(in result);
     }
+
     /// <summary>
     /// 
     /// </summary>
@@ -152,6 +153,27 @@ public static class MinHelper
     /// 
     /// </summary>
     /// <param name="request"></param>
+    /// <param name="context"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    public static Task<Microsoft.AspNetCore.Http.IResult> DispatchQueryWithLog<TQuery, TResult>(TQuery request, HttpContext context, CancellationToken ct)
+        where TQuery : IQuery<TResult>
+    {
+        return ActionWithLog(
+            context,
+            () =>
+            {
+                var provider = context.RequestServices.GetRequiredService<IServiceProvider>();
+                var dispatcher = context.RequestServices.GetRequiredService<IQueryDispatcher>();
+
+                return dispatcher.DispatchAsync(provider, request, ct);
+            }
+        );
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="request"></param>
     /// <param name="body"></param>
     /// <param name="context"></param>
     /// <param name="ct"></param>
@@ -169,6 +191,27 @@ public static class MinHelper
                 var dispatcher = context.RequestServices.GetRequiredService<IQueryDispatcher>();
 
                 return dispatcher.DispatchAsync(provider, request, ct);
+            }
+        );
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="context"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    public static Task<Microsoft.AspNetCore.Http.IResult> SafeDispatchQueryWithLog<TQuery, TResult>(TQuery request, HttpContext context, CancellationToken ct)
+        where TQuery : IQuery<Result<TResult>>
+    {
+        return ActionWithLog(
+            context,
+            () =>
+            {
+                var provider = context.RequestServices.GetRequiredService<IServiceProvider>();
+                var dispatcher = context.RequestServices.GetRequiredService<IQueryDispatcher>();
+
+                return dispatcher.SafeDispatchAsync(provider, request, ct);
             }
         );
     }
@@ -196,6 +239,29 @@ public static class MinHelper
             }
         );
     }
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="body"></param>
+    /// <param name="context"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    public static Task<Microsoft.AspNetCore.Http.IResult> DispatchCommandWithLog<TCommand, TResult>(TCommand request, HttpContext context, CancellationToken ct)
+        where TCommand : ICommand<TResult>
+    {
+        return ActionWithLog(
+            context,
+            () =>
+            {
+                var provider = context.RequestServices.GetRequiredService<IServiceProvider>();
+                var dispatcher = context.RequestServices.GetRequiredService<ICommandDispatcher>();
+
+                return dispatcher.DispatchAsync(provider, request, ct);
+            }
+        );
+    }
     /// <summary>
     /// 
     /// </summary>
@@ -217,6 +283,27 @@ public static class MinHelper
                 var dispatcher = context.RequestServices.GetRequiredService<ICommandDispatcher>();
 
                 return dispatcher.DispatchAsync(provider, request, ct);
+            }
+        );
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="context"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    public static Task<Microsoft.AspNetCore.Http.IResult> SafeDispatchCommandWithLog<TCommand, TResult>(TCommand request, HttpContext context, CancellationToken ct)
+        where TCommand : ICommand<Result<TResult>>
+    {
+        return ActionWithLog(
+            context,
+            () =>
+            {
+                var provider = context.RequestServices.GetRequiredService<IServiceProvider>();
+                var dispatcher = context.RequestServices.GetRequiredService<ICommandDispatcher>();
+
+                return dispatcher.SafeDispatchAsync(provider, request, ct);
             }
         );
     }
