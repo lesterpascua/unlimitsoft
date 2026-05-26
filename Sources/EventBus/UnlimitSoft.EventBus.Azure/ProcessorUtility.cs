@@ -1,4 +1,5 @@
 ﻿using Azure.Messaging.ServiceBus;
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using UnlimitSoft.CQRS.Event;
@@ -24,7 +25,8 @@ public static class ProcessorUtility
     public static async ValueTask<IResponse?> Default<TEvent>(MessageEnvelop envelop, ServiceBusReceivedMessage message, EventUtility.Args<TEvent> args, object? extraArgs, CancellationToken ct = default)
         where TEvent : class, IEvent
     {
-        message.ApplicationProperties.TryGetValue(Constants.HeaderEventName, out var eventName);
+        if (!message.ApplicationProperties.TryGetValue(Constants.HeaderEventName, out var eventName) && !message.ApplicationProperties.TryGetValue("EventName", out eventName))
+            throw new InvalidOperationException("Event name is missing in the message properties.");
 
         return await EventUtility.ProcessAsync(eventName?.ToString(), envelop, args, extraArgs, ct);
     }
