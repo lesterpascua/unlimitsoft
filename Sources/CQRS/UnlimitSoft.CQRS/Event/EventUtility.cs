@@ -50,6 +50,24 @@ public static class EventUtility
                 args.Logger?.SkipEventType(eventType, eventName!);
                 return responses;
             }
+            // Only for legacy support if the event don't have id and body is null try to deserialize as legazy envelop
+            if (@event.Id == Guid.Empty && @event.GetBody() is null)
+            {
+                var legazy = args.Serializer.Deserialize<LegazyEnvelop>(json);
+                if (legazy?.Msg is null)
+                {
+                    args.Logger?.SkipEventType(eventType, eventName!);
+                    return responses;
+                }
+                var aux = args.Serializer.Cast(eventType, legazy.Msg);
+                if (aux is null)
+                {
+                    args.Logger?.SkipEventType(eventType, eventName!);
+                    return responses;
+                }
+
+                @event = (TEvent)aux;
+            }
 
             curr = @event;
             args.BeforeProcess?.Invoke(curr!, extraArgs);
@@ -85,6 +103,7 @@ public static class EventUtility
     #endregion
 
     #region Nested Classes
+    private sealed record LegazyEnvelop(int Type, object Msg);
     /// <summary>
     /// 
     /// </summary>
