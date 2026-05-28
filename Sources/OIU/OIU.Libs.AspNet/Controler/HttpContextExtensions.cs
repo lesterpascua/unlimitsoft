@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using OIU.Libs.Security;
 using System.Security.Claims;
 using UnlimitSoft.Logger.AspNet;
+using UnlimitSoft.Web.Security.Claims;
 
 namespace OIU.Libs.AspNet.Controler;
 
@@ -34,7 +35,9 @@ public static class HttpContextExtensions
     public static string? GetCustomerId(this ClaimsPrincipal @this)
     {
         var claim = @this.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier);
-        return claim?.Value;
+        if (claim is not null)
+            return claim.Value;
+        return @this.GetSubjectId();
     }
     /// <summary>
     /// 
