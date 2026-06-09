@@ -9,4 +9,4 @@ namespace UnlimitSoft.EventBus.RabbitMQ;
 /// </summary>
 /// <param name="Channel"></param>
 /// <param name="EventArgs"></param>
-public sealed record RabbitMQBody(IModel Channel, BasicDeliverEventArgs EventArgs);
+public sealed record RabbitMQBody(IChannel Channel, BasicDeliverEventArgs EventArgs);

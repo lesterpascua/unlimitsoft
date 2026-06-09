@@ -39,7 +39,6 @@ using UnlimitSoft.CQRS.Query;
 using UnlimitSoft.Data;
 using UnlimitSoft.Data.EntityFramework.Configuration;
 using UnlimitSoft.Data.EntityFramework.DependencyInjection;
-using UnlimitSoft.DependencyInjections;
 using UnlimitSoft.Distribute;
 using UnlimitSoft.Json;
 using UnlimitSoft.Logger;
@@ -47,6 +46,7 @@ using UnlimitSoft.Logger.AspNet;
 using UnlimitSoft.Security;
 using UnlimitSoft.Web.AspNet.Filter;
 using UnlimitSoft.Web.AspNet.Security.Authentication;
+using UnlimitSoft.Web.DependencyInjections;
 
 
 #if NET7_0_OR_GREATER

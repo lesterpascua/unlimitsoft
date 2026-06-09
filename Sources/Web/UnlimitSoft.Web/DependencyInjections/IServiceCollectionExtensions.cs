@@ -9,7 +9,7 @@ using UnlimitSoft.Json;
 using UnlimitSoft.Reflection;
 using UnlimitSoft.Web.Client;
 
-namespace UnlimitSoft.DependencyInjections;
+namespace UnlimitSoft.Web.DependencyInjections;
 
 
 /// <summary>
@@ -82,7 +82,7 @@ public static class IServiceCollectionExtensions
             IEnumerable<Assembly> aux = AppDomain.CurrentDomain.GetAssemblies();
             if (options.ExtraAssemblies is not null)
                 aux = aux.Union(options.ExtraAssemblies);
-            loadedAssemblies = aux.Distinct().ToArray();
+            loadedAssemblies = [.. aux.Distinct()];
         }
         if (loadedAssemblies is null)
             return services;

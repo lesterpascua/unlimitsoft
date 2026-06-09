@@ -2,6 +2,7 @@
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -24,9 +25,10 @@ public class RabbitMQEventListener<TAlias> : IEventListener, IDisposable where T
     private readonly IEnumerable<RabbitMQQueueAlias<TAlias>> _queues;
     private readonly ProcessorCallback<TAlias, RabbitMQBody> _processor;
     private readonly bool _recreateQueue;
+    private readonly Func<string, CancellationToken, Task>? _exchangeFactory;
     private readonly ILogger<RabbitMQEventListener<TAlias>>? _logger;
 
-    private IModel? _channel;
+    private IChannel? _channel;
     private IConnection? _connection;
 
 
@@ -38,9 +40,15 @@ public class RabbitMQEventListener<TAlias> : IEventListener, IDisposable where T
     /// <param name="queues"></param>
     /// <param name="processor"></param>
     /// <param name="recreateQueue"></param>
+    /// <param name="exchangeFactory"></param>
     /// <param name="logger"></param>
-    public RabbitMQEventListener(string endpoint, IJsonSerializer serializer, IEnumerable<RabbitMQQueueAlias<TAlias>> queues, ProcessorCallback<TAlias, RabbitMQBody> processor, bool recreateQueue = false, ILogger<RabbitMQEventListener<TAlias>>? logger = null)
-        : this(new ConnectionFactory { Uri = new Uri(endpoint) }, serializer, queues, processor, recreateQueue, logger)
+    public RabbitMQEventListener(string endpoint, IJsonSerializer serializer, 
+        IEnumerable<RabbitMQQueueAlias<TAlias>> queues, 
+        ProcessorCallback<TAlias, RabbitMQBody> processor, 
+        bool recreateQueue = false,
+        Func<string, CancellationToken, Task>? exchangeFactory = null,
+        ILogger<RabbitMQEventListener<TAlias>>? logger = null)
+        : this(new ConnectionFactory { Uri = new Uri(endpoint) }, serializer, queues, processor, recreateQueue, exchangeFactory, logger)
     {
     }
     /// <summary>
@@ -51,15 +59,26 @@ public class RabbitMQEventListener<TAlias> : IEventListener, IDisposable where T
     /// <param name="queues"></param>
     /// <param name="processor"></param>
     /// <param name="recreateQueue"></param>
+    /// <param name="exchangeFactory"></param>
     /// <param name="logger"></param>
-    public RabbitMQEventListener(IConnectionFactory factory, IJsonSerializer serializer, IEnumerable<RabbitMQQueueAlias<TAlias>> queues, ProcessorCallback<TAlias, RabbitMQBody> processor, bool recreateQueue = false, ILogger<RabbitMQEventListener<TAlias>>? logger = null)
+    public RabbitMQEventListener(
+        IConnectionFactory factory, 
+        IJsonSerializer serializer, 
+        IEnumerable<RabbitMQQueueAlias<TAlias>> queues, 
+        ProcessorCallback<TAlias, RabbitMQBody> processor, 
+        bool recreateQueue = false,
+        Func<string, CancellationToken, Task>? exchangeFactory = null,
+        ILogger<RabbitMQEventListener<TAlias>>? logger = null)
     {
         _factory = factory;
         _serializer = serializer;
         _queues = queues.Where(x => x.Active == true).ToArray();
         _processor = processor;
         _recreateQueue = recreateQueue;
+        _exchangeFactory = exchangeFactory;
         _logger = logger;
+
+        _exchangeFactory ??= (exchange, ct) => _channel!.ExchangeDeclareAsync(exchange, ExchangeType.Direct, true, false, cancellationToken: ct);
     }
 
     /// <inheritdoc/>
@@ -76,24 +95,29 @@ public class RabbitMQEventListener<TAlias> : IEventListener, IDisposable where T
     /// <param name="ct"></param>
     /// <returns></returns>
     /// <exception cref="NotImplementedException"></exception>
-    public ValueTask ListenAsync(TimeSpan waitRetry, CancellationToken ct = default)
+    public async ValueTask ListenAsync(TimeSpan waitRetry, CancellationToken ct = default)
     {
         _logger?.LogDebug("RabbitMQEventListener start");
 
-        _connection = _factory.CreateConnection();
-        _channel = _connection.CreateModel();
+        _connection = await _factory.CreateConnectionAsync(ct);
+        _channel = await _connection.CreateChannelAsync(cancellationToken: ct);
 
         #region Initialize Queues
         foreach (var entry in _queues)
-            _channel.QueueDeclare(entry.Queue, entry.Durable, entry.Exclusive, entry.AutoDelete, null);
+            await _channel.QueueDeclareAsync(entry.Queue, entry.Durable, entry.Exclusive, entry.AutoDelete, null, cancellationToken: ct);
 
-        _channel.BasicQos(0, 1, false);
+        await _channel.BasicQosAsync(0, 1, false, ct);
         foreach (var queue in _queues)
         {
             if (_recreateQueue)
-                _channel.QueuePurge(queue.Queue);
+                await _channel.QueuePurgeAsync(queue.Queue, ct);
+
+            if (_exchangeFactory is not null)
+                await _exchangeFactory(queue.Exchange, ct);
+
+            await _channel.ExchangeDeclareAsync(queue.Exchange, ExchangeType.Direct, true, false, cancellationToken: ct);
             foreach (var rk in queue.RoutingKey)
-                _channel.QueueBind(queue.Queue, queue.Exchange, rk);
+                await _channel.QueueBindAsync(queue.Queue, queue.Exchange, rk, cancellationToken: ct);
         }
         #endregion
 
@@ -102,13 +126,11 @@ public class RabbitMQEventListener<TAlias> : IEventListener, IDisposable where T
         {
             var queue = entry.Queue;
 
-            var accountChanges = new EventingBasicConsumer(_channel);
-            accountChanges.Received += (sender, e) => ProcessEventAsync(sender, entry, e).Wait();
+            var accountChanges = new AsyncEventingBasicConsumer(_channel);
+            accountChanges.ReceivedAsync += (sender, e) => ProcessEventAsync(sender, entry, e);
 
-            _channel.BasicConsume(queue, false, accountChanges);
+            await _channel.BasicConsumeAsync(queue, false, accountChanges, ct);
         }
-
-        return default;
     }
 
     #region Protected Methods

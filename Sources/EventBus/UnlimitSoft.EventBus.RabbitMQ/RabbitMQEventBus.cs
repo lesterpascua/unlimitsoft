@@ -27,15 +27,15 @@ public class RabbitMQEventBus<TAlias, TEventPayload> : IEventBus, IDisposable
     private readonly IJsonSerializer _serializer;
     private readonly Func<TAlias, string, object, bool>? _filter;
     private readonly Func<TAlias, string, object, object>? _transform;
-    private readonly Action<object?, BasicAckEventArgs>? _acks;
-    private readonly Action<object?, BasicNackEventArgs>? _nacks;
+    private readonly Func<object?, BasicAckEventArgs, Task>? _acks;
+    private readonly Func<object?, BasicNackEventArgs, Task>? _nacks;
     private readonly Action<object, IBasicProperties>? _setup;
     private readonly ILogger<RabbitMQEventBus<TAlias, TEventPayload>>? _logger;
 
     /// <summary>
     /// RabbitMQ model
     /// </summary>
-    protected IModel? _channel;
+    protected IChannel? _channel;
     /// <summary>
     /// RabbitMQ connection
     /// </summary>
@@ -82,7 +82,7 @@ public class RabbitMQEventBus<TAlias, TEventPayload> : IEventBus, IDisposable
     /// <param name="logger"></param>
     public RabbitMQEventBus(IConnectionFactory factory, IEnumerable<RabbitMQQueueAlias<TAlias>> queue, IEventNameResolver resolver, IJsonSerializer serializer,
         Func<TAlias, string, object, bool>? filter = null, Func<TAlias, string, object, object>? transform = null,
-        Action<object?, BasicAckEventArgs>? acks = null, Action<object?, BasicNackEventArgs>? nacks = null,
+        Func<object?, BasicAckEventArgs, Task>? acks = null, Func<object?, BasicNackEventArgs, Task>? nacks = null,
         Action<object, IBasicProperties>? setup = null,
         ILogger<RabbitMQEventBus<TAlias, TEventPayload>>? logger = null
     )
@@ -111,34 +111,29 @@ public class RabbitMQEventBus<TAlias, TEventPayload> : IEventBus, IDisposable
         GC.SuppressFinalize(this);
     }
     /// <inheritdoc />
-    public ValueTask StartAsync(TimeSpan waitRetry, CancellationToken ct = default)
+    public async ValueTask StartAsync(TimeSpan waitRetry, CancellationToken ct = default)
     {
-        _connection = _factory.CreateConnection();
-        _channel = _connection.CreateModel();
+        _connection = await _factory.CreateConnectionAsync(ct);
+        _channel = await _connection.CreateChannelAsync(cancellationToken: ct);
 
         // 
         // code when message is confirmed
-        _channel.BasicAcks += (sender, ea) =>
+        _channel.BasicAcksAsync += (sender, ea) =>
         {
             _logger?.LogDebug("Acks: {@Event}", ea);
-            _acks?.Invoke(sender, ea);
+            return _acks?.Invoke(sender, ea) ?? Task.CompletedTask;
         };
-        _channel.BasicNacks += (sender, ea) =>
+        _channel.BasicNacksAsync += (sender, ea) =>
         {
             _logger?.LogDebug("Nacks: {@Event}", ea);
-            _nacks?.Invoke(sender, ea);
+            return _nacks?.Invoke(sender, ea) ?? Task.CompletedTask;
         };
-#if NETSTANDARD
-        return default;
-#else
-        return ValueTask.CompletedTask;
-#endif
     }
 
     /// <inheritdoc />
     public Task PublishAsync(IEvent @event, bool useEnvelop = true, CancellationToken ct = default)
     {
-        return SendAsync(@event, @event.Id, @event.Name, @event.CorrelationId, useEnvelop);
+        return SendAsync(@event, @event.Id, @event.Name, @event.CorrelationId, useEnvelop, ct);
     }
     /// <inheritdoc />
     public virtual Task PublishPayloadAsync(EventPayload eventPayload, bool useEnvelop = true, CancellationToken ct = default)
@@ -150,10 +145,10 @@ public class RabbitMQEventBus<TAlias, TEventPayload> : IEventBus, IDisposable
         var @event = LoadFromPaylod(eventType, (TEventPayload)eventPayload);
         if (@event is null)
             return Task.CompletedTask;
-        return SendAsync(@event, eventPayload.Id, eventPayload.Name, eventPayload.CorrelationId, useEnvelop);
+        return SendAsync(@event, eventPayload.Id, eventPayload.Name, eventPayload.CorrelationId, useEnvelop, ct);
     }
     /// <inheritdoc />
-    public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop = true, CancellationToken ct = default) => SendAsync(graph, id, eventName, correlationId, useEnvelop);
+    public Task PublishAsync(object graph, Guid id, string eventName, string correlationId, bool useEnvelop = true, CancellationToken ct = default) => SendAsync(graph, id, eventName, correlationId, useEnvelop, ct);
 
     /// <summary>
     /// Load event from Payload
@@ -187,19 +182,23 @@ public class RabbitMQEventBus<TAlias, TEventPayload> : IEventBus, IDisposable
     /// <param name="eventName"></param>
     /// <param name="correlationId"></param>
     /// <param name="useEnvelop"></param>
+    /// <param name="ct"></param>
     /// <returns></returns>
-    protected virtual Task SendAsync(object graph, Guid id, string eventName, string? correlationId, bool useEnvelop)
+    protected async virtual Task SendAsync(object graph, Guid id, string eventName, string? correlationId, bool useEnvelop, CancellationToken ct)
     {
+        if (_channel is null)
+            throw new InvalidOperationException("Connection not established. Call StartAsync first.");
         //using var rabbitMQConnection = _retryPolicy.Execute(() => _factory.CreateConnection());
         //rabbitMQConnection.CreateModel()
 
-        _channel!.ConfirmSelect();
-        var properties = _channel.CreateBasicProperties();
-        properties.Persistent = true;
-        properties.ContentType = "application/json";
-        properties.MessageId = id.ToString();
+        var properties = new BasicProperties
+        {
+            Persistent = true,
+            ContentType = "application/json",
+            MessageId = id.ToString()
+        };
 
-        properties.Headers ??= new Dictionary<string, object>();
+        properties.Headers ??= new Dictionary<string, object?>();
         properties.Headers[Constants.HeaderCorrelation] = correlationId;
         properties.Headers[Constants.HeaderEventName] = eventName;
         properties.Headers[Constants.HeaderHasEnvelop] = useEnvelop;
@@ -220,12 +219,10 @@ public class RabbitMQEventBus<TAlias, TEventPayload> : IEventBus, IDisposable
 
                 var message = Encoding.UTF8.GetBytes(_serializer.Serialize(content)!);
 
-                _channel.BasicPublish(queue.Exchange, rk, true, properties, message);
-                _channel.WaitForConfirms();
+                await _channel.BasicPublishAsync(queue.Exchange, rk, true, properties, message, cancellationToken: ct);
 
                 _logger?.LogInformation("Publish Event to {Exchange}, {RoutingKey}, {@Event}", queue.Exchange, queue.RoutingKey, graph);
             }
         }
-        return Task.CompletedTask;
     }
 }
