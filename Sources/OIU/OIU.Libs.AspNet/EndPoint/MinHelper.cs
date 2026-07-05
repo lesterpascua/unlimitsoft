@@ -305,6 +305,35 @@ public static class MinHelper
     /// 
     /// </summary>
     /// <param name="request"></param>
+    /// <param name="body"></param>
+    /// <param name="context"></param>
+    /// <param name="code"></param>
+    /// <param name="transform"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    public static Task<Microsoft.AspNetCore.Http.IResult> DispatchCommandWithLog<TCommand, TBody, TResult>(TCommand request, TBody? body, HttpContext context, HttpStatusCode code, Func<HttpStatusCode, object, ResultCodePairUri>? transform, CancellationToken ct)
+        where TBody : class
+        where TCommand : ICommand<TResult>
+    {
+        return ActionWithLog(
+            context,
+            body,
+            async () =>
+            {
+                var provider = context.RequestServices.GetRequiredService<IServiceProvider>();
+                var dispatcher = context.RequestServices.GetRequiredService<ICommandDispatcher>();
+
+                var aux = await dispatcher.DispatchAsync(provider, request, ct);
+                return aux.To();
+            },
+            code,
+            transform
+        );
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="request"></param>
     /// <param name="context"></param>
     /// <param name="ct"></param>
     /// <returns></returns>
@@ -344,6 +373,36 @@ public static class MinHelper
 
                 return dispatcher.SafeDispatchAsync(provider, request, ct);
             }
+        );
+    }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="body"></param>
+    /// <param name="context"></param>
+    /// <param name=""></param>
+    /// <param name="code"></param>
+    /// <param name="transform"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    public static Task<Microsoft.AspNetCore.Http.IResult> SafeDispatchCommandWithLog<TCommand, TBody, TResult>(TCommand request, TBody? body, HttpContext context, HttpStatusCode code, Func<HttpStatusCode, object, ResultCodePairUri>? transform, CancellationToken ct)
+        where TBody : class
+        where TCommand : ICommand<Result<TResult>>
+    {
+        return ActionWithLog(
+            context,
+            body,
+            async () =>
+            {
+                var provider = context.RequestServices.GetRequiredService<IServiceProvider>();
+                var dispatcher = context.RequestServices.GetRequiredService<ICommandDispatcher>();
+
+                var aux = await dispatcher.SafeDispatchAsync(provider, request, ct);
+                return aux.To();
+            },
+            code,
+            transform
         );
     }
 
