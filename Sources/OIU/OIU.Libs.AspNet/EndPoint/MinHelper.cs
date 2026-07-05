@@ -52,6 +52,7 @@ public static class MinHelper
 
         return default;
     }
+
     /// <summary>
     /// Get the result from the Result object and convert it to an IResult
     /// </summary>
@@ -59,16 +60,30 @@ public static class MinHelper
     /// <param name="result">The result object.</param>
     /// <param name="code">The optional HTTP status code.</param>
     /// <returns>An IResult representing the outcome.</returns>
-    public static Microsoft.AspNetCore.Http.IResult GetResult<TResult>(in Result<TResult> result, HttpStatusCode? code = null)
+    public static Microsoft.AspNetCore.Http.IResult GetResult<TResult>(in Result<TResult> result, HttpStatusCode? code) => GetResult(result.To(), code);
+    /// <summary>
+    /// Get the result from the Result object and convert it to an IResult
+    /// </summary>
+    /// <param name="result">The result object.</param>
+    /// <param name="code">The optional HTTP status code.</param>
+    /// <param name="transform"></param>
+    /// <returns>An IResult representing the outcome.</returns>
+    public static Microsoft.AspNetCore.Http.IResult GetResult(in Result<object> result, HttpStatusCode code, Func<HttpStatusCode, object, ResultCodePairUri>? transform)
     {
         if (result.IsSuccess)
         {
+            string? uri = null;
             var value = result.Value!;
+            if (transform is not null)
+                (code, value, uri) = transform(code, value);
+
             if (value is OIUFileResult fileResult)
                 return Results.File(fileResult.Content, fileResult.ContentType, fileResult.Name);
             return code switch
             {
-                HttpStatusCode.Accepted => Results.Accepted(string.Empty, value),
+                HttpStatusCode.Accepted => Results.Accepted(uri, value),
+                HttpStatusCode.Created => Results.Created(uri, value),
+                HttpStatusCode.NoContent => Results.NoContent(),
                 _ or HttpStatusCode.OK => Results.Ok(value)
             };
         }
@@ -99,7 +114,7 @@ public static class MinHelper
         var dispatcher = context.RequestServices.GetRequiredService<IQueryDispatcher>();
 
         var result = await dispatcher.DispatchAsync(provider, request, ct);
-        return GetResult(in result);
+        return GetResult(in result, null);
     }
     /// <summary>
     /// 
@@ -114,7 +129,7 @@ public static class MinHelper
         var dispatcher = context.RequestServices.GetRequiredService<IQueryDispatcher>();
 
         var result = await dispatcher.SafeDispatchAsync(provider, request, ct);
-        return GetResult(in result);
+        return GetResult(in result, null);
     }
 
     /// <summary>
@@ -130,7 +145,7 @@ public static class MinHelper
         var dispatcher = context.RequestServices.GetRequiredService<ICommandDispatcher>();
 
         var result = await dispatcher.DispatchAsync(provider, request, ct);
-        return GetResult(in result);
+        return GetResult(in result, null);
     }
     /// <summary>
     /// 
@@ -333,6 +348,30 @@ public static class MinHelper
     }
 
     /// <summary>
+    /// 
+    /// </summary>
+    /// <typeparam name="TBody"></typeparam>
+    /// <typeparam name="TResult"></typeparam>
+    /// <param name="context"></param>
+    /// <param name="body"></param>
+    /// <param name="action"></param>
+    /// <returns></returns>
+    public static async Task<Microsoft.AspNetCore.Http.IResult> ActionWithLog<TBody, TResult>(HttpContext context, TBody? body, Func<ValueTask<Result<TResult>>> action)
+        where TBody : class
+    {
+        return await ActionWithLog(context, body, async () => (await action()).To(), HttpStatusCode.OK, null);
+    }
+    /// <summary>
+    /// Executes the specified action, logging the HTTP request and response details, and returns the result as an HTTP
+    /// </summary>
+    /// <typeparam name="TResult">The type of the result returned by the action.</typeparam>
+    /// <param name="context">The HTTP context for the current request. Provides access to request and response information.</param>
+    /// <param name="action">A delegate representing the asynchronous action to execute. The action should return a result of type TResult
+    /// wrapped in a message result.</param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains an HTTP result representing the
+    /// outcome of the action.</returns>
+    public static Task<Microsoft.AspNetCore.Http.IResult> ActionWithLog<TResult>(HttpContext context, Func<ValueTask<Result<TResult>>> action) => ActionWithLog<object, TResult>(context, null, action);
+    /// <summary>
     /// Executes the specified action, logging the HTTP request and response details, and returns the result as an HTTP
     /// response.
     /// </summary>
@@ -342,9 +381,11 @@ public static class MinHelper
     /// <param name="body">The request body to be passed to the action. Can be null if the action does not require a body.</param>
     /// <param name="action">A delegate representing the asynchronous action to execute. The action should return a result of type TResult
     /// wrapped in a message result.</param>
+    /// <param name="code"></param>
+    /// <param name="transform"></param>
     /// <returns>A task that represents the asynchronous operation. The task result contains an HTTP result representing the
     /// outcome of the action.</returns>
-    public static async Task<Microsoft.AspNetCore.Http.IResult> ActionWithLog<TBody, TResult>(HttpContext context, TBody? body, Func<ValueTask<Result<TResult>>> action)
+    public static async Task<Microsoft.AspNetCore.Http.IResult> ActionWithLog<TBody>(HttpContext context, TBody? body, Func<ValueTask<Result<object>>> action, HttpStatusCode code, Func<HttpStatusCode, object, ResultCodePairUri>? transform)
         where TBody : class
     {
         const string
@@ -357,11 +398,14 @@ public static class MinHelper
 
         var level = options?.LogLevel ?? LogLevel.Information;
         if (!logger.IsEnabled(level))
-            return GetResult(await action());
+        {
+            var aux = await action();
+            return GetResult(aux, code, transform);
+        }
 
         // Log request and response in the same log entry, so we can easily correlate them using TraceId
         string? error = null;
-        Result<TResult> result = default!;
+        Result<object> result = default!;
         var correlationId = context.TraceIdentifier;
         logger.Log(level, REQUEST_MESSAGE, correlationId, context.GetIpAddress(), req.Method, req.GetDisplayUrl(), body, GetHeader(req.Headers));
         try
@@ -386,7 +430,7 @@ public static class MinHelper
                 logger.Log(level, RESPONSE_MESSAGE, correlationId, (int)HttpStatusCode.InternalServerError, error);
         }
 
-        return GetResult(result);
+        return GetResult(result, code, transform);
 
         // ========================================================================================================================================
         static string GetHeader(IHeaderDictionary headers)
@@ -412,14 +456,4 @@ public static class MinHelper
             return sb.Remove(sb.Length - 2, 2).Append(']').ToString();
         }
     }
-    /// <summary>
-    /// Executes the specified action, logging the HTTP request and response details, and returns the result as an HTTP
-    /// </summary>
-    /// <typeparam name="TResult">The type of the result returned by the action.</typeparam>
-    /// <param name="context">The HTTP context for the current request. Provides access to request and response information.</param>
-    /// <param name="action">A delegate representing the asynchronous action to execute. The action should return a result of type TResult
-    /// wrapped in a message result.</param>
-    /// <returns>A task that represents the asynchronous operation. The task result contains an HTTP result representing the
-    /// outcome of the action.</returns>
-    public static Task<Microsoft.AspNetCore.Http.IResult> ActionWithLog<TResult>(HttpContext context, Func<ValueTask<Result<TResult>>> action) => ActionWithLog<object, TResult>(context, null, action);
 }

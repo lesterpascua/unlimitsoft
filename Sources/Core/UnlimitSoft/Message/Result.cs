@@ -116,6 +116,20 @@ public readonly struct Result<TResponse> : IResult
 public static class ResultExtensions
 {
     /// <summary>
+    /// Convert the internal value of the result to another type
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Result<object> To<TIn>(this in Result<TIn> value) => new(value.Value, value.Error);
+    /// <summary>
+    /// Convert the internal value of the result to another type
+    /// </summary>
+    /// <param name="value"></param>
+    /// <returns></returns>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    public static Result<TOut> To<TOut>(this in Result<object> value) => new((TOut?)value.Value, value.Error);
+    /// <summary>
     /// Return a result from success
     /// </summary>
     /// <param name="value"></param>
