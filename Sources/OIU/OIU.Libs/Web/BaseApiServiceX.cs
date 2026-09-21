@@ -118,7 +118,13 @@ public abstract class BaseApiServiceX : BaseApiService
             return await SendAsync<T>(HttpMethod.Get, url, correlationId: correlationId, ct: ct);
 
         return await TryCacheFirst(
-            _ => SendAsync<T>(HttpMethod.Get, url, correlationId: correlationId, ct: ct),
+            async _ =>
+            {
+                var result = await SendAsync<T>(HttpMethod.Get, url, correlationId: correlationId, ct: ct);
+                if (!result.IsSuccess)
+                    throw new InvalidOperationException("Error fetching data from the source");
+                return result;
+            },
             (ref ICache.Config config) =>
             {
                 config.AbsoluteExpirationRelativeToNow = expirationTime;

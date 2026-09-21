@@ -75,6 +75,9 @@ public readonly struct Result<TResponse> : IResult
     /// </summary>
     /// <param name="value"></param>
     /// <param name="error"></param>
+#if !NETSTANDARD
+    [System.Text.Json.Serialization.JsonConstructor]
+#endif
     internal Result(TResponse? value, IResponse? error)
     {
         _value = value;
