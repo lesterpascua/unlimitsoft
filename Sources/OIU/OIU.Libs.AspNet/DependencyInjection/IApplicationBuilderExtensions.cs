@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -129,14 +130,14 @@ public static class IApplicationBuilderExtensions
     /// <param name="app"></param>
     /// <param name="assemblies"></param>
     /// <returns></returns>
-    public static IApplicationBuilder UseEndpointRegistration(this WebApplication app, Assembly[] assemblies)
+    public static IEndpointRouteBuilder UseEndpointRegistration(this IEndpointRouteBuilder app, Assembly[] assemblies)
     {
         var endpointTypes = assemblies
             .SelectMany(a => a.GetTypes().Where(t => t.IsClass && !t.IsAbstract && t.GetInterface(nameof(IEndPointRegister)) is not null));
         foreach (var type in endpointTypes)
         {
             var endpoint = (IEndPointRegister)ActivatorUtilities.CreateInstance(
-                app.Services, 
+                app.ServiceProvider, 
                 type
             );
             endpoint.Register(app);

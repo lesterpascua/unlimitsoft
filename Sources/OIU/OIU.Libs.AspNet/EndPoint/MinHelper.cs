@@ -96,6 +96,48 @@ public static class MinHelper
         {
             HttpStatusCode.NotFound => Results.NotFound(error.GetErrorBody()),
             HttpStatusCode.BadRequest => Results.BadRequest(error.GetErrorBody()),
+            HttpStatusCode.Forbidden => Results.Json(error.GetErrorBody(), statusCode: StatusCodes.Status403Forbidden),
+            HttpStatusCode.UnprocessableEntity => Results.UnprocessableEntity(error.GetErrorBody()),
+            HttpStatusCode.Conflict => Results.Conflict(error.GetErrorBody()),
+            _ => Results.InternalServerError(),
+        };
+    }
+    /// <summary>
+    /// Get the result from the Result object and convert it to an IResult
+    /// </summary>
+    /// <param name="result">The result object.</param>
+    /// <param name="code">The optional HTTP status code.</param>
+    /// <param name="transform"></param>
+    /// <returns>An IResult representing the outcome.</returns>
+    public static async Task<Microsoft.AspNetCore.Http.IResult> GetResultAsync(Result<object> result, HttpStatusCode code, Func<HttpStatusCode, object, Task<ResultCodePairUri>>? transform)
+    {
+        if (result.IsSuccess)
+        {
+            string? uri = null;
+            var value = result.Value!;
+            if (transform is not null)
+                (code, value, uri) = await transform(code, value);
+
+            if (value is OIUFileResult fileResult)
+                return Results.File(fileResult.Content, fileResult.ContentType, fileResult.Name);
+            return code switch
+            {
+                HttpStatusCode.Accepted => Results.Accepted(uri, value),
+                HttpStatusCode.Created => Results.Created(uri, value),
+                HttpStatusCode.NoContent => Results.NoContent(),
+                _ or HttpStatusCode.OK => Results.Ok(value)
+            };
+        }
+
+        var error = result.Error;
+        if (error is null)
+            return Results.InternalServerError();
+
+        return error.Code switch
+        {
+            HttpStatusCode.NotFound => Results.NotFound(error.GetErrorBody()),
+            HttpStatusCode.BadRequest => Results.BadRequest(error.GetErrorBody()),
+            HttpStatusCode.Forbidden => Results.Json(error.GetErrorBody(), statusCode: StatusCodes.Status403Forbidden),
             HttpStatusCode.UnprocessableEntity => Results.UnprocessableEntity(error.GetErrorBody()),
             HttpStatusCode.Conflict => Results.Conflict(error.GetErrorBody()),
             _ => Results.InternalServerError(),
@@ -405,6 +447,36 @@ public static class MinHelper
             transform
         );
     }
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="body"></param>
+    /// <param name="context"></param>
+    /// <param name=""></param>
+    /// <param name="code"></param>
+    /// <param name="transform"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    public static Task<Microsoft.AspNetCore.Http.IResult> SafeDispatchCommandWithLogAsync<TCommand, TBody, TResult>(TCommand request, TBody? body, HttpContext context, HttpStatusCode code, Func<HttpStatusCode, object, Task<ResultCodePairUri>>? transform, CancellationToken ct)
+        where TBody : class
+        where TCommand : ICommand<Result<TResult>>
+    {
+        return ActionWithLogAsync(
+            context,
+            body,
+            async () =>
+            {
+                var provider = context.RequestServices.GetRequiredService<IServiceProvider>();
+                var dispatcher = context.RequestServices.GetRequiredService<ICommandDispatcher>();
+
+                var aux = await dispatcher.SafeDispatchAsync(provider, request, ct);
+                return aux.To();
+            },
+            code,
+            transform
+        );
+    }
 
     /// <summary>
     /// 
@@ -435,7 +507,6 @@ public static class MinHelper
     /// response.
     /// </summary>
     /// <typeparam name="TBody">The type of the request body to be processed. Must be a reference type.</typeparam>
-    /// <typeparam name="TResult">The type of the result returned by the action.</typeparam>
     /// <param name="context">The HTTP context for the current request. Provides access to request and response information.</param>
     /// <param name="body">The request body to be passed to the action. Can be null if the action does not require a body.</param>
     /// <param name="action">A delegate representing the asynchronous action to execute. The action should return a result of type TResult
@@ -490,29 +561,90 @@ public static class MinHelper
         }
 
         return GetResult(result, code, transform);
-
-        // ========================================================================================================================================
-        static string GetHeader(IHeaderDictionary headers)
-        {
-            if (headers.Count == 0)
-                return "[]";
-
-            const string END_VALUE = "] }, ";
-            var sb = new StringBuilder().Append('[');
-            foreach (var header in headers)
-            {
-                sb.Append("{ Key: \"").Append(header.Key).Append("\", Value: [");
-                if (header.Value.Count == 0)
-                {
-                    sb.Append(END_VALUE);
-                    continue;
-                }
-
-                foreach (var value in header.Value)
-                    sb.Append('"').Append(value).Append("\", ");
-                sb.Remove(sb.Length - 2, 2).Append(END_VALUE);
-            }
-            return sb.Remove(sb.Length - 2, 2).Append(']').ToString();
-        }
     }
+    /// <summary>
+    /// Executes the specified action, logging the HTTP request and response details, and returns the result as an HTTP
+    /// response.
+    /// </summary>
+    /// <typeparam name="TBody">The type of the request body to be processed. Must be a reference type.</typeparam>
+    /// <param name="context">The HTTP context for the current request. Provides access to request and response information.</param>
+    /// <param name="body">The request body to be passed to the action. Can be null if the action does not require a body.</param>
+    /// <param name="action">A delegate representing the asynchronous action to execute. The action should return a result of type TResult
+    /// wrapped in a message result.</param>
+    /// <param name="code"></param>
+    /// <param name="transform"></param>
+    /// <returns>A task that represents the asynchronous operation. The task result contains an HTTP result representing the
+    /// outcome of the action.</returns>
+    public static async Task<Microsoft.AspNetCore.Http.IResult> ActionWithLogAsync<TBody>(HttpContext context, TBody? body, Func<ValueTask<Result<object>>> action, HttpStatusCode code, Func<HttpStatusCode, object, Task<ResultCodePairUri>>? transform)
+        where TBody : class
+    {
+        const string
+            REQUEST_MESSAGE = "API Request {TraceId} from {Ip}, {Method} {Url}, Body = {@Body}, Header = {Header}",
+            RESPONSE_MESSAGE = "API Response {TraceId} Code = {StatusCode}, Body = {@Response}";
+
+        var req = context.Request;
+        var logger = context.RequestServices.GetRequiredService<ILogger<IEndPointRegister>>();
+        var options = context.RequestServices.GetService<IOptions<RequestLoggerAttribute.Options>>()?.Value;
+
+        var level = options?.LogLevel ?? LogLevel.Information;
+        if (!logger.IsEnabled(level))
+        {
+            var aux = await action();
+            return await GetResultAsync(aux, code, transform);
+        }
+
+        // Log request and response in the same log entry, so we can easily correlate them using TraceId
+        string? error = null;
+        Result<object> result = default!;
+        var correlationId = context.TraceIdentifier;
+        logger.Log(level, REQUEST_MESSAGE, correlationId, context.GetIpAddress(), req.Method, req.GetDisplayUrl(), body, GetHeader(req.Headers));
+        try
+        {
+            result = await action();
+        }
+        catch (Exception ex)
+        {
+            error = $$"""{"error":"{{ex.Message}}"}""";
+            throw;
+        }
+        finally
+        {
+            if (error is null)
+            {
+                var statusCode = result.Error?.Code ?? HttpStatusCode.OK;
+                var value = result.IsSuccess ? result.Value : result.Error?.GetBody();
+
+                logger.Log(level, RESPONSE_MESSAGE, correlationId, (int)statusCode, value);
+            }
+            else
+                logger.Log(level, RESPONSE_MESSAGE, correlationId, (int)HttpStatusCode.InternalServerError, error);
+        }
+
+        return await GetResultAsync(result, code, transform);
+    }
+
+    #region Private Methods
+    private static string GetHeader(IHeaderDictionary headers)
+    {
+        if (headers.Count == 0)
+            return "[]";
+
+        const string END_VALUE = "] }, ";
+        var sb = new StringBuilder().Append('[');
+        foreach (var header in headers)
+        {
+            sb.Append("{ Key: \"").Append(header.Key).Append("\", Value: [");
+            if (header.Value.Count == 0)
+            {
+                sb.Append(END_VALUE);
+                continue;
+            }
+
+            foreach (var value in header.Value)
+                sb.Append('"').Append(value).Append("\", ");
+            sb.Remove(sb.Length - 2, 2).Append(END_VALUE);
+        }
+        return sb.Remove(sb.Length - 2, 2).Append(']').ToString();
+    }
+    #endregion
 }

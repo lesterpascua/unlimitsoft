@@ -757,20 +757,22 @@ public static class IServiceCollectionExtensions
         #region Swagger
         if (config.Documentation.Enabled)
         {
-            var docSection = configuration.GetRequiredSection(config.Documentation.Section);
-            services.Configure<DocumentationOptions>(docSection);
-
-            var docOptions = docSection.Get<DocumentationOptions>()!;
-            services.AddDocumentation(
-                docOptions,
-                config.Documentation.Documents,
-                config.Documentation.Title,
-                config.Documentation.Description,
-                config.Documentation.Version,
-                variants: config.Documentation.Variants,
-                inlineDefinitionsForEnums: config.Documentation.InlineDefinitionsForEnums,
-                configure: config.Documentation.Setup
-            );
+            var docSection = configuration.GetSection(config.Documentation.Section);
+            var docOptions = docSection.Get<DocumentationOptions>();
+            if (docOptions is not null)
+            {
+                services.Configure<DocumentationOptions>(docSection);
+                services.AddDocumentation(
+                    docOptions,
+                    config.Documentation.Documents,
+                    config.Documentation.Title,
+                    config.Documentation.Description,
+                    config.Documentation.Version,
+                    variants: config.Documentation.Variants,
+                    inlineDefinitionsForEnums: config.Documentation.InlineDefinitionsForEnums,
+                    configure: config.Documentation.Setup
+                );
+            }
         }
         #endregion
 

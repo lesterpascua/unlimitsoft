@@ -68,7 +68,7 @@ public abstract class SmsDescriptor<TSmsType, TModel> : ISmsDescriptor
 
         _subject = subject;
         _cacheKeyResolver = cacheKeyResolver;
-        this._serializer = serializer;
+        _serializer = serializer;
         _cache = cache;
         _loader = loader;
     }
@@ -81,6 +81,10 @@ public abstract class SmsDescriptor<TSmsType, TModel> : ISmsDescriptor
     public TSmsType? Layout { get; }
     /// <inheritdoc />
     public bool SaveInHistory { get; }
+    /// <summary>
+    /// Get serializer used to cast the model object to the real model type
+    /// </summary>
+    protected IJsonSerializer Serializer => _serializer;
 
     /// <inheritdoc />
     public virtual object GetModel(object model) => _serializer.Cast<TModel>(model) ?? new object();
