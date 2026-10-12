@@ -624,6 +624,17 @@ public static class MinHelper
     }
 
     #region Private Methods
+    /// <summary>
+    /// Headers holding credentials (session cookie, bearer token, antiforgery token), their values are never logged.
+    /// </summary>
+    private static readonly HashSet<string> _redactedHeaders = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "Cookie",
+        "Authorization",
+        "Proxy-Authorization",
+        "X-XSRF-TOKEN"
+    };
+
     private static string GetHeader(IHeaderDictionary headers)
     {
         if (headers.Count == 0)
@@ -640,8 +651,9 @@ public static class MinHelper
                 continue;
             }
 
+            var redacted = _redactedHeaders.Contains(header.Key);
             foreach (var value in header.Value)
-                sb.Append('"').Append(value).Append("\", ");
+                sb.Append('"').Append(redacted ? "***" : value).Append("\", ");
             sb.Remove(sb.Length - 2, 2).Append(END_VALUE);
         }
         return sb.Remove(sb.Length - 2, 2).Append(']').ToString();
