@@ -542,7 +542,7 @@ public static class IServiceCollectionExtensions
         switch (cacheLock?.Lock?.SysType ?? SysType.Memory)
         {
             case SysType.Memory:
-                services.AddSingleton<ISysLock, Distribute.SemaphoreSlimSysLock>();
+                services.AddSingleton<ISysLock, UnlimitSoft.Distribute.SemaphoreSlimSysLock>();
                 break;
             case SysType.Sql:
                 {
