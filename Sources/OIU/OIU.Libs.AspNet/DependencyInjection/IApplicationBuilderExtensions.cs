@@ -53,7 +53,7 @@ public static class IApplicationBuilderExtensions
         var correlationTrusted = app.ApplicationServices.GetRequiredService<ICorrelationTrusted>();
         var exceptionHandlerLogger = app.ApplicationServices.GetRequiredService<ILogger<OIUToResponseExceptionHandlerOptions>>();
 
-        logger.LogInformation("Starting, ENV: {Environment}, COMPILER: {Compilation}, Region: {Region} ...", service.EnvironmentName, compilation, options.Region);
+        logger.Starting(service.EnvironmentName, compilation, options.Region);
 
         app.UseMiddleware<OIULoggerMiddleware>();
         exceptionHandler ??= new OIUToResponseExceptionHandlerOptions(
@@ -384,4 +384,9 @@ public static class IApplicationBuilderExtensions
         private static bool IsV3(HttpContext context) => V3Path.IsMatch(context.Request.Path.Value ?? string.Empty);
     }
     #endregion
+}
+internal static partial class IApplicationBuilderExtensionsLoggerExtensions
+{
+    [LoggerMessage(EventId = 1, Level = LogLevel.Information, Message = "Starting, ENV: {Environment}, COMPILER: {Compilation}, Region: {Region} ...")]
+    public static partial void Starting(this ILogger logger, string environment, string compilation, string? region);
 }

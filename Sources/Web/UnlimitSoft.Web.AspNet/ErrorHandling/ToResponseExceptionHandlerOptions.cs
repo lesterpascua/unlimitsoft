@@ -119,7 +119,11 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
         context.Response.StatusCode = (int)code;
 
         var level = code == HttpStatusCode.InternalServerError ? LogLevel.Error : _logLevel;
-        _logger?.Log(level, feature.Error, "User: {Name}, login from: {IpAddress}", identity?.Name, context.GetIpAddress());
+        if (_logger is not null)
+        {
+            var ipAddress = context.GetIpAddress();
+            _logger.ExceptionHandled(feature.Error, level, identity?.Name, ipAddress);
+        }
 
         var traceId = context.TraceIdentifier;
         var correlationId = GetCorrelation(context);
@@ -132,4 +136,9 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
             await context.Response.WriteAsync(json);
     }
     #endregion
+}
+internal static partial class ToResponseExceptionHandlerOptionsLoggerExtensions
+{
+    [LoggerMessage(EventId = 1, Message = "User: {Name}, login from: {IpAddress}")]
+    public static partial void ExceptionHandled(this ILogger<ToResponseExceptionHandlerOptions> logger, Exception ex, LogLevel level, string? name, string ipAddress);
 }

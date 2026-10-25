@@ -84,7 +84,7 @@ public class DefaultApiClient : IApiClient
             var (json, code) = await SendWithContentAsync(method, completeUri, httpContent, setup, ct);
             var result = serializer.Deserialize<TModel>(json);
 
-            _logger?.LogInformation("HttpResponse for {Url}, Result = {Code}, Body = {@Body}", completeUri, code, result);
+            _logger?.HttpResponse(completeUri, code, result);
 
             return (result, code);
         }
@@ -107,14 +107,14 @@ public class DefaultApiClient : IApiClient
         foreach (var stream in streams)
             content.Add(new StreamContent(stream), fileName, fileName);
 
-        _logger?.LogInformation("HttpRequest for {Url}", completeUri);
+        _logger?.HttpRequest(completeUri);
         if (qs != null)
             completeUri += string.Concat('?', ObjectUtils.ToQueryString(_serializer, qs));
 
         var (json, code) = await SendWithContentAsync(method, completeUri, content, setup, ct);
         var result = jsonSerialize.Deserialize<TModel>(json);
 
-        _logger?.LogInformation("HttpResponse for {Url}, Result = {Code}, Body = {@Body}", completeUri, code, result);
+        _logger?.HttpResponse(completeUri, code, result);
 
         return (result, code);
     }
@@ -129,7 +129,7 @@ public class DefaultApiClient : IApiClient
         if (model is null)
         {
             content = null;
-            _logger?.LogInformation("HttpRequest for {Url}", uri);
+            _logger?.HttpRequest(uri);
             return uri;
         }
 
@@ -139,11 +139,11 @@ public class DefaultApiClient : IApiClient
             var qs = ObjectUtils.ToQueryString(serializer, model);
 
             uri = $"{uri}?{qs}";
-            _logger?.LogInformation("HttpRequest for {Url}", uri);
+            _logger?.HttpRequest(uri);
             return uri;
         }
 
-        _logger?.LogInformation("HttpRequest for {Url}, Body = {@Body}", uri, model);
+        _logger?.HttpRequestWithBody(uri, model);
         content = serializer.Serialize(model);
         return uri;
     }
@@ -164,11 +164,22 @@ public class DefaultApiClient : IApiClient
 
         if (!response.IsSuccessStatusCode)
         {
-            _logger?.LogWarning("HttpResponse for {Url}, Result = {Code}, Body = {Body}", completeUri, response.StatusCode, body);
+            _logger?.HttpResponseFailed(completeUri, response.StatusCode, body);
             throw new HttpException(response.StatusCode, response.ToString(), body);
         }
 
         return (body, response.StatusCode);
     }
     #endregion
+}
+internal static partial class DefaultApiClientLoggerExtensions
+{
+    [LoggerMessage(EventId = 1, Level = LogLevel.Information, Message = "HttpResponse for {Url}, Result = {Code}, Body = {@Body}")]
+    public static partial void HttpResponse(this ILogger logger, string url, HttpStatusCode code, object? body);
+    [LoggerMessage(EventId = 2, Level = LogLevel.Information, Message = "HttpRequest for {Url}")]
+    public static partial void HttpRequest(this ILogger logger, string url);
+    [LoggerMessage(EventId = 3, Level = LogLevel.Information, Message = "HttpRequest for {Url}, Body = {@Body}")]
+    public static partial void HttpRequestWithBody(this ILogger logger, string url, object body);
+    [LoggerMessage(EventId = 4, Level = LogLevel.Warning, Message = "HttpResponse for {Url}, Result = {Code}, Body = {Body}")]
+    public static partial void HttpResponseFailed(this ILogger logger, string url, HttpStatusCode code, string body);
 }

@@ -84,7 +84,7 @@ public class TransformResponseAttributeOptions
     public Action<ILogger, Exception, HttpContext, IDictionary<string, object>> ErrorLogger { get; set; } = (logger, exception, httpContext, requestArguments) =>
     {
         var request = httpContext.Request;
-        logger.LogError(exception, "User: {User}, Response: {@Response}",
+        logger.ErrorResponse(exception,
             httpContext.User.GetSubjectId(),
             new
             {
@@ -96,21 +96,31 @@ public class TransformResponseAttributeOptions
     /// <summary>
     /// Log bad request exception
     /// </summary>
-    public Action<ILogger?, HttpContext, object, string> BadRequestLogger { get; set; } = (logger, httpContext, response, message) => 
-        logger?.LogInformation("Code: {Code}, User: {User}, Message: {Message}, Response: {@Response}",
+    public Action<ILogger?, HttpContext, object, string> BadRequestLogger { get; set; } = (logger, httpContext, response, message) =>
+    {
+        if (logger is null)
+            return;
+
+        var user = httpContext.User.GetSubjectId();
+        logger.BadRequestResponse(
             StatusCodes.Status400BadRequest,
-            httpContext.User.GetSubjectId(),
+            user,
             message,
             response
         );
+    };
     /// <summary>
     /// Log error exception
     /// </summary>
-    public Action<ILogger, HttpContext, object> ResponseLogger { get; set; } = (logger, httpContext, response) => logger.LogInformation("Code: {Code}, User: {User}, Response: {@Response}",
-        response is ObjectResult result ? result.StatusCode ?? StatusCodes.Status200OK : StatusCodes.Status200OK,
-        httpContext.User.GetSubjectId(),
-        response is ObjectResult ? response : "Raw Data"
-    );
+    public Action<ILogger, HttpContext, object> ResponseLogger { get; set; } = (logger, httpContext, response) =>
+    {
+        var user = httpContext.User.GetSubjectId();
+        logger.ActionResponse(
+            response is ObjectResult result ? result.StatusCode ?? StatusCodes.Status200OK : StatusCodes.Status200OK,
+            user,
+            response is ObjectResult ? response : "Raw Data"
+        );
+    };
     /// <summary>
     /// Custom handler exception and transform into other response.
     /// </summary>
@@ -118,4 +128,13 @@ public class TransformResponseAttributeOptions
     /// If we don't process this exception just return (null, null) and the default behavior is executed.
     /// </remarks>
     public Func<ResultExecutingContext, (IActionResult, Exception)>? HandlerException { get; set; }
+}
+internal static partial class TransformResponseAttributeOptionsLoggerExtensions
+{
+    [LoggerMessage(EventId = 1, Level = LogLevel.Error, Message = "User: {User}, Response: {@Response}")]
+    public static partial void ErrorResponse(this ILogger logger, Exception ex, string user, object response);
+    [LoggerMessage(EventId = 2, Level = LogLevel.Information, Message = "Code: {Code}, User: {User}, Message: {Message}, Response: {@Response}")]
+    public static partial void BadRequestResponse(this ILogger logger, int code, string user, string message, object response);
+    [LoggerMessage(EventId = 3, Level = LogLevel.Information, Message = "Code: {Code}, User: {User}, Response: {@Response}")]
+    public static partial void ActionResponse(this ILogger logger, int code, string user, object response);
 }

@@ -51,10 +51,15 @@ public class LoggerMiddleware
         using var _2 = LogContext.PushProperty(Constants.LogContextCorrelationId, correlationId);
 
         // Log the asociation to historical debuging process
-        if (traceId != correlationId)
-            _logger?.LogInformation("Associate {Trace} with {Correlation}", traceId, correlationId);
+        if (traceId != correlationId && correlationId is not null)
+            _logger?.AssociateCorrelation(traceId, correlationId);
 
         // Call the next delegate/middleware in the pipeline.
         await _next(context);
     }
+}
+internal static partial class LoggerMiddlewareLoggerExtensions
+{
+    [LoggerMessage(EventId = 1, Level = LogLevel.Information, Message = "Associate {Trace} with {Correlation}")]
+    public static partial void AssociateCorrelation(this ILogger<LoggerMiddleware> logger, string trace, string correlation);
 }

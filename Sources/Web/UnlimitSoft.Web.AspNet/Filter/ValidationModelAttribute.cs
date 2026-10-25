@@ -41,10 +41,11 @@ public class ValidationModelAttribute : ActionFilterAttribute
         {
             context.Result = controller.BadRequest(context.ModelState);
 
-            if (_settings.LogLevel != LogLevel.None)
+            if (_logger is not null && _settings.LogLevel != LogLevel.None)
             {
                 var httpContext = context.HttpContext;
-                _logger?.Log(_settings.LogLevel, "TraceId: {Trace}, Code: {Code}, User: {User}", httpContext.TraceIdentifier, StatusCodes.Status400BadRequest, httpContext.User.GetSubjectId());
+                var user = httpContext.User.GetSubjectId();
+                _logger.InvalidModel(_settings.LogLevel, httpContext.TraceIdentifier, StatusCodes.Status400BadRequest, user);
             }
         }
     }
@@ -78,4 +79,9 @@ public class ValidationModelAttribute : ActionFilterAttribute
         public LogLevel LogLevel { get; set; } = LogLevel.Debug;
     }
     #endregion
+}
+internal static partial class ValidationModelAttributeLoggerExtensions
+{
+    [LoggerMessage(EventId = 1, Message = "TraceId: {Trace}, Code: {Code}, User: {User}")]
+    public static partial void InvalidModel(this ILogger<ValidationModelAttribute> logger, LogLevel level, string trace, int code, string user);
 }

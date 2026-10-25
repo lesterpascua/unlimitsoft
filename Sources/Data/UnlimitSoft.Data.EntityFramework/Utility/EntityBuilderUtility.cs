@@ -83,14 +83,14 @@ public static class EntityBuilderUtility
             .WaitAndRetryAsync(
                 retryCount,
                 retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
-                (ex, time) => logger?.LogWarning(ex, "Migration error on {TimeOut}s ({ExceptionMessage})", time, ex.Message)
+                (ex, time) => logger?.MigrationError(ex, time, ex.Message)
             );
         await policy.ExecuteAsync(
             async (ct) =>
             {
                 var pendingMigration = await dbContext.Database.GetPendingMigrationsAsync(ct);
                 foreach (var migration in pendingMigration)
-                    logger?.LogInformation("Run migration: {migration}", migration);
+                    logger?.RunMigration(migration);
 
                 await dbContext.Database.MigrateAsync(ct);
             }, 
@@ -141,4 +141,12 @@ public static class EntityBuilderUtility
             ct
         );
     }
+}
+
+internal static partial class EntityBuilderUtilityLoggerExtensions
+{
+    [LoggerMessage(EventId = 1, Level = LogLevel.Warning, Message = "Migration error on {TimeOut}s ({ExceptionMessage})")]
+    public static partial void MigrationError(this ILogger logger, Exception ex, TimeSpan timeOut, string exceptionMessage);
+    [LoggerMessage(EventId = 2, Level = LogLevel.Information, Message = "Run migration: {Migration}")]
+    public static partial void RunMigration(this ILogger logger, string migration);
 }

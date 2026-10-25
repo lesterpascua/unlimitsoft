@@ -79,7 +79,7 @@ public static class EventUtility
                 if (responses?.Code != HttpStatusCode.NotFound || !args.NotFoundAsWarning)
                     throw new EventResponseException("Some event process has error see responses", responses);
 
-                args.Logger?.LogWarning("Event: {Name} don't have handler associate", eventType.FullName);
+                args.Logger?.EventWithoutHandler(eventType.FullName);
             }
         }
         catch (Exception ex)
@@ -96,7 +96,7 @@ public static class EventUtility
     private static async ValueTask<IResponse?> DispatchEvent(IEventDispatcher eventDispatcher, ILogger? logger, IEvent @event, CancellationToken ct)
     {
         var (responses, error) = await eventDispatcher.DispatchAsync(@event, ct);
-        logger?.LogInformation("Procesed Event: {@Event} Response: {@Response}", @event, responses);
+        logger?.EventProcessed(@event, responses);
 
         return error ?? responses;
     }
@@ -117,4 +117,12 @@ public static class EventUtility
     /// <param name="Logger"></param>
     public sealed record Args<TEvent>(IJsonSerializer Serializer, IEventDispatcher Dispatcher, IEventNameResolver Resolver, Action<TEvent, object?>? BeforeProcess = null, Func<Exception, TEvent?, MessageEnvelop, object?, CancellationToken, ValueTask>? OnError = null, bool NotFoundAsWarning = true, ILogger? Logger = null);
     #endregion
+}
+
+internal static partial class EventUtilityLoggerExtensions
+{
+    [LoggerMessage(EventId = 1, Level = LogLevel.Warning, Message = "Event: {Name} don't have handler associate")]
+    public static partial void EventWithoutHandler(this ILogger logger, string? name);
+    [LoggerMessage(EventId = 2, Level = LogLevel.Information, Message = "Procesed Event: {@Event} Response: {@Response}")]
+    public static partial void EventProcessed(this ILogger logger, IEvent @event, IResponse? response);
 }

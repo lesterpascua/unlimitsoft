@@ -59,12 +59,7 @@ public static class ISchedulerCommandExtensions
     public static async Task<object?> ErrorRetryAsync(this ISchedulerCommand @this, ICommandBus bus, Exception? ex, Func<TimeSpan, Task>? action, TimeSpan? maxDelay = null, ILogger? logger = null, CancellationToken ct = default)
     {
         if (ex is not null)
-            logger?.LogError(
-                ex,
-                "Error trying to execute operation {Type} using arguments: {@Command}",
-                @this.GetType().FullName,
-                @this
-            );
+            logger?.ErrorExecutingOperation(ex, @this.GetType().FullName, @this);
 
         var delay = TimeSpanUtility.DuplicateRetryTime(@this.GetDelay(), maxDelay);
         @this.SetDelay(delay);
@@ -73,7 +68,7 @@ public static class ISchedulerCommandExtensions
             await action(delay);
 
         var jobId = await bus.SendAsync(@this, ct);
-        logger?.LogInformation("Command will retry in {Delay} with id={JobId}", delay, jobId);
+        logger?.CommandWillRetry(delay, jobId);
 
         return jobId;
     }
@@ -88,4 +83,12 @@ public static class ISchedulerCommandExtensions
     /// <param name="ct"></param>
     /// <returns></returns>
     public static Task<object?> ErrorRetryAsync(this ISchedulerCommand @this, ICommandBus bus, Exception ex, TimeSpan? maxDelay = null, ILogger? logger = null, CancellationToken ct = default) => @this.ErrorRetryAsync(bus, ex, null, maxDelay, logger, ct);
+}
+
+internal static partial class ISchedulerCommandExtensionsLoggerExtensions
+{
+    [LoggerMessage(EventId = 1, Level = LogLevel.Error, Message = "Error trying to execute operation {Type} using arguments: {@Command}")]
+    public static partial void ErrorExecutingOperation(this ILogger logger, Exception ex, string? type, ISchedulerCommand command);
+    [LoggerMessage(EventId = 2, Level = LogLevel.Information, Message = "Command will retry in {Delay} with id={JobId}")]
+    public static partial void CommandWillRetry(this ILogger logger, TimeSpan delay, object? jobId);
 }

@@ -93,9 +93,15 @@ public sealed class DefaultJobProcessor<TProps> : IJobProcessor
     private ValueTask<IResult> RunAsync(ICommand command, CancellationToken ct)
     {
         var jobId = Context.BackgroundJob.Id;
-        _logger?.LogDebug("Start process JobId: {JobId} command: {@Command}", jobId, command);
+        _logger?.StartProcess(jobId, command);
 
         return _dispatcher.DispatchDynamicAsync(_provider, command, ct);
     }
     #endregion
+}
+
+internal static partial class DefaultJobProcessorLoggerExtensions
+{
+    [LoggerMessage(EventId = 1, Level = LogLevel.Debug, Message = "Start process JobId: {JobId} command: {@Command}")]
+    public static partial void StartProcess(this ILogger logger, string jobId, ICommand command);
 }

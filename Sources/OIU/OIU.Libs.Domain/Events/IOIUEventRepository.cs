@@ -55,7 +55,7 @@ public sealed class OIUEventRepository : EventDbContextRepository<OIUEventPayloa
     public async Task<int> DeleteHistoryAsync(DateTime until, TimeSpan? timeOut = null, CancellationToken ct = default)
     {
         var scheme = _dbContext.Model.GetDefaultSchema();
-        _logger.LogInformation("Run query in scheme {Scheme}", scheme);
+        _logger.RunQueryInScheme(scheme);
 
         int? prevTimeOut = null;
         if (timeOut is not null)
@@ -68,9 +68,16 @@ public sealed class OIUEventRepository : EventDbContextRepository<OIUEventPayloa
         if (prevTimeOut is not null)
             _dbContext.Database.SetCommandTimeout(prevTimeOut);
 
-        _logger.LogInformation("Versioned event deleted {Count}", count);
+        _logger.VersionedEventDeleted(count);
         return count;
     }
     /// <inheritdoc />
     public Task ForceSaveChangesAsync(CancellationToken ct = default) => _dbContext.SaveChangesAsync(ct);
+}
+internal static partial class OIUEventRepositoryLoggerExtensions
+{
+    [LoggerMessage(EventId = 1, Level = LogLevel.Information, Message = "Run query in scheme {Scheme}")]
+    public static partial void RunQueryInScheme(this ILogger<OIUEventRepository> logger, string? scheme);
+    [LoggerMessage(EventId = 2, Level = LogLevel.Information, Message = "Versioned event deleted {Count}")]
+    public static partial void VersionedEventDeleted(this ILogger<OIUEventRepository> logger, int count);
 }

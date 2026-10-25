@@ -53,7 +53,7 @@ public class EventDbContextRepository<TEventPayload> : IEventRepository<TEventPa
         _dbContext.Update(@event);
         int amount = await _dbContext.SaveChangesAsync(ct);
 
-        _logger?.LogDebug("MarkEventsAsPublishedAsync {Amount} passed {@Event}", amount, @event);
+        _logger?.EventMarkedAsPublished(amount, @event);
     }
     /// <inheritdoc />
     public virtual async Task MarkEventsAsPublishedAsync(IEnumerable<TEventPayload> events, CancellationToken ct = default)
@@ -65,7 +65,7 @@ public class EventDbContextRepository<TEventPayload> : IEventRepository<TEventPa
         }
         int amount = await _dbContext.SaveChangesAsync(ct);
 
-        _logger?.LogDebug("MarkEventsAsPublishedAsync {Amount} passed {@Events}", amount, events);
+        _logger?.EventsMarkedAsPublished(amount, events);
     }
 
     /// <inheritdoc />
@@ -278,7 +278,7 @@ public class EventDbContextRepository<TEventPayload> : IEventRepository<TEventPa
     public virtual async Task SavePendingCangesAsync(CancellationToken ct = default)
     {
         int amount = await _dbContext.SaveChangesAsync(ct);
-        _logger?.LogDebug("SavePendingCangesAsync {Amount} JsonVersionedEventPayload", amount);
+        _logger?.PendingChangesSaved(amount);
     }
     /// <inheritdoc />
     public virtual async ValueTask<TEventPayload> CreateAsync(TEventPayload eventPayload, bool forceSave = false, CancellationToken ct = default)
@@ -287,7 +287,7 @@ public class EventDbContextRepository<TEventPayload> : IEventRepository<TEventPa
         if (forceSave)
             await _dbContext.SaveChangesAsync(ct);
 
-        _logger?.LogDebug("With {Force} CreateAsync {@EventPayload} JsonVersionedEventPayload", forceSave, eventPayload);
+        _logger?.EventPayloadCreated(forceSave, eventPayload);
         return eventPayload;
     }
     /// <inheritdoc />
@@ -297,7 +297,7 @@ public class EventDbContextRepository<TEventPayload> : IEventRepository<TEventPa
         if (forceSave)
             await _dbContext.SaveChangesAsync(ct);
 
-        _logger?.LogDebug("With {Force} CreateAsync {@EventPayload} JsonVersionedEventPayload", forceSave, eventPayloads);
+        _logger?.EventPayloadsCreated(forceSave, eventPayloads);
         return eventPayloads;
     }
 
@@ -372,4 +372,18 @@ public class EventDbContextRepository<TEventPayload> : IEventRepository<TEventPa
         return _getAllSourceIdWithOutPaging(_dbContext);
     }
     #endregion
+}
+
+internal static partial class EventDbContextRepositoryLoggerExtensions
+{
+    [LoggerMessage(EventId = 1, Level = LogLevel.Debug, Message = "MarkEventsAsPublishedAsync {Amount} passed {@Event}")]
+    public static partial void EventMarkedAsPublished(this ILogger logger, int amount, EventPayload @event);
+    [LoggerMessage(EventId = 2, Level = LogLevel.Debug, Message = "MarkEventsAsPublishedAsync {Amount} passed {@Events}")]
+    public static partial void EventsMarkedAsPublished(this ILogger logger, int amount, IEnumerable<EventPayload> events);
+    [LoggerMessage(EventId = 3, Level = LogLevel.Debug, Message = "SavePendingCangesAsync {Amount} JsonVersionedEventPayload")]
+    public static partial void PendingChangesSaved(this ILogger logger, int amount);
+    [LoggerMessage(EventId = 4, Level = LogLevel.Debug, Message = "With {Force} CreateAsync {@EventPayload} JsonVersionedEventPayload")]
+    public static partial void EventPayloadCreated(this ILogger logger, bool force, EventPayload eventPayload);
+    [LoggerMessage(EventId = 5, Level = LogLevel.Debug, Message = "With {Force} CreateAsync {@EventPayload} JsonVersionedEventPayload")]
+    public static partial void EventPayloadsCreated(this ILogger logger, bool force, IEnumerable<EventPayload> eventPayload);
 }

@@ -70,7 +70,7 @@ public sealed class HangfireCommandBus : ICommandBus
 
         var jobId = CreateJob(command, type);
         if (jobId is not null)
-            _logger?.LogDebug("Create background job with Id: {JobId}", jobId);
+            _logger?.BackgroundJobCreated(jobId);
         return jobId;
     }
 
@@ -133,4 +133,10 @@ public sealed class HangfireCommandBus : ICommandBus
         return jobId;
     }
     #endregion
+}
+
+internal static partial class HangfireCommandBusLoggerExtensions
+{
+    [LoggerMessage(EventId = 1, Level = LogLevel.Debug, Message = "Create background job with Id: {JobId}")]
+    public static partial void BackgroundJobCreated(this ILogger<HangfireCommandBus> logger, string jobId);
 }

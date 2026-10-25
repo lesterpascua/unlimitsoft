@@ -61,7 +61,7 @@ public sealed class OIULoggerMiddleware
 
         // Log the asociation to historical debuging process
         if (traceId != correlationId)
-            _logger.LogInformation("Associate {Trace} with {Correlation}", traceId, correlationId);
+            _logger.AssociateCorrelation(traceId, correlationId);
 
         // Call the next delegate/middleware in the pipeline.
         await _next(context);
@@ -91,7 +91,7 @@ public sealed class OIULoggerMiddleware
         }
         catch
         {
-            _logger.LogWarning("Call with Invalid identity from {IpAddress}, {Payload}", context.GetIpAddress(), header);
+            _logger.InvalidIdentity(context.GetIpAddress(), header);
         }
         return null;
     }
@@ -103,4 +103,11 @@ public sealed class OIULoggerMiddleware
         public Guid? Id { get; init; }
     }
     #endregion
+}
+internal static partial class OIULoggerMiddlewareLoggerExtensions
+{
+    [LoggerMessage(EventId = 1, Level = LogLevel.Information, Message = "Associate {Trace} with {Correlation}")]
+    public static partial void AssociateCorrelation(this ILogger<OIULoggerMiddleware> logger, string trace, string correlation);
+    [LoggerMessage(EventId = 2, Level = LogLevel.Warning, Message = "Call with Invalid identity from {IpAddress}, {Payload}")]
+    public static partial void InvalidIdentity(this ILogger<OIULoggerMiddleware> logger, string ipAddress, string payload);
 }

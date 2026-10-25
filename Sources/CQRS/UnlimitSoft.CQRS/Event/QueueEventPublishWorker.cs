@@ -252,7 +252,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
         Worker = Task.Run(PublishBackground);
 #pragma warning restore CA2016 // Forward the 'CancellationToken' parameter to methods
 
-        _logger?.LogInformation("EventPublishWorker start");
+        _logger?.WorkerStarted();
     }
 
     #region Protected Methods
@@ -296,7 +296,7 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
                 break;
 
             // Dispatch event throws the bus
-            _logger?.LogDebug("Start to publish events");
+            _logger?.StartPublishEvents();
 
             int bachSize = Math.Min(_pending.Count, _bachSize);
 
@@ -347,14 +347,11 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
                     }
                 }
 
-                _logger?.LogInformation("Publish {Try} events and found {Found}", ids.Count, eventsPayload.Count);
+                _logger?.EventsPublished(ids.Count, eventsPayload.Count);
             }
             catch (Exception ex) when (!_cts.Token.IsCancellationRequested)
             {
-                _logger?.LogError(
-                    ex, 
-                    "Error publish with correlation: {CorrelationId} and {@Event}.", lastEvent?.CorrelationId, lastEvent
-                );
+                _logger?.PublishError(ex, lastEvent?.CorrelationId, lastEvent);
                 await Task.Delay(_errorDelay, _cts.Token);
             }
         }
@@ -409,14 +406,14 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
             try
             {
                 nonPublishEvents = await eventSourcedRepository.GetNonPublishedEventsAsync(paging, ct);
-                _logger?.LogInformation("Event loaded: {Count}", paging.Page * paging.PageSize + nonPublishEvents.Count);
+                _logger?.EventLoaded(paging.Page * paging.PageSize + nonPublishEvents.Count);
 
                 pending.AddRange(nonPublishEvents);
                 paging.Page++;
             }
             catch (Exception ex)
             {
-                _logger?.LogWarning(ex, "Error retrieving pending event from database, {@Page}", paging);
+                _logger?.RetrievePendingEventsFailed(ex, paging);
                 nonPublishEvents = null;
             }
         } while (nonPublishEvents is null || nonPublishEvents.Count == bashSize);
@@ -434,4 +431,20 @@ public class QueueEventPublishWorker<TEventSourcedRepository, TEventPayload> : I
         }
     }
     #endregion
+}
+
+internal static partial class QueueEventPublishWorkerLoggerExtensions
+{
+    [LoggerMessage(EventId = 1, Level = LogLevel.Information, Message = "EventPublishWorker start")]
+    public static partial void WorkerStarted(this ILogger logger);
+    [LoggerMessage(EventId = 2, Level = LogLevel.Debug, Message = "Start to publish events")]
+    public static partial void StartPublishEvents(this ILogger logger);
+    [LoggerMessage(EventId = 3, Level = LogLevel.Information, Message = "Publish {Try} events and found {Found}")]
+    public static partial void EventsPublished(this ILogger logger, int @try, int found);
+    [LoggerMessage(EventId = 4, Level = LogLevel.Error, Message = "Error publish with correlation: {CorrelationId} and {@Event}.")]
+    public static partial void PublishError(this ILogger logger, Exception ex, string? correlationId, EventPayload? @event);
+    [LoggerMessage(EventId = 5, Level = LogLevel.Information, Message = "Event loaded: {Count}")]
+    public static partial void EventLoaded(this ILogger logger, int count);
+    [LoggerMessage(EventId = 6, Level = LogLevel.Warning, Message = "Error retrieving pending event from database, {@Page}")]
+    public static partial void RetrievePendingEventsFailed(this ILogger logger, Exception ex, Paging page);
 }

@@ -29,13 +29,13 @@ public static class TasksPoolExtensions
             name,
             async () =>
             {
-                logger.LogInformation("Start task {Name}", name);
+                logger.TaskStarted(name);
 
                 if (preDispatch is not null)
                     await preDispatch();
                 var result = await dispatcher.DispatchDynamicAsync(command);
 
-                logger.LogInformation("End task {Name} with result {Result}", name, result);
+                logger.TaskEnded(name, result);
             },
             cleanMemory
         );
@@ -58,15 +58,23 @@ public static class TasksPoolExtensions
             name,
             async () =>
             {
-                logger.LogInformation("Start task {Name}", name);
+                logger.TaskStarted(name);
 
                 if (preDispatch is not null)
                     await preDispatch();
                 var result = await dispatcher.DispatchAsync(command);
 
-                logger.LogInformation("End task {Name} with result {Result}", name, result);
+                logger.TaskEnded(name, result);
             },
             cleanMemory
         );
     }
+}
+
+internal static partial class TasksPoolExtensionsLoggerExtensions
+{
+    [LoggerMessage(EventId = 1, Level = LogLevel.Information, Message = "Start task {Name}")]
+    public static partial void TaskStarted(this ILogger logger, string name);
+    [LoggerMessage(EventId = 2, Level = LogLevel.Information, Message = "End task {Name} with result {Result}")]
+    public static partial void TaskEnded(this ILogger logger, string name, object? result);
 }
