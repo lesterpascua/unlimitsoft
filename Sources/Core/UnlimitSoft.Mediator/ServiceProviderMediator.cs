@@ -338,7 +338,7 @@ public sealed class ServiceProviderMediator : IMediator
 
     private static async ValueTask<IRequestHandlerPipeline[]?> PrePipelineAsync<TResponse>(IServiceProvider provider, IRequest<TResponse> request, RequestMetadata metadata, CancellationToken ct)
     {
-        /// TODO: pending to optimize with InvokerCache
+        // TODO: pending to optimize with InvokerCache
         var pipelineHandlers = new IRequestHandlerPipeline[metadata.Pipeline!.Handlers.Length];
         for (var i = 0; i < metadata.Pipeline.Handlers.Length; i++)
         {
@@ -407,7 +407,7 @@ public sealed class ServiceProviderMediator : IMediator
     }
     private static async ValueTask<TResponse> PostPipelineAsync<TResponse>(IRequest<TResponse> request, IRequestHandlerPipeline[] pipelineHandlers, TResponse response, CancellationToken ct)
     {
-        /// TODO: pending to optimize with InvokerCache
+        // TODO: pending to optimize with InvokerCache
         for (var i = pipelineHandlers.Length - 1; i >= 0; i--)
         {
             var pipelineHandler = pipelineHandlers[i];

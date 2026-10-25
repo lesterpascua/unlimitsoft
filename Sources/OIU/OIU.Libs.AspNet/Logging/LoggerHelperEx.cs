@@ -136,7 +136,7 @@ public static class LoggerHelperEx
         if (envType != EnvType.LOCAL && envType != EnvType.TEST && options.ElasticSearch is not null && options.ElasticSearch.LogLevel.Default != LogLevel.None)
         {
             loggerConfiguration.Enrich.WithProperty("Env", (int)envType);
-            /// TODO: update to use the new ElasticSearch sink
+            // TODO: update to use the new ElasticSearch sink
             //loggerConfiguration.WriteTo.Elasticsearch(
             //    [new Uri(options.ElasticSearch.Url)],
             //    opts =>
