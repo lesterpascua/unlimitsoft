@@ -20,6 +20,7 @@ using Swashbuckle.AspNetCore.SwaggerUI;
 using System.Net;
 using System.Reflection;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Web;
 using UnlimitSoft.Data;
 using UnlimitSoft.Json;
@@ -94,9 +95,9 @@ public static class IApplicationBuilderExtensions
                 var apiVersion = doc.Info.Version[..index];
                 var v = int.Parse(apiVersion);
 
-                var apiStartWith = $"/api/v{v}/";
+                var apiStartWith = new Regex($"^(/[^/]+)?/api/v{v}/", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant, TimeSpan.FromSeconds(1));
                 var paths = doc.Paths
-                    .Where(x => x.Key.StartsWith(apiStartWith))
+                    .Where(x => apiStartWith.IsMatch(x.Key))
                     .Select(s =>
                     {
                         var path = s.Key;
@@ -294,6 +295,8 @@ public static class IApplicationBuilderExtensions
     }
     private sealed class OIUToResponseExceptionHandlerOptions : UnlimitSoft.Web.AspNet.ErrorHandling.ToResponseExceptionHandlerOptions
     {
+        private static readonly Regex V3Path = new("^(/[^/]+)?/api/v3/", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant | RegexOptions.Compiled, TimeSpan.FromSeconds(1));
+
         private readonly ICorrelationTrusted _trusted;
         private readonly bool _showExceptionInfo;
         private readonly Dictionary<string, string[]> _defaultErrorBody;
@@ -349,12 +352,10 @@ public static class IApplicationBuilderExtensions
         /// </remarks>
         protected override object GetResponse(HttpContext context, IExceptionHandlerFeature feature, out HttpStatusCode code)
         {
-            const string v3 = "/api/v3/";
-
             if (feature.Error is ResponseException exception)
             {
                 code = exception.Code;
-                if (context.Request.Path.Value?.StartsWith(v3) == true)
+                if (IsV3(context))
                     return exception.Body;
                 return new Response<IDictionary<string, string[]>>(exception.Code, exception.Body);
             }
@@ -365,7 +366,7 @@ public static class IApplicationBuilderExtensions
                 {
                     [string.Empty] = [badRequest.StatusCode.ToString()]
                 };
-                if (context.Request.Path.Value?.StartsWith(v3) == true)
+                if (IsV3(context))
                     return error;
                 return new Response<IDictionary<string, string[]>>(code, error);
             }
@@ -375,10 +376,12 @@ public static class IApplicationBuilderExtensions
             if (!_showExceptionInfo)
                 body = _errorBody?.Invoke(context) ?? _defaultErrorBody;
 
-            if (context.Request.Path.Value?.StartsWith(v3) == true)
+            if (IsV3(context))
                 return body;
             return new Response<object>(code, body);
         }
+
+        private static bool IsV3(HttpContext context) => V3Path.IsMatch(context.Request.Path.Value ?? string.Empty);
     }
     #endregion
 }
