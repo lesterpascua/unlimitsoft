@@ -119,11 +119,8 @@ public class ToResponseExceptionHandlerOptions : ExceptionHandlerOptions
         context.Response.StatusCode = (int)code;
 
         var level = code == HttpStatusCode.InternalServerError ? LogLevel.Error : _logLevel;
-        if (_logger is not null)
-        {
-            var ipAddress = context.GetIpAddress();
-            _logger.ExceptionHandled(feature.Error, level, identity?.Name, ipAddress);
-        }
+        if (_logger is not null && _logger.IsEnabled(level))
+            _logger.ExceptionHandled(feature.Error, level, identity?.Name, context.GetIpAddress());
 
         var traceId = context.TraceIdentifier;
         var correlationId = GetCorrelation(context);

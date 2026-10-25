@@ -98,13 +98,12 @@ public class TransformResponseAttributeOptions
     /// </summary>
     public Action<ILogger?, HttpContext, object, string> BadRequestLogger { get; set; } = (logger, httpContext, response, message) =>
     {
-        if (logger is null)
+        if (logger is null || !logger.IsEnabled(LogLevel.Information))
             return;
 
-        var user = httpContext.User.GetSubjectId();
         logger.BadRequestResponse(
             StatusCodes.Status400BadRequest,
-            user,
+            httpContext.User.GetSubjectId(),
             message,
             response
         );
@@ -114,10 +113,12 @@ public class TransformResponseAttributeOptions
     /// </summary>
     public Action<ILogger, HttpContext, object> ResponseLogger { get; set; } = (logger, httpContext, response) =>
     {
-        var user = httpContext.User.GetSubjectId();
+        if (!logger.IsEnabled(LogLevel.Information))
+            return;
+
         logger.ActionResponse(
             response is ObjectResult result ? result.StatusCode ?? StatusCodes.Status200OK : StatusCodes.Status200OK,
-            user,
+            httpContext.User.GetSubjectId(),
             response is ObjectResult ? response : "Raw Data"
         );
     };

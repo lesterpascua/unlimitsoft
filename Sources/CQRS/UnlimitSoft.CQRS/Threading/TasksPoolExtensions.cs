@@ -64,7 +64,8 @@ public static class TasksPoolExtensions
                     await preDispatch();
                 var result = await dispatcher.DispatchAsync(command);
 
-                logger.TaskEnded(name, result);
+                if (logger.IsEnabled(LogLevel.Information))
+                    logger.TaskEnded(name, result);
             },
             cleanMemory
         );

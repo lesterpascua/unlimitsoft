@@ -41,11 +41,10 @@ public class ValidationModelAttribute : ActionFilterAttribute
         {
             context.Result = controller.BadRequest(context.ModelState);
 
-            if (_logger is not null && _settings.LogLevel != LogLevel.None)
+            if (_logger is not null && _logger.IsEnabled(_settings.LogLevel))
             {
                 var httpContext = context.HttpContext;
-                var user = httpContext.User.GetSubjectId();
-                _logger.InvalidModel(_settings.LogLevel, httpContext.TraceIdentifier, StatusCodes.Status400BadRequest, user);
+                _logger.InvalidModel(_settings.LogLevel, httpContext.TraceIdentifier, StatusCodes.Status400BadRequest, httpContext.User.GetSubjectId());
             }
         }
     }
