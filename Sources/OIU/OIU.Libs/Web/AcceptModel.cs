@@ -10,8 +10,14 @@
 /// <param name="Created">The date and time when the acceptance was created.</param>
 public sealed record AcceptModel(Guid Id, DateTime FinishBy, DateTime Expired, DateTime Created)
 {
+    /// <summary>
+    /// Date when the process should be finished. Alias of <see cref="FinishBy"/>.
+    /// </summary>
     [Obsolete("Date when the process should be finished.")]
     public DateTime CheckDate => FinishBy;
+    /// <summary>
+    /// The date and time when the acceptance expires. Alias of <see cref="Expired"/>.
+    /// </summary>
     [Obsolete("Use Expired property instead.")]
     public DateTime Expire => Expired;
 }

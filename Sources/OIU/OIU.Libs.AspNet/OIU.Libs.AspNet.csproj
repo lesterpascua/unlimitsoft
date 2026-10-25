@@ -33,6 +33,8 @@
 	<ItemGroup>
 		<PackageReference Include="AspNetCore.HealthChecks.UI.Client" Version="9.0.0" />
 		<PackageReference Include="Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore" Version="10.0.3" />
+		<!-- Override transitive 2.4.1 from Swashbuckle: GHSA-v5pm-xwqc-g5wc -->
+		<PackageReference Include="Microsoft.OpenApi" Version="2.7.6" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0" />
 		<PackageReference Include="Serilog.AspNetCore" Version="10.0.0" />
 		<PackageReference Include="Elastic.Serilog.Sinks" Version="9.0.0" />
