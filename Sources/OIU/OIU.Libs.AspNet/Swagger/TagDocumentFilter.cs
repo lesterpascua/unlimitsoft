@@ -55,6 +55,24 @@ internal sealed class TagDocumentFilter : IDocumentFilter
 
         swaggerDoc.Paths = paths;
     }
+    /// <summary>
+    /// Remove the document tags not referenced by any operation of the document (tags of endpoints living in other versions).
+    /// </summary>
+    /// <param name="swaggerDoc"></param>
+    public static void RemoveUnusedTags(OpenApiDocument swaggerDoc)
+    {
+        if (swaggerDoc.Tags is null)
+            return;
+
+        var used = swaggerDoc.Paths
+            .SelectMany(path => path.Value.Operations?.Values ?? Enumerable.Empty<OpenApiOperation>())
+            .SelectMany(operation => operation.Tags ?? Enumerable.Empty<OpenApiTagReference>())
+            .Select(tag => tag.Name)
+            .ToHashSet(StringComparer.Ordinal);
+
+        foreach (var tag in swaggerDoc.Tags.Where(tag => tag.Name is null || !used.Contains(tag.Name)).ToList())
+            swaggerDoc.Tags.Remove(tag);
+    }
 
     #region Private Methods
     private static string? OrderFunc(KeyValuePair<string, IOpenApiPathItem> item)

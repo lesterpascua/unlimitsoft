@@ -110,6 +110,8 @@ public static class IApplicationBuilderExtensions
                 doc.Paths.Clear();
                 foreach (var (Key, Value) in paths)
                     doc.Paths.Add(Key, Value);
+
+                Swagger.TagDocumentFilter.RemoveUnusedTags(doc);
             });
         });
         app.UseSwaggerUI(c =>
