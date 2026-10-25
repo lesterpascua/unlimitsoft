@@ -17,7 +17,6 @@ using OIU.Libs.AspNet.Logging;
 using OIU.Libs.Configuration;
 using OIU.Libs.Security;
 using Swashbuckle.AspNetCore.SwaggerUI;
-using System;
 using System.Net;
 using System.Reflection;
 using System.Text;
@@ -343,6 +342,11 @@ public static class IApplicationBuilderExtensions
             return context.TraceIdentifier;
         }
         /// <inheritdoc />
+        /// <remarks>
+        /// A request rejected by the framework before the endpoint runs (<see cref="BadHttpRequestException"/> with a 4xx status, for example a query
+        /// string or a body that can't be bound) answers that status with <c>{ "": ["&lt;status&gt;"] }</c>, never with the exception, even when the
+        /// exception information is shown. Any other exception answers 500.
+        /// </remarks>
         protected override object GetResponse(HttpContext context, IExceptionHandlerFeature feature, out HttpStatusCode code)
         {
             const string v3 = "/api/v3/";
@@ -353,6 +357,17 @@ public static class IApplicationBuilderExtensions
                 if (context.Request.Path.Value?.StartsWith(v3) == true)
                     return exception.Body;
                 return new Response<IDictionary<string, string[]>>(exception.Code, exception.Body);
+            }
+            if (feature.Error is BadHttpRequestException badRequest && badRequest.StatusCode >= 400 && badRequest.StatusCode < 500)
+            {
+                code = (HttpStatusCode)badRequest.StatusCode;
+                var error = new Dictionary<string, string[]>
+                {
+                    [string.Empty] = [badRequest.StatusCode.ToString()]
+                };
+                if (context.Request.Path.Value?.StartsWith(v3) == true)
+                    return error;
+                return new Response<IDictionary<string, string[]>>(code, error);
             }
 
             object body = feature.Error;

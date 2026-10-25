@@ -21,7 +21,7 @@ public static class ValidatorExtensionX
     /// <param name="builder"></param>
     /// <param name="curr"></param>
     /// <param name="required"></param>
-    /// <param name="errCode"></param>
+    /// <param name="errCode">Error associated to <see cref="WKE.ProcessStepIsNotValid"/>.</param>
     /// <returns></returns>
     public static IRuleBuilderOptions<T, TProperty> MustBeInValidStep<T, TProperty, TSteps>(this IRuleBuilder<T, TProperty> builder, TSteps curr, TSteps required, string errCode = "102") where TSteps : struct, Enum
     {

@@ -7,6 +7,7 @@ using Serilog;
 using Serilog.Sinks.MSSqlServer;
 using Serilog.Sinks.SystemConsole.Themes;
 using System.Data;
+using UnlimitSoft;
 using UnlimitSoft.Logger;
 using UnlimitSoft.Text.Json.Logger;
 
@@ -70,7 +71,7 @@ public static class LoggerHelperEx
         {
             loggerConfiguration.WriteTo.File(
                 restrictedToMinimumLevel: (Serilog.Events.LogEventLevel)options.File.LogLevel.Default,
-                path: $"Logs/{EnvTypeHelper.Name}.log",
+                path: $"logs/{EnvTypeHelper.Name}-{SysClock.GetNow():yyyyMMdd-HHmmss}.log",
                 rollingInterval: RollingInterval.Day,
                 rollOnFileSizeLimit: true,
                 fileSizeLimitBytes: 100 * 1024 * 1024,

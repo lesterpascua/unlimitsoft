@@ -529,8 +529,10 @@ public static class IServiceCollectionExtensions
         services.AddSingleton(SysClock.Clock);
         services.AddSingleton(JsonUtil.Default);
 
-        var gen = GetIdGen(config.MicroServiceId, serviceOptions);
-        UniqueGenerator.Default = gen;
+        // One generator per process: reuse the default when a previous host already assigned it (for example several test hosts in the same
+        // process), so the generator injected is always the same instance as UniqueGenerator.Default used by the entities. Two instances with
+        // the same service and worker identifier generate the same identifier when called in the same millisecond.
+        var gen = UniqueGenerator.GetOrSetDefault(() => GetIdGen(config.MicroServiceId, serviceOptions));
 
         services.AddSingleton<IServiceMetadata>(gen);
         services.AddSingleton<IUniqueGenerator>(gen);

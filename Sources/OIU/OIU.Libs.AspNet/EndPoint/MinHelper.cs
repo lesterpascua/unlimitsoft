@@ -60,7 +60,7 @@ public static class MinHelper
     /// <param name="result">The result object.</param>
     /// <param name="code">The optional HTTP status code.</param>
     /// <returns>An IResult representing the outcome.</returns>
-    public static Microsoft.AspNetCore.Http.IResult GetResult<TResult>(in Result<TResult> result, HttpStatusCode? code) => GetResult(result.To(), code);
+    public static Microsoft.AspNetCore.Http.IResult GetResult<TResult>(in Result<TResult> result, HttpStatusCode? code) => GetResult(result.To(), code ?? HttpStatusCode.OK, null);
     /// <summary>
     /// Get the result from the Result object and convert it to an IResult
     /// </summary>
@@ -373,7 +373,36 @@ public static class MinHelper
         );
     }
     /// <summary>
-    /// 
+    ///
+    /// </summary>
+    /// <param name="request"></param>
+    /// <param name="body"></param>
+    /// <param name="context"></param>
+    /// <param name="code"></param>
+    /// <param name="transform"></param>
+    /// <param name="ct"></param>
+    /// <returns></returns>
+    public static Task<Microsoft.AspNetCore.Http.IResult> DispatchCommandWithLogAsync<TCommand, TBody, TResult>(TCommand request, TBody? body, HttpContext context, HttpStatusCode code, Func<HttpStatusCode, object, Task<ResultCodePairUri>>? transform, CancellationToken ct)
+        where TBody : class
+        where TCommand : ICommand<TResult>
+    {
+        return ActionWithLogAsync(
+            context,
+            body,
+            async () =>
+            {
+                var provider = context.RequestServices.GetRequiredService<IServiceProvider>();
+                var dispatcher = context.RequestServices.GetRequiredService<ICommandDispatcher>();
+
+                var aux = await dispatcher.DispatchAsync(provider, request, ct);
+                return aux.To();
+            },
+            code,
+            transform
+        );
+    }
+    /// <summary>
+    ///
     /// </summary>
     /// <param name="request"></param>
     /// <param name="context"></param>
@@ -423,7 +452,6 @@ public static class MinHelper
     /// <param name="request"></param>
     /// <param name="body"></param>
     /// <param name="context"></param>
-    /// <param name=""></param>
     /// <param name="code"></param>
     /// <param name="transform"></param>
     /// <param name="ct"></param>

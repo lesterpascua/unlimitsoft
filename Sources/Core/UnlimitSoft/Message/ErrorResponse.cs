@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 
 namespace UnlimitSoft.Message;
@@ -140,4 +141,12 @@ public sealed class ErrorResponse : Response<IDictionary<string, string[]>?>
             err[i] = error[i].ToString("D");
         return GetError(code, key, err);
     }
+
+    /// <summary>
+    /// Builds a colon-delimited error argument string from an enum error code and optional argument values.
+    /// </summary>
+    /// <param name="error">The error code to include, formatted as its underlying numeric value.</param>
+    /// <param name="args">Additional values to append to the error argument string in order.</param>
+    /// <returns>A colon-delimited string in the format "{errorCode}:{errorCode[:arg1[:arg2...]]}".</returns>
+    public static string GetErrArgs(string error, params object[] args) => args.Aggregate(error, (cur, next) => $"{cur}:{next}");
 }

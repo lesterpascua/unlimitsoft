@@ -9,5 +9,5 @@ public interface IActionWithCustomer
     /// <summary>
     /// The command has an argument indicate the customer owner of the command.
     /// </summary>
-    Guid CustomerId { get; }
+    Guid? CustomerId { get; }
 }

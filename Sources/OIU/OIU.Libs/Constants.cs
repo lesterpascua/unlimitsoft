@@ -28,6 +28,11 @@ public static class Constants
     public const string OutputTemplate = "[{Timestamp:HH:mm:ss} {Level:u3}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}";
 
     /// <summary>
+    /// 
+    /// </summary>
+    public const string DEVELOPMENT = "Development";
+
+    /// <summary>
     /// Allow define mimetypes used in the services
     /// </summary>
     public static class MimeType
@@ -129,6 +134,14 @@ public static class Constants
         /// 
         /// </summary>
         public const string V1 = "v1";
+        /// <summary>
+        /// 
+        /// </summary>
+        public const string V2 = "v2";
+        /// <summary>
+        /// 
+        /// </summary>
+        public const string V3 = "v3";
         /// <summary>
         /// Endpoint to be consumed from the admin users
         /// </summary>
