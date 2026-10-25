@@ -25,6 +25,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-rvv3-g6hj-g44x" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.AutoMapper\UnlimitSoft.AutoMapper.csproj" />
 		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.Logger.AspNet\UnlimitSoft.Logger.AspNet.csproj" />
 		<ProjectReference Include="..\..\Sources\Core\UnlimitSoft.Logger\UnlimitSoft.Logger.csproj" />

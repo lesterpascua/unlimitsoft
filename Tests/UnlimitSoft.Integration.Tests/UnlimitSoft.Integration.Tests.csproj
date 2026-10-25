@@ -29,6 +29,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<NuGetAuditSuppress Include="https://github.com/advisories/GHSA-rvv3-g6hj-g44x" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <ProjectReference Include="..\..\Main\UnlimitSoft.WebApi\UnlimitSoft.WebApi.csproj" />
 	  <ProjectReference Include="..\..\Sources\Web\UnlimitSoft.Web.AspNet.Testing\UnlimitSoft.Web.AspNet.Testing.csproj" />
 	</ItemGroup>
