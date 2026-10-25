@@ -41,7 +41,6 @@ internal sealed class RequestMetadata
 
         public sealed class Impl
         {
-            public object? CLI;
             public Type ImplementType = default!;
         }
     }
