@@ -41,7 +41,7 @@ public static class IServiceCollectionExtensions
     [Obsolete("Use IServiceCollection AddApiServices(this IServiceCollection services, Action<ApiServicesOptions> configure)")]
     public static IServiceCollection AddApiServices(this IServiceCollection services,
         Func<Assembly, string?> assemblyFilter,
-        Func<Type, ServiceLifetime>? lifeTimeResolver = null,
+        Func<Type, Type, ServiceLifetime>? lifeTimeResolver = null,
         bool scanPreloadAssemblies = false,
         Func<IServiceProvider, Type, IApiClient, IApiService?>? serviceFactory = null,
         Func<Type, Type, object?>? resolver = null,
@@ -164,7 +164,7 @@ public static class IServiceCollectionExtensions
 
                         return service;
                     },
-                    options.LifeTimeResolver?.Invoke(typeInterface) ?? ServiceLifetime.Singleton
+                    options.LifeTimeResolver?.Invoke(typeInterface, serviceType) ?? ServiceLifetime.Singleton
                 );
                 services.Add(descriptor);
             }

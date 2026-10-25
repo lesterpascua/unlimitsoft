@@ -333,7 +333,7 @@ public sealed class OIUServicesConfiguration
         /// <summary>
         /// 
         /// </summary>
-        public Func<Type, ServiceLifetime>? LifeTimeResolver { get; set; }
+        public Func<Type, Type, ServiceLifetime>? LifeTimeResolver { get; set; }
         /// <summary>
         /// (Type typeInterface, Type typeToResolve) => object
         /// </summary>

@@ -22,7 +22,7 @@ public sealed class ApiServicesOptions
     /// <summary>
     /// If set allow to change the services registration live time. By default <see cref="ServiceLifetime.Singleton"/>.
     /// </summary>
-    public Func<Type, ServiceLifetime>? LifeTimeResolver { get; set; }
+    public Func<Type, Type, ServiceLifetime>? LifeTimeResolver { get; set; }
     /// <summary>
     /// Scan also the preload assemblies <see cref="AppDomain.GetAssemblies"/>. Some assemblies can load later so recomend pass the assembly explicity
     /// </summary>
